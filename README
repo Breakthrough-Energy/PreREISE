@@ -1,0 +1,4 @@
+This package defines the case to be run.
+It saves information like name, timerange, case.m file and a description of the case.
+It also save datalocation, where the data will be saved.
+It adds an entry into the database that will be used to track the case.
