@@ -9,13 +9,14 @@ eng = matlab.engine.start_matlab()
 def launch_scenario_performance(scenario_name):
 
     scenario_list = pd.read_csv('/home/kmueller/EGMProject/ScenarioList.csv')
+
+    scenario = scenario_list[scenario_list.name == scenario_name]
+
     # Catch if name not found
     if scenario.shape[0] == 0:
         print('No scenario with name ' + scenario_name)
         return
-
-    scenario = scenario_list[scenario_list.name == scenario_name]
-
+ 
     status = eng.perform_scenario(scenario_name,
                                   scenario.load_data_location.values[0],
                                   scenario.save_data_location.values[0],
