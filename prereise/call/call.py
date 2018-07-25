@@ -9,7 +9,11 @@ eng = matlab.engine.start_matlab()
 
 def launch_scenario_performance(scenario_name):
     # Load scenario list
-    scenario_list = pd.read_csv('/home/kmueller/EGMProject/ScenarioList.csv')
+    top_dirname = os.path.dirname(__file__)
+    top_dirname = os.path.join(top_dirname, '../')
+    scenario_dirname = '/home/EGM/'
+    scenario_list = pd.read_csv(scenario_dirname + 'ScenarioList.csv')
+    
     # Get parameters related to scenario
     scenario = scenario_list[scenario_list.name == scenario_name]
 
@@ -22,7 +26,7 @@ def launch_scenario_performance(scenario_name):
         os.mkdir(scenario.save_data_location.values[0])
     # Load path definition in matlab
     # TODO: This file need to be generated or should exist
-    eng.run('/home/kmueller/EGMProject/PreREISE/call/test/pathdef',nargout=0)
+    eng.run(top_dirname + 'matlab_pathdef',nargout=0)
     eng.addpath(scenario.folder_location.values[0])
     eng.addpath(scenario.data_location.values[0])
     eng.workspace['save_data_location'] = scenario.save_data_location.values[0]
