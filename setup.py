@@ -7,4 +7,5 @@ setup(name='prereise',
       author='Kaspar Mueller',
       author_email='kmueller@intven.com',
       packages=setuptools.find_packages(),
+      package_data={'prereise':['add_path.m']},
       zip_safe=False)

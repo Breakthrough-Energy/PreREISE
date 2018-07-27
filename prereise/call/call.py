@@ -26,7 +26,7 @@ def launch_scenario_performance(scenario_name):
         os.mkdir(scenario.save_data_location.values[0])
     # Load path definition in matlab
     # TODO: This file need to be generated or should exist
-    eng.run(top_dirname + 'matlab_pathdef',nargout=0)
+    eng.run(top_dirname + 'add_path',nargout=0)
     eng.addpath(scenario.folder_location.values[0])
     eng.addpath(scenario.data_location.values[0])
     eng.workspace['save_data_location'] = scenario.save_data_location.values[0]
