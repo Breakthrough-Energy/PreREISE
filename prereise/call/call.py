@@ -22,20 +22,20 @@ def launch_scenario_performance(scenario_name):
         print('No scenario with name ' + scenario_name)
         return
     # Create save data folder if does not exist
-    if not os.path.exists(scenario.save_data_location.values[0]):
-        os.mkdir(scenario.save_data_location.values[0])
+    if not os.path.exists(scenario.output_data_location.values[0]):
+        os.mkdir(scenario.output_data_location.values[0])
     # Load path definition in matlab
     # TODO: This file need to be generated or should exist
     eng.run(top_dirname + 'add_path',nargout=0)
     eng.addpath(scenario.folder_location.values[0])
-    eng.addpath(scenario.data_location.values[0])
-    eng.workspace['save_data_location'] = scenario.save_data_location.values[0]
+    eng.addpath(scenario.input_data_location.values[0])
+    eng.workspace['output_data_location'] = scenario.output_data_location.values[0]
     eng.workspace['start_index'] = int(scenario.start_index.values[0])
     eng.workspace['end_index'] = int(scenario.end_index.values[0])
     # Run scenario
     eng.run(scenario_name,nargout=0)
 
-    eng.rmpath(scenario.data_location.values[0])
+    eng.rmpath(scenario.input_data_location.values[0])
     eng.rmpath(scenario.folder_location.values[0])
     eng.quit()
 
