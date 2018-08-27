@@ -90,14 +90,9 @@ payload = 'names={year}'.format(year=year) + '&' + \
 
 data = pd.DataFrame({'Pout':[], 'id':[]})
 
-print(coord.keys())
-
-toto = [('-122.4056','45.584722'),('-122.4331','48.4481')]
-
-for key in toto:#coord.keys():
+for key in coord.keys():
     query = 'wkt=POINT({lon}%20{lat})'.format(lon=key[0], lat=key[1])
     data_loc = pd.read_csv(url+'&'+payload+'&'+query, skiprows=2)
-    print(data_loc.head())
     ghi = data_loc.GHI.values
     data_loc = pd.DataFrame(ghi, index=range(1,len(ghi)+1), columns=['Pout'])
     data_loc = data_loc / data_loc.max()
