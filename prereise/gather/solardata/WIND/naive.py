@@ -67,20 +67,20 @@ dt_range = dt.loc[(dt.datetime >= start) & (dt.datetime < end)]
 data = pd.DataFrame({'Pout':[], 'id':[]})
 
 for i, (key, val) in enumerate(ij.items()):
-    print("%d) Site location: (%.6f, %.6f)" % (i+1, key[0], key[1]))
-    print("Numer of plants: %d" % len(coord[key]))
+    print("Loading information for location #%d" % (i+1))
     ghi =  f['GHI'][min(dt_range.index):max(dt_range.index)+1, val[0], val[1]]
     data_loc = pd.DataFrame(ghi, index=range(1,len(ghi)+1), columns=['Pout'])
-    data_loc = data_loc / data_loc.max()
+    data_loc['Pout'] /= max(ghi)
 
     for i in coord[key]:
-        data_site = data_loc
-        data_site['Pout'] = data_site['Pout']*[i[1]]*len(data_loc)
-        data_site['id'] = [i[0]]*len(data_loc)
+        data_site = data_loc.copy()
+        data_site['Pout'] *= i[1]
+        data_site['id'] = i[0]
         if data.empty:
             data = pd.concat([data,data_site])
         else:
             data = data.append(data_site)
+
 data.sort_index(inplace=True)
 
 ## Write File
