@@ -90,21 +90,23 @@ payload = 'names={year}'.format(year=year) + '&' + \
 
 data = pd.DataFrame({'Pout':[], 'id':[]})
 
-for key in coord.keys():
+for i, key in enumerate(coord.keys()):
+    print("Loading information for location #%d" % (i+1))
     query = 'wkt=POINT({lon}%20{lat})'.format(lon=key[0], lat=key[1])
     data_loc = pd.read_csv(url+'&'+payload+'&'+query, skiprows=2)
     ghi = data_loc.GHI.values
     data_loc = pd.DataFrame(ghi, index=range(1,len(ghi)+1), columns=['Pout'])
-    data_loc = data_loc / data_loc.max()
+    data_loc['Pout'] /= max(ghi)
 
     for i in coord[key]:
-        data_site = data_loc
-        data_site['Pout'] = data_site['Pout']*[i[1]]*len(data_loc)
-        data_site['id'] = [i[0]]*len(data_loc)
+        data_site = data_loc.copy()
+        data_site['Pout'] *= i[1]
+        data_site['id'] = i[0]
         if data.empty:
             data = pd.concat([data,data_site])
         else:
             data = data.append(data_site)
+
 data.sort_index(inplace=True)
 
 # Write File
