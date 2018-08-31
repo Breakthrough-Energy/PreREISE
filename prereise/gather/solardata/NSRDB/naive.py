@@ -8,13 +8,13 @@ Website: https://nsrdb.nrel.gov
 API: https://developer.nrel.gov/docs/solar/nsrdb/psm3_data_download/
 
 Calculate the solar power output for a given plant based on the naive
-assumption that it is equal to the maximum capacity of the plant (Pmax) at
-maximum irradiance (GHI) over the time period considered.
+assumption that it is equal to the maximum capacity of the plant (GenMWMax)
+at maximum irradiance (GHI) over the time period considered.
 """
 
-###########################################
-# Get the plants coordinates, id and Pmax #
-###########################################
+###############################################
+# Get the plants coordinates, id and GenMWMax #
+###############################################
 import westernintnet
 grid = westernintnet.WesternIntNet()
 
@@ -25,9 +25,9 @@ coord = {}
 for i in range(len(solar_plant)):
     key = (str(solar_plant.lon.values[i]),str(solar_plant.lat.values[i]))
     if key not in coord.keys():
-        coord[key] = [(solar_plant.index[i],solar_plant.Pmax.values[i])]
+        coord[key] = [(solar_plant.index[i],solar_plant.GenMWMax.values[i])]
     else:
-        coord[key].append((solar_plant.index[i],solar_plant.Pmax.values[i]))
+        coord[key].append((solar_plant.index[i],solar_plant.GenMWMax.values[i]))
 
 print("There are %d unique locations." % len(coord.keys()))
 
