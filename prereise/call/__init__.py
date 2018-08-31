@@ -1,1 +1,2 @@
 from .call import launch_scenario_performance
+from .call import launch_scenario_performance_parallel
