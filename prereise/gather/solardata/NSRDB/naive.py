@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from collections import OrderedDict
 
 """
 Collect a  set of solar and meteoroligical data fields from the National
@@ -21,7 +22,7 @@ grid = westernintnet.WesternIntNet()
 solar_plant = grid.genbus.groupby('type').get_group('solar')
 print("There are %d solar plants in the Western grid." % len(solar_plant))
 
-coord = {}
+coord = OrderedDict()
 for i in range(len(solar_plant)):
     key = (str(solar_plant.lon.values[i]),str(solar_plant.lat.values[i]))
     if key not in coord.keys():
@@ -29,7 +30,8 @@ for i in range(len(solar_plant)):
     else:
         coord[key].append((solar_plant.index[i],solar_plant.GenMWMax.values[i]))
 
-print("There are %d unique locations." % len(coord.keys()))
+print("There are %d unique locations." % len(coord))
+
 
 #############################
 # Get Attributes from NSRDB #
@@ -88,27 +90,30 @@ payload = 'names={year}'.format(year=year) + '&' + \
           'reason={reason}'.format(reason=reason) + '&' + \
           'attributes={attr}'.format(attr=attributes)
 
-data = pd.DataFrame({'Pout':[], 'id':[]})
+data = pd.DataFrame({'Pout':[], 'plantID':[], 'tsID':[]})
 
 for i, key in enumerate(coord.keys()):
     print("Loading information for location #%d" % (i+1))
     query = 'wkt=POINT({lon}%20{lat})'.format(lon=key[0], lat=key[1])
-    data_loc = pd.read_csv(url+'&'+payload+'&'+query, skiprows=2)
+    data_loc = pd.read_csv(url + '&' + payload + '&' + query, skiprows=2)
     ghi = data_loc.GHI.values
-    data_loc = pd.DataFrame(ghi, index=range(1,len(ghi)+1), columns=['Pout'])
+    data_loc = pd.DataFrame({'Pout':ghi})
     data_loc['Pout'] /= max(ghi)
+    data_loc['tsID'] = range(1,len(ghi)+1)
 
     for i in coord[key]:
         data_site = data_loc.copy()
         data_site['Pout'] *= i[1]
-        data_site['id'] = i[0]
-        if data.empty:
-            data = pd.concat([data,data_site])
-        else:
-            data = data.append(data_site)
+        data_site['plantID'] = i[0]
 
-data.sort_index(inplace=True)
+        data = data.append(data_site, ignore_index = True, sort = False)
+
+data['plantID'] = data['plantID'].astype(np.int32)
+data['tsID'] = data['tsID'].astype(np.int32)
+
+data.sort_values(by=['tsID', 'plantID'], inplace=True)
+data.reset_index(inplace=True, drop=True)
 
 # Write File
 name = "western_Pout_%d.txt" % (year)
-data.to_csv(name, sep='\t', header=None, index=True, columns=['id','Pout'])
+data.to_csv(name, sep='\t', header=None, index=False, columns=['tsID','plantID','Pout'])
