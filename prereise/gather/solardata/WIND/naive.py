@@ -1,6 +1,7 @@
 import h5pyd
 import numpy as np
 import pandas as pd
+from collections import OrderedDict
 
 """
 Collect a set of solar and meteoroligical data fields from the Wind Integration
@@ -22,7 +23,7 @@ grid = westernintnet.WesternIntNet()
 solar_plant = grid.genbus.groupby('type').get_group('solar')
 print("There are %d solar plants in the Western grid." % len(solar_plant))
 
-coord = {}
+coord = OrderedDict()
 for i in range(len(solar_plant)):
     key = (solar_plant.lon.values[i],solar_plant.lat.values[i])
     if key not in coord.keys():
@@ -64,25 +65,28 @@ start = '2010-01-01'
 end   = '2013-01-01'
 dt_range = dt.loc[(dt.datetime >= start) & (dt.datetime < end)]
 
-data = pd.DataFrame({'Pout':[], 'id':[]})
+data = pd.DataFrame({'Pout':[], 'plantID':[], 'tsID':[]})
 
 for i, (key, val) in enumerate(ij.items()):
     print("Loading information for location #%d" % (i+1))
     ghi =  f['GHI'][min(dt_range.index):max(dt_range.index)+1, val[0], val[1]]
-    data_loc = pd.DataFrame(ghi, index=range(1,len(ghi)+1), columns=['Pout'])
+    data_loc = pd.DataFrame({'Pout':ghi})
     data_loc['Pout'] /= max(ghi)
+    data_loc['tsID'] = range(1,len(ghi)+1)
 
     for i in coord[key]:
         data_site = data_loc.copy()
         data_site['Pout'] *= i[1]
-        data_site['id'] = i[0]
-        if data.empty:
-            data = pd.concat([data,data_site])
-        else:
-            data = data.append(data_site)
+        data_site['plantID'] = i[0]
 
-data.sort_index(inplace=True)
+        data = data.append(data_site, ignore_index = True, sort = False)
 
-## Write File
-name = "western_Pout_%s_%s.txt" % (start, end)
-data.to_csv(name, sep='\t', header=None, index=True, columns=['id','Pout'])
+data['plantID'] = data['plantID'].astype(np.int32)
+data['tsID'] = data['tsID'].astype(np.int32)
+
+data.sort_values(by=['tsID', 'plantID'], inplace=True)
+data.reset_index(inplace=True, drop=True)
+
+# Write File
+name = "western_Pout_%d.txt" % (year)
+data.to_csv(name, sep='\t', header=None, index=False, columns=['tsID','plantID','Pout'])
