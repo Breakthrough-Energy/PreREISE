@@ -115,5 +115,5 @@ data.sort_values(by=['tsID', 'plantID'], inplace=True)
 data.reset_index(inplace=True, drop=True)
 
 # Write File
-name = "western_Pout_%d.txt" % (year)
-data.to_csv(name, sep='\t', header=None, index=False, columns=['tsID','plantID','Pout'])
+name = "western_solar_output_%d_ts.txt" % (year)
+data.to_csv(name, header=None, index=False, columns=['tsID','plantID','Pout'])
