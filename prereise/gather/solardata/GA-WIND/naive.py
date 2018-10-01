@@ -4,8 +4,8 @@ import pandas as pd
 from collections import OrderedDict
 
 """
-Collect a set of solar and meteoroligical data fields from the Wind Integration
-National Dataset (WIND).
+Collect a set of solar and meteoroligical data fields from the Gridded Atmospheric
+Wind Integration National Dataset (WIND) Toolkit.
 Website: https://www.nrel.gov/grid/wind-toolkit.html
 API: https://developer.nrel.gov/docs/wind/wind-toolkit/wind-toolkit-extract/
 
