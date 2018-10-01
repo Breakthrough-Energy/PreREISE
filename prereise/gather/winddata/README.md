@@ -11,7 +11,7 @@ Two datasets provide satisfy these requirements. The first one is the Techno-Eco
 * [RAP](https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap) is the continental-scale NOAA hourly-updated assimilation/modeling system operational at the National Centers for Environmental Prediction (NCEP). RAP covers North America and is comprised primarily of a numerical weather model and an analysis system to initialize that model. RAP provides 1-hour resolution solar radiation data, **ranging from May 2012 to date**, on a  13-km resolution horizontal grid. Data can be retrieved using the NetCDF Subset Service. Information on the interface is described [here](https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html).
 
 
-# Wind Output Calculation
+# Wind Power Output Calculation
 * The Techno-Economic WIND Toolkit Power dataset provides a power curves for each site. In this case, the closest site to the wind generator in the network is identified and then the power for each 5-min data point is retrieved.
 
 * RAP provides The U and V components of the wind speed at 80-m above ground every hour. This information allows to estimate the wind speed. Power curves provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) are then used to convert wind speed to power. Figure 1 in the document shows the different normalized wind turbine power curves considered.
