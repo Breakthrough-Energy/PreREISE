@@ -89,4 +89,4 @@ data.reset_index(inplace=True, drop=True)
 
 # Write File
 name = "western_Pout_%d.txt" % (year)
-data.to_csv(name, sep='\t', header=None, index=False, columns=['tsID','plantID','Pout'])
+data.to_csv(name, header=None, index=False, columns=['tsID','plantID','Pout'])
