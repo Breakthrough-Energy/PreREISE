@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import sys
+
+sys.path.append("../")
 
 """
 Impute missing data in the RAP dataset.
@@ -8,6 +11,33 @@ Impute missing data in the RAP dataset.
 The RAP dataframe is read, missing data are located and a simle procedure
 is used for imputation.
 """
+
+
+#############
+# Functions #
+#############
+
+def get_power(wspd, turbine):
+    """Convert wind speed to power using NREL turbine power curves.
+
+    Arguments:
+        wspd: wind speed (in m/s).
+        turbine: class of turbine.
+
+    Returns:
+        Normalized power.
+    """
+    match  = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
+    if not match.any():
+        return 0
+    values = PowerCurves[turbine][match]
+    return np.interp(wspd,PowerCurves[turbine][match].index.values,PowerCurves[turbine][match].values)
+
+
+
+###############
+# Impute data #
+###############
 
 # Read dataframe
 data = pd.read_pickle('western_wind_output_2016_unfilled.pkl')
@@ -52,25 +82,3 @@ data.to_pickle('western_wind_output_2016.pkl')
 # Write output in csv file
 name = "western_wind_output_2016_ts.csv"
 data.to_csv(name, header=None, index=False, columns=['tsID','plantID','Pout'])
-
-
-
-#############
-# Functions #
-#############
-
-def get_power(wspd, turbine):
-    """Convert wind speed to power using NREL turbine power curves.
-
-    Arguments:
-        wspd: wind speed (in m/s).
-        turbine: class of turbine.
-
-    Returns:
-        Normalized power.
-    """
-    match  = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
-    if not match.any():
-        return 0
-    values = PowerCurves[turbine][match]
-    return np.interp(wspd,PowerCurves[turbine][match].index.values,PowerCurves[turbine][match].values)
