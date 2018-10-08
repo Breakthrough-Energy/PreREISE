@@ -23,11 +23,11 @@ def _greatCircleDistance(lat1, lon1, lat2, lon2):
 
 
 def get_all_NREL_siteID_for_states(states_list):
-    """Retrieve all siteID's for wind farms in states in states_list.
+    """Retrieve ID's of wind farms in given states.
 
     :param states_list: list object containing state abbreviation.
     :return: Pandas DataFrame with columns ['site_id', 'lat', 'lon',
-        'capacity', 'capacity_factor']
+    'capacity', 'capacity_factor']
     """
     nrel_sites = None
 
