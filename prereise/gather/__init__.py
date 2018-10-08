@@ -1,2 +1,1 @@
-from .winddata import *
-from .solardata import *
+__all__ = ["solardata", "winddata"]
