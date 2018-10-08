@@ -18,7 +18,7 @@ data files in the defined locations.
 The convention is that we use the scenario name as the output folder name.
 Make sure your simulation m-file has the same name as the unique scenario name.
 
-## Start the simulation.
+## Call (Start the simulation)
 After setting up the scenario, the simulation engine can be called.
 You launch the simulation the following way:
 ```python
@@ -26,21 +26,21 @@ import prereise
 
 prereise.launch_scenario_performance('scenario_name')
 ```
-## Setup/Install
+### Setup/Install
 This package requires Matlab, Gurobi, and Matpower. Make sure to put the paths
 from Gurobi and Matpower into the `add_path.m` file.
 Before installing this package install Matlab, Gurobi and Matpower.
 ### For Matlab the following setup is required:
 On Windows systems —
-'''
+```
 cd "matlabroot\extern\engines\python"
 python setup.py install
-'''
+```
 On Mac or Linux systems —
-'''
+```
 cd "matlabroot/extern/engines/python"
 python setup.py install
-'''
+```
 ### Install Gurobi and add path
 Install Gurobi and add Matlab path to 'add_path.m'
 ```
@@ -55,3 +55,33 @@ Download Matpower and add the following directories to the `add_path.m`:
 ### Install this package
 In the folder with the setup.py file type:
 `pip3 install .`
+
+## Gather
+This module allows you to gather data for the simulation.
+### Wind data
+#### rap
+#### te_wind
+Using NREL's techno economical data base.
+
+Check out the demo jupyter notebook in
+
+`prereise/gather/winddata/te_wind/demo/`
+
+Usage in general:
+```
+from prereise.gather.winddata.te_wind import te_wind
+
+te_wind.get_all_NREL_siteID_for_states(['WA','CA'])
+```
+To run a test:
+```
+from prereise.gather.winddata.te_wind.test import te_wind_test
+te_wind_test.test()
+```
+
+
+Using NOAA's rapid refresh model data:
+```
+from prereise.gather.winddata import rap
+```
+### Solar data
