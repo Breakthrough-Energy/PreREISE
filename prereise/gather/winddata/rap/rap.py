@@ -7,67 +7,10 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 import requests
-import westernintnet
 from netCDF4 import Dataset
 from tqdm import tqdm
 
-PowerCurves = pd.read_csv(os.path.dirname(__file__) +
-                          '/../IECPowerCurves.csv')
-
-
-def ll2uv(lon, lat):
-    """Convert (longitude, latitude) to unit vector.
-
-    :param lon: longitude of the site (in deg.) measured eastward from
-    Greenwich, UK.
-    :param lat: latitude of the site (in deg.). Equator is the zero point.
-    :return: 3-components (x,y,z) unit vector.
-    """
-    cos_lat = math.cos(math.radians(lat))
-    sin_lat = math.sin(math.radians(lat))
-    cos_lon = math.cos(math.radians(lon))
-    sin_lon = math.sin(math.radians(lon))
-
-    uv = []
-    uv.append(cos_lat * cos_lon)
-    uv.append(cos_lat * sin_lon)
-    uv.append(sin_lat)
-
-    return uv
-
-
-def angular_distance(uv1, uv2):
-    """Calculate the angular distance between two vectors.
-
-    :param uv1: 3-components vector.
-    :param uv2: 3-components vector.
-    :return: angle in degrees.
-    """
-    cos_angle = uv1[0]*uv2[0] + uv1[1]*uv2[1] + uv1[2]*uv2[2]
-    if cos_angle >= 1:
-        cos_angle = 1
-    if cos_angle <= -1:
-        cos_angle = -1
-    angle = math.degrees(math.acos(cos_angle))
-
-    return angle
-
-
-def get_power(wspd, turbine):
-    """Convert wind speed to power using NREL turbine power curves.
-
-    :param wspd: wind speed (in m/s).
-    :param turbine: class of turbine.
-    :return: normalized power.
-    """
-    match = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & \
-            (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
-    if not match.any():
-        return 0
-    values = PowerCurves[turbine][match]
-    return np.interp(wspd,
-                     PowerCurves[turbine][match].index.values,
-                     PowerCurves[turbine][match].values)
+from helpers import angular_distance, get_power, ll2uv
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
