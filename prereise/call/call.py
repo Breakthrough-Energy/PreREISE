@@ -69,11 +69,10 @@ def scenario_matlab_call(scenario, i_start, i_end):
     """
     # Location of add_path file
     top_dirname = os.path.dirname(__file__)
-    top_dirname = os.path.join(top_dirname, '../')
 
     eng = matlab.engine.start_matlab()
     # Load path definition in MATLAB (MATPOWER and GUROBI)
-    eng.run(top_dirname + 'add_path', nargout=0)
+    eng.run(top_dirname + '/add_path', nargout=0)
     eng.addpath(scenario.folder_location.values[0])
     eng.addpath(scenario.input_data_location.values[0])
     eng.workspace['output_data_location'] = \
