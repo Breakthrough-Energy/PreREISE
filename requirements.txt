@@ -1,2 +1,16 @@
 ###### Requirements without Version Specifiers ######
+collections
+datetime
+math
+time
+os
+sys
+bokeh
+matplotlib
+numpy
+pandas
+pywtk
+requests
+netCDF4
 tqdm
+westernintnet
