@@ -126,7 +126,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
     dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     step = datetime.timedelta(hours=1)
 
-    for i, file in tqdm(enumerate(files)):
+    for i, file in tqdm(enumerate(files), total=len(files)):
         if i != 0 and i % 1000 == 0:
             time.sleep(300)
         query = file + var + '&' + box + '&' + extension
@@ -168,13 +168,12 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
             tmp.close()
             os.remove('tmp.nc')
         else:
-            print("File %s is missing" % file.split('/')[-1])
             missing.append(file)
 
-            # missing data are set to -99.
-            data_tmp['U'] = [-99] * n_target
-            data_tmp['V'] = [-99] * n_target
-            data_tmp['Pout'] = [-99] * n_target
+            # missing data are set to NaN.
+            data_tmp['U'] = [np.nan] * n_target
+            data_tmp['V'] = [np.nan] * n_target
+            data_tmp['Pout'] = [np.nan] * n_target
 
         data = data.append(data_tmp, ignore_index=True, sort=False)
         dt += step
