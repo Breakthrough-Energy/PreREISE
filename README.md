@@ -76,7 +76,11 @@ This module allows you to gather data for the simulation.
 Usage in general:
 ```
 from prereise.gather.winddata import rap
+
+rap.retrieve_data(wind_farm)
 ```
+Check out the demo jupyter notebook in
+`prereise/gather/winddata/rap/demo/`
 
 #### &beta;. Techno-Economic Wind Integration National Dataset Toolkit
 The [Techno-Economic WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 5-min resolution data for 7 years, ranging from 2007 to 2013, at 120,000 points within the continental U.S. selected for their wind resource. This set contains power estimates and forecasts along with a subset of atmospheric variables. Data can be accessed via an [API](https://developer.nrel.gov/docs/wind/wind-toolkit/).
