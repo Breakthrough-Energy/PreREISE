@@ -1,84 +1,52 @@
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import sys
 
-sys.path.append("../")
-
-"""
-Impute missing data in the RAP dataset.
-
-The RAP dataframe is read, missing data are located and a simle procedure
-is used for imputation.
-"""
+from helpers import get_power
 
 
-#############
-# Functions #
-#############
+def simple_imputation(data, wind_farm):
+    """Impute missing data using a simple procedure. For each missing entry,
+       the extrema of the U and V components of the wind speed of all non
+       missing entries that have the same location, same month, same hour
+       are first found for each missing entry. Then, a U and V value are
+       randomly generated between the respective derived ranges.
 
-def get_power(wspd, turbine):
-    """Convert wind speed to power using NREL turbine power curves.
-
-    Arguments:
-        wspd: wind speed (in m/s).
-        turbine: class of turbine.
-
-    Returns:
-        Normalized power.
+       :param data: pandas DataFrame as returned by
+       py:method:`rap.retrieve_data`.
+       :param wind_farm: pandas DataFrame of wind farms
+       :return: pandas DataFrame with missing entries imputed.
     """
-    match  = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
-    if not match.any():
-        return 0
-    values = PowerCurves[turbine][match]
-    return np.interp(wspd,PowerCurves[turbine][match].index.values,PowerCurves[turbine][match].values)
 
+    # Locate missing data
+    to_impute = data[data.U.isna()].index.values
 
+    # Timestamp of all entries in dataframe
+    dates = pd.DatetimeIndex(data['ts'].values)
 
-###############
-# Impute data #
-###############
+    n_target = len(wind_farm)
+    for i, j in tqdm(enumerate(to_impute), total=len(to_impute)):
+        if i % n_target == 0:
+            year = dates[j].year
+            month = dates[j].month
+            day = dates[j].day
+            hour = dates[j].hour
+            select = data[(dates.month == month) &
+                          (dates.hour == hour) &
+                          (data.Pout != -99)]
 
-# Read dataframe
-data = pd.read_pickle('western_wind_output_2016_unfilled.pkl')
+        k = data.loc[j].plantID
+        select_plant = select[select.plantID == k]
 
-# Locate missing data
-to_impute = data[data.Pout == -99].index
+        minU, maxU = select_plant['U'].min(), select_plant['U'].max()
+        minV, maxV = select_plant['V'].min(), select_plant['V'].max()
+        data.at[j, 'U'] = minU + (maxU - minU) * np.random.random()
+        data.at[j, 'V'] = minV + (maxV - minV) * np.random.random()
+        wspd = np.sqrt(data.loc[j].U**2 + data.loc[j].V**2)
+        capacity = wind_farm.loc[k].GenMWMax
+        data.at[j, 'Pout'] = get_power(wspd, 'IEC class 2') * capacity
 
-# Timestamp of all entries in dataframe
-dates = pd.DatetimeIndex(data['ts'].values)
-
-# Impute missing data
-# For each missing entry, the mean of the U and V components of the wind speed of all
-# entries sharing the same site, month, hour and, of course, are not missing are located.
-# U and V components of the missing entry is drawn from a uniform distribution bounded by
-# the maximum values of U and V, respectively.
-import westernintnet
-grid = westernintnet.WesternIntNet()
-
-wind_farm = grid.genbus.groupby('type').get_group('wind')
-n_target = len(wind_farm)
-
-PowerCurves = pd.read_csv('../IECPowerCurves.csv')
-
-for i, j in tqdm(enumerate(to_impute)):
-    if i % n_target == 0:
-        year, month, day, hour = dates[j].year, dates[j].month, dates[j].day, dates[j].hour
-        select = data[(dates.month == month) & (dates.hour == hour) & (data.Pout != -99)]
-
-    k = data.loc[j].plantID
-    select_plant = select[select.plantID == k]
-
-    minU, maxU = select_plant['U'].min(), select_plant['U'].max()
-    minV, maxV = select_plant['V'].min(), select_plant['V'].max()
-    data.at[j,'U'] = minU + (maxU - minU) * np.random.random()
-    data.at[j,'V'] = minV + (maxV - minV) * np.random.random()
-    data.at[j,'Pout'] = get_power(np.sqrt(data.loc[j].U**2 + data.loc[j].V**2), 'IEC class 2') * wind_farm.loc[k].GenMWMax
-
-
-# Save dataframe
-data.to_pickle('western_wind_output_2016.pkl')
-
-# Write output in csv file
-name = "western_wind_output_2016_ts.csv"
-data.to_csv(name, header=None, index=False, columns=['tsID','plantID','Pout'])
+    # Write output in csv file
+    name = "western_wind_output_2016_ts.csv"
+    data.to_csv(name, header=None, index=False,
+                columns=['tsID', 'plantID', 'Pout'])
