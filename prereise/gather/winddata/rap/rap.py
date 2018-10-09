@@ -1,42 +1,27 @@
-import numpy as np
-import pandas as pd
 import datetime
 import math
-import requests
-import time
 import os
-from netCDF4 import Dataset
+import time
 from collections import OrderedDict
+
+import numpy as np
+import pandas as pd
+import requests
+import westernintnet
+from netCDF4 import Dataset
 from tqdm import tqdm
 
+PowerCurves = pd.read_csv(os.path.dirname(__file__) +
+                          '/../IECPowerCurves.csv')
 
-"""
-Collect a set of wind speed data fields from the Rapid Refresh (RAP)
-dataset.
-Website: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
-API: https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html
-
-For each wind farm location in the network, the closest point on the
-RAP grid is located and the U and V components of the wind speed at
-80-m above ground is retrieved. This operation is repeated for each
-1-hour data point. Note that that there are some missing data.
-"""
-
-
-
-#############
-# Functions #
-#############
 
 def ll2uv(lon, lat):
     """Convert (longitude, latitude) to unit vector.
 
-    Arguments:
-        lon: longitude of the site (in deg.) measured eastward from Greenwich.
-        lat: latitude of the site (in deg.). Equator is the zero point.
-
-    Returns:
-        3-components (x,y,z) unit vector.
+    :param lon: longitude of the site (in deg.) measured eastward from
+    Greenwich, UK.
+    :param lat: latitude of the site (in deg.). Equator is the zero point.
+    :return: 3-components (x,y,z) unit vector.
     """
     cos_lat = math.cos(math.radians(lat))
     sin_lat = math.sin(math.radians(lat))
@@ -51,16 +36,12 @@ def ll2uv(lon, lat):
     return uv
 
 
-
 def angular_distance(uv1, uv2):
     """Calculate the angular distance between two vectors.
 
-    Arguments:
-        uv1: 3-components vector.
-        uv2: 3-components vector.
-
-    Returns:
-        Angle in degrees.
+    :param uv1: 3-components vector.
+    :param uv2: 3-components vector.
+    :return: angle in degrees.
     """
     cos_angle = uv1[0]*uv2[0] + uv1[1]*uv2[1] + uv1[2]*uv2[2]
     if cos_angle >= 1:
@@ -72,135 +53,137 @@ def angular_distance(uv1, uv2):
     return angle
 
 
-
 def get_power(wspd, turbine):
     """Convert wind speed to power using NREL turbine power curves.
 
-    Arguments:
-        wspd: wind speed (in m/s).
-        turbine: class of turbine.
-
-    Returns:
-        Normalized power.
+    :param wspd: wind speed (in m/s).
+    :param turbine: class of turbine.
+    :return: normalized power.
     """
-    match  = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
+    match = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & \
+            (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
     if not match.any():
         return 0
     values = PowerCurves[turbine][match]
-    return np.interp(wspd,PowerCurves[turbine][match].index.values,PowerCurves[turbine][match].values)
+    return np.interp(wspd,
+                     PowerCurves[turbine][match].index.values,
+                     PowerCurves[turbine][match].values)
 
 
+def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
+    """Retrive wind speed data from NOAA's server.
 
-###############################################
-# Get the plants coordinates, id and GenMWMax #
-###############################################
+    :param wind_farm: pandas DataFrame of wind farms.
+    :param start_date: start date.
+    :param end_date: end date (inclusive).
+    :return: pandas DataFrame with the columns: plant ID, U-component of the
+    wind speed (m/s) 80-m above ground, V-component of wind speed (m/s) 80-m
+    above ground, power output (MW), UTC timestamp and timestamp ID. Also
+    returns a list of missing files.
+    """
 
-import westernintnet
-grid = westernintnet.WesternIntNet()
+    # Information on wind farms
+    n_target = len(wind_farm)
 
-wind_farm = grid.genbus.groupby('type').get_group('wind')
-n_target = len(wind_farm)
-print("There are %d wind farms in the Western grid." % n_target)
+    lon_target = wind_farm.lon.values
+    lat_target = wind_farm.lat.values
+    id_target = wind_farm.index.values
+    capacity_target = wind_farm.GenMWMax.values
 
-lon_target = wind_farm.lon.values
-lat_target = wind_farm.lat.values
-id_target  = wind_farm.index.values
-capacity_target = wind_farm.GenMWMax.values
+    # Build query
+    link = 'https://www.ncei.noaa.gov/thredds/ncss/rap130anl/'
 
-###############
-# Build query #
-###############
+    start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    step = datetime.timedelta(days=1)
 
-path = 'https://www.ncei.noaa.gov/thredds/ncss/rap130anl/'
+    files = []
+    while start <= end:
+        ts = start.strftime('%Y%m%d')
+        url = link + ts[:6] + '/' + ts + '/rap_130_' + ts
+        for h in range(10000, 12400, 100):
+            files.append(url + '_' + str(h)[1:] + '_000.grb2?')
+        start += step
 
-start = datetime.datetime.strptime('2016-01-01', '%Y-%m-%d')
-end = datetime.datetime.strptime('2016-12-31', '%Y-%m-%d')
-step = datetime.timedelta(days=1)
+    var_u = 'u-component_of_wind_height_above_ground'
+    var_v = 'v-component_of_wind_height_above_ground'
+    var = 'var=' + var_u + '&' + 'var=' + var_v
 
-files = []
-while start <= end:
-    ts = start.strftime('%Y%m%d')
-    url = path + '2016'+ ts[4:6] + '/' + ts + '/'
-    for h in range(10000,12400,100):
-        files.append(url + 'rap_130_' + ts + '_' + str(h)[1:] + '_000.grb2?')
-    start += step
-print("There are %d files" % len(files))
+    box = 'north=49&west=-122&east=-102&south=32' + '&' + \
+          'disableProjSubset=on&horizStride=1&addLatLon=true'
 
-# Variables
-var = 'var=u-component_of_wind_height_above_ground' + '&' + \
-      'var=v-component_of_wind_height_above_ground'
+    extension = 'accept=netCDF'
 
-# Bounding Box
-box = 'north=49&west=-122&east=-102&south=32&disableProjSubset=on&horizStride=1&addLatLon=true'
+    # Download files and fill out dataframe
+    missing = []
+    target2grid = OrderedDict()
+    data = pd.DataFrame({'plantID': [],
+                         'U': [],
+                         'V': [],
+                         'Pout': [],
+                         'ts': [],
+                         'tsID': []})
+    dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    step = datetime.timedelta(hours=1)
 
-# Data Format
-extension = 'accept=netCDF'
+    for i, file in tqdm(enumerate(files)):
+        if i != 0 and i % 1000 == 0:
+            time.sleep(300)
+        query = file + var + '&' + box + '&' + extension
+        request = requests.get(query)
 
+        data_tmp = pd.DataFrame({'plantID': id_target,
+                                 'ts': [dt]*n_target,
+                                 'tsID': [i+1]*n_target})
 
+        if request.status_code == 200:
+            with open('tmp.nc', 'wb') as f:
+                f.write(request.content)
+            tmp = Dataset('tmp.nc', 'r')
+            lon_grid = tmp.variables['lon'][:].flatten()
+            lat_grid = tmp.variables['lat'][:].flatten()
+            u_wsp = tmp.variables[var_u][0, 1, :, :].flatten()
+            v_wsp = tmp.variables[var_v][0, 1, :, :].flatten()
 
-#########################################
-# Download files and fill out dataframe #
-#########################################
+            n_grid = len(lon_grid)
+            if data.empty:
+                # The angular distance is calculated once. The target to grid
+                # correspondence is stored in a dictionary.
+                for j in range(n_target):
+                    uv_target = ll2uv(lon_target[j], lat_target[j])
+                    angle = [angular_distance(uv_target,
+                                              ll2uv(lon_grid[k], lat_grid[k]))
+                             for k in range(n_grid)]
+                    target2grid[id_target[j]] = np.argmin(angle)
 
+            data_tmp['U'] = [u_wsp[target2grid[id_target[j]]]
+                             for j in range(n_target)]
+            data_tmp['V'] = [v_wsp[target2grid[id_target[j]]]
+                             for j in range(n_target)]
+            wspd = np.sqrt(pow(data_tmp['U'], 2) + pow(data_tmp['V'], 2))
+            data_tmp['Pout'] = [get_power(val,
+                                          'IEC class 2') * capacity_target[j]
+                                for j, val in enumerate(wspd)]
 
-PowerCurves = pd.read_csv('../IECPowerCurves.csv')
+            tmp.close()
+            os.remove('tmp.nc')
+        else:
+            print("File %s is missing" % file.split('/')[-1])
+            missing.append(file)
 
-missing = []
-target2grid = OrderedDict()
-data = pd.DataFrame({'plantID':[], 'U':[], 'V':[], 'Pout':[], 'ts':[], 'tsID':[]})
-dt = datetime.datetime.strptime('2016-01-01', '%Y-%m-%d')
-step = datetime.timedelta(hours=1)
+            # missing data are set to -99.
+            data_tmp['U'] = [-99] * n_target
+            data_tmp['V'] = [-99] * n_target
+            data_tmp['Pout'] = [-99] * n_target
 
+        data = data.append(data_tmp, ignore_index=True, sort=False)
+        dt += step
 
-for i, file in tqdm(enumerate(files)):
-    if i != 0 and i % 1000 == 0:
-        time.sleep(300)
-    query = file + var + '&' + box + '&' + extension
-    request = requests.get(query)
+    # Format dataframe
+    data['plantID'] = data['plantID'].astype(np.int32)
+    data['tsID'] = data['tsID'].astype(np.int32)
 
-    data_tmp = pd.DataFrame({'plantID':id_target, 'ts':[dt]*n_target, 'tsID':[i+1]*n_target})
+    data.sort_values(by=['tsID', 'plantID'], inplace=True)
+    data.reset_index(inplace=True, drop=True)
 
-    if request.status_code == 200:
-        with open('tmp.nc', 'wb') as f:
-            f.write(request.content)
-        tmp = Dataset('tmp.nc', 'r')
-        lon_grid = tmp.variables['lon'][:].flatten()
-        lat_grid = tmp.variables['lat'][:].flatten()
-        u_wsp = tmp.variables['u-component_of_wind_height_above_ground'][0,1,:,:].flatten()
-        v_wsp = tmp.variables['v-component_of_wind_height_above_ground'][0,1,:,:].flatten()
-
-        n_grid = len(lon_grid)
-        if data.empty:
-            # The angular distance is calculated once. The target to grid correspondence is stored in a dictionary.
-            for j in range(n_target):
-                uv_target = ll2uv(lon_target[j], lat_target[j])
-                distance = [angular_distance(uv_target, ll2uv(lon_grid[k],lat_grid[k])) for k in range(n_grid)]
-                target2grid[id_target[j]] = np.argmin(distance)
-
-        data_tmp['U'] = [u_wsp[target2grid[id_target[j]]] for j in range(n_target)]
-        data_tmp['V'] = [v_wsp[target2grid[id_target[j]]] for j in range(n_target)]
-        data_tmp['Pout'] = np.sqrt(pow(data_tmp['U'],2) + pow(data_tmp['V'],2))
-        data_tmp['Pout'] = [get_power(val, 'IEC class 2')*capacity_target[j] for j, val in enumerate(data_tmp['Pout'].values)]
-
-        tmp.close()
-        os.remove('tmp.nc')
-    else:
-        print("File %s is missing" % file.split('/')[-1])
-        missing.append(file)
-
-        # missing data are set to -99.
-        data_tmp['U'] = [-99] * n_target
-        data_tmp['V'] = [-99] * n_target
-        data_tmp['Pout'] = [-99] * n_target
-
-    data = data.append(data_tmp, ignore_index=True, sort=False)
-
-    dt += step
-
-data['plantID'] = data['plantID'].astype(np.int32)
-data['tsID'] = data['tsID'].astype(np.int32)
-
-data.sort_values(by=['tsID', 'plantID'], inplace=True)
-data.reset_index(inplace=True, drop=True)
-
-data.to_pickle('western_wind_output_2016_unfilled.pkl')
+    return data, missing
