@@ -115,7 +115,7 @@ The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https
 
 [NSRDB (National Solar Radiation Database)](https://nsrdb.nrel.gov/) provides 1-hour resolution solar radiation data, ranging from 1998 to 2016, for the entire U.S. and a growing list of international locations on a 4x4 square kilometer grid. Data can be accessed via an [API](https://developer.nrel.gov/docs/solar/nsrdb/). Note that the Physical Solar Model v3 is used.
 
-### B. Power output Calculation
+### B. Power output calculation
 
 ####  &alpha;. Wind power output
 
@@ -123,7 +123,7 @@ The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https
 
 The *IEC class 2* power curve provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) is used to convert wind speed to power for all the wind farms in the network. This is the method currently implemented.
 
-####  &beta;. Wind power output
+####  &beta;. Solar power output
 
 &bull; <u>Naïve method</u>:
 
