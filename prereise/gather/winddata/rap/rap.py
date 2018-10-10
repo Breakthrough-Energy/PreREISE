@@ -14,7 +14,7 @@ from helpers import angular_distance, get_power, ll2uv
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
-    """Retrive wind speed data from NOAA's server.
+    """Retrieve wind speed data from NOAA's server.
 
     :param wind_farm: pandas DataFrame of wind farms.
     :param start_date: start date.
