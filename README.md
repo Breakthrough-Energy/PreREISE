@@ -68,10 +68,13 @@ In the folder with the setup.py file type:
 ## 3. Gather
 This module allows you to gather data for the simulation.
 
-### A. Wind data
+### A. Collect Data
 
-####  &alpha;. Rapid Refresh
-[RAP](https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap) (Rapid Refresh) is the continental-scale NOAA hourly-updated assimilation/modeling system operational at the National Centers for Environmental Prediction (NCEP). RAP covers North America and is comprised primarily of a numerical weather model and an analysis system to initialize that model. RAP provides, every hour ranging from May 2012 to date, the U and V components of the wind speed at 80 meter above ground on a 13x13 square kilometer resolution grid every hour. Data can be retrieved using the NetCDF Subset Service. Information on this interface is described [here](https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html). Power curves provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) are then used to convert wind speed to power.
+####  &alpha;. Wind data
+
+&bull; <u>Rapid Refresh</u>:
+
+[RAP](https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap) (Rapid Refresh) is the continental-scale NOAA hourly-updated assimilation/modeling system operational at the National Centers for Environmental Prediction (NCEP). RAP covers North America and is comprised primarily of a numerical weather model and an analysis system to initialize that model. RAP provides, every hour ranging from May 2012 to date, the U and V components of the wind speed at 80 meter above ground on a 13x13 square kilometer resolution grid every hour. Data can be retrieved using the NetCDF Subset Service. Information on this interface is described [here](https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html).
 
 Usage in general:
 ```
@@ -82,7 +85,8 @@ rap.retrieve_data(wind_farm)
 Check out the demo jupyter notebook in
 `prereise/gather/winddata/rap/demo/`
 
-#### &beta;. Techno-Economic Wind Integration National Dataset Toolkit
+&bull; <u>Techno-Economic Wind Integration National Dataset Toolkit</u>:
+
 The [Techno-Economic WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 5-min resolution data for 7 years, ranging from 2007 to 2013, at 120,000 points within the continental U.S. selected for their wind resource. This set contains power estimates and forecasts along with a subset of atmospheric variables. Data can be accessed via an [API](https://developer.nrel.gov/docs/wind/wind-toolkit/).
 
 Check out the demo jupyter notebook in
@@ -101,10 +105,26 @@ te_wind_test.test()
 ```
 
 
-### B. Solar data
+#### &beta;. Solar data
 
-####  &alpha;. The Gridded Atmospheric Wind Integration National Dataset Toolkit
+&bull; <u>The Gridded Atmospheric Wind Integration National Dataset Toolkit</u>:
+
 The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 1-hour resolution irradiance data for 7 years, ranging from 2007 to 2013, on a uniform 2x2 square kilometer grid that covers the continental U.S., the Baja Peninsula, and parts of the Pacific and Atlantic oceans. Data can be accessed using the Highly Scalable Data Service. NREL wrote [example notebooks](https://github.com/NREL/hsds-examples) that demonstrate how to access the data.
 
-####  &beta;. The National Solar Radiation database
+&bull; <u>The National Solar Radiation Database</u>:
+
 [NSRDB (National Solar Radiation Database)](https://nsrdb.nrel.gov/) provides 1-hour resolution solar radiation data, ranging from 1998 to 2016, for the entire U.S. and a growing list of international locations on a 4x4 square kilometer grid. Data can be accessed via an [API](https://developer.nrel.gov/docs/solar/nsrdb/). Note that the Physical Solar Model v3 is used.
+
+### B. Power output Calculation
+
+####  &alpha;. Wind power output
+
+&bull; <u>Naïve method</u>:
+
+The *IEC class 2* power curve provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) is used to convert wind speed to power for all the wind farms in the network. This is the method currently implemented.
+
+####  &beta;. Wind power output
+
+&bull; <u>Naïve method</u>:
+
+This estimation method uses a simple normalization procedure to convert the Global Horizontal Irradiance (GHI) to power output. For each plant location the hourly GHI is divided by the maximum GHI over the period considered and multiplied by the capacity of the plant. In other words, each plant reaches its maximal capacity only once over the period considered. This procedure is referred to as naïve since it only accounts for the plant capacity. Note that other factors can possibly affect the conversion from solar radiation at ground to power such as the temperature at the site as well as many system configuration including DC/AC ratio or eventual tilt system. This is the method currently implemented.
