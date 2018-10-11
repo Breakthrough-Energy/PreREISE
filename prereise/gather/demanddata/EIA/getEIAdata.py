@@ -9,9 +9,9 @@ from dateutil.parser import parse
 from pandas.tseries.offsets import *
 
 
-def pickDataset(tok, startdate, enddate, offsetdays, serieslist):
+def from_download(tok, startdate, enddate, offsetdays, serieslist):
     '''
-    Assemble dataset of demand data per balancing authority for desired date range.
+    Download and assemble dataset of demand data per balancing authority for desired date range.
     
     Parameters:
     - tok : token obtained by registering with EIA
@@ -42,6 +42,42 @@ def pickDataset(tok, startdate, enddate, offsetdays, serieslist):
 
     return df_all
     
+
+def from_excel(directory, serieslist, startdate, enddate):
+    '''
+    Assemble EIA balancing authority (BA) data from pre-downloaded Excel spreadsheets.
+    The spreadsheets contain data from July 2015 to present.
+    
+    Parameters:
+    - directory : location of Excel files
+    - serieslist : list of BA initials, e.g., ['PSE',BPAT','CISO']
+    - startdate : desired start of dataset
+    - enddate : desired end of dataset 
+
+    Returns:
+    - Dataframe indexed with hourly UTC time and BA series name for column names
+
+    '''
+
+    df={}
+    
+    for x in serieslist:
+        print(x)
+        filename = x + '.xlsx'
+        df[x] = pd.read_excel(io = directory + "/" + filename, header = 0, usecols = 'B,U')
+        df[x].index = pd.to_datetime(df[x]['UTC Time'])
+        df[x] = df[x].resample('H').asfreq()  #To be sure there are no missing times
+        df[x].drop(columns =['UTC Time'], inplace=True)
+        df[x].rename(columns = {"Published D": x}, inplace = True)
+
+    timespan = pd.date_range(startdate, enddate, freq='H')
+    
+    df_all = pd.DataFrame(index = timespan)
+    for x in serieslist:
+        df_all = pd.concat([df_all,df[x]], join='inner', axis=1)
+
+    return df_all
+
 
 '''
 Class EIAgov copied from https://quantcorner.wordpress.com/2014/11/18/downloading-eias-data-with-python/ on 8/13/2018
