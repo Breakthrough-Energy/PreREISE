@@ -72,7 +72,7 @@ def to_reise(data):
     ts = data['ts'].unique()
     plantID = data[data.tsID == 1].plantID.values
 
-    for i in range(1,max(data.tsID)+1):
+    for i in range(1, max(data.tsID)+1):
         data_tmp = pd.DataFrame({'Pout': data[data.tsID == i].Pout.values},
                                 index=plantID)
         if i == 1:
