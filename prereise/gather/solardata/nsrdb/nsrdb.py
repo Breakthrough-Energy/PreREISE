@@ -65,9 +65,9 @@ def retrieve_data(solar_plant, year='2016'):
         data_loc = pd.DataFrame({'Pout': ghi})
         data_loc['Pout'] /= max(ghi)
         data_loc['tsID'] = range(1, len(ghi)+1)
-        data_loc['ts'] =  pd.date_range(start=year,
-                                        end=str(int(year)+1),
-                                        freq='H')[:-1]
+        data_loc['ts'] = pd.date_range(start=year,
+                                       end=str(int(year)+1),
+                                       freq='H')[:-1]
 
         for i in coord[key]:
             data_site = data_loc.copy()
