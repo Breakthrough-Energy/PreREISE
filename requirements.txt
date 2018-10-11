@@ -1,16 +1,19 @@
 ###### Requirements without Version Specifiers ######
 collections
 datetime
+dateutil
 math
-time
 os
+time
 sys
 bokeh
+h5pyd
 matplotlib
+netCDF4
 numpy
 pandas
+pyproj
 pywtk
 requests
-netCDF4
 tqdm
 westernintnet
