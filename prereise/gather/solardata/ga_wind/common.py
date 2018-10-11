@@ -1,18 +1,13 @@
 import numpy as np
 from pyproj import Proj
 
+
 def ll2ij(lon_origin, lat_origin, lon, lat):
-    """
-    Function to find the nearest x/y indices for a given lat/lon using Proj4 projection library
+    """Find nearest x/y indices for a given lat/lon.
 
-    Parameters
-    ----------
-    lat : Latitude of coordinate of interest
-    lon : Longitude of coordinate of interest
-
-    Results
-    -------
-    ij  : (x,y) coordinate in the database of the closest pixel to coordinate of interest
+    :param lat: Latitude of coordinate of interest.
+    :param lon: Longitude of coordinate of interest.
+    :return: coordinate of the closest pixel in the database.
     """
 
     proj_string = """+proj=lcc +lat_1=30 +lat_2=60
@@ -26,6 +21,8 @@ def ll2ij(lon_origin, lat_origin, lon, lat):
     target_xy = proj2grid(lon, lat)
 
     delta = np.subtract(target_xy, origin_xy)
-    ij = [int(round(x/2000)) for x in delta] # 2km grid resolution
+
+    # 2-km grid resolution
+    ij = [int(round(x/2000)) for x in delta]
 
     return tuple(reversed(ij))
