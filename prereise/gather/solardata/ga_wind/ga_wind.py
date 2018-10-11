@@ -9,7 +9,9 @@ from tqdm import tqdm
 from helpers import ll2ij
 
 
-def retrieve_data(solar_plant, start_date='2007-01-01', end_date='2014-01-01'):
+def retrieve_data(solar_plant, hs_api_key,
+                  start_date='2007-01-01',
+                  end_date='2014-01-01'):
     """Retrieve irradiance data from Gridded Atmospheric Wind Integration
     National Dataset.
 
@@ -38,7 +40,6 @@ def retrieve_data(solar_plant, start_date='2007-01-01', end_date='2014-01-01'):
     hs_endpoint = 'https://developer.nrel.gov/api/hsds/'
     hs_username = None
     hs_password = None
-    hs_api_key = '3K3JQbjZmWctY0xmIfSYvYgtIcM3CN0cb1Y2w9bf'
 
     f = h5pyd.File("/nrel/wtk-us.h5", 'r',
                    username=hs_username,

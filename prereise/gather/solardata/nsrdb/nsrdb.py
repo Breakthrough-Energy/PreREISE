@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def retrieve_data(solar_plant, year='2016'):
+def retrieve_data(solar_plant, email, api_key, year='2016'):
     """Retrieve irradiance data from NSRDB.
 
     :param wind_farm: pandas DataFrame of wind farms.
@@ -30,16 +30,10 @@ def retrieve_data(solar_plant, year='2016'):
                                solar_plant.GenMWMax.values[i]))
 
     # Build query
-    api_key = '0neC1BX0VMIGFJWIXYA7Y9ZCjbmHeceLHjWiPjdf'
     attributes = 'ghi'
     leap_day = 'true'
     interval = '60'
     utc = 'true'
-    name = 'Benjamin+Rouille+d+Orfeuil'
-    reason = 'Renewable+Energy+Studies'
-    affiliation = 'Intellectual+Ventures'
-    email = 'brdo@intven.com'
-    list = 'false'
 
     # URL
     url = 'http://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?'
@@ -49,12 +43,12 @@ def retrieve_data(solar_plant, year='2016'):
         'leap_day={leap}'.format(leap=leap_day) + '&' + \
         'interval={interval}'.format(interval=interval) + '&' + \
         'utc={utc}'.format(utc=utc) + '&' + \
-        'full_name={name}'.format(name=name) + '&' + \
         'email={email}'.format(email=email) + '&' + \
-        'affiliation={affiliation}'.format(affiliation=affiliation) + '&' + \
-        'mailing_list={mailing_list}'.format(mailing_list=list) + '&' + \
-        'reason={reason}'.format(reason=reason) + '&' + \
         'attributes={attr}'.format(attr=attributes)
+        #'full_name={name}'.format(name=name) + '&' + \
+        #'affiliation={affiliation}'.format(affiliation=affiliation) + '&' + \
+        #'mailing_list={mailing_list}'.format(mailing_list=list) + '&' + \
+        #'reason={reason}'.format(reason=reason) + '&' + \
 
     data = pd.DataFrame({'Pout': [], 'plantID': [], 'ts': [], 'tsID': []})
 
