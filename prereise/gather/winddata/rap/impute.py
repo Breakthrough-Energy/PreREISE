@@ -25,6 +25,9 @@ def simple(data, wind_farm, inplace=True):
 
     # Locate missing data
     to_impute = data[data.U.isna()].index
+    if len(to_impute) == 0:
+        print("No missing data")
+        return
 
     # Timestamp of all entries in dataframe
     dates = pd.DatetimeIndex(data.index.values)
