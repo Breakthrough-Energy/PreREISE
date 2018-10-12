@@ -15,7 +15,7 @@ def retrieve_data(solar_plant, hs_api_key,
     """Retrieve irradiance data from Gridded Atmospheric Wind Integration
     National Dataset.
 
-    :param wind_farm: pandas DataFrame of wind farms.
+    :param solar_plant: pandas DataFrame of wind farms.
     :param year: year.
     :return: pandas DataFrame with the columns: plant ID, timestamp ID and
     power output (MW).
