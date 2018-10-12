@@ -25,3 +25,7 @@ def test():
     [power, wind_speed] = te_wind.dict_to_DataFrame(
         data, data_range, closest_NREL_siteID
     )
+    wind_farm_power_series_hourly = te_wind.scale_power_to_plant_capacity(
+        power, wind_farm_bus, closest_NREL_siteID
+        )
+    print('Test Done')
