@@ -8,7 +8,7 @@ from tqdm import tqdm
 def retrieve_data(solar_plant, email, api_key, year='2016'):
     """Retrieve irradiance data from NSRDB.
 
-    :param wind_farm: pandas DataFrame of wind farms.
+    :param solar_plant: pandas DataFrame of wind farms.
     :param year: year.
     :return: pandas DataFrame with the columns: plant ID, timestamp ID and
     power output (MW).
