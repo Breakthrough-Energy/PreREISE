@@ -2,19 +2,20 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from helpers import get_power
+from .helpers import get_power
 
 
 def simple(data, wind_farm, inplace=True):
-    """Impute missing data using a simple procedure. For each missing entry, \
-    the extrema of the U and V components of the wind speed of all non \
-    missing entries that have the same location, same month, same hour are \
-    first found for each missing entry. Then, a U and V value are randomly \
+    """Impute missing data using a simple procedure. For each missing entry, \ 
+    the extrema of the U and V components of the wind speed of all non \ 
+    missing entries that have the same location, same month, same hour are \ 
+    first found for each missing entry. Then, a U and V value are randomly \ 
     generated between the respective derived ranges.
 
-    :param data: pandas DataFrame as returned by :py:func:`rap.retrieve_data`.
+    :param data: pandas DataFrame as returned \ 
+    by :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
     :param wind_farm: pandas DataFrame of wind farms.
-    :param bool inplace: should the imputation be done in place
+    :param inplace: should the imputation be done in place
     :return: pandas DataFrame with missing entries imputed.
     """
 

@@ -10,7 +10,7 @@ import requests
 from netCDF4 import Dataset
 from tqdm import tqdm
 
-from helpers import angular_distance, get_power, ll2uv
+from .helpers import angular_distance, get_power, ll2uv
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
@@ -19,9 +19,9 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
     :param wind_farm: pandas DataFrame of wind farms.
     :param start_date: start date.
     :param end_date: end date (inclusive).
-    :return: pandas DataFrame with the columns: plant ID, U-component of the \
-    wind speed (m/s) 80-m above ground, V-component of wind speed (m/s) 80-m \
-    above ground, power output (MW), UTC timestamp and timestamp ID. Also \
+    :return: pandas DataFrame with the columns: plant ID, U-component of the \ 
+    wind speed (m/s) 80-m above ground, V-component of wind speed (m/s) 80-m \ 
+    above ground, power output (MW), UTC timestamp and timestamp ID. Also \ 
     returns a list of missing files.
     """
 

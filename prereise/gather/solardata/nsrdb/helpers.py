@@ -4,8 +4,8 @@ import pandas as pd
 def to_reise(data):
     """Format data for REISE.
 
-    :param data: pandas DataFrame as returned by
-    py:method:`nsrdb.retrieve_data`.
+    :param data: pandas DataFrame as returned \ 
+    by :py:func:`prereise.gather.solardata.nsrdb.nsrdb.retrieve_data`.
     :return: pandas DataFrame formated for REISE.
     """
     ts = data['ts'].unique()

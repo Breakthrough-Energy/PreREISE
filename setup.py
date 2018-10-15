@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='prereise',
       version='0.1',
@@ -6,6 +6,6 @@ setup(name='prereise',
       url='https://github.com/intvenlab/PreREISE',
       author='Kaspar Mueller',
       author_email='kmueller@intven.com',
-      packages=setuptools.find_packages(),
+      packages=find_packages(),
       package_data={'prereise':['add_path.m']},
       zip_safe=False)

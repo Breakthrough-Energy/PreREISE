@@ -6,18 +6,18 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from helpers import ll2ij
+from .helpers import ll2ij
 
 
 def retrieve_data(solar_plant, hs_api_key,
                   start_date='2007-01-01',
                   end_date='2014-01-01'):
-    """Retrieve irradiance data from Gridded Atmospheric Wind Integration
+    """Retrieve irradiance data from Gridded Atmospheric Wind Integration \ 
     National Dataset.
 
-    :param solar_plant: pandas DataFrame of wind farms.
+    :param solar_plant: pandas DataFrame of solar plants.
     :param year: year.
-    :return: pandas DataFrame with the columns: plant ID, timestamp ID and
+    :return: pandas DataFrame with the columns: plant ID, timestamp ID and \ 
     power output (MW).
     """
 
