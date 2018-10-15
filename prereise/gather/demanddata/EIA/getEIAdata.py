@@ -6,7 +6,7 @@ from urllib.request import urlopen
 import numpy as np
 import pandas as pd
 from dateutil.parser import parse
-from pandas.tseries.offsets import *
+from pandas.tseries.offsets import DateOffset 
 
 
 def from_download(tok, startdate, enddate, offsetdays, serieslist):
@@ -14,21 +14,22 @@ def from_download(tok, startdate, enddate, offsetdays, serieslist):
     Download and assemble dataset of demand data per balancing authority
     for desired date range.
 
-    : param tok : token obtained by registering with EIA
-    : param start : start date
-    : param end : end data
-    : param serieslist : list of demand series names provided by EIA
-    : param offsetdays : number of business days for data to stabilize
-    : return : return Dataframe indexed with hourly UTC time and BA series
+    :param string tok: token obtained by registering with EIA
+    :param timestamp start: start date
+    :param timestamp end: end data
+    :param list serieslist: list of demand series names provided by EIA,
+    e.g., ['EBA.AVA-ALL.D.H', 'EBA.AZPS-ALL.D.H']
+    :param int offsetdays: number of business days for data to stabilize
+    :return: return Dataframe indexed with hourly UTC time and BA series
     name for column names
 
     '''
     df = {}
 
-    for x in [[i] for i in serieslist]:
-        BA = x[0]
+    for x in serieslist:
+        BA = x
         print('Downloading', BA)
-        d = EIAgov(tok, x)
+        d = EIAgov(tok, [x])
         df[BA] = d.GetData()
         df[BA].index = pd.to_datetime(df[BA]['Date'])
         df[BA].drop(columns=['Date'], inplace=True)
@@ -50,11 +51,11 @@ def from_excel(directory, serieslist, startdate, enddate):
     Excel spreadsheets. The spreadsheets contain data from July 2015
     to present.
 
-    : param string directory : location of Excel files
-    : param list serieslist : list of BA initials, e.g., ['PSE',BPAT','CISO']
-    : param timestamp startdate : desired start of dataset
-    : param timestamp enddate : desired end of dataset
-    : return : return Dataframe indexed with hourly UTC time and
+    :param string directory: location of Excel files
+    :param list serieslist: list of BA initials, e.g., ['PSE',BPAT','CISO']
+    :param timestamp startdate: desired start of dataset
+    :param timestamp enddate: desired end of dataset
+    :return: return Dataframe indexed with hourly UTC time and
                BA series name for column names
 
     '''
@@ -95,8 +96,11 @@ class EIAgov(object):
         - EIA token
         - id code(s) of the series to be downloaded
 
-        : param token: string
-        : param series: string or list of strings
+        :param string token: string
+        :param list series: string or list of strings
+        :raises kerError: when URL or file are not found
+
+
         '''
         self.token = token
         self.series = series
