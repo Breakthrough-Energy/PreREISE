@@ -33,7 +33,7 @@ def to_reise(data):
     """Format data for REISE.
 
     :param data: pandas DataFrame as returned \ 
-    by :py:func:`prereise.gather.solardata.ga_wind.ga_wind.retrieve_data`.
+        by :py:func:`prereise.gather.solardata.ga_wind.ga_wind.retrieve_data`.
     :return: pandas DataFrame formated for REISE.
     """
     ts = data['ts'].unique()

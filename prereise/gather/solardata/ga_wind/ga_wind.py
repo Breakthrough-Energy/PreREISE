@@ -13,12 +13,12 @@ def retrieve_data(solar_plant, hs_api_key,
                   start_date='2007-01-01',
                   end_date='2014-01-01'):
     """Retrieve irradiance data from Gridded Atmospheric Wind Integration \ 
-    National Dataset.
+        National Dataset.
 
     :param solar_plant: pandas DataFrame of solar plants.
     :param year: year.
     :return: pandas DataFrame with the columns: plant ID, timestamp ID and \ 
-    power output (MW).
+        power output (MW).
     """
 
     # Information on solar plants

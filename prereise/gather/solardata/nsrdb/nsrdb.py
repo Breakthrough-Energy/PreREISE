@@ -11,7 +11,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
     :param solar_plant: pandas DataFrame of solar plants.
     :param year: year.
     :return: pandas DataFrame with the columns: plant ID, timestamp ID and \ 
-    power output (MW).
+        power output (MW).
     """
 
     # Information on solar plants

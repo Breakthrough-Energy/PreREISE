@@ -12,7 +12,7 @@ def ll2uv(lon, lat):
     """Convert (longitude, latitude) to unit vector.
 
     :param lon: longitude of the site (in deg.) measured eastward from \ 
-    Greenwich, UK.
+        Greenwich, UK.
     :param lat: latitude of the site (in deg.). Equator is the zero point.
     :return: 3-components (x,y,z) unit vector.
     """
@@ -67,7 +67,7 @@ def to_reise(data):
     """Format data for REISE.
 
     :param data: pandas DataFrame as returned \ 
-    by :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
+        by :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
     :return: pandas DataFrame formated for REISE.
     """
     ts = data['ts'].unique()

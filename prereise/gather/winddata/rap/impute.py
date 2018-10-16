@@ -7,13 +7,13 @@ from .helpers import get_power
 
 def simple(data, wind_farm, inplace=True):
     """Impute missing data using a simple procedure. For each missing entry, \ 
-    the extrema of the U and V components of the wind speed of all non \ 
-    missing entries that have the same location, same month, same hour are \ 
-    first found for each missing entry. Then, a U and V value are randomly \ 
-    generated between the respective derived ranges.
+        the extrema of the U and V components of the wind speed of all non \ 
+        missing entries that have the same location, same month, same hour \ 
+        are first found for each missing entry. Then, a U and V value are 
+        randomly generated between the respective derived ranges.
 
     :param data: pandas DataFrame as returned \ 
-    by :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
+        by :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
     :param wind_farm: pandas DataFrame of wind farms.
     :param inplace: should the imputation be done in place
     :return: pandas DataFrame with missing entries imputed.

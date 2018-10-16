@@ -27,7 +27,7 @@ def get_all_NREL_siteID_for_states(states_list):
 
     :param states_list: list object containing state abbreviation.
     :return: Pandas DataFrame with columns ['site_id', 'lat', 'lon', \ 
-    'capacity', 'capacity_factor']
+        'capacity', 'capacity_factor']
     """
     nrel_sites = None
 
