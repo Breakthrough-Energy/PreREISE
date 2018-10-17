@@ -56,7 +56,7 @@ Download Matpower and add the following directories to the `add_path.m`:
 In the folder with the setup.py file type:
 `pip3 install .`
 
-# Collecting Demand Data
+## Collecting Demand Data
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted their data.
 The data can be obtained either by direct download from their database or
 by download of Excel spreadsheets. The direct download currently contains only published 
@@ -74,3 +74,9 @@ import getEIAdata
 The notebook https://github.com/intvenlab/PreREISE/blob/mlh/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb 
 illustrates usage.
 
+## Outputting Demand Profile
+The notebook https://github.com/intvenlab/PreREISE/blob/mlh/prereise/gather/demanddata/EIA/demo/OutputDemandProfiles.ipynb 
+describes the steps done to convert the raw demand data into the input profile data. Cleaning steps included
+1) missing data imputation - the EIA method was used, i.e., EIA published data was used; beyond this, NA's were converted to float zeros
+2) missing hours were added 
+3) the BA counts were distributed across each region where the BA operates, using the region populations as weights.
