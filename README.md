@@ -19,6 +19,7 @@ The convention is that we use the scenario name as the output folder name.
 Make sure your simulation m-file has the same name as the unique scenario name.
 
 ## Start the simulation.
+Simulation can only be launched on server. 
 After setting up the scenario, the simulation engine can be called.
 You launch the simulation the following way:
 ```python
@@ -26,6 +27,14 @@ import prereise
 
 prereise.launch_scenario_performance('scenario_name')
 ```
+### Test
+To test run:
+```python
+from prereise.call.test import test_call
+
+test_call.test()
+```
+
 ## Setup/Install
 This package requires Matlab, Gurobi, and Matpower. Make sure to put the paths
 from Gurobi and Matpower into the `add_path.m` file.
