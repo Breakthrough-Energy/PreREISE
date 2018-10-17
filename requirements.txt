@@ -7,13 +7,17 @@ os
 time
 sys
 bokeh
+h5py
 h5pyd
+matlab.engine
 matplotlib
+multiprocessing
 netCDF4
 numpy
 pandas >= 0.23.0
 pyproj
 pywtk
 requests
+timeit
 tqdm
-westernintnet
+westernintnet.westernintnet
