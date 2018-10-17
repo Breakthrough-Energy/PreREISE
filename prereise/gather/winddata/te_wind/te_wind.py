@@ -1,4 +1,3 @@
-
 import math
 import sys
 
@@ -26,7 +25,7 @@ def get_all_NREL_siteID_for_states(states_list):
     """Retrieve ID's of wind farms in given states.
 
     :param states_list: list object containing state abbreviation.
-    :return: Pandas DataFrame with columns ['site_id', 'lat', 'lon', \ 
+    :return: pandas DataFrame with columns ['site_id', 'lat', 'lon', \ 
         'capacity', 'capacity_factor']
     """
     nrel_sites = None
@@ -63,13 +62,13 @@ def get_all_NREL_siteID_for_states(states_list):
 def find_NREL_siteID_closest_to_windfarm(nrel_sites, wind_farm_bus):
     """Find NREL site closest to wind farm.
 
-    :param nrel_sites: Pandas DataFrame that needs the columns \ 
+    :param nrel_sites: pandas DataFrame that needs the columns \ 
         ['site_id', 'lat', 'lon','capacity'] as returned by \ 
         :py:func:`get_all_NREL_siteID_for_states`.
-    :param wind_farm_bus: Pandas DataFrame with the following structure: \ 
+    :param wind_farm_bus: pandas DataFrame with the following structure: \ 
         ['plantID'(index), 'lat', 'lon']. The order of the columns \ 
         plantID(index), lat and lon is important.
-    :return: Pandas Series with plantID as index, siteID and capacity as value.
+    :return: pandas Series with plantID as index, siteID and capacity as value.
     """
     closest_NREL_siteID = pd.DataFrame(index=wind_farm_bus.index,
                                        columns=['siteID', 'capacity', 'dist'])
@@ -98,10 +97,10 @@ def find_NREL_siteID_closest_to_windfarm(nrel_sites, wind_farm_bus):
 def get_data_from_NREL_server(siteIDs, data_range):
     """Get power and wind speed data from NREL server.
 
-    :param siteIDs: Pandas DataFrame with siteIDs and capacity as values, \ 
+    :param siteIDs: pandas DataFrame with siteIDs and capacity as values, \ 
         as returned by :py:func:`find_NREL_siteID_closest_to_windfarm`
-    :param data_range: Pandas data_range, freq needs to be 5min.
-    :return: 2D dict containing Pandas DataFrame with index date \ 
+    :param data_range: pandas data_range, freq needs to be 5min.
+    :return: 2D dict containing pandas DataFrame with index date \ 
         and columns power and wind_speed. \ 
         The data is normalized using the capacity. \ 
         The 1. key is the month like '2010-10' \ 
@@ -153,13 +152,13 @@ def dict_to_DataFrame(data, data_range, closest_NREL_siteID):
     """Converts the dict into two DataFrames. One for power and one for wind
     speed.
 
-    :param data: 2D dict containing Pandas DataFrame with index date \ 
+    :param data: 2D dict containing pandas DataFrame with index date \ 
         and columns power and wind_speed. The 1. key is the month like \ 
         '2010-10'. The 2. key is the siteID like 121409. \ 
         The dict structure is as returend by \ 
         :py:func:`get_data_from_NREL_server`.
-    :param data_range: Pandas data_range of the data.
-    :param closest_NREL_siteID: Pandas Series with plantID as index, \ 
+    :param data_range: pandas data_range of the data.
+    :param closest_NREL_siteID: pandas Series with plantID as index, \ 
         siteID and capacity as value. The structure is as returned by \ 
         :py:func:`find_NREL_siteID_closest_to_windfarm`.
     :return: Two DataFrames, one for power and one for wind speed. Index is \ 
@@ -188,13 +187,13 @@ def scale_power_to_plant_capacity(NREL_power,
                                   closest_NREL_siteID):
     """ Scales power to plant capacity
 
-    :param NREL_power: Pandas DataFrame index data_range and columns siteID. \ 
+    :param NREL_power: pandas DataFrame index data_range and columns siteID. \ 
         The structure the same as the one of the first variable returned by \ 
         :py:func:`dict_to_DataFrame`.
-    :param wind_farm_bus: Pandas DataFrame containing plantID and GenMWMax. \ 
-    :param closest_NREL_siteID: Pandas DataFrame containing siteID as \ 
+    :param wind_farm_bus: pandas DataFrame containing plantID and GenMWMax. \ 
+    :param closest_NREL_siteID: pandas DataFrame containing siteID as \ 
         as returned by :py:func`find_NREL_siteID_closest_to_windfarm`. \ 
-    :return: Pandas DataFrame with data_range as well as plantID containing \ 
+    :return: pandas DataFrame with data_range as well as plantID containing \ 
         the power.
     """
     wind_farm_power = pd.DataFrame(index=NREL_power.index,

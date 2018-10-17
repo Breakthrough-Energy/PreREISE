@@ -16,13 +16,13 @@ from .helpers import angular_distance, get_power, ll2uv
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
     """Retrieve wind speed data from NOAA's server.
 
-    :param wind_farm: pandas DataFrame of wind farms.
+    :param wind_farm: pandas DataFrame with the following structure: \ 
+        ['plantID'(index), 'lat', 'lon', 'GenMWMax'].
     :param start_date: start date.
     :param end_date: end date (inclusive).
-    :return: pandas DataFrame with the columns: plant ID, U-component of the \ 
-        wind speed (m/s) 80-m above ground, V-component of wind speed (m/s) \ 
-        80-m above ground, power output (MW), UTC timestamp and timestamp \ 
-        ID. Also returns a list of missing files.
+    :return: pandas DataFrame with the following structure: ['PlantID', 'U', \ 
+        'V', 'Pout', 'ts', 'tsID']. The power output is in MW and the U and \ 
+        V component of the wind speed 80-m above ground level are in m/s.
     """
 
     # Information on wind farms
