@@ -17,6 +17,7 @@ def launch_scenario_performance(scenario_name, n_pcalls=1):
     This function launches the scenario.
     The scenario is launched in parallel if n_pcalls > 1.
     The function calls scenario_matlab_call in n_pcalls parallel calls.
+    
     :param scenario_name: name of the scenario.
     :param n_pcalls: Number of parallel runs.
     """
@@ -63,6 +64,7 @@ def scenario_matlab_call(scenario, i_start, i_end):
     related to the scenario. The function starts a MATLAB engine,
     runs the add_path file to load MATPOWER and GUROBI.
     It loads the data path and runs the scenario.
+    
     :param scenario: The scenario pandas data frame to be launched.
     :param i_start: Start index.
     :param i_end: End index.
