@@ -76,7 +76,8 @@ illustrates usage.
 
 ## Outputting Demand Profile
 The notebook https://github.com/intvenlab/PreREISE/blob/mlh/prereise/gather/demanddata/EIA/demo/OutputDemandProfiles.ipynb 
-describes the steps done to convert the raw demand data into the input profile data. Cleaning steps included
+shows the steps done to convert the raw demand data into the input demand profile data. Cleaning steps included
 1) missing data imputation - the EIA method was used, i.e., EIA published data was used; beyond this, NA's were converted to float zeros
 2) missing hours were added 
-3) the BA counts were distributed across each region where the BA operates, using the region populations as weights.
+3) the BA counts were distributed across each region where the BA operates, using the region populations as weights. For example, if a BA operates in both WA and OR, the counts for WA are weighted by the fraction of the total counts in WA relative to the total population of WA and OR.
+The demand profile is finally converted to Matlab input using Matlab. Another copy with headers is saved in L:\Renewable Energy\EnergyGridModeling\Data\Western\demand_data\processed.
