@@ -29,6 +29,6 @@ def test_EIAdownload():
                   ]
     this = getEIAdata.from_download(token, start, end, offset, demand_list)
     
-    assert len(this.columns) == (len(demand_list) +1)
+    assert len(this.columns) == (len(demand_list))
 
 
