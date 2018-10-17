@@ -68,8 +68,13 @@ foreign connected balancing authorities).
 Module getEIAdata contains functions that converts the data into pandas dataframes for
 further processing.
 
-To use, include
+To use, 
+```python
 import getEIAdata
+...
+data = getEIAdata.from_excel(dir, BA_list, startdate, enddate)
+
+```
 
 The notebook https://github.com/intvenlab/PreREISE/blob/mlh/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb 
 illustrates usage.
