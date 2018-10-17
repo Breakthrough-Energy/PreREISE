@@ -1,7 +1,6 @@
 import unittest
 
-import sys
-sys.path.append("..")
-import call
+from ..call import launch_scenario_performance
 
-call.launch_scenario_performance('texas_scenario')
+
+launch_scenario_performance('texas_scenario')
