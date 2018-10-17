@@ -9,7 +9,7 @@ sys
 bokeh
 h5py
 h5pyd
-matlab.engine
+matlab
 matplotlib
 multiprocessing
 netCDF4
@@ -20,4 +20,4 @@ pywtk
 requests
 timeit
 tqdm
-westernintnet.westernintnet
+westernintnet
