@@ -61,7 +61,16 @@ Demand data are obtained from EIA, to whom Balancing Authorities have submitted 
 The data can be obtained either by direct download from their database or
 by download of Excel spreadsheets. The direct download currently contains only published 
 demand data. The Excel spreadsheets include original and imputed demand data, as well as
-results of various data quality checks done by EIA.
+results of various data quality checks done by EIA. Documentation about the datasets are in https://github.com/intvenlab/PreREISE/blob/mlh/doc/EIA-930_userguide-knownissues.pdf. 
+Excel spreadsheets can be downloaded by clicking on the links in page 9 (Table of all US and
+foreign connected balancing authorities).
 
-Package getEIAdata contains functions that converts the data into pandas dataframes for
+Module getEIAdata contains functions that converts the data into pandas dataframes for
 further processing.
+
+To use, include
+import getEIAdata
+
+The notebook https://github.com/intvenlab/PreREISE/blob/mlh/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb 
+illustrates usage.
+
