@@ -22,12 +22,20 @@ Make sure your simulation m-file has the same name as the unique scenario name.
 
 
 ## 2. Call (Start the simulation)
+Simulation can only be launched on server.
 After setting up the scenario, the simulation engine can be called.
 You launch the simulation the following way:
 ```python
 import prereise
 
 prereise.launch_scenario_performance('scenario_name')
+```
+### Test
+To test run:
+```python
+from prereise.call.test import test_call
+
+test_call.test()
 ```
 
 ### A. Setup/Install
@@ -77,7 +85,7 @@ This module allows you to gather data for the simulation.
 [RAP](https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap) (Rapid Refresh) is the continental-scale NOAA hourly-updated assimilation/modeling system operational at the National Centers for Environmental Prediction (NCEP). RAP covers North America and is comprised primarily of a numerical weather model and an analysis system to initialize that model. RAP provides, every hour ranging from May 2012 to date, the U and V components of the wind speed at 80 meter above ground on a 13x13 square kilometer resolution grid every hour. Data can be retrieved using the NetCDF Subset Service. Information on this interface is described [here](https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html).
 
 Usage in general:
-```
+```python
 from prereise.gather.winddata import rap
 
 rap.retrieve_data(wind_farm)
@@ -93,13 +101,13 @@ Check out the demo jupyter notebook in
 `prereise/gather/winddata/te_wind/demo/`
 
 Usage in general:
-```
+```python
 from prereise.gather.winddata.te_wind import te_wind
 
 te_wind.get_all_NREL_siteID_for_states(['WA','CA'])
 ```
 To run a test:
-```
+```python
 from prereise.gather.winddata.te_wind.test import te_wind_test
 te_wind_test.test()
 ```

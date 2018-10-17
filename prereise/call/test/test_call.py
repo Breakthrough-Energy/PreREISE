@@ -1,6 +1,10 @@
+import os
+import sys
 import unittest
+
 
 from ..call import launch_scenario_performance
 
 
-launch_scenario_performance('texas_scenario')
+def test():
+    call.launch_scenario_performance('western_scenarioUnitTest02', 16)
