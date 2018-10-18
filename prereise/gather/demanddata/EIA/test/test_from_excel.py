@@ -1,6 +1,3 @@
-# This test passes using 'python -m pytest' AND separated from the rest of the prereise package.
-# If tested with prereise package, the pytest keeps finding the matlab call error from call.py, then ends.
-
 import pytest
 
 import json
@@ -10,11 +7,8 @@ from urllib.error import URLError, HTTPError
 from urllib.request import urlopen
 
 from datetime import datetime, timedelta
+from .. import getEIAdata
 
-import sys
-sys.path.append("..")
-
-import getEIAdata
 
 def test_from_excel():
     dir1 = 'L:\\Renewable Energy\\EnergyGridModeling\\Data\\Western\\demand_data\\raw\\WECC_demand_2015-2018'
