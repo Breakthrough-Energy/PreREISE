@@ -98,7 +98,6 @@ class EIAgov(object):
 
         :param string token: string
         :param list series: string or list of strings
-        :raises kerError: when URL or file are not found
 
 
         '''
@@ -106,6 +105,15 @@ class EIAgov(object):
         self.series = series
 
     def Raw(self, ser):
+        '''
+        Download json files from EIA
+
+        :param list ser: list of filenames
+        :raises keyError: when URL or file are not found or
+        are not valid
+
+        '''
+
         url = ('http://api.eia.gov/series/?api_key='
                + self.token + '&series_id=' + ser.upper())
 
@@ -125,6 +133,10 @@ class EIAgov(object):
             print('Reason: ', e.reason)
 
     def GetData(self):
+        '''
+        Convert json files into pandas Dataframe
+        
+        '''
         date_ = self.Raw(self.series[0])
         date_series = date_['series'][0]['data']
         endi = len(date_series)
