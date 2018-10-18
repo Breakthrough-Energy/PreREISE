@@ -10,20 +10,18 @@ from pandas.tseries.offsets import DateOffset
 
 
 def from_download(tok, startdate, enddate, offsetdays, serieslist):
-    '''
-    Download and assemble dataset of demand data per balancing authority
-    for desired date range.
+    """Downloads and assemble dataset of demand data per balancing authority \ 
+        for desired date range.
 
-    :param string tok: token obtained by registering with EIA
-    :param timestamp start: start date
-    :param timestamp end: end data
-    :param list serieslist: list of demand series names provided by EIA,
-    e.g., ['EBA.AVA-ALL.D.H', 'EBA.AZPS-ALL.D.H']
-    :param int offsetdays: number of business days for data to stabilize
-    :return: return Dataframe indexed with hourly UTC time and BA series
-    name for column names
-
-    '''
+    :param string tok: token obtained by registering with EIA.
+    :param timestamp start: start date.
+    :param timestamp end: end data.
+    :param list serieslist: list of demand series names provided by EIA, \ 
+        e.g., ['EBA.AVA-ALL.D.H', 'EBA.AZPS-ALL.D.H'].
+    :param int offsetdays: number of business days for data to stabilize.
+    :return: data frame indexed with hourly UTC time and BA series \ 
+        name for column names.
+    """
     df = {}
 
     for x in serieslist:
@@ -46,19 +44,16 @@ def from_download(tok, startdate, enddate, offsetdays, serieslist):
 
 
 def from_excel(directory, serieslist, startdate, enddate):
-    '''
-    Assemble EIA balancing authority (BA) data from pre-downloaded
-    Excel spreadsheets. The spreadsheets contain data from July 2015
-    to present.
+    """Assembles EIA balancing authority (BA) data from pre-downloaded Excel \ 
+        spreadsheets. The spreadsheets contain data from July 2015 to present.
 
-    :param string directory: location of Excel files
-    :param list serieslist: list of BA initials, e.g., ['PSE',BPAT','CISO']
-    :param timestamp startdate: desired start of dataset
-    :param timestamp enddate: desired end of dataset
-    :return: return Dataframe indexed with hourly UTC time and
-               BA series name for column names
-
-    '''
+    :param string directory: location of Excel files.
+    :param list serieslist: list of BA initials, e.g., ['PSE',BPAT','CISO'].
+    :param timestamp startdate: desired start of dataset.
+    :param timestamp enddate: desired end of dataset.
+    :return: data frame indexed with hourly UTC time and BA series \ 
+        name for column names.
+    """
 
     df = {}
 
@@ -81,38 +76,24 @@ def from_excel(directory, serieslist, startdate, enddate):
     return df_all
 
 
-'''
-Class EIAgov copied from
-https://quantcorner.wordpress.com/2014/11/18/downloading-eias-data-with-python/
-on 8/13/2018
-'''
-
-
 class EIAgov(object):
     def __init__(self, token, series):
-        '''
-        Purpose:
-        Initialise the EIAgov class by requesting:
-        - EIA token
-        - id code(s) of the series to be downloaded
+        """Initialises the EIAgov class. Copied from \ 
+        `https://quantcorner.wordpress.com/2014/11/18/downloading-eias-data-with-python/` 
 
-        :param string token: string
-        :param list series: string or list of strings
-
-
-        '''
+        :param string token: EIA token
+        :param list series: id code(s) of the series to be downloaded
+        """
+        
         self.token = token
         self.series = series
 
     def Raw(self, ser):
-        '''
-        Download json files from EIA
+        """Downloads json files from EIA.
 
-        :param list ser: list of filenames
-        :raises keyError: when URL or file are not found or
-        are not valid
-
-        '''
+        :param list ser: list of filenames.
+        :raises keyError: when URL or file are either not found or not valid.
+        """
 
         url = ('http://api.eia.gov/series/?api_key='
                + self.token + '&series_id=' + ser.upper())
@@ -133,10 +114,9 @@ class EIAgov(object):
             print('Reason: ', e.reason)
 
     def GetData(self):
-        '''
-        Convert json files into pandas Dataframe
+        """Convert json files into pandas DataFrame
+        """
         
-        '''
         date_ = self.Raw(self.series[0])
         date_series = date_['series'][0]['data']
         endi = len(date_series)
