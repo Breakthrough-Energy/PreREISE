@@ -1,6 +1,3 @@
-# This test passes using 'python -m pytest' AND separated from the rest of the prereise package.
-# If tested with the prereise package, the pytest keeps finding the matlab call error from call.py, then ends.
-
 import pytest
 
 import json
@@ -11,10 +8,7 @@ from urllib.request import urlopen
 
 from datetime import datetime
 
-import sys
-sys.path.append("..")
-
-import getEIAdata
+from .. import getEIAdata
 
 
 
