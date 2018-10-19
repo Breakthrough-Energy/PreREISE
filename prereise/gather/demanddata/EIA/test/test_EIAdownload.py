@@ -13,6 +13,15 @@ from .. import getEIAdata
 
 
 def test_EIAdownload():
+
+    '''
+    Check pandas DataFrame assembled from data download \ 
+    by API call from EIA. Test checks that the correct \ 
+    number of files are downloaded and correct number of \ 
+    columns are created.
+    
+    '''
+
     token = '6d666bb7097e41102ef69a35aa1edb2b'
     offset = 3    
     start = pd.to_datetime('2018-07-01 07:00:00')
