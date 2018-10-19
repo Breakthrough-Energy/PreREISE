@@ -11,7 +11,14 @@ from .. import getEIAdata
 
 
 def test_from_excel():
-    dir1 = 'L:\\Renewable Energy\\EnergyGridModeling\\Data\\Western\\demand_data\\raw\\WECC_demand_2015-2018'
+    '''
+    Test pandas DataFrame assembled from Excel spreadsheets \ 
+    manually downloaded from EIA.  Test checks that correct \ 
+    number of columns are created.
+
+    '''
+
+    dir1 = './'
 
     start = pd.to_datetime('2018-07-01 07:00:00')
     end = pd.to_datetime('2018-10-01 07:00:00')

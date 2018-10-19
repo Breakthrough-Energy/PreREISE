@@ -19,10 +19,13 @@ def test_EIAdownload():
     by API call from EIA. Test checks that the correct \ 
     number of files are downloaded and correct number of \ 
     columns are created.
+
+    Token string can be obtained by registering in 
+    https://www.eia.gov/opendata/
     
     '''
 
-    token = '6d666bb7097e41102ef69a35aa1edb2b'
+    token = 'token string assigned by EIA'
     offset = 3    
     start = pd.to_datetime('2018-07-01 07:00:00')
     end = datetime.today()
