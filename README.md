@@ -58,8 +58,11 @@ In the folder with the setup.py file type:
 
 ## Collecting Demand Data
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted their data.
-The data can be obtained either by direct download from their database or
-by download of Excel spreadsheets. The direct download currently contains only published 
+The data can be obtained either by direct download from their database using an API or
+by download of Excel spreadsheets. A token is required for the API download and this token
+can be obtained by a user by registering at https://www.eia.gov/opendata/.
+
+The direct download currently contains only published 
 demand data. The Excel spreadsheets include original and imputed demand data, as well as
 results of various data quality checks done by EIA. Documentation about the datasets are in https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf.
 Excel spreadsheets can be downloaded by clicking on the links in page 9 (Table of all US and
