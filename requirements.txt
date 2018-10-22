@@ -21,3 +21,4 @@ requests
 timeit
 tqdm
 westernintnet
+xlrd
