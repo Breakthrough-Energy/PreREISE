@@ -1,1 +1,1 @@
-__all__ = ["getEIAdata"]
+__all__ = ["get_eia_data"]
