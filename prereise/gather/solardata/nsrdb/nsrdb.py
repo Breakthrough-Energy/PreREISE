@@ -46,10 +46,6 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
         'utc={utc}'.format(utc=utc) + '&' + \
         'email={email}'.format(email=email) + '&' + \
         'attributes={attr}'.format(attr=attributes)
-        #'full_name={name}'.format(name=name) + '&' + \
-        #'affiliation={affiliation}'.format(affiliation=affiliation) + '&' + \
-        #'mailing_list={mailing_list}'.format(mailing_list=list) + '&' + \
-        #'reason={reason}'.format(reason=reason) + '&' + \
 
     data = pd.DataFrame({'Pout': [], 'plantID': [], 'ts': [], 'tsID': []})
 
