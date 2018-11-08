@@ -6,8 +6,6 @@ import pandas as pd
 from py3samsdk import PySSC
 from tqdm import tqdm
 
-ssc_lib = 'U:\\SAM\\2017-9-5-r4\\win64\\'
-
 
 def get_frac(zone):
     """Return fraction of solar plants with fix, single-axis, double-axis in \ 
@@ -16,7 +14,6 @@ def get_frac(zone):
     :param string zone: zone.
     :return: list of coefficients.
     """
- 
     western = ['Arizona', 'Bay Area', 'Central California', 'Colorado',
                'El Paso', 'Idaho', 'Montana', 'Nevada', 'New Mexico',
                'Northern California', 'Oregon', 'Southeast California',
@@ -29,7 +26,6 @@ def get_frac(zone):
         raise Exception('Invalid zone')
 
 
-
 def retrieve_data(solar_plant, email, api_key, year='2016'):
     """Retrieve irradiance data from NSRDB and calculate the power output \ 
         using the System Advisor Model (SAM).
@@ -40,6 +36,18 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
     :return: data frame with the following structure: ['Pout', \ 
         'plantID', 'ts', 'tsID']. The power output is in MW.
     """
+
+    # SAM only takes 365 days.
+    try:
+        leap_day = (pd.Timestamp('%s-02-29-00' % year).dayofyear - 1) * 24
+        is_leap_year = True
+        dates = pd.date_range(start="%s-01-01-00" % 2015,
+                              freq='H', periods=365*24)
+        dates = dates.map(lambda t: t.replace(year=int(year)))
+    except:
+        is_leap_year = False
+        dates = pd.date_range(start="%s-01-01-00" % year,
+                              freq='H', periods=365*24)
 
     # Information on solar plants
     n_target = len(solar_plant)
@@ -58,7 +66,6 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
 
     # Build query
     attributes = 'dhi,dni,wind_speed,air_temperature'
-    leap_day = 'true'
     interval = '60'
     utc = 'true'
 
@@ -67,7 +74,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
     url = url + 'api_key={key}'.format(key=api_key)
 
     payload = 'names={year}'.format(year=year) + '&' + \
-        'leap_day={leap}'.format(leap=leap_day) + '&' + \
+        'leap_day={leap}'.format(leap='false') + '&' + \
         'interval={interval}'.format(interval=interval) + '&' + \
         'utc={utc}'.format(utc=utc) + '&' + \
         'email={email}'.format(email=email) + '&' + \
@@ -75,53 +82,45 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
 
     data = pd.DataFrame({'Pout': [], 'plantID': [], 'ts': [], 'tsID': []})
 
-    tf = TimezoneFinder()
     for key in tqdm(coord.keys(), total=len(coord)):
         query = 'wkt=POINT({lon}%20{lat})'.format(lon=key[0], lat=key[1])
 
         info = pd.read_csv(url+'&'+payload+'&'+query, nrows=1)
-        timezone, elevation = info['Local Time Zone'], info['Elevation']
+        tz, elevation = info['Local Time Zone'], info['Elevation']
 
-        data_loc = pd.read_csv(url + '&' + payload + '&' + query, skiprows=2)
+        data_resource = pd.read_csv(url + '&' + payload + '&' + query,
+                                    skiprows=2)
+        data_resource.set_index(dates + timedelta(hours=int(tz.values[0])),
+                                inplace=True)
 
-        data_loc = pd.DataFrame({'tsID': range(1, len(ghi)+1)}) 
-        data_loc['ts'] = pd.date_range(start=year, end=str(int(year)+1), 
-                                       freq='H')[:-1]
-
-        try:
-             leap_day = pd.Timestamp('%s-02-29-00' % year).dayofyear * 24
-             local_time = data_loc['ts'].values
-
-             local_time[leap_day-24:leap_day] = pd.date_range(
-                start='%s-02-28-00' % year, end='%s-02-28-23' % year, freq='H')
-        except:
-            pass
-            
-        local_time = data_loc['ts'].values - timedelta(hours=timezone)
-        if local_time
-        
         # SAM
-        ssc = PySSC(ssc_lib)
+        ssc = PySSC('U:\\SAM\\2017-9-5-r4\\win64\\')
 
         resource = ssc.data_create()
-        ssc.data_set_number(resource, 'lat', key[1])
-        ssc.data_set_number(resource, 'lon', key[0])
-        ssc.data_set_number(resource, 'tz', timezone)
+        ssc.data_set_number(resource, 'lat', float(key[1]))
+        ssc.data_set_number(resource, 'lon', float(key[0]))
+        ssc.data_set_number(resource, 'tz', tz)
         ssc.data_set_number(resource, 'elev', elevation)
-        ssc.data_set_array(resource, 'year', local_time.year)
-        ssc.data_set_array(resource, 'month', local_time.month)
-        ssc.data_set_array(resource, 'day', local_time.day)
-        ssc.data_set_array(resource, 'hour', local_time.hour)
-        ssc.data_set_array(resource, 'minute', local_time.minute)
-        ssc.data_set_array(resource, 'dn', data_loc['DNI'])
-        ssc.data_set_array(resource, 'df', data_loc['DHI'])
-        ssc.data_set_array(resource, 'wspd', data_loc['Wind Speed'])
-        ssc.data_set_array(resource, 'tdry', data_loc['Temperature'])
+        ssc.data_set_array(resource, 'year', data_resource.index.year)
+        ssc.data_set_array(resource, 'month', data_resource.index.month)
+        ssc.data_set_array(resource, 'day', data_resource.index.day)
+        ssc.data_set_array(resource, 'hour', data_resource.index.hour)
+        ssc.data_set_array(resource, 'minute', data_resource.index.minute)
+        ssc.data_set_array(resource, 'dn', data_resource['DNI'])
+        ssc.data_set_array(resource, 'df', data_resource['DHI'])
+        ssc.data_set_array(resource, 'wspd', data_resource['Wind Speed'])
+        ssc.data_set_array(resource, 'tdry', data_resource['Temperature'])
 
         for i in coord[key]:
-            Pout = 0
+            data_site = pd.DataFrame({'ts': pd.date_range(
+                                                start='%s-01-01-00' % year,
+                                                end='%s-12-31-23' % year,
+                                                freq='H')})
+            data_site['tsID'] = range(1, len(data_site)+1)
+            data_site['plantID'] = i[0]
             zone = solar_plant.loc[i[0]].ZoneName
-            for j, type in enumerate([0, 2, 3]):
+
+            for j, axis in enumerate([0, 2, 4]):
                 core = ssc.data_create()
                 ssc.data_set_table(core, 'solar_resource_data', resource)
                 ssc.data_set_number(core, 'system_capacity', i[1])
@@ -130,20 +129,28 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
                 ssc.data_set_number(core, 'azimuth', 180)
                 ssc.data_set_number(core, 'inv_eff', 94)
                 ssc.data_set_number(core, 'losses', 14)
-                ssc.data_set_number(core, 'array_type', type)
+                ssc.data_set_number(core, 'array_type', axis)
                 ssc.data_set_number(core, 'gcr', 0.4)
                 ssc.data_set_number(core, 'adjust:constant', 0)
-                
+
                 mod = ssc.module_create('pvwattsv5')
                 ssc.module_exec(mod, core)
-                Pout += get_frac(zone)[j] * \
-                        np.array(ssc.data_get_array(core, 'gen'))
+                if j == 0:
+                    Pout = get_frac(zone)[j] * \
+                           np.array(ssc.data_get_array(core, 'gen'))
+                else:
+                    Pout = Pout + \
+                           get_frac(zone)[j] * \
+                           np.array(ssc.data_get_array(core, 'gen'))
+
                 ssc.data_free(core)
                 ssc.module_free(mod)
 
-            data_site = data_loc.copy()
-            data_site['Pout'] = Pout
-            data_site['plantID'] = i[0]
+            if is_leap_year == True:
+                data_site['Pout'] = np.insert(Pout, leap_day,
+                                              Pout[leap_day-24:leap_day])
+            else:
+                data_site['Pout'] = Pout
 
             data = data.append(data_site, ignore_index=True, sort=False)
 
