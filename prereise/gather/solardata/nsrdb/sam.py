@@ -21,10 +21,11 @@ def get_frac(zone):
                'El Paso', 'Idaho', 'Montana', 'Nevada', 'New Mexico',
                'Northern California', 'Oregon', 'Southeast California',
                'Southwest California', 'Utah', 'Washington', 'Wyoming']
-    if zone in western:
+    all = western
+    if zone in all:
         return [0.2870468, 0.6745755, 0.0383777]
     else:
-        print("%s is incorrect. Possible zones are: %s" % (z, all))
+        print("%s is incorrect. Possible zones are: %s" % (zone, all))
         raise Exception('Invalid zone')
 
 
