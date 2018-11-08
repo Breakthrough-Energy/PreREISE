@@ -4,10 +4,11 @@ import pandas as pd
 def to_reise(data):
     """Format data for REISE.
 
-    :param data: pandas DataFrame as returned \ 
+    :param pandas data: data frame as returned \ 
         by :py:func:`prereise.gather.solardata.nsrdb.nsrdb.retrieve_data`.
-    :return: pandas DataFrame formated for REISE.
+    :return: data frame formated for REISE.
     """
+
     ts = data['ts'].unique()
     plantID = data[data.tsID == 1].plantID.values
 
