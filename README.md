@@ -118,11 +118,14 @@ te_wind_test.test()
 ```
 
 #### &beta;. Solar data
+
 &bull; <u>The Gridded Atmospheric Wind Integration National Dataset Toolkit</u>:
 The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 1-hour resolution irradiance data for 7 years, ranging from 2007 to 2013, on a uniform 2x2 square kilometer grid that covers the continental U.S., the Baja Peninsula, and parts of the Pacific and Atlantic oceans. Data can be accessed using the Highly Scalable Data Service. NREL wrote [example notebooks](https://github.com/NREL/hsds-examples) that demonstrate how to access the data.
 
 &bull; <u>The National Solar Radiation Database</u>:
 [NSRDB (National Solar Radiation Database)](https://nsrdb.nrel.gov/) provides 1-hour resolution solar radiation data, ranging from 1998 to 2016, for the entire U.S. and a growing list of international locations on a 4x4 square kilometer grid. Data can be accessed via an [API](https://developer.nrel.gov/docs/solar/nsrdb/). Note that the Physical Solar Model v3 is used.
+
+An API key is required to access and use the above databases. Get your own API key [here](https://developer.nrel.gov/signup/).
 
 #### &gamma;. Demand Data
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted their data.
