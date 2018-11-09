@@ -160,7 +160,7 @@ from prereise.gather.demanddata.eia.test import test_from_excel
 test_from_excel.test_from_excel()
 ```
 
-The notebook [AssembleBAfromExcel_demo.ipynb](prereise/gather/demanddata/eia/demo/AssembleBAfromExcel_demo.ipynb) illustrates usage.
+The notebook [AssembleBAfromExcel_demo.ipynb](prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb) illustrates usage.
 
 ##### Outputting Demand Profile
 To output the demand profile, cleaning steps were applied to the EIA data:  
