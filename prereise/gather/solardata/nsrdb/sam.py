@@ -44,7 +44,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
         dates = pd.date_range(start="%s-01-01-00" % 2015,
                               freq='H', periods=365*24)
         dates = dates.map(lambda t: t.replace(year=int(year)))
-    except:
+    except ValueError:
         is_leap_year = False
         dates = pd.date_range(start="%s-01-01-00" % year,
                               freq='H', periods=365*24)
@@ -146,7 +146,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
                 ssc.data_free(core)
                 ssc.module_free(mod)
 
-            if is_leap_year == True:
+            if is_leap_year is True:
                 data_site['Pout'] = np.insert(Pout, leap_day,
                                               Pout[leap_day-24:leap_day])
             else:
