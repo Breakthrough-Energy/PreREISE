@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -123,7 +123,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
             for j, axis in enumerate([0, 2, 4]):
                 core = ssc.data_create()
                 ssc.data_set_table(core, 'solar_resource_data', resource)
-                ssc.data_set_number(core, 'system_capacity', i[1])
+                ssc.data_set_number(core, 'system_capacity', i[1] * 1000.)
                 ssc.data_set_number(core, 'dc_ac_ratio', 1.1)
                 ssc.data_set_number(core, 'tilt', 30)
                 ssc.data_set_number(core, 'azimuth', 180)
@@ -137,11 +137,11 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
                 ssc.module_exec(mod, core)
                 if j == 0:
                     Pout = get_frac(zone)[j] * \
-                           np.array(ssc.data_get_array(core, 'gen'))
+                           np.array(ssc.data_get_array(core, 'gen')) / 1000
                 else:
                     Pout = Pout + \
                            get_frac(zone)[j] * \
-                           np.array(ssc.data_get_array(core, 'gen'))
+                           np.array(ssc.data_get_array(core, 'gen')) / 1000
 
                 ssc.data_free(core)
                 ssc.module_free(mod)
