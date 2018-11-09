@@ -5,6 +5,7 @@ After setting up the scenario in REISE you create an entry in `ScenarioList.csv`
 This file contains all scenraios. The location of the list on the server is `/home/EGM/`.
 
 
+
 ## 1. Creating a Scenario
 A scenario can be defined by adding an entry to the scenario list `ScenarioList.csv`.
 Fill in all the required information. The following fields are required:
@@ -19,6 +20,7 @@ Make sure you have stored the `scenario_name.m` file, the related simulation and
 data files in the defined locations.
 The convention is that we use the scenario name as the output folder name.
 Make sure your simulation m-file has the same name as the unique scenario name.
+
 
 
 ## 2. Call (Start the simulation)
@@ -43,6 +45,7 @@ This package requires Matlab, Gurobi, and Matpower. Make sure to put the paths
 from Gurobi and Matpower into the `add_path.m` file.
 Before installing this package install Matlab, Gurobi and Matpower.
 
+
 ### B. For Matlab the following setup is required:
 On Windows systems —
 ```
@@ -55,11 +58,13 @@ cd "matlabroot/extern/engines/python"
 python setup.py install
 ```
 
+
 ### C. Install Gurobi and add path
 Install Gurobi and add Matlab path to 'add_path.m'
 ```
 <GUROBI>/<os>/matlab
 ```
+
 
 ### D. For Matpower the following setup is required:
 Download Matpower and add the following directories to the `add_path.m`:
@@ -68,20 +73,21 @@ Download Matpower and add the following directories to the `add_path.m`:
 <MATPOWER>/most   — core MOST functions
 ```
 
+
 ### E. Install this package
 In the folder with the setup.py file type:
 `pip3 install .`
 
 
+
 ## 3. Gather
 This module allows you to gather data for the simulation.
+
 
 ### A. Collect Data
 
 ####  &alpha;. Wind data
-
 &bull; <u>Rapid Refresh</u>:
-
 [RAP](https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap) (Rapid Refresh) is the continental-scale NOAA hourly-updated assimilation/modeling system operational at the National Centers for Environmental Prediction (NCEP). RAP covers North America and is comprised primarily of a numerical weather model and an analysis system to initialize that model. RAP provides, every hour ranging from May 2012 to date, the U and V components of the wind speed at 80 meter above ground on a 13x13 square kilometer resolution grid every hour. Data can be retrieved using the NetCDF Subset Service. Information on this interface is described [here](https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html).
 
 Usage in general:
@@ -94,7 +100,6 @@ Check out the demo jupyter notebook in
 `prereise/gather/winddata/rap/demo/`
 
 &bull; <u>Techno-Economic Wind Integration National Dataset Toolkit</u>:
-
 The [Techno-Economic WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 5-min resolution data for 7 years, ranging from 2007 to 2013, at 120,000 points within the continental U.S. selected for their wind resource. This set contains power estimates and forecasts along with a subset of atmospheric variables. Data can be accessed via an [API](https://developer.nrel.gov/docs/wind/wind-toolkit/).
 
 Check out the demo jupyter notebook in
@@ -112,15 +117,11 @@ from prereise.gather.winddata.te_wind.test import te_wind_test
 te_wind_test.test()
 ```
 
-
 #### &beta;. Solar data
-
 &bull; <u>The Gridded Atmospheric Wind Integration National Dataset Toolkit</u>:
-
 The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 1-hour resolution irradiance data for 7 years, ranging from 2007 to 2013, on a uniform 2x2 square kilometer grid that covers the continental U.S., the Baja Peninsula, and parts of the Pacific and Atlantic oceans. Data can be accessed using the Highly Scalable Data Service. NREL wrote [example notebooks](https://github.com/NREL/hsds-examples) that demonstrate how to access the data.
 
 &bull; <u>The National Solar Radiation Database</u>:
-
 [NSRDB (National Solar Radiation Database)](https://nsrdb.nrel.gov/) provides 1-hour resolution solar radiation data, ranging from 1998 to 2016, for the entire U.S. and a growing list of international locations on a 4x4 square kilometer grid. Data can be accessed via an [API](https://developer.nrel.gov/docs/solar/nsrdb/). Note that the Physical Solar Model v3 is used.
 
 #### &gamma;. Demand Data
@@ -156,28 +157,26 @@ from prereise.gather.demanddata.eia.test import test_from_excel
 test_from_excel.test_from_excel()
 ```
 
-The notebook prereise/gather/demanddata/eia/demo/AssembleBAfromExcel_demo.ipynb 
-illustrates usage.
+The notebook [AssembleBAfromExcel_demo.ipynb](prereise/gather/demanddata/eia/demo/AssembleBAfromExcel_demo.ipynb) illustrates usage.
 
 ##### Outputting Demand Profile
-To output the demand profile, cleaning steps were applied to the EIA data.
-1) missing data imputation - the EIA method was used, i.e., EIA published data was used; beyond this, NA's were converted to float zeros
-2) missing hours were added 
+To output the demand profile, cleaning steps were applied to the EIA data:  
+1) missing data imputation - the EIA method was used, i.e., EIA published data was used; beyond this, NA's were converted to float zeros;  
+2) missing hours were added.
 
 The BA counts were then distributed across each region where the BA operates, using the region populations as weights. For example, if a BA operates in both WA and OR, the counts for WA are weighted by the fraction of the total counts in WA relative to the total population of WA and OR.
 
 The demand profile is finally converted to Matlab format. 
 
+
 ### B. Power output calculation
 
 ####  &alpha;. Wind power output
-
 &bull; <u>Naïve method</u>:
-
 The *IEC class 2* power curve provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) is used to convert wind speed to power for all the wind farms in the network. This is the method currently implemented.
 
 ####  &beta;. Solar power output
-
 &bull; <u>Naïve method</u>:
+This estimation method uses a simple normalization procedure to convert the Global Horizontal Irradiance (GHI) to power output. For each plant location the hourly GHI is divided by the maximum GHI over the period considered and multiplied by the capacity of the plant. In other words, each plant reaches its maximal capacity only once over the period considered. This procedure is referred to as naïve since it only accounts for the plant capacity. Note that other factors can possibly affect the conversion from solar radiation at ground to power such as the temperature at the site as well as many system configuration including tilt system.
 
-This estimation method uses a simple normalization procedure to convert the Global Horizontal Irradiance (GHI) to power output. For each plant location the hourly GHI is divided by the maximum GHI over the period considered and multiplied by the capacity of the plant. In other words, each plant reaches its maximal capacity only once over the period considered. This procedure is referred to as naïve since it only accounts for the plant capacity. Note that other factors can possibly affect the conversion from solar radiation at ground to power such as the temperature at the site as well as many system configuration including DC/AC ratio or eventual tilt system. This is the method currently implemented.
+&bull; <u>System Advisor Model (SAM)</u>: [SAM](https://sam.nrel.gov/) developed by NREL can be used to estimate the solar power output. A collection of developer tools for creating renewable energy system models can be downloaded [here](https://sam.nrel.gov/sdk). Irradiance date need first to be retrieved from NSRDB for a given location along with other meteorological parameters. This information are fed to the SAM Simulation Core (SCC) and the power output is retrieved. The SSC can reflect the technology used: photovoltaic (PV), solar water heating and concentrating solar  power (CSP). The [PVWatts v5](https://www.nrel.gov/docs/fy14osti/62641.pdf) model is used. Input parameters need to be set for this model. The default values have been used for most of them. Only the system size and the array type depend on the solar plant that is considered in the grid.
