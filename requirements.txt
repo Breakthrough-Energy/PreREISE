@@ -15,6 +15,7 @@ multiprocessing
 netCDF4
 numpy
 pandas >= 0.23.0
+py3samsdk
 pyproj
 pywtk
 requests
