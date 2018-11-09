@@ -26,15 +26,20 @@ def get_frac(zone):
         raise Exception('Invalid zone')
 
 
-def retrieve_data(solar_plant, email, api_key, year='2016'):
+def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
     """Retrieve irradiance data from NSRDB and calculate the power output \ 
         using the System Advisor Model (SAM).
 
     :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
         *'GenMWMax' as columns and *'PlantID'* as index.
+    :param string email: email used for API key \ 
+        `sign up <https://developer.nrel.gov/signup/>`_.
+    :param string api_key: API key.
+    :param string ssc_lib: path to System Advisor Model (SAM) SAM Simulation \ 
+        Simulation Core (SSC) library.
     :param string year: year.
-    :return: data frame with the following structure: ['Pout', \ 
-        'plantID', 'ts', 'tsID']. The power output is in MW.
+    :return: data frame with the following structure: ['Pout', 'plantID', \ 
+        'ts', 'tsID']. The power output is in MW.
     """
 
     # SAM only takes 365 days.
@@ -94,7 +99,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
                                 inplace=True)
 
         # SAM
-        ssc = PySSC('U:\\SAM\\2017-9-5-r4\\win64\\')
+        ssc = PySSC(ssc_lib)
 
         resource = ssc.data_create()
         ssc.data_set_number(resource, 'lat', float(key[1]))
