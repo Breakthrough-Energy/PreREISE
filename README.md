@@ -180,7 +180,7 @@ fixed_data = find_fix_outliers.slope_interpolate(BA_file, threshold)
 
 To test
 ```python
-from prereise.gather.demanddata.eia.test import test_test_slope_interpolate
+from prereise.gather.demanddata.eia.test import test_slope_interpolate
 test_slope_interpolate.test_slope_interpolate()
 ```
 The notebook prereise/gather/demanddata/eia/demo/BA_Anomaly_Detection_demo.ipynb 
