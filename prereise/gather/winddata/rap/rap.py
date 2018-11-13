@@ -13,7 +13,7 @@ from tqdm import tqdm
 from helpers import angular_distance, get_power, ll2uv
 
 
-def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
+def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     """Retrieve wind speed data from NOAA's server.
 
     :param wind_farm: pandas DataFrame with the following structure: \ 
@@ -70,7 +70,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
     step = datetime.timedelta(hours=1)
 
     for i, file in tqdm(enumerate(files), total=len(files)):
-        if i != 0 and i % 1000 == 0:
+        if i != 0 and i % 2500 == 0:
             time.sleep(300)
         query = file + var + '&' + box + '&' + extension
         request = requests.get(query)
