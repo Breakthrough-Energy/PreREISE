@@ -10,7 +10,7 @@ import requests
 from netCDF4 import Dataset
 from tqdm import tqdm
 
-from .helpers import angular_distance, get_power, ll2uv
+from helpers import angular_distance, get_power, ll2uv
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):

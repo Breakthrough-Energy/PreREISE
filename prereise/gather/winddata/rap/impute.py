@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .helpers import get_power
+from helpers import get_power
 
 
 def simple(data, wind_farm, inplace=True):
