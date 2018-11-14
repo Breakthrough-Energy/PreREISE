@@ -168,6 +168,24 @@ The BA counts were then distributed across each region where the BA operates, us
 
 The demand profile is finally converted to Matlab format. 
 
+##### Removing outliers in the demand profiles
+Outliers are detected by looking for large changes in the slope of the demand data. The underlying physical rationale is that demand changes are mostly driven by weather temperature changes (first or higher order), and thermal mass limits the rate at which demand values can change. By looking at the slope of demand data, it is seen that the slope distribution is normally distributed, and outliers can be easily found by imposing a z-score threshold value of 3. These outliers are then replaced by linear interpolation.
+
+To use the outlier detector:
+```python
+from prereise.gather.demanddata.eia import find_fix_outliers
+
+fixed_data = find_fix_outliers.slope_interpolate(BA_file, threshold)
+```
+
+To test
+```python
+from prereise.gather.demanddata.eia.test import test_slope_interpolate
+test_slope_interpolate.test_slope_interpolate()
+```
+The notebook prereise/gather/demanddata/eia/demo/BA_Anomaly_Detection_demo.ipynb 
+illustrates usage.
+
 ### B. Power output calculation
 
 ####  &alpha;. Wind power output
