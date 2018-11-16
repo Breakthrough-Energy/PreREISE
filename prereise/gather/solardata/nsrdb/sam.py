@@ -7,22 +7,21 @@ from py3samsdk import PySSC
 from tqdm import tqdm
 
 
-def get_frac(zone):
+def get_frac(interconnect):
     """Return fraction of solar plants with fix, single-axis, double-axis in \ 
         zone.
 
     :param string zone: zone.
     :return: list of coefficients.
     """
-    western = ['Arizona', 'Bay Area', 'Central California', 'Colorado',
-               'El Paso', 'Idaho', 'Montana', 'Nevada', 'New Mexico',
-               'Northern California', 'Oregon', 'Southeast California',
-               'Southwest California', 'Utah', 'Washington', 'Wyoming']
-    all = western
-    if zone in all:
+
+    if interconnect is 'Western':
         return [0.2870468, 0.6745755, 0.0383777]
+    elif interconnect is 'Texas':
+        return [0.08, 0.46, 0.46]
     else:
-        print("%s is incorrect. Possible zones are: %s" % (zone, all))
+        print("%s is incorrect. Possible interconnects are: %s" % 
+              (interconnect, ['Western', 'Texas']))
         raise Exception('Invalid zone')
 
 
@@ -123,7 +122,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                                                 freq='H')})
             data_site['tsID'] = range(1, len(data_site)+1)
             data_site['plantID'] = i[0]
-            zone = solar_plant.loc[i[0]].ZoneName
+            zone = solar_plant.loc[i[0]].interconnect
 
             for j, axis in enumerate([0, 2, 4]):
                 core = ssc.data_create()
