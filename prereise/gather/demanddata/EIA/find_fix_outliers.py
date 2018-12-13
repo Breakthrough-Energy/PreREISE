@@ -8,8 +8,7 @@ from dateutil.parser import parse
 
 sys.path.append("..")
 
-
-def slope_interpolate(ba_df, threshold):
+def slope_interpolate(ba_df,threshold):
     '''
     Look for demand outliers by applying a zscore
     threshold to the demand slope
@@ -46,6 +45,7 @@ def slope_interpolate(ba_df, threshold):
     for example, the temperature data or other relevant profiles.
 
     '''
+
     df = ba_df.copy()
     ba_name = df.columns[0]
 
@@ -55,9 +55,8 @@ def slope_interpolate(ba_df, threshold):
     df['delta_zscore'] = np.abs((df['delta'] - delta_mu)/delta_sigma)
 
     # Find the outliers
-    outlier_index_list = df.loc[df['delta_zscore'] > 3].index
+    outlier_index_list = df.loc[df['delta_zscore']>3].index
 
-    # Replace outliers
     hour_save = -1
     for i in outlier_index_list:
         hour_index = df.index.get_loc(i)
@@ -66,9 +65,26 @@ def slope_interpolate(ba_df, threshold):
             next_save = hour_index + 1
             continue
         if hour_index == next_save:
-            next_save = next_save + 1
+            next_save = hour_index + 1
             continue
+            
+        #Check for zeros: consecutive zeros, 
+        #which don't have delta_zscores exceed threshold,
+        #will get extrapolated to the next non-zero value
+        #This is fine for, say up to 5 hours; will not be appropriate 
+        #otherwise since it may not capture the periodic patterns
+        #Print a warning
+        
+        if df.iloc[hour_index-1][ba_name]==0:
+            #print(hour_index, '->', next_save)
+            next_save = hour_index + 1
+            continue
+            
         num = next_save - hour_save
+        
+        if num > 5:
+            print('Too many zeros near ', i, '! Review data!')
+        
         start = df.iloc[hour_save-1][ba_name]
         dee = (df.iloc[next_save-1][ba_name] - start)/num
         for j in range(hour_save-1, next_save):
@@ -77,6 +93,7 @@ def slope_interpolate(ba_df, threshold):
             print(j, save_me, df.iloc[j][ba_name])
         hour_save = hour_index
         next_save = hour_index + 1
+
     if hour_save != -1:
         num = next_save - hour_save
         start = df.iloc[hour_save-1][ba_name]
