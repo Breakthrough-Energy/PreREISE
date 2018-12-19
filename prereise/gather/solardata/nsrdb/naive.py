@@ -11,12 +11,12 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
 
     :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
         *'GenMWMax' as columns and *'PlantID'* as index.
-    :param string email: email used for API key \ 
+    :param str email: email used for API key \ 
         `sign up <https://developer.nrel.gov/signup/>`_. 
-    :param string api_key: API key.
-    :param string year: year.
-    :return: data frame with the following structure: ['Pout', 'plantID', \ 
-        'ts', 'tsID']. The power output is in MW.
+    :param str api_key: API key.
+    :param str year: year.
+    :return: (*pandas*) -- data frame with *'Pout'*, *'plantID'*, *'ts'* \ 
+        and *'tsID'* as columns. The power output is in MWh.
     """
 
     # Information on solar plants

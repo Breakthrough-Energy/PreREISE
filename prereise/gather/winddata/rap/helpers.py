@@ -11,10 +11,11 @@ PowerCurves = pd.read_csv(os.path.dirname(__file__) +
 def ll2uv(lon, lat):
     """Convert (longitude, latitude) to unit vector.
 
-    :param lon: longitude of the site (in deg.) measured eastward from \ 
+    :param float lon: longitude of the site (in deg.) measured eastward from \ 
         Greenwich, UK.
-    :param lat: latitude of the site (in deg.). Equator is the zero point.
-    :return: 3-components (x,y,z) unit vector.
+    :param float lat: latitude of the site (in deg.). Equator is the zero \ 
+        point.
+    :return: (*tuple*) -- 3-components (x,y,z) unit vector.
     """
     cos_lat = math.cos(math.radians(lat))
     sin_lat = math.sin(math.radians(lat))
@@ -32,9 +33,9 @@ def ll2uv(lon, lat):
 def angular_distance(uv1, uv2):
     """Calculate the angular distance between two vectors.
 
-    :param uv1: 3-components vector as returned by :py:func:`ll2uv`.
-    :param uv2: 3-components vector as returned by :py:func:`ll2uv`.
-    :return: angle (in degrees).
+    :param tuple uv1: 3-components vector as returned by :func:`ll2uv`.
+    :param tuple uv2: 3-components vector as returned by :func:`ll2uv`.
+    :return: (*float*) -- angle (in degrees).
     """
     cos_angle = uv1[0]*uv2[0] + uv1[1]*uv2[1] + uv1[2]*uv2[2]
     if cos_angle >= 1:
@@ -49,9 +50,9 @@ def angular_distance(uv1, uv2):
 def get_power(wspd, turbine):
     """Convert wind speed to power using NREL turbine power curves.
 
-    :param wspd: wind speed (in m/s).
-    :param turbine: class of turbine.
-    :return: normalized power.
+    :param float wspd: wind speed (in m/s).
+    :param str turbine: class of turbine.
+    :return: (*float*) -- normalized power.
     """
     match = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & \
             (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
@@ -66,9 +67,9 @@ def get_power(wspd, turbine):
 def to_reise(data):
     """Format data for REISE.
 
-    :param data: pandas DataFrame as returned \ 
-        by :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
-    :return: pandas DataFrame formated for REISE.
+    :param pandas data: data frame as returned \ 
+        by :func:`prereise.gather.winddata.rap.rap.retrieve_data`.
+    :return: (*pandas*) -- data frame formated for REISE.
     """
     ts = data['ts'].unique()
     plantID = data[data.tsID == 1].plantID.values

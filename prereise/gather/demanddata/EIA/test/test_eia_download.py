@@ -13,16 +13,13 @@ from .. import get_eia_data
 
 @pytest.mark.skip(reason="Need API key")
 def test_eia_download():
-    '''
-    Check pandas DataFrame assembled from data download \ 
-    by API call from EIA. Test checks that the correct \ 
-    number of files are downloaded and correct number of \ 
-    columns are created.
-
-    Token string can be obtained by registering in 
-    https://www.eia.gov/opendata/
-
-    '''
+    """Check data frame assembled from data download by API call from \ 
+        EIA. Test checks that the correct number of files are downloaded and \ 
+        correct number of columns are created.
+        
+        Token string can be obtained by registering \ 
+        `here <https://www.eia.gov/opendata/>`_.
+    """
     print(
         'A API key is required for the API download. The key '
         'can be obtained by a user by registering at '

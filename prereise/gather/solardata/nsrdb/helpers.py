@@ -5,8 +5,9 @@ def to_reise(data):
     """Format data for REISE.
 
     :param pandas data: data frame as returned \ 
-        by :py:func:`prereise.gather.solardata.nsrdb.nsrdb.retrieve_data`.
-    :return: data frame formated for REISE.
+        by :func:`prereise.gather.solardata.nsrdb.naive.retrieve_data` or \ 
+        :func:`prereise.gather.solardata.nsrdb.sam.retrieve_data`.
+    :return: (*pandas*) -- data frame formated for REISE.
     """
 
     ts = data['ts'].unique()
