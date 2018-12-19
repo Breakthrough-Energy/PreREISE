@@ -7,33 +7,25 @@ This file contains all scenarios. The location of the list on the server is `/ho
 
 
 ## 1. Creating a Scenario
-A scenario can be defined by adding an entry to the scenario list `ScenarioList.csv`.
-Fill in all the required information. The following fields are required:
+A scenario can be defined by adding an entry to the scenario list `ScenarioList.csv`. Fill in all the required information. The template is given in the table below.
 
 name | folder_location | input_data_location | output_data_location | start_index | end_index | extract | description
 ------------ | ------------- | ------------ | ------------- | ------------ | ------------- | ------------ | -------------
 `scenario_name` | Folder location of Matlab files | Input data location | Output data location | Start index | End index | True/False to convert data into csv | Description
 
-Make sure you choose an unique name in the scenario_name column . Since this list is temporary
-and will be replaced by a database there is no check of uniqueness.
-Make sure you have stored the `scenario_name.m` file, the related simulation and
-data files in the defined locations.
-The convention is that we use the scenario name as the output folder name.
-Make sure your simulation m-file has the same name as the unique scenario name.
+Make sure you choose an unique name in the `scenario_name` column. Since this list is temporary and will be replaced by a database there is no check of uniqueness. Make sure you have stored the `scenario_name.m` file, the related simulation and data files in the defined locations. The convention is that we use the scenario name as the output folder name. Make sure your simulation m-file has the same name as the unique scenario name.
 
 
 
 ## 2. Call (Start the simulation)
-Simulation can only be launched on server.
-After setting up the scenario, the simulation engine can be called.
-You launch the simulation the following way:
+Simulation can only be launched on server. After setting up the scenario, the simulation engine can be called and the simulation can be started as follows:
 ```python
 import prereise
 
 prereise.launch_scenario_performance('scenario_name')
 ```
 ### Test
-To test run:
+To test, run:
 ```python
 from prereise.call.test import test_call
 
@@ -41,9 +33,7 @@ test_call.test()
 ```
 
 ### A. Setup/Install
-This package requires Matlab, Gurobi, and Matpower. Make sure to put the paths
-from Gurobi and Matpower into the `add_path.m` file.
-Before installing this package install Matlab, Gurobi and Matpower.
+This package requires Matlab, Gurobi, and Matpower. Make sure to put the paths from Gurobi and Matpower into the `add_path.m` file. Before installing this package, Matlab, Gurobi and Matpower must be installed first.
 
 
 ### B. For Matlab the following setup is required:
@@ -60,14 +50,14 @@ python setup.py install
 
 
 ### C. Install Gurobi and add path
-Install Gurobi and add Matlab path to 'add_path.m'
+Install Gurobi and add Matlab path to 'add_path.m':
 ```
 <GUROBI>/<os>/matlab
 ```
 
 
 ### D. For Matpower the following setup is required:
-Download Matpower and add the following directories to the `add_path.m`:
+Download Matpower and add the following directories in `add_path.m`:
 ```
 <MATPOWER>        — core MATPOWER functions
 <MATPOWER>/most   — core MOST functions
@@ -81,7 +71,7 @@ In the folder with the setup.py file type:
 
 
 ## 3. Gather
-This module allows you to gather data for the simulation.
+This module allows you to gather the required data for the simulation.
 
 
 ### A. Collect Data
@@ -128,19 +118,11 @@ The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https
 An API key is required to access and use the above databases. Get your own API key [here](https://developer.nrel.gov/signup/).
 
 #### Demand Data
-Demand data are obtained from EIA, to whom Balancing Authorities have submitted their data.
-The data can be obtained either by direct download from their database using an API or
-by download of Excel spreadsheets. A API key is required for the API download and this key
-can be obtained by a user by registering at https://www.eia.gov/opendata/.
+Demand data are obtained from EIA, to whom Balancing Authorities have submitted their data. The data can be obtained either by direct download from their database using an API or by download of Excel spreadsheets. A API key is required for the API download and this key can be obtained by a user by registering at https://www.eia.gov/opendata/.
 
-The direct download currently contains only published 
-demand data. The Excel spreadsheets include original and imputed demand data, as well as
-results of various data quality checks done by EIA. Documentation about the datasets are in https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf.
-Excel spreadsheets can be downloaded by clicking on the links in page 9 (Table of all US and
-foreign connected balancing authorities).
+The direct download currently contains only published demand data. The Excel spreadsheets include original and imputed demand data, as well as results of various data quality checks done by EIA. Documentation about the datasets can be found [here](https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf). Excel spreadsheets can be downloaded by clicking on the links in page 9 (Table of all US and foreign connected balancing authorities).
 
-Module get_eia_data contains functions that converts the data into pandas dataframes for
-further processing.
+Module `get_eia_data` contains functions that converts the data into data frames for further processing.
 
 To use, 
 ```python
@@ -176,10 +158,10 @@ The demand profile is finally converted to Matlab format.
 
 #### Wind power output
 * <u>Naïve method</u>:
-The *IEC class 2* power curve provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) is used to convert wind speed to power for all the wind farms in the network. This is the method currently implemented.
+The *IEC class 2* power curve provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) is used to convert wind speed to power for all the wind farms in the network. This is the only method implemented at the moment.
 
 #### Solar power output
 * <u>Naïve method</u>:
-This estimation method uses a simple normalization procedure to convert the Global Horizontal Irradiance (GHI) to power output. For each plant location the hourly GHI is divided by the maximum GHI over the period considered and multiplied by the capacity of the plant. In other words, each plant reaches its maximal capacity only once over the period considered. This procedure is referred to as naïve since it only accounts for the plant capacity. Note that other factors can possibly affect the conversion from solar radiation at ground to power such as the temperature at the site as well as many system configuration including tilt system.
+This estimation method uses a simple normalization procedure to convert the Global Horizontal Irradiance (GHI) to power output. For each plant location the hourly GHI is divided by the maximum GHI over the period considered and multiplied by the capacity of the plant. In other words, each plant reaches its maximal capacity only once over the period considered. This procedure is referred to as naïve since it only accounts for the plant capacity. Note that other factors can possibly affect the conversion from solar radiation at ground to power such as the temperature at the site as well as many system configuration including tracking technology.
 
-* <u>System Advisor Model (SAM)</u>: [SAM](https://sam.nrel.gov/) developed by NREL can be used to estimate the solar power output. A collection of developer tools for creating renewable energy system models can be downloaded [here](https://sam.nrel.gov/sdk). Irradiance data along with other meteorological parameters need first to be retrieved from NSRDB for a given site. This information are then fed to the SAM Simulation Core (SCC) and the power output is retrieved. The SSC can reflect the technology used: photovoltaic (PV), solar water heating and concentrating solar power (CSP). The [PVWatts v5](https://www.nrel.gov/docs/fy14osti/62641.pdf) model is used for all the solar plants in the grid. The default values of the parameters of the PVWatts model have been used. Only the system size (capacity in kW) and the array type (Fixed open rack, Fixed roof mount, 1-Axis, Fixed open rack Backtracked 1-Axis and 2-Axis) is set for each solar plant.
+* <u>System Advisor Model (SAM)</u>: [SAM](https://sam.nrel.gov/) developed by NREL can be used to estimate the solar power output. A collection of developer tools for creating renewable energy system models can be downloaded [here](https://sam.nrel.gov/sdk). Irradiance data along with other meteorological parameters need first to be retrieved from NSRDB for a given site. This information are then fed to the SAM Simulation Core (SCC) and the power output is retrieved. The SSC can reflect the technology used: photovoltaic (PV), solar water heating and concentrating solar power (CSP). The *[PVWatts v5](https://www.nrel.gov/docs/fy14osti/62641.pdf)* model is used for all the solar plants in the grid. The default values of the parameters of the *PVWatts* model have been used. Only the system size (capacity in kW) and the array type (fixed open rack, backtracked, 1-axis and 2-axis) is set for each solar plant.
