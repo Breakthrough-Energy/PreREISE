@@ -13,7 +13,7 @@ from .. import get_eia_data
 
 def test_from_excel():
     """Tests data frame assembled from Excel spreadsheets manually \ 
-        downloaded from EIA.  Test checks that correct number of columns are \ 
+        downloaded from EIA. Test checks that correct number of columns are \ 
         created.
     """
 
