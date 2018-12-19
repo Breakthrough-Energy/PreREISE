@@ -2,7 +2,7 @@
 This package defines the scenario and calls the Matlab simulation engine.
 The name stands for pre Renewable Energy Integration Study Engine.
 After setting up the scenario in REISE you create an entry in `ScenarioList.csv`.
-This file contains all scenraios. The location of the list on the server is `/home/EGM/`.
+This file contains all scenarios. The location of the list on the server is `/home/EGM/`.
 
 
 
@@ -86,8 +86,8 @@ This module allows you to gather data for the simulation.
 
 ### A. Collect Data
 
-####  &alpha;. Wind data
-&bull; <u>Rapid Refresh</u>:
+#### Wind data
+* <u>Rapid Refresh</u>:
 [RAP](https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap) (Rapid Refresh) is the continental-scale NOAA hourly-updated assimilation/modeling system operational at the National Centers for Environmental Prediction (NCEP). RAP covers North America and is comprised primarily of a numerical weather model and an analysis system to initialize that model. RAP provides, every hour ranging from May 2012 to date, the U and V components of the wind speed at 80 meter above ground on a 13x13 square kilometer resolution grid every hour. Data can be retrieved using the NetCDF Subset Service. Information on this interface is described [here](https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html).
 
 Usage in general:
@@ -99,7 +99,7 @@ rap.retrieve_data(wind_farm)
 Check out the demo jupyter notebook in
 `prereise/gather/winddata/rap/demo/`
 
-&bull; <u>Techno-Economic Wind Integration National Dataset Toolkit</u>:
+* <u>Techno-Economic Wind Integration National Dataset Toolkit</u>:
 The [Techno-Economic WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 5-min resolution data for 7 years, ranging from 2007 to 2013, at 120,000 points within the continental U.S. selected for their wind resource. This set contains power estimates and forecasts along with a subset of atmospheric variables. Data can be accessed via an [API](https://developer.nrel.gov/docs/wind/wind-toolkit/).
 
 Check out the demo jupyter notebook in
@@ -117,17 +117,17 @@ from prereise.gather.winddata.te_wind.test import te_wind_test
 te_wind_test.test()
 ```
 
-#### &beta;. Solar data
+#### Solar data
 
-&bull; <u>The Gridded Atmospheric Wind Integration National Dataset Toolkit</u>:
+* <u>The Gridded Atmospheric Wind Integration National Dataset Toolkit</u>:
 The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 1-hour resolution irradiance data for 7 years, ranging from 2007 to 2013, on a uniform 2x2 square kilometer grid that covers the continental U.S., the Baja Peninsula, and parts of the Pacific and Atlantic oceans. Data can be accessed using the Highly Scalable Data Service. NREL wrote [example notebooks](https://github.com/NREL/hsds-examples) that demonstrate how to access the data.
 
-&bull; <u>The National Solar Radiation Database</u>:
+* <u>The National Solar Radiation Database</u>:
 [NSRDB (National Solar Radiation Database)](https://nsrdb.nrel.gov/) provides 1-hour resolution solar radiation data, ranging from 1998 to 2016, for the entire U.S. and a growing list of international locations on a 4x4 square kilometer grid. Data can be accessed via an [API](https://developer.nrel.gov/docs/solar/nsrdb/). Note that the Physical Solar Model v3 is used.
 
 An API key is required to access and use the above databases. Get your own API key [here](https://developer.nrel.gov/signup/).
 
-#### &gamma;. Demand Data
+#### Demand Data
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted their data.
 The data can be obtained either by direct download from their database using an API or
 by download of Excel spreadsheets. A API key is required for the API download and this key
@@ -174,12 +174,12 @@ The demand profile is finally converted to Matlab format.
 
 ### B. Power output calculation
 
-####  &alpha;. Wind power output
-&bull; <u>Naïve method</u>:
+#### Wind power output
+* <u>Naïve method</u>:
 The *IEC class 2* power curve provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf) is used to convert wind speed to power for all the wind farms in the network. This is the method currently implemented.
 
-####  &beta;. Solar power output
-&bull; <u>Naïve method</u>:
+#### Solar power output
+* <u>Naïve method</u>:
 This estimation method uses a simple normalization procedure to convert the Global Horizontal Irradiance (GHI) to power output. For each plant location the hourly GHI is divided by the maximum GHI over the period considered and multiplied by the capacity of the plant. In other words, each plant reaches its maximal capacity only once over the period considered. This procedure is referred to as naïve since it only accounts for the plant capacity. Note that other factors can possibly affect the conversion from solar radiation at ground to power such as the temperature at the site as well as many system configuration including tilt system.
 
-&bull; <u>System Advisor Model (SAM)</u>: [SAM](https://sam.nrel.gov/) developed by NREL can be used to estimate the solar power output. A collection of developer tools for creating renewable energy system models can be downloaded [here](https://sam.nrel.gov/sdk). Irradiance data along with other meteorological parameters need first to be retrieved from NSRDB for a given site. This information are then fed to the SAM Simulation Core (SCC) and the power output is retrieved. The SSC can reflect the technology used: photovoltaic (PV), solar water heating and concentrating solar power (CSP). The [PVWatts v5](https://www.nrel.gov/docs/fy14osti/62641.pdf) model is used for all the solar plants in the grid. The default values of the parameters of the PVWatts model have been used. Only the system size (capacity in kW) and the array type (Fixed open rack, Fixed roof mount, 1-Axis, Fixed open rack Backtracked 1-Axis and 2-Axis) is set for each solar plant.
+* <u>System Advisor Model (SAM)</u>: [SAM](https://sam.nrel.gov/) developed by NREL can be used to estimate the solar power output. A collection of developer tools for creating renewable energy system models can be downloaded [here](https://sam.nrel.gov/sdk). Irradiance data along with other meteorological parameters need first to be retrieved from NSRDB for a given site. This information are then fed to the SAM Simulation Core (SCC) and the power output is retrieved. The SSC can reflect the technology used: photovoltaic (PV), solar water heating and concentrating solar power (CSP). The [PVWatts v5](https://www.nrel.gov/docs/fy14osti/62641.pdf) model is used for all the solar plants in the grid. The default values of the parameters of the PVWatts model have been used. Only the system size (capacity in kW) and the array type (Fixed open rack, Fixed roof mount, 1-Axis, Fixed open rack Backtracked 1-Axis and 2-Axis) is set for each solar plant.
