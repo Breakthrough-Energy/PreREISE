@@ -1,1 +1,1 @@
-__all__= ["test_EIAdownload", "test_from_excel"]
+__all__= ["test_eia_download", "test_from_excel"]
