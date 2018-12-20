@@ -17,6 +17,7 @@ def retrieve_data(solar_plant, hs_api_key,
 
     :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
         *'GenMWMax'* and *'plantID'* as indices.
+    :param str hs_api_key: API key.
     :param str year: year.
     :return: (*pandas*) -- data frame with *'Pout'*, *'plantID'*, *'ts'* and \ 
         *'tsID'* as columns. The power output is in MWh.
