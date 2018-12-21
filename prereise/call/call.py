@@ -1,5 +1,6 @@
 import datetime
 import os
+import sys
 from multiprocessing import Process
 from timeit import default_timer as timer
 
@@ -7,22 +8,20 @@ import matlab.engine
 import numpy as np
 import pandas as pd
 
-# global variables
-scenario_dirname = '/home/EGM/'
-scenario_list = pd.read_csv(scenario_dirname + 'ScenarioList.csv')
+from prereise.call.const import SCENARIO_LIST_LOCATION
 
 
 def launch_scenario_performance(scenario_name, n_pcalls=1):
-    """
-    This function launches the scenario.
-    The scenario is launched in parallel if n_pcalls > 1.
-    The function calls scenario_matlab_call in n_pcalls parallel calls.
-    
-    :param scenario_name: name of the scenario.
-    :param n_pcalls: Number of parallel runs.
+    """Launches the scenario.
+
+    :param str scenario_name: name of the scenario.
+    :param int n_pcalls: number of parallel runs. The scenario is launched in \ 
+        parallel if n_pcalls > 1. The function calls \ 
+        :func:scenario_matlab_call in n_pcalls parallel calls.
     """
 
     # Get parameters related to scenario
+    scenario_list = pd.read_csv(SCENARIO_LIST_LOCATION)
     scenario = scenario_list[scenario_list.name == scenario_name]
 
     # Catch if name not found
@@ -59,15 +58,13 @@ def launch_scenario_performance(scenario_name, n_pcalls=1):
 
 
 def scenario_matlab_call(scenario, i_start, i_end):
-    """
-    It reads the scenario list file that contains all the information
-    related to the scenario. The function starts a MATLAB engine,
-    runs the add_path file to load MATPOWER and GUROBI.
-    It loads the data path and runs the scenario.
-    
-    :param scenario: The scenario pandas data frame to be launched.
-    :param i_start: Start index.
-    :param i_end: End index.
+    """Reads the scenario list, starts a MATLAB engine, runs the add_path \ 
+        file to load MATPOWER and GUROBI. Then, loads the data path and \ 
+        runs the scenario.
+
+    :param pandas scenario: scenario data frame to be launched.
+    :param int i_start: start index.
+    :param int i_end: end index.
     """
     # Location of add_path file
     top_dirname = os.path.dirname(__file__)
