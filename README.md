@@ -95,7 +95,7 @@ An API key is required to access and use the above databases. Get your own API k
 
 Here, the power output can be estimated using the previously presented naïve method or a more sophisticated one. The latter uses the System Advisor Model ([SAM](https://sam.nrel.gov/)) developed by NREL. The developer tools for creating renewable energy system models can be downloaded [here](https://sam.nrel.gov/sdk). Irradiance data along with other meteorological parameters must first be retrieved from NSRDB for each site. This information are then fed to the SAM Simulation Core (SCC) and the power output is retrieved. The SSC reflect the technology used: photovoltaic (PV), solar water heating and concentrating solar power (CSP). The *[PVWatts v5](https://www.nrel.gov/docs/fy14osti/62641.pdf)* model is used for all the solar plants in the grid. The default values of the parameters of the *PVWatts* model are untouched. Only the system size and the array type (fixed open rack, backtracked, 1-axis and 2-axis) is set for each solar plant.
 
-The naïve and the SAM method are used in the ***[naive_demo.ipynb](prereise/gather/solardata/nsrdb/demo/naive_demo.ipynb)*** and ***[sam_demo.ipynb](prereise/gather/solardata/nsrdb/demo/sam_demo.ipynb)*** demo notebook, respectively.
+The naïve and the SAM method are used in the ***[nsrdb_naive_demo.ipynb](prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb)*** and ***[nsrdb_sam_demo.ipynb](prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb)*** demo notebook, respectively.
 
 
 ### C. Demand Data
