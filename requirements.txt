@@ -1,25 +1,12 @@
-###### Requirements without Version Specifiers ######
-collections
-datetime
-dateutil
-math
-os
-time
-sys
-bokeh
-h5py
-h5pyd
-matlab
-matplotlib
-multiprocessing
-netCDF4
-numpy
-pandas >= 0.23.0
-py3samsdk
-pyproj
-pywtk
-requests
-timeit
-tqdm
-westernintnet
-xlrd
+bokeh==0.13.0
+h5py==2.8.0
+h5pyd==0.3.2
+matplotlib==3.0.0
+netCDF4==1.4.1
+numpy==1.15.2
+pandas==0.23.0
+-e git://github.com/sjschneider/py3samsdk.git#egg=py3samsdk
+pyproj==1.9.5.1
+-e git://github.com/NREL/pywtk.git#egg=pywtk
+requests==2.19.1
+tqdm==4.27.0
