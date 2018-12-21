@@ -37,10 +37,12 @@ Download Matpower and add the following directories in ***add_path.m***:
 ```
 
 
-### D. PreREISE
-In the folder where the ***setup.py*** file is located:
-`pip3 install .`
+### D. WesternInterconnectNetwork
+In the ***WesternInterconnect*** package, locate the ***setup.py*** file and type: `pip3 install .`
 
+
+### E. PreREISE
+In the ***PreREISE*** package, locate the ***setup.py*** file and type: `pip3 install .`
 
 
 ## 2. Create Scenario
