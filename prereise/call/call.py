@@ -1,6 +1,5 @@
 import datetime
 import os
-import sys
 from multiprocessing import Process
 from timeit import default_timer as timer
 
@@ -15,8 +14,8 @@ def launch_scenario_performance(scenario_name, n_pcalls=1):
     """Launches the scenario.
 
     :param str scenario_name: name of the scenario.
-    :param int n_pcalls: number of parallel runs. The scenario is launched in \ 
-        parallel if n_pcalls > 1. The function calls \ 
+    :param int n_pcalls: number of parallel runs. The scenario is launched \
+        in parallel if n_pcalls > 1. The function calls \
         :func:scenario_matlab_call in n_pcalls parallel calls.
     """
 
@@ -39,11 +38,11 @@ def launch_scenario_performance(scenario_name, n_pcalls=1):
         os.error('i_start has to be greater than 1')
     if i_start > i_end:
         os.error('i_end larger than i_start')
-    if n_pcalls > (i_end-i_start + 1):
+    if n_pcalls > (i_end - i_start + 1):
         os.error('n_pcalls is larger than the number of intervals')
 
     # Split the index into n_pcall parts
-    pcall_list = np.array_split(range(i_start, i_end+1), n_pcalls)
+    pcall_list = np.array_split(range(i_start, i_end + 1), n_pcalls)
     proc = []
     start = timer()
     for i in pcall_list:
@@ -54,7 +53,7 @@ def launch_scenario_performance(scenario_name, n_pcalls=1):
     for p in proc:
         p.join()
     end = timer()
-    print('Run time: ' + str(datetime.timedelta(seconds=(end-start))))
+    print('Run time: ' + str(datetime.timedelta(seconds=(end - start))))
 
 
 def scenario_matlab_call(scenario, i_start, i_end):
@@ -88,4 +87,5 @@ def scenario_matlab_call(scenario, i_start, i_end):
 
 if __name__ == "__main__":
     import sys
+
     launch_scenario_performance(sys.argv[1])

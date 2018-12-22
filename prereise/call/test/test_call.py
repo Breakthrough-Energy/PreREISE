@@ -1,7 +1,3 @@
-import os
-import sys
-import unittest
-
 import pytest
 
 from prereise.call.call import launch_scenario_performance
