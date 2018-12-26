@@ -38,12 +38,13 @@ Download Matpower and add the following directories in ***add_path.m***:
 
 
 ### D. WesternInterconnectNetwork
-In the ***WesternInterconnect*** package, locate the ***setup.py*** file and type: `pip3 install .`
+In the ***WesternInterconnect*** package, locate the ***setup.py*** file and type: `pip3 install .` Do not forget to update your PYTHONPATH environment variable.
 
 
 ### E. PreREISE
-In the ***PreREISE*** package, locate the ***setup.py*** file and type: `pip3 install .`
-Do not forget to your PYTONPATH environment variable the path to this package.
+In the ***PreREISE*** package, locate the ***setup.py*** file and type: `pip3 install .` Do not forget to update your PYTHONPATH environment variable.
+
+
 
 ## 2. Create Scenario
 A scenario can be defined by adding an entry to the scenario list ***ScenarioList.csv***. Fill in all the required information. The template is given in the table below.
