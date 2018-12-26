@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from . import helpers
+import prereise.gather.winddata.rap.helpers 
 
 
 def simple(data, wind_farm, inplace=True):

@@ -10,7 +10,7 @@ import requests
 from netCDF4 import Dataset
 from tqdm import tqdm
 
-from . import helpers
+import prereise.gather.winddata.rap.helpers
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
