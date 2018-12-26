@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from .. import get_eia_data
+from prereise.gather.demanddata.EIA import get_eia_data
 
 
 @pytest.mark.skip(reason="Need API key")

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .helpers import ll2ij
+from prereise.gather.solardata.ga_wind import helpers
 
 
 def retrieve_data(solar_plant, hs_api_key,
@@ -53,7 +53,7 @@ def retrieve_data(solar_plant, hs_api_key,
     lat_origin, lon_origin = f['coordinates'][0][0]
     ij = {}
     for key in coord.keys():
-        ij[key] = ll2ij(lon_origin, lat_origin, key[0], key[1])
+        ij[key] = helpers.ll2ij(lon_origin, lat_origin, key[0], key[1])
 
     # Extract time serie
     dt = f['datetime']
