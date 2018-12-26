@@ -43,7 +43,7 @@ In the ***WesternInterconnect*** package, locate the ***setup.py*** file and typ
 
 ### E. PreREISE
 In the ***PreREISE*** package, locate the ***setup.py*** file and type: `pip3 install .`
-
+Do not forget to your PYTONPATH environment variable the path to this package.
 
 ## 2. Create Scenario
 A scenario can be defined by adding an entry to the scenario list ***ScenarioList.csv***. Fill in all the required information. The template is given in the table below.
