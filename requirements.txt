@@ -1,6 +1,7 @@
 bokeh==0.13.0
 h5py==2.8.0
 h5pyd==0.3.2
+matlab
 matplotlib==3.0.0
 netCDF4==1.4.1
 numpy==1.15.2
