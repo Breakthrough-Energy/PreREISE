@@ -7,23 +7,13 @@ from py3samsdk import PySSC
 from tqdm import tqdm
 
 
-def get_frac(interconnect):
+def get_frac():
     """Return fraction of solar plants using no tracking (fix), single-axis \ 
-        or double-axis tracking in zone.
-
-    :param str zone: zone.
-    :raise Exception: if interconnect is invalid.
-    :return: (*list*) -- three coefficients, one for each technology.
+        or double-axis tracking in Western Interconnect.
     """
 
-    if interconnect is 'Western':
-        return [0.2870468, 0.6745755, 0.0383777]
-    elif interconnect is 'Texas':
-        return [0.08, 0.46, 0.46]
-    else:
-        print("%s is incorrect. Possible interconnects are: %s" % 
-              (interconnect, ['Western', 'Texas']))
-        raise Exception('Invalid zone')
+    return [0.2870468, 0.6745755, 0.0383777]
+
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
@@ -123,7 +113,6 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                                                 freq='H')})
             data_site['tsID'] = range(1, len(data_site)+1)
             data_site['plantID'] = i[0]
-            zone = solar_plant.loc[i[0]].interconnect
 
             for j, axis in enumerate([0, 2, 4]):
                 core = ssc.data_create()
@@ -141,11 +130,11 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                 mod = ssc.module_create('pvwattsv5')
                 ssc.module_exec(mod, core)
                 if j == 0:
-                    Pout = get_frac(zone)[j] * \
+                    Pout = get_frac()[j] * \
                            np.array(ssc.data_get_array(core, 'gen')) / 1000
                 else:
                     Pout = Pout + \
-                           get_frac(zone)[j] * \
+                           get_frac()[j] * \
                            np.array(ssc.data_get_array(core, 'gen')) / 1000
 
                 ssc.data_free(core)
