@@ -1,14 +1,14 @@
 # PreREISE
-This package defines the scenario and calls the Matlab simulation engine. The name stands for pre Renewable Energy Integration Study Engine. After setting up the scenario in REISE you create an entry in ***ScenarioList.csv***. This file contains all scenarios. The location of the list on the server is `/home/EGM/`.
+This package defines the scenario and calls the MATLAB simulation engine. The name stands for pre Renewable Energy Integration Study Engine. After setting up the scenario in REISE you create an entry in ***ScenarioList.csv***. This file contains all scenarios. The location of the list on the server is `/home/EGM/`.
 
 
 
 ## 1. Setup/Install
-This package requires Matlab, Gurobi, and Matpower. Make sure to put the paths from Gurobi and Matpower into the ***add_path.m*** file. Before installing this package, Matlab, Gurobi and Matpower must be installed first.
+This package requires MATLAB, Gurobi, MATPOWER and WesternInterconnect.
 
 
-### A. Matlab
-Install Matlab and proceed as follows:  
+### A. MATLAB
+Install MATLAB and proceed as follows:  
 ```
 cd "matlabroot\extern\engines\python"
 python setup.py install
@@ -23,14 +23,14 @@ for Mac or Linux systems.
 
 
 ### B. Gurobi
-Install Gurobi and add Matlab path to ***add_path.m***:
+Install Gurobi and add MATLAB path to ***add_path.m***:
 ```
 <GUROBI>/<os>/matlab
 ```
 
 
-### C. Matpower
-Download Matpower and add the following directories in ***add_path.m***:
+### C. MATPOWER
+Download MATPOWER and add the following directories in ***add_path.m***:
 ```
 <MATPOWER>        — core MATPOWER functions
 <MATPOWER>/most   — core MOST functions
@@ -38,20 +38,24 @@ Download Matpower and add the following directories in ***add_path.m***:
 
 
 ### D. WesternInterconnectNetwork
-In the ***WesternInterconnect*** package, locate the ***setup.py*** file and type: `pip3 install .` Do not forget to update your PYTHONPATH environment variable.
+In the WesternInterconnect package, locate the ***setup.py*** file and type: `pip3 install .` Do not forget to update your PYTHONPATH environment variable.
 
 
 ### E. PreREISE
-In the ***PreREISE*** package, locate the ***setup.py*** file and type: `pip3 install .` Do not forget to update your PYTHONPATH environment variable.
+In the PreREISE package, locate the ***setup.py*** file and type: `pip3 install .` Do not forget to update your PYTHONPATH environment variable.
 
 
 
 ## 2. Create Scenario
-A scenario can be defined by adding an entry to the scenario list ***ScenarioList.csv***. Fill in all the required information. The template is given in the table below.
-
-name | folder_location | input_data_location | output_data_location | start_index | end_index | extract | description
------------- | ------------- | ------------ | ------------- | ------------ | ------------- | ------------ | -------------
-`scenario_name` | Folder location of Matlab files | Input data location | Output data location | Start index | End index | True/False to convert data into csv | Description
+A scenario can be defined by adding an entry to the scenario list ***ScenarioList.csv*** table. Fill in all the required information. There are 8 columns in the scenario list table. These are:
+* **name**: `scenario_name`;
+* **folder_location**: path to folder where MATLAB files are located;
+* **input_data_location**: path to folder where input data are located;
+* **output_data_location**: path to folder where input will be saved;
+* **start_index**: start index;
+* **end_index**: end index;
+* **extract**: True/False. Should output data be converted to csv and;
+* **description**: description, problem encountered, ...
 
 Make sure you choose an unique name in the `scenario_name` column. Since this list is temporary and will be replaced by a database there is no check of uniqueness. Make sure you have stored the ***scenario_name.m*** file, the related simulation and data files in the defined locations. The convention is that we use the scenario name as the output folder name. Make sure your simulation m-file has the same name as the unique scenario name.
 
@@ -138,7 +142,7 @@ The BA counts were then distributed across each region where the BA operates, us
 
 
 
-## Start simulation
+## 4. Start simulation
 Simulation can only be launched on server. After setting up the scenario, the simulation engine can be called and the simulation can be started as follows:
 ```python
 import prereise
