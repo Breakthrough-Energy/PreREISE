@@ -5,10 +5,13 @@ from westernintnet.westernintnet import win_data
 
 def get_profile(start='2016-01-01-00', end='2016-12-31-23'):
     """Creates hydro profile using monthly capacity factors reported by EIA \ 
-        `here <https://www.eia.gov/electricity/annual/html/epa_04_08_b.html>`_.
+        in this `table \
+        <https://www.eia.gov/electricity/annual/html/epa_04_08_b.html>`_.
 
     :param string start: starting date.
     :param string end: ending date.
+    :return: (*pandas*) -- data frame formated for REISE. The power output \ 
+        is in MWh.
     """
     start = pd.Timestamp(start)
     end = pd.Timestamp(end)
