@@ -6,9 +6,9 @@ from pyproj import Proj
 def ll2ij(lon_origin, lat_origin, lon, lat):
     """Find nearest x/y indices for a given lat/lon.
 
-    :param lat: Latitude of coordinate of interest.
-    :param lon: Longitude of coordinate of interest.
-    :return: coordinate of the closest pixel in the database.
+    :param float lat: Latitude of coordinate of interest.
+    :param float lon: Longitude of coordinate of interest.
+    :return: (*tuple*) -- coordinate of the closest pixel in the database.
     """
 
     proj_string = """+proj=lcc +lat_1=30 +lat_2=60
@@ -32,9 +32,9 @@ def ll2ij(lon_origin, lat_origin, lon, lat):
 def to_reise(data):
     """Format data for REISE.
 
-    :param data: pandas DataFrame as returned by \ 
-        :py:func:`prereise.gather.solardata.ga_wind.ga_wind.retrieve_data`.
-    :return: pandas DataFrame formated for REISE.
+    :param pandas data: pandas data frame as returned by \ 
+        :func:`prereise.gather.solardata.ga_wind.ga_wind.retrieve_data`.
+    :return: (*pandas*) data frame formated for REISE.
     """
     ts = data['ts'].unique()
     plantID = data[data.tsID == 1].plantID.values

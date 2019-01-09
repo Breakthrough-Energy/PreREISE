@@ -1,1 +1,1 @@
-__all__ = ["context", "te_wind_test"]
+__all__ = ["te_wind_test"]

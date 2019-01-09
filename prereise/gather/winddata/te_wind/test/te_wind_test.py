@@ -1,16 +1,12 @@
-# Import western interconnect data
-from westernintnet.westernintnet import WesternIntNet
-
-from .context import *
-
-win = WesternIntNet()
+from westernintnet.westernintnet import win_data
+from prereise.gather.winddata.te_wind import te_wind
 
 
 def test():
 
     all_siteID_NREL = te_wind.get_all_NREL_siteID_for_states(['WA'])
 
-    wind_farm_bus = win.genbus.groupby('type').get_group('wind')
+    wind_farm_bus = win_data.genbus.groupby('type').get_group('wind')
 
     closest_NREL_siteID = te_wind.find_NREL_siteID_closest_to_windfarm(
         all_siteID_NREL, wind_farm_bus[['lat', 'lon']]
