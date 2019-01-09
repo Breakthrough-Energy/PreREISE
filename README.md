@@ -105,7 +105,13 @@ Here, the power output can be estimated using the previously presented naïve me
 The naïve and the SAM method are used in the ***[nsrdb_naive_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb)*** and ***[nsrdb_sam_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb)*** demo notebook, respectively.
 
 
-### C. Demand Data
+### C. Hydro Data
+EIA (Energy Information Administration) published monthly capacity factors for hydro plants across the country. This dataset (available [here](https://www.eia.gov/electricity/annual/html/epa_04_08_b.html)) is used to produce a profile for each hydro plant in the grid. Note that we are using the same set of capacity factor independently of the geographical location of the plant. As a result, the profile of all the hydro plants in the grid will have the same shape. Only the power output will differ (the scale of the profile).
+
+Check out the ***[eia_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/hydro/prereise/gather/hydrodata/eia/demo/eia_demo.ipynb)*** notebook for demo.
+
+
+### D. Demand Data
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted their data. The data can be obtained either by direct download from their database using an API or by download of Excel spreadsheets. A API key is required for the API download and this key can be obtained by a user by registering at https://www.eia.gov/opendata/.
 
 The direct download currently contains only published demand data. The Excel spreadsheets include original and imputed demand data, as well as results of various data quality checks done by EIA. Documentation about the datasets can be found [here](https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf). Excel spreadsheets can be downloaded by clicking on the links in page 9 (Table of all US and foreign connected balancing authorities).
