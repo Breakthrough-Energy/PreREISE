@@ -70,14 +70,15 @@ def from_excel(directory, series_list, start_date, end_date):
 
 
 class EIAgov(object):
+    """Copied from `this link <https://quantcorner.wordpress.com/\
+        2014/11/18/downloading-eias-data-with-python/>`_.
+    
+    :param str token: EIA token.
+    :param list series: id code(s) of the series to be downloaded.
+    
+    """
+    
     def __init__(self, token, series):
-        """Initialises the EIAgov class. Copied from `this link \ 
-        <https://quantcorner.wordpress.com/2014/11/18/downloading-eias-data-with-python/>`_ 
-
-        :param str token: EIA token
-        :param list series: id code(s) of the series to be downloaded
-        """
-
         self.token = token
         self.series = series
 
@@ -107,8 +108,9 @@ class EIAgov(object):
             print('Reason: ', e.reason)
 
     def get_data(self):
-        """Converts json files into pandas DataFrame
+        """Converts json files into data frame.
 
+        :return: (*pandas*) -- data frame.
         """
 
         date_ = self.raw(self.series[0])
