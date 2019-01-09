@@ -6,9 +6,9 @@ matplotlib==3.0.0
 netCDF4==1.4.1
 numpy==1.15.2
 pandas==0.23.0
--e git://github.com/sjschneider/py3samsdk.git#egg=py3samsdk
+-e git+https://github.com/sjschneider/py3samsdk.git#egg=py3samsdk
 pyproj==1.9.5.1
--e git://github.com/NREL/pywtk.git#egg=pywtk
+-e git+https://github.com/NREL/pywtk.git#egg=pywtk
 requests==2.19.1
 tqdm==4.27.0
 xlrd=1.2.0
