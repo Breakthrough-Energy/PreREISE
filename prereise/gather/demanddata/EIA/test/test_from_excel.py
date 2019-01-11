@@ -8,16 +8,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from .. import get_eia_data
+from prereise.gather.demanddata.eia import get_eia_data
 
 
 def test_from_excel():
-    '''
-    Test pandas DataFrame assembled from Excel spreadsheets \ 
-    manually downloaded from EIA.  Test checks that correct \ 
-    number of columns are created.
-
-    '''
+    """Tests data frame assembled from Excel spreadsheets manually \ 
+        downloaded from EIA. Test checks that correct number of columns are \ 
+        created.
+    """
 
     dir1 = os.path.join(os.path.dirname(__file__), 'data')
 

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .helpers import ll2ij
+from prereise.gather.solardata.ga_wind import helpers
 
 
 def retrieve_data(solar_plant, hs_api_key,
@@ -15,11 +15,12 @@ def retrieve_data(solar_plant, hs_api_key,
     """Retrieve irradiance data from Gridded Atmospheric Wind Integration \ 
         National Dataset.
 
-    :param solar_plant: pandas DataFrame with the following structure: \ 
-        ['plantID'(index), 'lat', 'lon', 'GenMWMax'].
-    :param year: year.
-    :return: pandas DataFrame with the following structure: ['Pout', \ 
-        'plantID', 'ts', 'tsID']. The power output is in MW.
+    :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
+        *'GenMWMax'* and *'plantID'* as indices.
+    :param str hs_api_key: API key.
+    :param str year: year.
+    :return: (*pandas*) -- data frame with *'Pout'*, *'plantID'*, *'ts'* and \ 
+        *'tsID'* as columns. The power output is in MWh.
     """
 
     # Information on solar plants
@@ -52,7 +53,7 @@ def retrieve_data(solar_plant, hs_api_key,
     lat_origin, lon_origin = f['coordinates'][0][0]
     ij = {}
     for key in coord.keys():
-        ij[key] = ll2ij(lon_origin, lat_origin, key[0], key[1])
+        ij[key] = helpers.ll2ij(lon_origin, lat_origin, key[0], key[1])
 
     # Extract time serie
     dt = f['datetime']

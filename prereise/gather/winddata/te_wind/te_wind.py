@@ -12,6 +12,14 @@ from tqdm import tqdm
 
 
 def _greatCircleDistance(lat1, lon1, lat2, lon2):
+    """Calculates distance between two sites
+
+    :param float lat1: latitude of first site (in rad.)
+    :param float lon1: longitude of first site (in rad.)
+    :param float lat2: latitude of second site (in rad.)
+    :param float lon2: longitude of second site (in rad.)
+    :return: (*float*) -- distance between two sites (in km.).
+    """
     R = 6368
 
     def haversin(x):
@@ -24,9 +32,9 @@ def _greatCircleDistance(lat1, lon1, lat2, lon2):
 def get_all_NREL_siteID_for_states(states_list):
     """Retrieve ID's of wind farms in given states.
 
-    :param states_list: list object containing state abbreviation.
-    :return: pandas DataFrame with columns ['site_id', 'lat', 'lon', \ 
-        'capacity', 'capacity_factor']
+    :param list states_list: list object containing state abbreviation.
+    :return: (*pandas*) -- dataframe with *'site_id'*, *'lat'*, *'lon'*, \ 
+        *'capacity'* and *'capacity_factor'* as columns.
     """
     nrel_sites = None
 
@@ -62,13 +70,13 @@ def get_all_NREL_siteID_for_states(states_list):
 def find_NREL_siteID_closest_to_windfarm(nrel_sites, wind_farm_bus):
     """Find NREL site closest to wind farm.
 
-    :param nrel_sites: pandas DataFrame that needs the columns \ 
-        ['site_id', 'lat', 'lon','capacity'] as returned by \ 
-        :py:func:`get_all_NREL_siteID_for_states`.
-    :param wind_farm_bus: pandas DataFrame with the following structure: \ 
-        ['plantID'(index), 'lat', 'lon']. The order of the columns \ 
-        plantID(index), lat and lon is important.
-    :return: pandas Series with plantID as index, siteID and capacity as value.
+    :param pandas nrel_sites: data frame with *'site_id'*, *'lat'*, *'lon'* \ 
+        and *'capacity'* as columns. Same strucutre as the one returned by \ 
+        :func:`get_all_NREL_siteID_for_states`.
+    :param pandas wind_farm_bus: data frame with *'lat'*, *'lon'* as columns \ 
+        and *'plantID'* as indices. The order of the columns is important.
+    :return: (*pandas*) -- data frame with *'siteID'*, '*capacity*' and \ 
+        *'dist'* as columns and *'plantID'* as indices.
     """
     closest_NREL_siteID = pd.DataFrame(index=wind_farm_bus.index,
                                        columns=['siteID', 'capacity', 'dist'])
@@ -97,15 +105,16 @@ def find_NREL_siteID_closest_to_windfarm(nrel_sites, wind_farm_bus):
 def get_data_from_NREL_server(siteIDs, data_range):
     """Get power and wind speed data from NREL server.
 
-    :param siteIDs: pandas DataFrame with siteIDs and capacity as values, \ 
-        as returned by :py:func:`find_NREL_siteID_closest_to_windfarm`
-    :param data_range: pandas data_range, freq needs to be 5min.
-    :return: 2D dict containing pandas DataFrame with index date \ 
-        and columns power and wind_speed. \ 
-        The data is normalized using the capacity. \ 
-        The 1. key is the month like '2010-10' \ 
-        The 2. key is the siteID like 121409 \ 
-        So the class site_dict['2012-12'][121409] returns the DataFrame.
+    :param pandas siteIDs: data frame with *'siteID'* and '*capacity*' as \ 
+        columns. Same structure as the one returned by \ 
+        :func:`find_NREL_siteID_closest_to_windfarm`.
+    :param pandas data_range: data_range, freq needs to be 5min.
+    :return: (*dict*) -- dictionary of data frame with *'power'* \ 
+        and *'wind_speed'* as columns and timestamp as indices. The data is \ 
+        normalized using the capacity of the plant. The first key is a \ 
+        month-like timestamp (e.g. *'2010-10'*). The second key is the site \ 
+        id number (e.g. *'121409'*). Then, site_dict['2012-12'][121409] is \ 
+        a data frame.
     """
 
     wtk_url = "https://h2oq9ul559.execute-api.us-west-2.amazonaws.com/dev"
@@ -116,7 +125,7 @@ def get_data_from_NREL_server(siteIDs, data_range):
     # We use a dict because the output is a tensor
     # 1: siteIDs 2: date(month) 3: attribute(power, wind_speed)
     sites_dict = {}
-    # Use helper DataFrame to specifie download interval
+    # Use helper DataFrame to specify download interval
     helper_df = pd.DataFrame(index=data_range)
 
     for y in tqdm(helper_df.index.year.unique()):
@@ -149,20 +158,19 @@ def get_data_from_NREL_server(siteIDs, data_range):
 
 
 def dict_to_DataFrame(data, data_range, closest_NREL_siteID):
-    """Converts the dict into two DataFrames. One for power and one for wind
-    speed.
+    """Converts dictionary into two data frames. One is power, the other is \ 
+        wind speed.
 
-    :param data: 2D dict containing pandas DataFrame with index date \ 
-        and columns power and wind_speed. The 1. key is the month like \ 
-        '2010-10'. The 2. key is the siteID like 121409. \ 
-        The dict structure is as returend by \ 
-        :py:func:`get_data_from_NREL_server`.
-    :param data_range: pandas data_range of the data.
-    :param closest_NREL_siteID: pandas Series with plantID as index, \ 
-        siteID and capacity as value. The structure is as returned by \ 
-        :py:func:`find_NREL_siteID_closest_to_windfarm`.
-    :return: Two DataFrames, one for power and one for wind speed. Index is \ 
-        data_range and columns are site_IDs
+    :param dict data: dictionary of data frame with *'power'* \ 
+        and *'wind_speed'* as columns and timestamp as indices. The first key \ 
+        is a month-like timestamp (e.g. *'2010-10'*). The second key is the \ 
+        site id number (e.g. *'121409'*). It is returend by \ 
+        :func:`get_data_from_NREL_server`.
+    :param pandas data_range: date range for the data.
+    :param pandas closest_NREL_siteID: data frame with *'siteID'* as column \ 
+        and *'plantID'* as indices.
+    :return: (*list*) -- Two data frames, one for power and one for wind \ 
+        speed. Column is *'siteID'* and indices are timestamp.
     """
     NREL_power = pd.DataFrame(index=data_range,
                               columns=closest_NREL_siteID[
@@ -185,16 +193,18 @@ def dict_to_DataFrame(data, data_range, closest_NREL_siteID):
 def scale_power_to_plant_capacity(NREL_power,
                                   wind_farm_bus,
                                   closest_NREL_siteID):
-    """ Scales power to plant capacity
+    """Scales power to plant capacity.
 
-    :param NREL_power: pandas DataFrame index data_range and columns siteID. \ 
-        The structure the same as the one of the first variable returned by \ 
-        :py:func:`dict_to_DataFrame`.
-    :param wind_farm_bus: pandas DataFrame containing plantID and GenMWMax. \ 
-    :param closest_NREL_siteID: pandas DataFrame containing siteID as \ 
-        as returned by :py:func`find_NREL_siteID_closest_to_windfarm`. \ 
-    :return: pandas DataFrame with data_range as well as plantID containing \ 
-        the power.
+    :param pandas NREL_power: data frame with *'siteID'* as columns and \ 
+        timestamp as indices. Same structure as the one returned by \ 
+        :func:`dict_to_DataFrame`.
+    :param pandas wind_farm_bus: data frame with *'GenMWMax'* as column and \ 
+        *'plantID'* as indices.
+    :param pandas closest_NREL_siteID: data frame with *'siteID'*, \ 
+        '*capacity*' and *'dist'* as columns and *'plantID'* as indices. It \ 
+        is returned by :func`find_NREL_siteID_closest_to_windfarm`.
+    :return: (*pandas*) -- data frame of the power generated with \ 
+        *'plantID'* and timestamp as indices.
     """
     wind_farm_power = pd.DataFrame(index=NREL_power.index,
                                    columns=wind_farm_bus.index.values)

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .helpers import get_power
+import prereise.gather.winddata.rap.helpers 
 
 
 def simple(data, wind_farm, inplace=True):
@@ -12,11 +12,11 @@ def simple(data, wind_farm, inplace=True):
         are first found for each missing entry. Then, a U and V value are 
         randomly generated between the respective derived ranges.
 
-    :param data: pandas DataFrame as returned \ 
+    :param pandas data: data frame as returned \ 
         by :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
-    :param wind_farm: pandas DataFrame of wind farms.
-    :param inplace: should the imputation be done in place
-    :return: pandas DataFrame with missing entries imputed.
+    :param pandas wind_farm: data frame of wind farms.
+    :param bool inplace: should the imputation be done in place
+    :return: (*pandas*) -- data frame with missing entries imputed.
     """
 
     if inplace:
@@ -54,7 +54,8 @@ def simple(data, wind_farm, inplace=True):
         data_impute.at[j, 'V'] = minV + (maxV - minV) * np.random.random()
         wspd = np.sqrt(data.loc[j].U**2 + data.loc[j].V**2)
         capacity = wind_farm.loc[k].GenMWMax
-        data_impute.at[j, 'Pout'] = get_power(wspd, 'IEC class 2') * capacity
+        data_impute.at[j, 'Pout'] = helpers.get_power(
+            wspd, 'IEC class 2') * capacity
 
     if not inplace:
         return data_impute

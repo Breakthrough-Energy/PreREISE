@@ -10,19 +10,21 @@ import requests
 from netCDF4 import Dataset
 from tqdm import tqdm
 
-from .helpers import angular_distance, get_power, ll2uv
+import prereise.gather.winddata.rap.helpers
 
 
-def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
+def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     """Retrieve wind speed data from NOAA's server.
 
-    :param wind_farm: pandas DataFrame with the following structure: \ 
-        ['plantID'(index), 'lat', 'lon', 'GenMWMax'].
-    :param start_date: start date.
-    :param end_date: end date (inclusive).
-    :return: pandas DataFrame with the following structure: ['PlantID', 'U', \ 
-        'V', 'Pout', 'ts', 'tsID']. The power output is in MW and the U and \ 
-        V component of the wind speed 80-m above ground level are in m/s.
+    :param pandas wind_farm: data frame with *'lat'*, *'lon'* and \ 
+        *'GenMWMax'* as columns and *'plantID'*  as index.
+    :param str start_date: start date.
+    :param str end_date: end date (inclusive).
+    :return: (*tuple*) -- First element is a pandas data frame with \ 
+        *'PlantID'*, *'U'*, *'V'*, *'Pout'*, *'ts'* and *'tsID'* as columns. \ 
+        The power output is in MWh and the U and V component of the wind \ 
+        speed 80-m above ground level are in m/s. Second element is a list \ 
+        of missing files.
     """
 
     # Information on wind farms
@@ -70,7 +72,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
     step = datetime.timedelta(hours=1)
 
     for i, file in tqdm(enumerate(files), total=len(files)):
-        if i != 0 and i % 1000 == 0:
+        if i != 0 and i % 2500 == 0:
             time.sleep(300)
         query = file + var + '&' + box + '&' + extension
         request = requests.get(query)
@@ -93,9 +95,9 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
                 # The angular distance is calculated once. The target to grid
                 # correspondence is stored in a dictionary.
                 for j in range(n_target):
-                    uv_target = ll2uv(lon_target[j], lat_target[j])
-                    angle = [angular_distance(uv_target,
-                                              ll2uv(lon_grid[k], lat_grid[k]))
+                    uv_target = helpers.ll2uv(lon_target[j], lat_target[j])
+                    angle = [helpers.angular_distance(uv_target,
+                             helpers.ll2uv(lon_grid[k], lat_grid[k]))
                              for k in range(n_grid)]
                     target2grid[id_target[j]] = np.argmin(angle)
 
@@ -104,8 +106,8 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2017-12-31'):
             data_tmp['V'] = [v_wsp[target2grid[id_target[j]]]
                              for j in range(n_target)]
             wspd = np.sqrt(pow(data_tmp['U'], 2) + pow(data_tmp['V'], 2))
-            data_tmp['Pout'] = [get_power(val,
-                                          'IEC class 2') * capacity_target[j]
+            data_tmp['Pout'] = [helpers.get_power(val, 'IEC class 2') *
+                                capacity_target[j]
                                 for j, val in enumerate(wspd)]
 
             tmp.close()
