@@ -1,18 +1,12 @@
 import os
-from datetime import datetime, timedelta
-
-import numpy as np
 import pandas as pd
-import pytest
 
 from prereise.gather.demanddata.eia import find_fix_outliers 
 
 
 def test_slope_interpolate():
-    """
-    Test outlier detection and replacement method.
-    Test checks that there are 4 changed outliers
-    for the input test set and threshold.
+    """Test outlier detection and replacement method. Check that there are \ 
+        4 changed outliers for the input test set and threshold.
     """
 
     dir1 = os.path.join(os.path.dirname(__file__), 'data')

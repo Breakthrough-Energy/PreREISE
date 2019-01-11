@@ -1,12 +1,9 @@
 import json
 import os
-from datetime import datetime
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
-import numpy as np
 import pandas as pd
-from dateutil.parser import parse
 from pandas.tseries.offsets import DateOffset
 
 

@@ -1,12 +1,6 @@
-import os
-import sys
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
-from dateutil.parser import parse
 
-sys.path.append("..")
 
 def slope_interpolate(ba_df, threshold):
     """Look for demand outliers by applying a z-score threshold to the \ 

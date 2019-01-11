@@ -1,10 +1,6 @@
 import getpass
-import json
 from datetime import datetime
-from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
 
-import numpy as np
 import pandas as pd
 import pytest
 
