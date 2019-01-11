@@ -51,7 +51,7 @@ A scenario can be defined by adding an entry to the scenario list ***ScenarioLis
 * **name**: `scenario_name`;
 * **folder_location**: path to folder where MATLAB files are located;
 * **input_data_location**: path to folder where input data are located;
-* **output_data_location**: path to folder where input will be saved;
+* **output_data_location**: path to folder where output data will be saved;
 * **start_index**: start index;
 * **end_index**: end index;
 * **extract**: True/False. Should output data be converted to csv and;
@@ -138,7 +138,7 @@ from prereise.gather.demanddata.eia.test import test_from_excel
 test_from_excel.test_from_excel()
 ```
 
-The notebook [AssembleBAfromExcel_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb) illustrates usage.
+The [AssembleBAfromExcel_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/anomaly_detect_1/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb) notebook illustrates usage.
 
 To output the demand profile, cleaning steps were applied to the EIA data:  
 1) missing data imputation - the EIA method was used, i.e., EIA published data was used; beyond this, NA's were converted to float zeros;  
@@ -160,7 +160,7 @@ To test
 from prereise.gather.demanddata.eia.test import test_slope_interpolate
 test_slope_interpolate.test_slope_interpolate()
 ```
-The notebook [BA_Anomaly_Detection_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/anomaly_detect_1/prereise/gather/demanddata/EIA/demo//BA_Anomaly_Detection_demo.ipynb) illustrates usage.
+The [BA_Anomaly_Detection_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/anomaly_detect_1/prereise/gather/demanddata/EIA/demo//BA_Anomaly_Detection_demo.ipynb) notebook illustrates usage.
 
 
 
