@@ -12,7 +12,7 @@ def test_eia_download():
     """Check data frame assembled from data download by API call from \ 
         EIA. Test checks that the correct number of files are downloaded and \ 
         correct number of columns are created.
-        
+
         Token string can be obtained by registering \ 
         `here <https://www.eia.gov/opendata/>`_.
     """

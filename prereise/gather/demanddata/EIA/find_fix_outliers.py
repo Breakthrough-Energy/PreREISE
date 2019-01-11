@@ -47,7 +47,7 @@ def slope_interpolate(ba_df, threshold):
     df['delta_zscore'] = np.abs((df['delta'] - delta_mu)/delta_sigma)
 
     # Find the outliers
-    outlier_index_list = df.loc[df['delta_zscore']>3].index
+    outlier_index_list = df.loc[df['delta_zscore'] > 3].index
 
     hour_save = -1
     for i in outlier_index_list:
@@ -60,15 +60,15 @@ def slope_interpolate(ba_df, threshold):
             next_save = hour_index + 1
             continue
 
-        #Check for zeros: consecutive zeros, 
-        #which don't have delta_zscores exceed threshold,
-        #will get extrapolated to the next non-zero value
-        #This is fine for, say up to 5 hours; will not be appropriate 
-        #otherwise since it may not capture the periodic patterns
-        #Print a warning
+        # Check for zeros: consecutive zeros,
+        # which don't have delta_zscores exceed threshold,
+        # will get extrapolated to the next non-zero value
+        # This is fine for, say up to 5 hours; will not be appropriate
+        # otherwise since it may not capture the periodic patterns
+        # Print a warning
 
-        if df.iloc[hour_index-1][ba_name]==0:
-            #print(hour_index, '->', next_save)
+        if df.iloc[hour_index-1][ba_name] == 0:
+            # print(hour_index, '->', next_save)
             next_save = hour_index + 1
             continue
 

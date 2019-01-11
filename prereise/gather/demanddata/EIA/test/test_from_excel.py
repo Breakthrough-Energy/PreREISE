@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 
 from prereise.gather.demanddata.eia import get_eia_data
