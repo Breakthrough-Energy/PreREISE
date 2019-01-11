@@ -51,7 +51,7 @@ A scenario can be defined by adding an entry to the scenario list ***ScenarioLis
 * **name**: `scenario_name`;
 * **folder_location**: path to folder where MATLAB files are located;
 * **input_data_location**: path to folder where input data are located;
-* **output_data_location**: path to folder where input will be saved;
+* **output_data_location**: path to folder where output data will be saved;
 * **start_index**: start index;
 * **end_index**: end index;
 * **extract**: True/False. Should output data be converted to csv and;
@@ -138,13 +138,29 @@ from prereise.gather.demanddata.eia.test import test_from_excel
 test_from_excel.test_from_excel()
 ```
 
-The notebook [AssembleBAfromExcel_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb) illustrates usage.
+The [AssembleBAfromExcel_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/anomaly_detect_1/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb) notebook illustrates usage.
 
 To output the demand profile, cleaning steps were applied to the EIA data:  
 1) missing data imputation - the EIA method was used, i.e., EIA published data was used; beyond this, NA's were converted to float zeros;  
 2) missing hours were added.
 
 The BA counts were then distributed across each region where the BA operates, using the region populations as weights. For example, if a BA operates in both WA and OR, the counts for WA are weighted by the fraction of the total counts in WA relative to the total population of WA and OR.
+
+The next step consist in detecting outliers by looking for large changes in the slope of the demand data. The underlying physical rationale is that demand changes are mostly driven by weather temperature changes (first or higher order), and thermal mass limits the rate at which demand values can change. By looking at the slope of demand data, it is seen that the slope distribution is normally distributed, and outliers can be easily found by imposing a z-score threshold value of 3. These outliers are then replaced by linear interpolation.
+
+To use the outlier detector:
+```python
+from prereise.gather.demanddata.eia import find_fix_outliers
+
+fixed_data = find_fix_outliers.slope_interpolate(BA_file, threshold)
+```
+
+To test
+```python
+from prereise.gather.demanddata.eia.test import test_slope_interpolate
+test_slope_interpolate.test_slope_interpolate()
+```
+The [BA_Anomaly_Detection_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/anomaly_detect_1/prereise/gather/demanddata/EIA/demo//BA_Anomaly_Detection_demo.ipynb) notebook illustrates usage.
 
 
 

@@ -1,12 +1,6 @@
-import json
 import os
-from datetime import datetime, timedelta
-from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
 
-import numpy as np
 import pandas as pd
-import pytest
 
 from prereise.gather.demanddata.eia import get_eia_data
 

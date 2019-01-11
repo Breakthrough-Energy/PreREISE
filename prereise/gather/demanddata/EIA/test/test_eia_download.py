@@ -1,10 +1,6 @@
 import getpass
-import json
 from datetime import datetime
-from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -16,7 +12,7 @@ def test_eia_download():
     """Check data frame assembled from data download by API call from \ 
         EIA. Test checks that the correct number of files are downloaded and \ 
         correct number of columns are created.
-        
+
         Token string can be obtained by registering \ 
         `here <https://www.eia.gov/opendata/>`_.
     """
