@@ -71,12 +71,12 @@ This module aims at gathering the required data for the simulation.
 
 Note that the dataset is incomplete (33 hours are missing in 2016) and, consequently, missing entries need to be imputed. Afterwards, wind speed is converted to power for all the wind farms in the network using the *IEC class 2* power curve provided by NREL in the [WIND Toolkit documentation](https://www.nrel.gov/docs/fy14osti/61714.pdf).
 
-Check out the ***[rap_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/winddata/rap/demo/rap_demo.ipynb)*** notebook for demo.
+Check out the ***[rap_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb)*** notebook for demo.
 
 #### ii. Techno-Economic Wind Integration National Dataset Toolkit
 The [Techno-Economic WIND (Wind Integration National Dataset) Toolkit](https://www.nrel.gov/grid/wind-toolkit.html) provides 5-min resolution data for 7 years, ranging from 2007 to 2013, at 120,000 points within the continental U.S. selected for their wind resource. This set contains power estimates and forecasts along with a subset of atmospheric variables. Data can be accessed via an [API](https://developer.nrel.gov/docs/wind/wind-toolkit/).
 
-The closest site to the wind farm in the network is found in the NREL dataset and the associated power estimate is simply scaled to the plant capacity to obtain a wind power output profile. The procedure is illustrated in the ***[te_wind_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/winddata/te_wind/demo/te_wind_demo.ipynb)*** notebook.
+The closest site to the wind farm in the network is found in the NREL dataset and the associated power estimate is simply scaled to the plant capacity to obtain a wind power output profile. The procedure is illustrated in the ***[te_wind_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/winddata/te_wind/demo/te_wind_demo.ipynb)*** notebook.
 
 Also, a test can be run as follows:
 ```python
@@ -93,7 +93,7 @@ The [Gridded Atmospheric WIND (Wind Integration National Dataset) Toolkit](https
 
 Power output is estimated using a simple normalization procedure. For each solar plant location the hourly Global Horizontal Irradiance (GHI) is divided by the maximum GHI over the period considered and multiplied by the capacity of the plant. This procedure is referred to as naïve since it only accounts for the plant capacity. Note that other factors can possibly affect the conversion from solar radiation at ground to power such as the temperature at the site as well as many system configuration including tracking technology.
 
-Check out the ***[ga_wind_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/solardata/ga_wind/demo/ga_wind_demo.ipynb)*** notebook for demo.
+Check out the ***[ga_wind_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/ga_wind/demo/ga_wind_demo.ipynb)*** notebook for demo.
 
 #### ii. The National Solar Radiation Database
 [NSRDB (National Solar Radiation Database)](https://nsrdb.nrel.gov/) provides 1-hour resolution solar radiation data, ranging from 1998 to 2016, for the entire U.S. and a growing list of international locations on a 4x4 square kilometer grid. Data can be accessed via an [API](https://developer.nrel.gov/docs/solar/nsrdb/). Note that the Physical Solar Model v3 is used.
@@ -102,13 +102,13 @@ An API key is required to access and use the above databases. Get your own API k
 
 Here, the power output can be estimated using the previously presented naïve method or a more sophisticated one. The latter uses the System Advisor Model ([SAM](https://sam.nrel.gov/)) developed by NREL. The developer tools for creating renewable energy system models can be downloaded [here](https://sam.nrel.gov/sdk). Irradiance data along with other meteorological parameters must first be retrieved from NSRDB for each site. This information are then fed to the SAM Simulation Core (SCC) and the power output is retrieved. The SSC reflect the technology used: photovoltaic (PV), solar water heating and concentrating solar power (CSP). The *[PVWatts v5](https://www.nrel.gov/docs/fy14osti/62641.pdf)* model is used for all the solar plants in the grid. The default values of the parameters of the *PVWatts* model are untouched. Only the system size and the array type (fixed open rack, backtracked, 1-axis and 2-axis) is set for each solar plant.
 
-The naïve and the SAM method are used in the ***[nsrdb_naive_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb)*** and ***[nsrdb_sam_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/sam/prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb)*** demo notebook, respectively.
+The naïve and the SAM method are used in the ***[nsrdb_naive_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb)*** and ***[nsrdb_sam_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb)*** demo notebook, respectively.
 
 
 ### C. Hydro Data
 EIA (Energy Information Administration) published monthly capacity factors for hydro plants across the country. This dataset (available [here](https://www.eia.gov/electricity/annual/html/epa_04_08_b.html)) is used to produce a profile for each hydro plant in the grid. Note that we are using the same set of capacity factor independently of the geographical location of the plant. As a result, the profile of all the hydro plants in the grid will have the same shape. Only the power output will differ (the scale of the profile).
 
-Check out the ***[eia_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/hydro/prereise/gather/hydrodata/eia/demo/eia_demo.ipynb)*** notebook for demo.
+Check out the ***[eia_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/eia_demo.ipynb)*** notebook for demo.
 
 
 ### D. Demand Data
@@ -138,7 +138,7 @@ from prereise.gather.demanddata.eia.test import test_from_excel
 test_from_excel.test_from_excel()
 ```
 
-The [AssembleBAfromExcel_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/anomaly_detect_1/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb) notebook illustrates usage.
+The ***[AssembleBAfromExcel_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/EIA/demo/AssembleBAfromExcel_demo.ipynb)*** notebook illustrates usage.
 
 To output the demand profile, cleaning steps were applied to the EIA data:  
 1) missing data imputation - the EIA method was used, i.e., EIA published data was used; beyond this, NA's were converted to float zeros;  
@@ -160,7 +160,7 @@ To test
 from prereise.gather.demanddata.eia.test import test_slope_interpolate
 test_slope_interpolate.test_slope_interpolate()
 ```
-The [BA_Anomaly_Detection_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/anomaly_detect_1/prereise/gather/demanddata/EIA/demo//BA_Anomaly_Detection_demo.ipynb) notebook illustrates usage.
+The ***[BA_Anomaly_Detection_demo.ipynb](https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/EIA/demo//BA_Anomaly_Detection_demo.ipynb)*** notebook illustrates usage.
 
 
 
