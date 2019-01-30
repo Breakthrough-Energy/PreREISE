@@ -1,7 +1,8 @@
-import unittest
+import pytest
 
-import sys
-sys.path.append("..")
-import call
+from prereise.call.call import launch_scenario_performance
 
-call.launch_scenario_performance('texas_scenario')
+
+@pytest.mark.skip(reason="Need to run on the server")
+def test():
+    launch_scenario_performance('western_scenarioUnitTest02', 16)
