@@ -1,11 +1,11 @@
-
-from prereise.call import const
+from prereise.call import const 
 
 import datetime
 import matlab.engine
 import numpy as np
 import os
 import pandas as pd
+import subprocess
 
 from collections import OrderedDict
 from multiprocessing import Process
@@ -18,13 +18,23 @@ def get_scenario(scenario_id):
     :param int scenario_id: scenario index.
     :return: (*dict*) -- scenario information.
     """
-    scenario_list = pd.read_csv(const.SCENARIO_LIST)
+    scenario_list = pd.read_csv(const.SCENARIO_LIST, dtype=str)
     scenario_list.fillna('', inplace=True)
-    scenario_list.astype(str)
     scenario = scenario_list[scenario_list.id == scenario_id]
 
     return scenario.to_dict('records', into=OrderedDict)[0]
 
+def update_execute_list(scenario_id, status):
+    """Updates status in execute list on server.
+
+    :param str scenario_id: scenario index.
+    :param str status: execution status.
+    """
+    options = "-F, -v OFS=',' -v INPLACE_SUFFIX=.bak -i inplace"
+    program = ("'{for(i=1; i<=NF; i++){if($1==%s) $2=\"%s\"}};1'" %
+               (scenario_id, status))
+    command = "awk %s %s %s" % (options, program, const.EXECUTE_LIST)
+    os.system(command)
 
 def launch_scenario_performance(scenario_id, n_pcalls=1):
     """Launches the scenario.
@@ -35,7 +45,7 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
         :func:scenario_matlab_call.
     """
 
-    scenario = get_scenario(scenario_id)
+    scenario_info = get_scenario(scenario_id)
 
     start_index = int(scenario_info['start_index']) + 1
     end_index = int(scenario_info['end_index']) + 1
@@ -48,9 +58,12 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
 
     # Create save data folder if does not exist
     output_dir = os.path.join(const.EXECUTE_DIR,
-                              'scenario_%s/output' % scenario['id'])
+                              'scenario_%s/output' % scenario_info['id'])
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
+
+    # Update status in ExecuteList.csv
+    update_execute_list(scenario_info['id'], 'running')
 
     # Split the index into n_pcall parts
     pcall_list = np.array_split(range(start_index, end_index + 1), n_pcalls)
@@ -58,36 +71,40 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     start = timer()
     for i in pcall_list:
         p = Process(target=scenario_matlab_call,
-                    args=(scenario, int(i[0]), int(i[-1]),))
+                    args=(scenario_info, int(i[0]), int(i[-1]),))
         p.start()
         proc.append(p)
     for p in proc:
         p.join()
     end = timer()
 
+    # Update status in ExecuteList.csv
+    update_execute_list(scenario_info['id'], 'done')
+
     runtime = str(datetime.timedelta(seconds=(end - start)))
     print('Run time: %s' % runtime)
 
 
-def scenario_matlab_call(scenario, start_index, end_index):
+def scenario_matlab_call(scenario_info, start_index, end_index):
     """Reads the scenario list, starts a MATLAB engine, runs the add_path \
         file to load MATPOWER and GUROBI. Then, loads the data path and \
         runs the scenario.
 
-    :param dict scenario: scenario information.
+    :param dict scenario_info: scenario information.
     :param int start_index: start index.
     :param int end_index: end index.
     """
+    
     # Location of add_path file
-    top_dirname = os.path.dirname(__file__)
+    top_dirname = os.path.dirname(os.path.abspath(__file__))
     eng = matlab.engine.start_matlab()
 
     # Load path definition in MATLAB (MATPOWER and GUROBI)
     eng.run(top_dirname + '/add_path', nargout=0)
     input_dir = os.path.join(const.EXECUTE_DIR,
-                             'scenario_%s' % scenario['id'])
+                             'scenario_%s' % scenario_info['id'])
     output_dir = os.path.join(const.EXECUTE_DIR,
-                              'scenario_%s/output' % scenario['id'])
+                              'scenario_%s/output' % scenario_info['id'])
 
     eng.addpath(input_dir)
 
