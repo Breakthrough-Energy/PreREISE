@@ -5,7 +5,6 @@ import matlab.engine
 import numpy as np
 import os
 import pandas as pd
-import subprocess
 
 from collections import OrderedDict
 from multiprocessing import Process
@@ -24,16 +23,18 @@ def get_scenario(scenario_id):
 
     return scenario.to_dict('records', into=OrderedDict)[0]
 
-def update_execute_list(scenario_id, status):
+def insert_list(filename, scenario_id, column_number, column_value):
     """Updates status in execute list on server.
 
+    :param str filename: path to execute or scenario list.
     :param str scenario_id: scenario index.
-    :param str status: execution status.
+    :param str column_number: id of column (indexing starts at 1).
+    :param str column_value: value to insert.
     """
     options = "-F, -v OFS=',' -v INPLACE_SUFFIX=.bak -i inplace"
-    program = ("'{for(i=1; i<=NF; i++){if($1==%s) $2=\"%s\"}};1'" %
-               (scenario_id, status))
-    command = "awk %s %s %s" % (options, program, const.EXECUTE_LIST)
+    program = ("'{for(i=1; i<=NF; i++){if($1==%s) $%s=\"%s\"}};1'" %
+               (scenario_id, column_number, column_value))
+    command = "awk %s %s %s" % (options, program, filename)
     os.system(command)
 
 def launch_scenario_performance(scenario_id, n_pcalls=1):
@@ -43,6 +44,7 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     :param int n_pcalls: number of parallel runs. The scenario is launched \
         in parallel if n_pcalls > 1. This function calls \
         :func:scenario_matlab_call.
+    :raises Exception: if indices are improperly set.
     """
 
     scenario_info = get_scenario(scenario_id)
@@ -50,11 +52,11 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     start_index = int(scenario_info['start_index']) + 1
     end_index = int(scenario_info['end_index']) + 1
     if start_index < 1:
-        os.error('start_index < 1')
+        raise Exception('start_index < 1')
     if start_index > end_index:
-        os.error('end_index > first_index')
+        raise Exception('end_index > first_index')
     if n_pcalls > (end_index - start_index + 1):
-        os.error('n_pcalls is larger than the number of intervals')
+        raise Exception('n_pcalls is larger than the number of intervals')
 
     # Create save data folder if does not exist
     output_dir = os.path.join(const.EXECUTE_DIR,
@@ -63,7 +65,7 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
         os.mkdir(output_dir)
 
     # Update status in ExecuteList.csv
-    update_execute_list(scenario_info['id'], 'running')
+    insert_list(const.EXECUTE_LIST, scenario_info['id'], '2', 'running')
 
     # Split the index into n_pcall parts
     pcall_list = np.array_split(range(start_index, end_index + 1), n_pcalls)
@@ -79,10 +81,12 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     end = timer()
 
     # Update status in ExecuteList.csv
-    update_execute_list(scenario_info['id'], 'done')
+    insert_list(const.EXECUTE_LIST, scenario_info['id'], '2', 'finished')
 
-    runtime = str(datetime.timedelta(seconds=(end - start)))
-    print('Run time: %s' % runtime)
+    runtime = datetime.timedelta(seconds=(end - start))
+    print('Run time: %s' % str(runtime))
+    insert_list(const.SCENARIO_LIST, scenario_info['id'], '16',
+                "%s:%s" % (runtime.seconds//3600, (runtime.seconds//60)%60))
 
 
 def scenario_matlab_call(scenario_info, start_index, end_index):
@@ -111,8 +115,8 @@ def scenario_matlab_call(scenario_info, start_index, end_index):
     eng.workspace['output_data_location'] = output_dir
     eng.workspace['start_index'] = start_index
     eng.workspace['end_index'] = end_index
-
     # Run scenario
+
     eng.addpath(const.SCENARIO_MATLAB)
     eng.run('scenario_matlab_script', nargout=0)
 
