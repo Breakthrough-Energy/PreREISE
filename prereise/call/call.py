@@ -23,7 +23,7 @@ def get_scenario(scenario_id):
 
     return scenario.to_dict('records', into=OrderedDict)[0]
 
-def insert_list(filename, scenario_id, column_number, column_value):
+def insert_in_file(filename, scenario_id, column_number, column_value):
     """Updates status in execute list on server.
 
     :param str filename: path to execute or scenario list.
@@ -65,7 +65,7 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
         os.mkdir(output_dir)
 
     # Update status in ExecuteList.csv
-    insert_list(const.EXECUTE_LIST, scenario_info['id'], '2', 'running')
+    insert_in_file(const.EXECUTE_LIST, scenario_info['id'], '2', 'running')
 
     # Split the index into n_pcall parts
     pcall_list = np.array_split(range(start_index, end_index + 1), n_pcalls)
@@ -81,11 +81,11 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     end = timer()
 
     # Update status in ExecuteList.csv
-    insert_list(const.EXECUTE_LIST, scenario_info['id'], '2', 'finished')
+    insert_in_file(const.EXECUTE_LIST, scenario_info['id'], '2', 'finished')
 
     runtime = datetime.timedelta(seconds=(end - start))
     print('Run time: %s' % str(runtime))
-    insert_list(const.SCENARIO_LIST, scenario_info['id'], '16',
+    insert_in_file(const.SCENARIO_LIST, scenario_info['id'], '16',
                 "%s:%s" % (runtime.seconds//3600, (runtime.seconds//60)%60))
 
 
