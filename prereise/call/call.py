@@ -1,4 +1,4 @@
-from prereise.call import const 
+from prereise.call import const
 
 import datetime
 import matlab.engine
@@ -98,7 +98,7 @@ def scenario_matlab_call(scenario_info, start_index, end_index):
     :param int start_index: start index.
     :param int end_index: end index.
     """
-    
+
     # Location of add_path file
     top_dirname = os.path.dirname(os.path.abspath(__file__))
     eng = matlab.engine.start_matlab()
@@ -115,6 +115,7 @@ def scenario_matlab_call(scenario_info, start_index, end_index):
     eng.workspace['output_data_location'] = output_dir
     eng.workspace['start_index'] = start_index
     eng.workspace['end_index'] = end_index
+    eng.workspace['interval'] = scenario_info['interval']
     # Run scenario
 
     eng.addpath(const.SCENARIO_MATLAB)
