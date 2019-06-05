@@ -49,12 +49,15 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
 
     scenario_info = get_scenario(scenario_id)
 
-    start_index = int(scenario_info['start_index']) + 1
-    end_index = int(scenario_info['end_index']) + 1
+    interval = int(scenario_info['interval'].split('H', 1)[0])
+    diff = scenario_info['end_date'] - scenario_info['start_date']
+    hours = diff / np.timedelta64(1, 'h') + 1
+    start_index = 1
+    end_index = hours // interval
     if start_index < 1:
         raise Exception('start_index < 1')
     if start_index > end_index:
-        raise Exception('end_index > first_index')
+        raise Exception('end_index > start_index')
     if n_pcalls > (end_index - start_index + 1):
         raise Exception('n_pcalls is larger than the number of intervals')
 
@@ -85,7 +88,7 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
 
     runtime = datetime.timedelta(seconds=(end - start))
     print('Run time: %s' % str(runtime))
-    insert_in_file(const.SCENARIO_LIST, scenario_info['id'], '16',
+    insert_in_file(const.SCENARIO_LIST, scenario_info['id'], '14',
                 "%s:%s" % (runtime.seconds//3600, (runtime.seconds//60)%60))
 
 
@@ -115,7 +118,7 @@ def scenario_matlab_call(scenario_info, start_index, end_index):
     eng.workspace['output_data_location'] = output_dir
     eng.workspace['start_index'] = start_index
     eng.workspace['end_index'] = end_index
-    eng.workspace['interval'] = scenario_info['interval']
+    eng.workspace['interval'] = int(scenario_info['interval'].split('H', 1)[0])
     # Run scenario
 
     eng.addpath(const.SCENARIO_MATLAB)
