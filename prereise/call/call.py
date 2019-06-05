@@ -50,10 +50,14 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     scenario_info = get_scenario(scenario_id)
 
     interval = int(scenario_info['interval'].split('H', 1)[0])
-    diff = scenario_info['end_date'] - scenario_info['start_date']
+    start_date = scenario_info['start_date']
+    end_date = scenario_info['end_date']
+    diff = pd.Timestamp(end_date) - pd.Timestamp(start_date)
     hours = diff / np.timedelta64(1, 'h') + 1
+ 
     start_index = 1
-    end_index = hours // interval
+    end_index = int(hours / interval)
+
     if start_index < 1:
         raise Exception('start_index < 1')
     if start_index > end_index:
