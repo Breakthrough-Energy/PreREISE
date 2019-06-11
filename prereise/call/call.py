@@ -1,6 +1,7 @@
 from prereise.call import const
 
 import datetime
+import math
 import matlab.engine
 import numpy as np
 import os
@@ -49,21 +50,16 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
 
     scenario_info = get_scenario(scenario_id)
 
-    interval = int(scenario_info['interval'].split('H', 1)[0])
-    start_date = scenario_info['start_date']
-    end_date = scenario_info['end_date']
-    diff = pd.Timestamp(end_date) - pd.Timestamp(start_date)
-    hours = diff / np.timedelta64(1, 'h') + 1
- 
-    start_index = 1
-    end_index = int(hours / interval)
+    min_ts = pd.Timestamp('2016-01-01 00:00:00')
+    max_ts = pd.Timestamp('2016-12-31 23:00:00')
+    dates = pd.date_range(start=min_ts, end=max_ts, freq='1H')
 
-    if start_index < 1:
-        raise Exception('start_index < 1')
-    if start_index > end_index:
-        raise Exception('end_index > start_index')
-    if n_pcalls > (end_index - start_index + 1):
-        raise Exception('n_pcalls is larger than the number of intervals')
+    start_ts = pd.Timestamp(scenario_info['start_date'])
+    end_ts = pd.Timestamp(scenario_info['end_date'])
+
+    # MATLAB starts at 1
+    start_index = dates.get_loc(start_ts) + 1
+    end_index = dates.get_loc(end_ts) + 1
 
     # Create save data folder if does not exist
     output_dir = os.path.join(const.EXECUTE_DIR,
