@@ -3,7 +3,6 @@ from prereise.call import const
 import datetime
 import math
 import matlab.engine
-import numpy as np
 import os
 import pandas as pd
 
@@ -111,7 +110,7 @@ def scenario_matlab_call(scenario_info, start_index, end_index):
     input_dir = os.path.join(const.EXECUTE_DIR,
                              'scenario_%s' % scenario_info['id'])
     output_dir = os.path.join(const.EXECUTE_DIR,
-                              'scenario_%s/output' % scenario_info['id'])
+                              'scenario_%s/output/' % scenario_info['id'])
 
     eng.addpath(input_dir)
 
