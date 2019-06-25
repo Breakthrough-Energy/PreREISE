@@ -1,7 +1,6 @@
 from prereise.call import const
 
 import datetime
-import math
 import matlab.engine
 import numpy as np
 import os
@@ -24,6 +23,7 @@ def get_scenario(scenario_id):
 
     return scenario.to_dict('records', into=OrderedDict)[0]
 
+
 def insert_in_file(filename, scenario_id, column_number, column_value):
     """Updates status in execute list on server.
 
@@ -37,6 +37,7 @@ def insert_in_file(filename, scenario_id, column_number, column_value):
                (scenario_id, column_number, column_value))
     command = "awk %s %s %s" % (options, program, filename)
     os.system(command)
+
 
 def launch_scenario_performance(scenario_id, n_pcalls=1):
     """Launches the scenario.
@@ -89,7 +90,8 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     runtime = datetime.timedelta(seconds=(end - start))
     print('Run time: %s' % str(runtime))
     insert_in_file(const.SCENARIO_LIST, scenario_info['id'], '14',
-                "%s:%s" % (runtime.seconds//3600, (runtime.seconds//60)%60))
+                   "%s:%s" % (runtime.seconds//3600,
+                              (runtime.seconds//60) % 60))
 
 
 def scenario_matlab_call(scenario_info, start_index, end_index):
