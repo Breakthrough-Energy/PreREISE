@@ -5,4 +5,4 @@ from prereise.call.call import launch_scenario_performance
 
 @pytest.mark.skip(reason="Need to run on the server")
 def test():
-    launch_scenario_performance('western_scenarioUnitTest02', 16)
+    launch_scenario_performance('0', 16)
