@@ -39,12 +39,11 @@ def insert_in_file(filename, scenario_id, column_number, column_value):
     os.system(command)
 
 
-def launch_scenario_performance(scenario_id, n_pcalls=1):
+def launch_scenario_performance(scenario_id, n_parallel_call=1):
     """Launches the scenario.
 
     :param int scenario_id: scenario index.
-    :param int n_pcalls: number of parallel runs. The scenario is launched \
-        in parallel if n_pcalls > 1. This function calls \
+    :param int n_parallel_call: number of parallel runs. This function calls
         :func:scenario_matlab_call.
     :raises Exception: if indices are improperly set.
     """
@@ -68,14 +67,15 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    # Update status in ExecuteList.csv
+    # Update status in ExecuteList.csv on server
     insert_in_file(const.EXECUTE_LIST, scenario_info['id'], '2', 'running')
 
-    # Split the index into n_pcall parts
-    pcall_list = np.array_split(range(start_index, end_index + 1), n_pcalls)
+    # Split the index into n_parallel_call parts
+    parallel_call_list = np.array_split(range(start_index, end_index + 1),
+                                        n_parallel_call)
     proc = []
     start = timer()
-    for i in pcall_list:
+    for i in parallel_call_list:
         p = Process(target=scenario_matlab_call,
                     args=(scenario_info, int(i[0]), int(i[-1]),))
         p.start()
@@ -84,7 +84,7 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
         p.join()
     end = timer()
 
-    # Update status in ExecuteList.csv
+    # Update status in ExecuteList.csv on server
     insert_in_file(const.EXECUTE_LIST, scenario_info['id'], '2', 'finished')
 
     runtime = datetime.timedelta(seconds=(end - start))
@@ -95,9 +95,8 @@ def launch_scenario_performance(scenario_id, n_pcalls=1):
 
 
 def scenario_matlab_call(scenario_info, start_index, end_index):
-    """Reads the scenario list, starts a MATLAB engine, runs the add_path \
-        file to load MATPOWER and GUROBI. Then, loads the data path and \
-        runs the scenario.
+    """Starts a MATLAB engine, runs the add_path file to load MATPOWER and
+        GUROBI. Then, loads the data path and runs the scenario.
 
     :param dict scenario_info: scenario information.
     :param int start_index: start index.
