@@ -14,7 +14,7 @@ from timeit import default_timer as timer
 def get_scenario(scenario_id):
     """Returns scenario information.
 
-    :param int scenario_id: scenario index.
+    :param str scenario_id: scenario index.
     :return: (*dict*) -- scenario information.
     """
     scenario_list = pd.read_csv(const.SCENARIO_LIST, dtype=str)
@@ -42,7 +42,7 @@ def insert_in_file(filename, scenario_id, column_number, column_value):
 def launch_scenario_performance(scenario_id, n_parallel_call=1):
     """Launches the scenario.
 
-    :param int scenario_id: scenario index.
+    :param str scenario_id: scenario index.
     :param int n_parallel_call: number of parallel runs. This function calls
         :func:scenario_matlab_call.
     :raises Exception: if indices are improperly set.
