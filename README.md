@@ -40,19 +40,19 @@ Download MATPOWER and add the following directories in ***add_path.m***:
 
 ### D. WesternInterconnectNetwork
 In the WesternInterconnect package, locate the ***setup.py*** file and type:
-`pip3 install .` The other option is to update the PYTHONPATH environment
+`pip3 install .`. The other option is to update the PYTHONPATH environment
 variable.
 
 
 ### E. PreREISE
 In the PreREISE package, locate the ***setup.py*** file and type:
-`pip3 install .` The other option is to update the PYTHONPATH environment
+`pip3 install .`. The other option is to update the PYTHONPATH environment
 variable.
 
 
 
 
-## 3. Gather Data for Simulation 
+## 2. Gather Data for Simulation 
 This module aims at gathering the required data for the simulation.
 
 ### A. Wind data
@@ -216,7 +216,7 @@ usage.
 
 
 
-## 4. Start simulation
+## 3. Start simulation
 Simulation can only be launched on server. After setting up the scenario, the
 simulation engine can be called and the simulation can be started as follows:
 ```
