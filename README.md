@@ -107,7 +107,7 @@ oceans. Data can be accessed using the Highly Scalable Data Service. NREL wrote
 Power output is estimated using a simple normalization procedure. For each
 solar plant location the hourly Global Horizontal Irradiance (GHI) is divided
 by the maximum GHI over the period considered and multiplied by the capacity of
-the plant. This procedure is referred to as naïve since it only accounts for
+the plant. This procedure is referred to as naive since it only accounts for
 the plant capacity. Note that other factors can possibly affect the conversion
 from solar radiation at ground to power such as the temperature at the site as
 well as many system configuration including tracking technology.
@@ -137,7 +137,7 @@ The default values of the parameters of the *PVWatts* model are untouched. Only
 the system size and the array type (fixed open rack, backtracked, 1-axis and
 2-axis) is set for each solar plant.
 
-The naïve and the SAM method are used in the ***[nsrdb_naive_demo.ipynb]
+The naive and the SAM method are used in the ***[nsrdb_naive_demo.ipynb]
 [NSRDB_naive_notebook]*** and ***[nsrdb_sam_demo.ipynb][NSRDB_sam_notebook]***
 demo notebooks, respectively.
 
@@ -184,7 +184,7 @@ from prereise.gather.demanddata.eia.test import test_from_excel
 test_from_excel.test_from_excel()
 ```
 
-The ***[AssembleBAfromExcel_demo.ipynb][demand_notebook]*** notebook illustrates
+The ***[assemble_ba_from_excel_demo.ipynb][demand_notebook]*** notebook illustrates
 usage.
 
 To output the demand profile, cleaning steps were applied to the EIA data:  
@@ -211,7 +211,7 @@ from prereise.gather.demanddata.eia.test import test_slope_interpolate
 
 test_slope_interpolate.test_slope_interpolate()
 ```
-The ***[BA_Anomaly_Detection_demo.ipynb][demand_anomaly]*** notebook illustrates
+The ***[ba_anomaly_detection_demo.ipynb][demand_anomaly]*** notebook illustrates
 usage.
 
 
