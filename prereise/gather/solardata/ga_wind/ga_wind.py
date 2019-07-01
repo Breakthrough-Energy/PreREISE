@@ -9,18 +9,18 @@ from tqdm import tqdm
 from prereise.gather.solardata.ga_wind import helpers
 
 
-def retrieve_data(solar_plant, hs_api_key,
-                  start_date='2007-01-01',
+def retrieve_data(solar_plant, hs_api_key, start_date='2007-01-01',
                   end_date='2014-01-01'):
-    """Retrieve irradiance data from Gridded Atmospheric Wind Integration \ 
+    """Retrieve irradiance data from Gridded Atmospheric Wind Integration
         National Dataset.
 
-    :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
+    :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'GenMWMax'* and *'plantID'* as indices.
     :param str hs_api_key: API key.
-    :param str year: year.
-    :return: (*pandas*) -- data frame with *'Pout'*, *'plantID'*, *'ts'* and \ 
-        *'tsID'* as columns. The power output is in MWh.
+    :param str start_date: start date.
+    :param str end_date: end date.
+    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plantID'*,
+        *'ts'* and *'tsID'* as columns. The power output is in MWh.
     """
 
     # Information on solar plants

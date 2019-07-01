@@ -8,28 +8,27 @@ from tqdm import tqdm
 
 
 def get_frac():
-    """Return fraction of solar plants using no tracking (fix), single-axis \ 
-        or double-axis tracking in Western Interconnect.
+    """Return fraction of solar plants using no tracking (fix), single-axis or
+        double-axis tracking in Western Interconnection.
     """
 
     return [0.2870468, 0.6745755, 0.0383777]
 
 
-
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
-    """Retrieve irradiance data from NSRDB and calculate the power output \ 
-        using the System Advisor Model (SAM).
+    """Retrieves irradiance data from NSRDB and calculate the power output using
+        the System Adviser Model (SAM).
 
-    :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
+    :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'GenMWMax' as columns and *'PlantID'* as index.
     :param str email: email used for API key \ 
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
-    :param str ssc_lib: path to System Advisor Model (SAM) SAM Simulation \ 
-        Core (SSC) library.
+    :param str ssc_lib: path to System Adviser Model (SAM) SAM Simulation Core
+        (SSC) library.
     :param str year: year.
-    :return: (*pandas*) -- data frame with *'Pout'*, *'plantID'*, *'ts'* \ 
-        and *'tsID'* as columns. The power output is in MWh.
+    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plantID'*,
+        *'ts'* and *'tsID'* as columns. The power output is in MWh.
     """
 
     # SAM only takes 365 days.
