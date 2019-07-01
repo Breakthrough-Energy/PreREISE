@@ -6,10 +6,10 @@ from pyproj import Proj
 def ll2ij(lon_origin, lat_origin, lon, lat):
     """Find nearest x/y indices for a given lat/lon.
 
-    :param float lat_origin: Latitude of coordinate of origin.
-    :param float lon_origin: Longitude of coordinate of origin.
-    :param float lat: Latitude of coordinate of interest.
-    :param float lon: Longitude of coordinate of interest.
+    :param float lat_origin: latitude of coordinate of origin.
+    :param float lon_origin: longitude of coordinate of origin.
+    :param float lat: latitude of coordinate of interest.
+    :param float lon: longitude of coordinate of interest.
     :return: (*tuple*) -- coordinate of the closest pixel in the database.
     """
 

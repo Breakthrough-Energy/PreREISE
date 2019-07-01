@@ -6,8 +6,8 @@ from prereise.gather.demanddata.eia import find_fix_outliers
 
 
 def test_slope_interpolate():
-    """Test outlier detection and replacement method. Check that there are \ 
-        4 changed outliers for the input test set and threshold.
+    """Test outlier detection and replacement method. Check that there are four
+        changed outliers for the input test set and threshold.
     """
 
     dir1 = os.path.join(os.path.dirname(__file__), 'data')

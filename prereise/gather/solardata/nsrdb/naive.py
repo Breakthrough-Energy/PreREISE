@@ -9,14 +9,14 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
     """Retrieve irradiance data from NSRDB and calculate the power output \ 
         using a simple normalization.
 
-    :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
+    :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'GenMWMax' as columns and *'PlantID'* as index.
-    :param str email: email used for API key \ 
-        `sign up <https://developer.nrel.gov/signup/>`_. 
+    :param str email: email used for API key
+        `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
     :param str year: year.
-    :return: (*pandas*) -- data frame with *'Pout'*, *'plantID'*, *'ts'* \ 
-        and *'tsID'* as columns. The power output is in MWh.
+    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plantID'*,
+        *'ts'* and *'tsID'* as columns. The power output is in MWh.
     """
 
     # Information on solar plants
