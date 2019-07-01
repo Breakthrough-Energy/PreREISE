@@ -1,1 +1,1 @@
-__all__ = ["demanddata", "solardata", "winddata", "hydrodata"]
+__all__ = ['demanddata', 'solardata', 'winddata', 'hydrodata']
