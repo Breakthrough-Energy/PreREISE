@@ -4,7 +4,7 @@ from pyproj import Proj
 
 
 def ll2ij(lon_origin, lat_origin, lon, lat):
-    """Find nearest x/y indices for a given lat/lon.
+    """Finds nearest x/y indices for a given lat/lon.
 
     :param float lat_origin: latitude of coordinate of origin.
     :param float lon_origin: longitude of coordinate of origin.
@@ -32,24 +32,25 @@ def ll2ij(lon_origin, lat_origin, lon, lat):
 
 
 def to_reise(data):
-    """Format data for REISE.
+    """Formats data for REISE.
 
-    :param pandas.DataFrame data: pandas data frame as returned by
+    :param pandas.DataFrame data: data frame as returned by
         :func:`prereise.gather.solardata.ga_wind.ga_wind.retrieve_data`.
     :return: (*pandas.DataFrame*) data frame formatted for REISE.
     """
     ts = data['ts'].unique()
-    plantID = data[data.tsID == 1].plantID.values
+    plant_id = data[data.ts_id == 1].plant_id.values
 
-    for i in range(1, max(data.tsID)+1):
-        data_tmp = pd.DataFrame({'Pout': data[data.tsID == i].Pout.values},
-                                index=plantID)
+    profile = None
+    for i in range(1, max(data.ts_id) + 1):
+        data_tmp = pd.DataFrame({'Pout': data[data.ts_id == i].Pout.values},
+                                index=plant_id)
         if i == 1:
-            dataT = data_tmp.T
+            profile = data_tmp.T
         else:
-            dataT = dataT.append(data_tmp.T, sort=False, ignore_index=True)
+            profile = profile.append(data_tmp.T, sort=False, ignore_index=True)
 
-    dataT.set_index(ts, inplace=True)
-    dataT.index.name = 'UTC'
+    profile.set_index(ts, inplace=True)
+    profile.index.name = 'UTC'
 
-    return dataT
+    return profile
