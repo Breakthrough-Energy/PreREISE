@@ -1,27 +1,25 @@
-from westernintnet.westernintnet import win_data
+from powersimdata.input.grid import Grid
 from prereise.gather.winddata.te_wind import te_wind
 
 
 def test():
+    """Prints power output profile of wind farms in Washington state.
 
-    all_siteID_NREL = te_wind.get_all_NREL_siteID_for_states(['WA'])
+    """
+    site = te_wind.get_nrel_site(['WA'])
 
-    wind_farm_bus = win_data.genbus.groupby('type').get_group('wind')
+    grid = Grid(['Western'])
+    wind_farm = grid.plant.groupby('type').get_group('wind')
 
-    closest_NREL_siteID = te_wind.find_NREL_siteID_closest_to_windfarm(
-        all_siteID_NREL, wind_farm_bus[['lat', 'lon']]
-    )
+    closest_site = te_wind.site2farm(site, wind_farm[['lat', 'lon']])
 
-    data_start = te_wind.pd.Timestamp('2010-01-01')
-    data_end = te_wind.pd.Timestamp('2010-01-01 23:55:00')
-    data_range = te_wind.pd.date_range(data_start, data_end, freq='5min')
+    start_date = te_wind.pd.Timestamp('2010-01-01')
+    end_date = te_wind.pd.Timestamp('2010-01-01 23:55:00')
+    date_range = te_wind.pd.date_range(start_date, end_date, freq='5min')
 
-    data = te_wind.get_data_from_NREL_server(closest_NREL_siteID, data_range)
+    data = te_wind.get_data(closest_site, date_range)
 
-    [power, wind_speed] = te_wind.dict_to_DataFrame(
-        data, data_range, closest_NREL_siteID
-    )
-    wind_farm_power_series_hourly = te_wind.scale_power_to_plant_capacity(
-        power, wind_farm_bus, closest_NREL_siteID
-        )
+    [power, _] = te_wind.dict2frame(data, date_range, closest_site)
+    profile = te_wind.get_profile(power, wind_farm, closest_site)
+    print(profile.head())
     print('Test Done')
