@@ -7,12 +7,22 @@ from py3samsdk import PySSC
 from tqdm import tqdm
 
 
-def get_frac():
-    """Return fraction of solar plants using no tracking (fix), single-axis or
-        double-axis tracking in Western Interconnection.
+def get_frac(interconnect):
+    """Returns fraction of solar plants using no tracking (fix), single-axis or
+        double-axis tracking in specified interconnection.
+
+    :param str interconnect: interconnection.
+    raise ValueError: if interconnection does not exist.
+    :return: (*list*) -- three coefficients. One for each technology.
     """
 
-    return [0.2870468, 0.6745755, 0.0383777]
+    if interconnect is 'Western':
+        return [0.2870468, 0.6745755, 0.0383777]
+    elif interconnect is 'Texas':
+        return [0.08, 0.46, 0.46]
+    else:
+        print("Possible interconnections are: %s" % ['Western', 'Texas'])
+        raise ValueError
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
@@ -20,15 +30,15 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
         the System Adviser Model (SAM).
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
-        *'GenMWMax' as columns and *'PlantID'* as index.
+        *'GenMWMax' as columns and *'plant_id'* as index.
     :param str email: email used for API key \ 
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
     :param str ssc_lib: path to System Adviser Model (SAM) SAM Simulation Core
         (SSC) library.
     :param str year: year.
-    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plantID'*,
-        *'ts'* and *'tsID'* as columns. The power output is in MWh.
+    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
+        *'ts'* and *'ts_id'* as columns. The power output is in MWh.
     """
 
     # SAM only takes 365 days.
@@ -39,6 +49,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                               freq='H', periods=365*24)
         dates = dates.map(lambda t: t.replace(year=int(year)))
     except ValueError:
+        leap_day = None
         is_leap_year = False
         dates = pd.date_range(start="%s-01-01-00" % year,
                               freq='H', periods=365*24)
@@ -74,7 +85,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
         'email={email}'.format(email=email) + '&' + \
         'attributes={attr}'.format(attr=attributes)
 
-    data = pd.DataFrame({'Pout': [], 'plantID': [], 'ts': [], 'tsID': []})
+    data = pd.DataFrame({'Pout': [], 'plant_id': [], 'ts': [], 'ts_id': []})
 
     for key in tqdm(coord.keys(), total=len(coord)):
         query = 'wkt=POINT({lon}%20{lat})'.format(lon=key[0], lat=key[1])
@@ -110,9 +121,11 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                                                 start='%s-01-01-00' % year,
                                                 end='%s-12-31-23' % year,
                                                 freq='H')})
-            data_site['tsID'] = range(1, len(data_site)+1)
-            data_site['plantID'] = i[0]
+            data_site['ts_id'] = range(1, len(data_site)+1)
+            data_site['plant_id'] = i[0]
+            interconnect = solar_plant.loc[i[0]].interconnect
 
+            power = 0
             for j, axis in enumerate([0, 2, 4]):
                 core = ssc.data_create()
                 ssc.data_set_table(core, 'solar_resource_data', resource)
@@ -128,31 +141,31 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
 
                 mod = ssc.module_create('pvwattsv5')
                 ssc.module_exec(mod, core)
+
                 if j == 0:
-                    Pout = get_frac()[j] * \
-                           np.array(ssc.data_get_array(core, 'gen')) / 1000
+                    power = get_frac(interconnect)[j] * \
+                            np.array(ssc.data_get_array(core, 'gen')) / 1000
                 else:
-                    Pout = Pout + \
-                           get_frac()[j] * \
-                           np.array(ssc.data_get_array(core, 'gen')) / 1000
+                    power = power + get_frac(interconnect)[j] * \
+                            np.array(ssc.data_get_array(core, 'gen')) / 1000
 
                 ssc.data_free(core)
                 ssc.module_free(mod)
 
             if is_leap_year is True:
-                data_site['Pout'] = np.insert(Pout, leap_day,
-                                              Pout[leap_day-24:leap_day])
+                data_site['Pout'] = np.insert(power, leap_day,
+                                              power[leap_day-24:leap_day])
             else:
-                data_site['Pout'] = Pout
+                data_site['Pout'] = power
 
             data = data.append(data_site, ignore_index=True, sort=False)
 
         ssc.data_free(resource)
 
-    data['plantID'] = data['plantID'].astype(np.int32)
-    data['tsID'] = data['tsID'].astype(np.int32)
+    data['plant_id'] = data['plant_id'].astype(np.int32)
+    data['ts_id'] = data['ts_id'].astype(np.int32)
 
-    data.sort_values(by=['tsID', 'plantID'], inplace=True)
+    data.sort_values(by=['ts_id', 'plant_id'], inplace=True)
     data.reset_index(inplace=True, drop=True)
 
     return data
