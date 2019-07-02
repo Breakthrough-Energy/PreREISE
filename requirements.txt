@@ -10,6 +10,7 @@ pandas==0.24.2
 pyproj==1.9.6
 -e git+https://github.com/NREL/pywtk.git#egg=pywtk
 pytest==4.5.0
+python-dateutil==2.7.5
 requests==2.21.0
 tqdm==4.29.1
 xlrd=1.2.0
