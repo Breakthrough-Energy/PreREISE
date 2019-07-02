@@ -1,5 +1,4 @@
 import datetime
-import math
 import os
 import time
 from collections import OrderedDict
@@ -10,21 +9,22 @@ import requests
 from netCDF4 import Dataset
 from tqdm import tqdm
 
-import prereise.gather.winddata.rap.helpers
+from prereise.gather.winddata.rap.helpers import ll2uv, \
+    angular_distance, get_power
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     """Retrieve wind speed data from NOAA's server.
 
-    :param pandas wind_farm: data frame with *'lat'*, *'lon'* and \ 
-        *'GenMWMax'* as columns and *'plantID'*  as index.
+    :param pandas.DataFrame wind_farm: data frame with *'lat'*, *'lon'* and
+        *'GenMWMax'* as columns and *'plant_id'*  as index.
     :param str start_date: start date.
     :param str end_date: end date (inclusive).
-    :return: (*tuple*) -- First element is a pandas data frame with \ 
-        *'PlantID'*, *'U'*, *'V'*, *'Pout'*, *'ts'* and *'tsID'* as columns. \ 
-        The power output is in MWh and the U and V component of the wind \ 
-        speed 80-m above ground level are in m/s. Second element is a list \ 
-        of missing files.
+    :return: (*tuple*) -- First element is a pandas data frame with
+        *'plant_id'*, *'U'*, *'V'*, *'Pout'*, *'ts'* and *'ts_id'* as columns.
+        The power output is in MWh and the U and V component of the wind speed
+        80-m above ground level are in m/s. Second element is a list of missing
+        files.
     """
 
     # Information on wind farms
@@ -59,15 +59,15 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
 
     extension = 'accept=netCDF'
 
-    # Download files and fill out dataframe
+    # Download files and fill out data frame
     missing = []
     target2grid = OrderedDict()
-    data = pd.DataFrame({'plantID': [],
+    data = pd.DataFrame({'plant_id': [],
                          'U': [],
                          'V': [],
                          'Pout': [],
                          'ts': [],
-                         'tsID': []})
+                         'ts_id': []})
     dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     step = datetime.timedelta(hours=1)
 
@@ -77,9 +77,9 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
         query = file + var + '&' + box + '&' + extension
         request = requests.get(query)
 
-        data_tmp = pd.DataFrame({'plantID': id_target,
+        data_tmp = pd.DataFrame({'plant_id': id_target,
                                  'ts': [dt]*n_target,
-                                 'tsID': [i+1]*n_target})
+                                 'ts_id': [i+1]*n_target})
 
         if request.status_code == 200:
             with open('tmp.nc', 'wb') as f:
@@ -95,9 +95,9 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
                 # The angular distance is calculated once. The target to grid
                 # correspondence is stored in a dictionary.
                 for j in range(n_target):
-                    uv_target = helpers.ll2uv(lon_target[j], lat_target[j])
-                    angle = [helpers.angular_distance(uv_target,
-                             helpers.ll2uv(lon_grid[k], lat_grid[k]))
+                    uv_target = ll2uv(lon_target[j], lat_target[j])
+                    angle = [angular_distance(uv_target,
+                             ll2uv(lon_grid[k], lat_grid[k]))
                              for k in range(n_grid)]
                     target2grid[id_target[j]] = np.argmin(angle)
 
@@ -106,7 +106,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
             data_tmp['V'] = [v_wsp[target2grid[id_target[j]]]
                              for j in range(n_target)]
             wspd = np.sqrt(pow(data_tmp['U'], 2) + pow(data_tmp['V'], 2))
-            data_tmp['Pout'] = [helpers.get_power(val, 'IEC class 2') *
+            data_tmp['Pout'] = [get_power(val, 'IEC class 2') *
                                 capacity_target[j]
                                 for j, val in enumerate(wspd)]
 
@@ -123,11 +123,11 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
         data = data.append(data_tmp, ignore_index=True, sort=False)
         dt += step
 
-    # Format dataframe
-    data['plantID'] = data['plantID'].astype(np.int32)
-    data['tsID'] = data['tsID'].astype(np.int32)
+    # Format data frame
+    data['plant_id'] = data['plant_id'].astype(np.int32)
+    data['ts_id'] = data['ts_id'].astype(np.int32)
 
-    data.sort_values(by=['tsID', 'plantID'], inplace=True)
+    data.sort_values(by=['ts_id', 'plant_id'], inplace=True)
     data.reset_index(inplace=True, drop=True)
 
     return data, missing

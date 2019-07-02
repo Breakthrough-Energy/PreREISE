@@ -4,17 +4,15 @@ import os
 import numpy as np
 import pandas as pd
 
-PowerCurves = pd.read_csv(os.path.dirname(__file__) +
-                          '/../IECPowerCurves.csv')
+PowerCurves = pd.read_csv(os.path.dirname(__file__) + '/../IECPowerCurves.csv')
 
 
 def ll2uv(lon, lat):
     """Convert (longitude, latitude) to unit vector.
 
-    :param float lon: longitude of the site (in deg.) measured eastward from \ 
+    :param float lon: longitude of the site (in deg.) measured eastward from
         Greenwich, UK.
-    :param float lat: latitude of the site (in deg.). Equator is the zero \ 
-        point.
+    :param float lat: latitude of the site (in deg.). Equator is the zero point.
     :return: (*tuple*) -- 3-components (x,y,z) unit vector.
     """
     cos_lat = math.cos(math.radians(lat))
@@ -22,10 +20,7 @@ def ll2uv(lon, lat):
     cos_lon = math.cos(math.radians(lon))
     sin_lon = math.sin(math.radians(lon))
 
-    uv = []
-    uv.append(cos_lat * cos_lon)
-    uv.append(cos_lat * sin_lon)
-    uv.append(sin_lat)
+    uv = [cos_lat * cos_lon, cos_lat * sin_lon, sin_lat]
 
     return uv
 
@@ -58,7 +53,6 @@ def get_power(wspd, turbine):
             (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
     if not match.any():
         return 0
-    values = PowerCurves[turbine][match]
     return np.interp(wspd,
                      PowerCurves[turbine][match].index.values,
                      PowerCurves[turbine][match].values)
@@ -67,22 +61,23 @@ def get_power(wspd, turbine):
 def to_reise(data):
     """Format data for REISE.
 
-    :param pandas data: data frame as returned \ 
-        by :func:`prereise.gather.winddata.rap.rap.retrieve_data`.
-    :return: (*pandas*) -- data frame formated for REISE.
+    :param pandas.DataFrame data: data frame as returned by
+        :func:`prereise.gather.winddata.rap.rap.retrieve_data`.
+    :return: (*pandas.DataFrame*) -- data frame formatted for REISE.
     """
     ts = data['ts'].unique()
-    plantID = data[data.tsID == 1].plantID.values
+    plant_id = data[data.ts_id == 1].plant_id.values
 
-    for i in range(1, max(data.tsID)+1):
-        data_tmp = pd.DataFrame({'Pout': data[data.tsID == i].Pout.values},
-                                index=plantID)
+    profile = None
+    for i in range(1, max(data.ts_id)+1):
+        data_tmp = pd.DataFrame({'Pout': data[data.ts_id == i].Pout.values},
+                                index=plant_id)
         if i == 1:
-            dataT = data_tmp.T
+            profile = data_tmp.T
         else:
-            dataT = dataT.append(data_tmp.T, sort=False, ignore_index=True)
+            profile = profile.append(data_tmp.T, sort=False, ignore_index=True)
 
-    dataT.set_index(ts, inplace=True)
-    dataT.index.name = 'UTC'
+    profile.set_index(ts, inplace=True)
+    profile.index.name = 'UTC'
 
-    return dataT
+    return profile

@@ -11,17 +11,18 @@ def to_reise(data):
     """
 
     ts = data['ts'].unique()
-    plantID = data[data.tsID == 1].plantID.values
+    plant_id = data[data.ts_id == 1].plant_id.values
 
-    for i in range(1, max(data.tsID)+1):
-        data_tmp = pd.DataFrame({'Pout': data[data.tsID == i].Pout.values},
-                                index=plantID)
+    profile = None
+    for i in range(1, max(data.ts_id) + 1):
+        data_tmp = pd.DataFrame({'Pout': data[data.ts_id == i].Pout.values},
+                                index=plant_id)
         if i == 1:
-            dataT = data_tmp.T
+            profile = data_tmp.T
         else:
-            dataT = dataT.append(data_tmp.T, sort=False, ignore_index=True)
+            profile = profile.append(data_tmp.T, sort=False, ignore_index=True)
 
-    dataT.set_index(ts, inplace=True)
-    dataT.index.name = 'UTC'
+    profile.set_index(ts, inplace=True)
+    profile.index.name = 'UTC'
 
-    return dataT
+    return profile
