@@ -45,8 +45,8 @@ def simple(data, wind_farm, inplace=True):
                           (dates.hour == hour) &
                           (data.Pout != -99)]
 
-        k = data.loc[j].plantID
-        select_plant = select[select.plantID == k]
+        k = data.loc[j].plant_id
+        select_plant = select[select.plant_id == k]
 
         min_u, max_u = select_plant['U'].min(), select_plant['U'].max()
         min_v, max_v = select_plant['V'].min(), select_plant['V'].max()
