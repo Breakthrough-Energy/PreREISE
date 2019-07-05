@@ -15,7 +15,7 @@ def simple(data, wind_farm, inplace=True):
     :param pandas.DataFrame data: data frame as returned by
         :py:func:`prereise.gather.winddata.rap.rap.retrieve_data`.
     :param pandas.DataFrame wind_farm: data frame of wind farms.
-    :param bool inplace: should the imputation be done in place
+    :param bool inplace: should the imputation be done in place.
     :return: (*pandas.DataFrame*) -- data frame with missing entries imputed.
     """
 
