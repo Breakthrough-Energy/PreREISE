@@ -38,13 +38,7 @@ Download MATPOWER and add the following directories in ***add_path.m***:
 ```
 
 
-### D. WesternInterconnectNetwork
-In the WesternInterconnect package, locate the ***setup.py*** file and type:
-`pip3 install .`. The other option is to update the PYTHONPATH environment
-variable.
-
-
-### E. PreREISE
+### D. PreREISE
 In the PreREISE package, locate the ***setup.py*** file and type:
 `pip3 install .`. The other option is to update the PYTHONPATH environment
 variable.
@@ -52,7 +46,7 @@ variable.
 
 
 
-## 2. Gather Data for Simulation 
+## 2. Gather Data for Simulation
 This module aims at gathering the required data for the simulation.
 
 ### A. Wind data
@@ -192,7 +186,7 @@ To output the demand profile, cleaning steps were applied to the EIA data:
 was used; beyond this, NA's were converted to float zeros;  
 2) missing hours were added.
 
-The BA counts were then distributed across each region where the BA operates, 
+The BA counts were then distributed across each region where the BA operates,
 using the region populations as weights. For example, if a BA operates in both
 WA and OR, the counts for WA are weighted by the fraction of the total counts
 in WA relative to the total population of WA and OR.
