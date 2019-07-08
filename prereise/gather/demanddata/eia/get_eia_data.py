@@ -81,7 +81,7 @@ class EIAgov(object):
     def raw(self, ser):
         """Downloads json files from EIA.
 
-        :param list ser: list of filenames.
+        :param str ser: list of filenames.
         :raises keyError: when URL or file are either not found or not valid.
         """
 
