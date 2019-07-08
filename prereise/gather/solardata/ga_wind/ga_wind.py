@@ -66,7 +66,8 @@ def retrieve_data(solar_plant, hs_api_key, start_date='2007-01-01',
     data = pd.DataFrame({'Pout': [], 'plant_id': [], 'ts': [], 'ts_id': []})
 
     for (key, val) in tqdm(ij.items(), total=len(ij)):
-        ghi = f['GHI'][min(dt_range.index):max(dt_range.index)+1, val[0], val[1]]
+        ghi = f['GHI'][min(dt_range.index):max(dt_range.index)+1,
+                       val[0], val[1]]
         data_loc = pd.DataFrame({'Pout': ghi})
         data_loc['Pout'] /= max(ghi)
         data_loc['ts_id'] = range(1, len(ghi)+1)
