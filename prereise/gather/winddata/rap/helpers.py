@@ -51,7 +51,7 @@ def get_power(wspd, turbine):
     """
     match = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & \
             (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
-    if not match.any():
+    if not any(match):
         return 0
     return np.interp(wspd,
                      PowerCurves[turbine][match].index.values,
