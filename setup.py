@@ -7,5 +7,5 @@ setup(name='prereise',
       author='Kaspar Mueller',
       author_email='kmueller@intven.com',
       packages=find_packages(),
-      package_data={'prereise':['call/add_path.m']},
+      package_data={'prereise': ['call/add_path.m']},
       zip_safe=False)

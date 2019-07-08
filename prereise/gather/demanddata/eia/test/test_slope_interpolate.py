@@ -11,12 +11,11 @@ def test_slope_interpolate():
     """
 
     dir1 = os.path.join(os.path.dirname(__file__), 'data')
-    BA = pd.read_csv(dir1 + "/" + 'BA_2016.csv', index_col='UTC Time',
+    ba = pd.read_csv(dir1 + "/" + 'BA_2016.csv', index_col='UTC Time',
                      parse_dates=True)
-    orig_fall = BA['PSCO'].to_frame().copy()
+    orig_fall = ba['PSCO'].to_frame().copy()
 
-    threshold = 3
-    fixed = find_fix_outliers.slope_interpolate(orig_fall, threshold)
+    fixed = find_fix_outliers.slope_interpolate(orig_fall)
     fixed.rename(columns={'PSCO': 'PSCO3'}, inplace=True)
 
     combine = pd.concat([orig_fall, fixed], axis=1)
