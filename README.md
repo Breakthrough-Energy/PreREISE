@@ -5,7 +5,7 @@ name stands for pre Renewable Energy Integration Study Engine.
 
 
 ## 1. Setup/Install
-This package requires MATLAB, Gurobi, MATPOWER and WesternInterconnect.
+This package requires MATLAB, MATPOWER and Gurobi.
 
 
 ### A. MATLAB
@@ -23,20 +23,19 @@ python setup.py install
 for Mac or Linux systems.
 
 
-### B. Gurobi
-Install Gurobi and add MATLAB path to ***add_path.m***:
-```
-<GUROBI>/<os>/matlab
-```
-
-
-### C. MATPOWER
+### B. MATPOWER
 Download MATPOWER and add the following directories in ***add_path.m***:
 ```
 <MATPOWER>        — core MATPOWER functions
 <MATPOWER>/most   — core MOST functions
 ```
 
+
+### C. Gurobi
+Install Gurobi and add MATLAB path to ***add_path.m***:
+```
+<GUROBI>/<os>/matlab
+```
 
 ### D. PreREISE
 In the PreREISE package, locate the ***setup.py*** file and type:
