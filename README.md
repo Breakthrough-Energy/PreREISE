@@ -212,8 +212,11 @@ usage.
 ## 3. Start simulation
 Simulation can only be launched on server. After setting up the scenario, the
 simulation engine can be called and the simulation can be started as follows:
-```
-python prereise.call.call.py 0
+```python
+from prereise.call.call import launch_scenario_performance
+
+scenario_id = '0'
+launch_scenario_performance(scenario_id)
 ```
 where the argument is the *scenario id*.
 
