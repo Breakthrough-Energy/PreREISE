@@ -7,5 +7,5 @@ setup(name='prereise',
       author='Kaspar Mueller',
       author_email='kmueller@intven.com',
       packages=find_packages(),
-      package_data={'prereise': ['call/add_path.m']},
+      package_data={'prereise':['call/add_path.m','gather/winddata/IECPowerCurves.csv','gather/hydrodata/eia/cf.csv']},
       zip_safe=False)
