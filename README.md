@@ -130,9 +130,9 @@ The default values of the parameters of the *PVWatts* model are untouched. Only
 the system size and the array type (fixed open rack, backtracked, 1-axis and
 2-axis) is set for each solar plant.
 
-The naive and the SAM method are used in the ***[nsrdb_naive_demo.ipynb]
-[NSRDB_naive_notebook]*** and ***[nsrdb_sam_demo.ipynb][NSRDB_sam_notebook]***
-demo notebooks, respectively.
+The naive and the SAM methods are used in the 
+***[nsrdb_naive_demo.ipynb][NSRDB_naive_notebook]*** and
+***[nsrdb_sam_demo.ipynb][NSRDB_sam_notebook]*** demo notebooks, respectively.
 
 
 ### C. Hydro Data
@@ -152,7 +152,7 @@ Demand data are obtained from EIA, to whom Balancing Authorities have submitted
 their data. The data can be obtained either by direct download from their
 database using an API or by download of Excel spreadsheets. A API key is
 required for the API download and this key can be obtained by a user by
-registering at https://www.eia.gov/opendata/.
+registering at <https://www.eia.gov/opendata/>.
 
 The direct download currently contains only published demand data. The Excel
 spreadsheets include original and imputed demand data, as well as results of
