@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='prereise',
-      version='0.2',
+      version='0.3',
       description='Create and run an energy scenario',
       url='https://github.com/intvenlab/PreREISE',
       author='Kaspar Mueller',
