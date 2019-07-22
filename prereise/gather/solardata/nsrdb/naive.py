@@ -9,14 +9,14 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
     """Retrieve irradiance data from NSRDB and calculate the power output \ 
         using a simple normalization.
 
-    :param pandas solar_plant: data frame with *'lat'*, *'lon'* and \ 
-        *'GenMWMax' as columns and *'PlantID'* as index.
-    :param str email: email used for API key \ 
-        `sign up <https://developer.nrel.gov/signup/>`_. 
+    :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
+        *'GenMWMax' as columns and *'plant_id'* as index.
+    :param str email: email used for API key
+        `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
     :param str year: year.
-    :return: (*pandas*) -- data frame with *'Pout'*, *'plantID'*, *'ts'* \ 
-        and *'tsID'* as columns. The power output is in MWh.
+    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
+        *'ts'* and *'ts_id'* as columns. The power output is in MWh.
     """
 
     # Information on solar plants
@@ -51,7 +51,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
         'email={email}'.format(email=email) + '&' + \
         'attributes={attr}'.format(attr=attributes)
 
-    data = pd.DataFrame({'Pout': [], 'plantID': [], 'ts': [], 'tsID': []})
+    data = pd.DataFrame({'Pout': [], 'plant_id': [], 'ts': [], 'ts_id': []})
 
     for key in tqdm(coord.keys(), total=len(coord)):
         query = 'wkt=POINT({lon}%20{lat})'.format(lon=key[0], lat=key[1])
@@ -59,7 +59,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
         ghi = data_loc.GHI.values
         data_loc = pd.DataFrame({'Pout': ghi})
         data_loc['Pout'] /= max(ghi)
-        data_loc['tsID'] = range(1, len(ghi)+1)
+        data_loc['ts_id'] = range(1, len(ghi)+1)
         data_loc['ts'] = pd.date_range(start=year,
                                        end=str(int(year)+1),
                                        freq='H')[:-1]
@@ -67,14 +67,14 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
         for i in coord[key]:
             data_site = data_loc.copy()
             data_site['Pout'] *= i[1]
-            data_site['plantID'] = i[0]
+            data_site['plant_id'] = i[0]
 
             data = data.append(data_site, ignore_index=True, sort=False)
 
-    data['plantID'] = data['plantID'].astype(np.int32)
-    data['tsID'] = data['tsID'].astype(np.int32)
+    data['plant_id'] = data['plant_id'].astype(np.int32)
+    data['ts_id'] = data['ts_id'].astype(np.int32)
 
-    data.sort_values(by=['tsID', 'plantID'], inplace=True)
+    data.sort_values(by=['ts_id', 'plant_id'], inplace=True)
     data.reset_index(inplace=True, drop=True)
 
     return data

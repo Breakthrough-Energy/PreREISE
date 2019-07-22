@@ -12,13 +12,13 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
         for desired date range.
 
     :param str tok: token obtained by registering with EIA.
-    :param timestamp start: start date.
-    :param timestamp end: end data.
-    :param list series_list: list of demand series names provided by EIA, \ 
-        e.g., ['EBA.AVA-ALL.D.H', 'EBA.AZPS-ALL.D.H'].
+    :param datetime.datetime start_date: start date.
+    :param datetime.datetime end_date: end data.
+    :param list series_list: list of demand series names provided by EIA, e.g.,
+        ['EBA.AVA-ALL.D.H', 'EBA.AZPS-ALL.D.H'].
     :param int offset_days: number of business days for data to stabilize.
-    :return: (*pandas*) -- data frame indexed with hourly UTC time and BA \ 
-        series name for column names.
+    :return: (*pandas.DataFrame*) -- data frame indexed with hourly UTC time and
+        BA series name for column names.
     """
 
     timespan = pd.date_range(start_date,
@@ -38,15 +38,15 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
 
 
 def from_excel(directory, series_list, start_date, end_date):
-    """Assembles EIA balancing authority (BA) data from pre-downloaded Excel \ 
+    """Assembles EIA balancing authority (BA) data from pre-downloaded Excel
         spreadsheets. The spreadsheets contain data from July 2015 to present.
 
     :param str directory: location of Excel files.
     :param list series_list: list of BA initials, e.g., ['PSE',BPAT','CISO'].
-    :param timestamp start_date: desired start of dataset.
-    :param timestamp end_date: desired end of dataset.
-    :return: (*pandas*) -- data frame indexed with hourly UTC time and BA \ 
-        series name for column names.
+    :param datetime.datetime start_date: desired start of dataset.
+    :param datetime.datetime end_date: desired end of dataset.
+    :return: (*pandas.DataFrame*) -- data frame indexed with hourly UTC time and
+        BA series name for column names.
     """
     timespan = pd.date_range(start_date, end_date, freq='H')
     df_all = pd.DataFrame(index=timespan)
@@ -72,7 +72,6 @@ class EIAgov(object):
     
     :param str token: EIA token.
     :param list series: id code(s) of the series to be downloaded.
-    
     """
     
     def __init__(self, token, series):
@@ -82,7 +81,7 @@ class EIAgov(object):
     def raw(self, ser):
         """Downloads json files from EIA.
 
-        :param list ser: list of filenames.
+        :param str ser: list of filenames.
         :raises keyError: when URL or file are either not found or not valid.
         """
 
@@ -107,7 +106,7 @@ class EIAgov(object):
     def get_data(self):
         """Converts json files into data frame.
 
-        :return: (*pandas*) -- data frame.
+        :return: (*pandas.DataFrame*) -- data frame.
         """
 
         date_ = self.raw(self.series[0])

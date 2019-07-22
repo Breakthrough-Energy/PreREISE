@@ -6,9 +6,8 @@ from prereise.gather.demanddata.eia import get_eia_data
 
 
 def test_from_excel():
-    """Tests data frame assembled from Excel spreadsheets manually \ 
-        downloaded from EIA. Test checks that correct number of columns are \ 
-        created.
+    """Tests data frame assembled from Excel spreadsheets manually downloaded
+        from EIA. Test checks that correct number of columns are created.
     """
 
     dir1 = os.path.join(os.path.dirname(__file__), 'data')
