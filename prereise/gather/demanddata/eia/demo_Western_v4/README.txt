@@ -1,0 +1,3 @@
+--wecc_demand_v4.ipynb: whole process of gathering 2016 demand profile v4 for Western interconnect
+--western_demand_v4.csv: alogrithm raw output
+--western_demand_v4_adjust.csv: post adjusted output based on external references (Research Dan)
