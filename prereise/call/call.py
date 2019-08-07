@@ -4,6 +4,7 @@ import datetime
 import matlab.engine
 import numpy as np
 import os
+import posixpath
 import pandas as pd
 
 from collections import OrderedDict
@@ -62,7 +63,7 @@ def launch_scenario_performance(scenario_id, n_parallel_call=1):
     end_index = dates.get_loc(end_ts) + 1
 
     # Create save data folder if does not exist
-    output_dir = os.path.join(const.EXECUTE_DIR,
+    output_dir = posixpath.join(const.EXECUTE_DIR,
                               'scenario_%s/output' % scenario_info['id'])
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
@@ -104,15 +105,15 @@ def scenario_matlab_call(scenario_info, start_index, end_index):
     """
 
     # Location of add_path file
-    top_dirname = os.path.dirname(os.path.abspath(__file__))
+    top_dirname = posixpath.dirname(posixpath.abspath(__file__))
     eng = matlab.engine.start_matlab()
 
     # Load path definition in MATLAB (MATPOWER and GUROBI)
     eng.run(top_dirname + '/add_path', nargout=0)
-    input_dir = os.path.join(const.EXECUTE_DIR,
-                             'scenario_%s' % scenario_info['id'])
-    output_dir = os.path.join(const.EXECUTE_DIR,
-                              'scenario_%s/output/' % scenario_info['id'])
+    input_dir = posixpath.join(const.EXECUTE_DIR,
+                               'scenario_%s' % scenario_info['id'])
+    output_dir = posixpath.join(const.EXECUTE_DIR,
+                                'scenario_%s/output/' % scenario_info['id'])
 
     eng.addpath(input_dir)
 
