@@ -1,0 +1,5 @@
+* Issue: Hydro Generation Profile V2#94 and Implement Texas Hydro V2#105 @Renewable Energy Integration 
+* Date: 8/5/2019
+* Owner: Bainan
+* Use: Generate hydro generation profile for WECC and Texas based on four data sources: hourly variation: 1) WA NWhydro 2) CA Net Demand via WECC demand v4 - wind v1 - solar v2; net generation: 1) EIA monthly hydro net generation for each state 2) ERCOT hydro generation profile. Details of the procedure can be found in hydro_generation_profile_v2.ipynb.
+* Details: \Dropbox (IVL)\Explorations\BainanX\Hydro Generation Profile v2
