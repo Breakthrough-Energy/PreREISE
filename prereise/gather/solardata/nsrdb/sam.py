@@ -20,9 +20,11 @@ def get_frac(interconnect):
         return [0.2870468, 0.6745755, 0.0383777]
     elif interconnect is 'Texas':
         return [0.08, 0.46, 0.46]
+    elif interconnect is 'Eastern':
+        return [0.713, 0.286, 0.001]
     else:
-        print("Possible interconnections are: %s" % ['Western', 'Texas'])
-        raise ValueError
+        raise Exception("Wrong interconnect. "
+                        "Choose from Eastern | Western | Texas")
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
