@@ -1,1 +1,5 @@
 install latest version of Visual Studio
+
+set up environment for fiona and rtree
+
+Control Areas shape file data source: https://hifld-geoplatform.opendata.arcgis.com/datasets/control-areas
