@@ -42,7 +42,7 @@ def slope_interpolate(ba_df):
     df['delta_zscore'] = np.abs((df['delta'] - delta_mu)/delta_sigma)
 
     # Find the outliers
-    outlier_index_list = df.loc[df['delta_zscore'] > 3].index
+    outlier_index_list = df.loc[df['delta_zscore'] > 5].index
 
     hour_save = -1
     for i in outlier_index_list:
@@ -68,7 +68,7 @@ def slope_interpolate(ba_df):
 
         num = next_save - hour_save
 
-        if num > 5:
+        if num > 4:
             print('Too many zeros near ', i, '! Review data!')
 
         start = df.iloc[hour_save-1][ba_name]
