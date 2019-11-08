@@ -1,5 +1,14 @@
 import numpy as np
+import pandas as pd
 
+def fix_dataframe_outliers(demand):
+    demand_fix_outliers = demand
+    for ba in demand.columns.to_list():
+        print()
+        print(ba)
+        demand_ba = demand[ba]
+        demand_fix_outliers[ba] = slope_interpolate(pd.DataFrame(demand_ba))
+    return demand_fix_outliers
 
 def slope_interpolate(ba_df):
     """Look for demand outliers by applying a z-score threshold to the demand
