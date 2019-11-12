@@ -1,9 +1,10 @@
 import pandas as pd
 
 def transform_ba_to_region(demand, mapping):
-    """ Tranforms column of demand dataframe to regions defined by dictionary mapping
-        :params dataframe demand: dataframe for the demand
+    """ Transforms column of demand dataframe to regions defined by dictionary mapping
+        :params pandas.DataFrame demand: dataframe for the demand
         :params dict mapping: dictionary mapping of BA columns to regions
+        :return: (*pandas.DataFrame*) -- dataframe with demand columns according to region
     """
     agg_demand = pd.DataFrame(index=demand.index)
     for key in mapping:

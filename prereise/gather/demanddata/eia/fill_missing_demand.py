@@ -1,10 +1,11 @@
 import pandas as pd
 
 def replace_with_shifted_demand(demand, start, end):
-    """ Downloads the demand between the start and end dates for a list of BAs
-        :param dataframe demand Dataframe with hourly demand where the columns are BA regions
-        :param datetime start Datetime for start of period of interest
-        :param datetime end Datetime for end of period of interest
+    """ Replaces missing data within overall demand dataframe with averages of nearby shifted demand
+        :param pandas.DataFrame demand: Dataframe with hourly demand where the columns are BA regions
+        :param datetime.datetime start: Datetime for start of period of interest
+        :param datetime.datetime end: Datetime for end of period of interest
+        :return: (*pandas.DataFrame*) -- Data frame with missing demand data filled in
     """
     look_back1day = demand.shift(1, freq ='D')
     look_back2day = demand.shift(2, freq ='D') 
@@ -32,10 +33,11 @@ def replace_with_shifted_demand(demand, start, end):
     return filled_demand
 
 def fill_ba_demand(df_BA, baName, dayMap):
-    """ Downloads the demand between the start and end dates for a list of BAs
-        :param dataframe df_BA Dataframe for BA demand, shifted demand, and day of the week
-        :param str baName Name of the BA in dataframe
-        :param dict dayMap Mapping for replacing missing demand data with shifted demand
+    """ Replaces missing data in BA demand and returns result
+        :param pandas.DataFrame: df_BA Dataframe for BA demand, shifted demand, and day of the week
+        :param str baName: Name of the BA in dataframe
+        :param dict dayMap: Mapping for replacing missing demand data with shifted demand
+        :return: (*pandas.DataFrame*) --  BA dataseries with demand filled in 
     """
     for day in range(0,7):
         if len(df_BA[dayMap[day]].shape) > 1:

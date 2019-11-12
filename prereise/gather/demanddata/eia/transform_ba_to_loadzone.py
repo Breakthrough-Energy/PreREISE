@@ -2,6 +2,11 @@ import pandas as pd
 import os
 
 def map_to_loadzone(agg_demand, bus_map):
+    """ Transforms columns of demand dataframe from BA regions to load zones according to bus_map
+        :params pandas.DataFrame agg_demand: dataframe for the aggregated region demand
+        :params pandas.DataFrame bus_map: dataframe used to map BA regions to load zones using Pd weighting
+        :return: (*pandas.DataFrame*) -- new dataframe with demand columns according to load_zone
+    """
     BA_agg = bus_map[['BA','Pd']].groupby('BA').sum().rename(columns={'Pd':'PdTotal'})
 
     BA_scaling_factor = bus_map.merge(BA_agg, left_on='BA', right_on='BA')

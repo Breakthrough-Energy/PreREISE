@@ -2,6 +2,14 @@ import numpy as np
 import pandas as pd
 
 def fix_dataframe_outliers(demand):
+    """Make a dataframe of demand with outliers replaced with values    
+        interpolated from the non-outlier edge points using slope_interpolate
+        
+    :param pandas.Dataframe demand: demand data frame with UTC time index
+        and BA name as column name
+    :return: (*pandas.DataFrame*) -- data frame with anamolaus demand values
+        replaced by interpolated values
+    """
     demand_fix_outliers = pd.DataFrame(index=demand.index)
     for ba in demand.columns.to_list():
         print()
