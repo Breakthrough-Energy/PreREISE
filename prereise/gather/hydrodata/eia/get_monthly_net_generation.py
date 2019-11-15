@@ -1,7 +1,9 @@
+import os
 import pandas as pd
-def get_monthly_net_generation(state):
+def get_monthly_net_generation(state,filename):
     """Get monthly total hydro net generation for the query state in 2016 from EIA923
     :param str state: the query state
+    :param str filename: name of the reference file
     :return: (*list*) EIA_net_generation -- monthly hydro net generation of the query state in a list  
         of length 12
     :raise Exception: if state is invalid.
@@ -24,11 +26,8 @@ def get_monthly_net_generation(state):
         print("%s is incorrect. Possible states are: %s" %
                   (state, list(state_name.keys())))
         raise Exception('Invalid state')
-     
-    filename = 'EIA923_Schedules_2_3_4_5_M_12_2016_Final_Revision.xlsx'
-    # filedir = './f923_2016/'
-    filedir = './'
-    plant_generation = pd.read_excel(io = filedir + filename, header = 0, usecols = 'A,D,G,I,P,CB:CM',skiprows = range(5))
+    filedir = os.path.join(os.path.join(os.path.dirname(__file__), '..'),'data')
+    plant_generation = pd.read_excel(io = os.path.join(filedir,filename), header = 0, usecols = 'A,D,G,I,P,CB:CM',skiprows = range(5))
     # Filter by state and fuel type, HYC: conventional; hydro HPS: pump hydro
     net_generation_by_plant = plant_generation[(plant_generation['Plant State'] == state) & ((plant_generation['AER\nFuel Type Code'] == 'HYC')|(plant_generation['AER\nFuel Type Code'] == 'HPS'))].copy()
     # Drop unnecessary columns, plant ID, etc..

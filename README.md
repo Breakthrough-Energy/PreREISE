@@ -136,6 +136,8 @@ The naive and the SAM methods are used in the
 
 
 ### C. Hydro Data
+
+#### i. Hydro v1
 EIA (Energy Information Administration) published monthly capacity factors for
 hydro plants across the country. This dataset (available [here][hydro_cf]) is
 used to produce a profile for each hydro plant in the grid. Note that we are
@@ -145,6 +147,9 @@ grid will have the same shape. Only the power output will differ (the scale of
 the profile).
 
 Check out the ***[eia_demo.ipynb][hydro_notebook]*** notebook for demo.
+
+#### ii. Hydro v2
+
 
 
 ### D. Demand Data

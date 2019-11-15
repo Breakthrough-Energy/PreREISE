@@ -1,8 +1,9 @@
 from powersimdata.scenario.scenario import Scenario
 from powersimdata.input.grid import Grid
-def get_net_demand_profile_western(state):
+def get_net_demand_profile_western(state,s):
     """Get the net demand profile of a specific state based on Western basecase scenario 2016
     :param str state: the query state
+    :param powersimdata.scenario.scenario.Scenario s: scenario instance
     :return: (*list*) netdemand -- net demand profile of the query state in a list of length 8784
     :raise Exception: if state is invalid.
     """
@@ -26,7 +27,6 @@ def get_net_demand_profile_western(state):
         raise Exception('Invalid state')
         
     #load Western basecase scenario 2016 and the corresponding profiles
-    s = Scenario("87")
     wind = s.state.get_wind()
     solar = s.state.get_solar()
     demand = s.state.get_demand()
