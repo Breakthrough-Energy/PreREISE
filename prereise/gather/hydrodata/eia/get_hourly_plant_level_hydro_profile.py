@@ -1,5 +1,7 @@
 import pandas as pd
 from powersimdata.input.grid import Grid
+
+
 def get_hourly_plant_level_hydro_profile(total_profile,state):
     """Decompose total hydro profile into plant level profile based on hydro generator capacities in the query state
     :param list total_profile: total hydro profile in the query state
@@ -9,7 +11,8 @@ def get_hourly_plant_level_hydro_profile(total_profile,state):
     """
     state_name = {'WA':{'Washington'},
                   'OR':{'Oregon'},
-                  'CA':{'Northern California','Bay Area','Central California','Southwest California','Southeast California'},
+                  'CA':{'Northern California','Bay Area','Central California',
+                        'Southwest California','Southeast California'},
                   'NV':{'Nevada'},
                   'AZ':{'Arizona'},
                   'UT':{'Utah'},
@@ -25,13 +28,16 @@ def get_hourly_plant_level_hydro_profile(total_profile,state):
         raise Exception('Invalid state')
 
     western = Grid(['Western'])
+    
     # Group hydro plants in the query state from the plant DataFrame of the Grid object.
     plant = western.plant[(western.plant.type == 'hydro') & (western.plant['zone_name'].isin(state_name[state]))]
+    
     total_hydro_capacity = plant['GenMWMax'].sum()
     hydro_v2 = pd.DataFrame(columns = plant.index)
+    
     for plantid in hydro_v2.columns:
         factor = plant.loc[plantid]['GenMWMax']/total_hydro_capacity
         plant_profile = [val*factor for val in total_profile]
         hydro_v2[plantid] = plant_profile.copy()
+        
     return hydro_v2
-    

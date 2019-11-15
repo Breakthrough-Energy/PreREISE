@@ -168,6 +168,8 @@ The naive and the SAM methods are used in the
 
 
 ### C. Hydro Data
+
+#### i. Hydro v1
 EIA (Energy Information Administration) published monthly capacity factors for
 hydro plants across the country. This dataset (available [here][hydro_cf]) is
 used to produce a profile for each hydro plant in the grid. Note that we are
@@ -178,6 +180,18 @@ the profile).
 
 Check out the ***[eia_demo.ipynb][hydro_notebook]*** notebook for demo.
 
+#### ii. Hydro v2
+##### a. Western
+Hydro hourly profile v2 for Western consists of two components: profile shape to capture the hourly variance and monthly total generation to capture the historical summation. EIA published monthly total generation for each hydro plant by state in form EIA923 (available [here][EIA923]). 
+
+Given that Washington state has the most hydro generation in the Western Interconnection, we use the aggregated generation of the top 20 US Army Corps managed hydro dams in Northwestern US (primarily in WA) as the shape of this hydro profile v2 for all the states in Western except for California and Wyoming. The data is obtained via US Army Corps of Engineers Northwestern Division DataQuery Tool 2.0 at <http://www.nwd-wc.usace.army.mil/dd/common/dataquery/www/>.
+
+Observed from system daily outlook of California ISO (available [here][CAISO_outlook]), the hydro generation profile follows closely to the net demand profile. Thus, we construct the shape curve of hydro profile v2 in CA using the net demand profile of CA in the basecase scenario (Scenario 87). As for Wyoming, due to the small name plate capacities of the hydro generators, we simply apply a constant shape curve to avoid peak-hour violation of maximum capacity.
+
+The final hydro profile v2 is built by scaling the corresponding shape curves based on the monthly total generation record in each state, then decomposing into plant-level profiles proportional to the generator capacities. Check out the ***[western_hydro_v2_demo.ipynb][hydro_v2_western_notebook]*** notebook for demo.
+
+##### b.Texas
+The Electric Reliability Council of Texas (ERCOT) published actual generation by fuel type for each 15 minute settlement interval. For details, see the fuel mix report at <http://www.ercot.com/gridinfo/generation/>. Given this time-series historical data, similarly with the western case, the final hydro profile v2 for Texas is contructed by decomposing the total hydro generation profile proportional to the generator capacities. Check out the ***[texas_hydro_v2_demo.ipynb][hydro_v2_texas_notebook]*** notebook for demo.
 
 ### D. Demand Data
 
@@ -235,7 +249,7 @@ Lastly, buses were mapped to counties. This step requires an input data file tha
 
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted
 their data. The data can be obtained either by direct download from their
-database using an API or by download of Excel spreadsheets. A API key is
+database using an API or by download of Excel spreadsheets. An API key is
 required for the API download and this key can be obtained by a user by
 registering at <https://www.eia.gov/opendata/>.
 
@@ -337,3 +351,7 @@ test_call.test()
 [demand_doc]: https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf
 [demand_notebook]:https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/assemble_ba_from_excel_demo.ipynb
 [demand_anomaly]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/ba_anomaly_detection_demo.ipynb
+[EIA923]: https://www.eia.gov/electricity/data/eia923/
+[CAISO_outlook]: http://www.caiso.com/TodaysOutlook/Pages/default.aspx
+[hydro_v2_western_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/western_hydro_v2_demo.ipynb
+[hydro_v2_texas_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/texas_hydro_v2_demo.ipynb
