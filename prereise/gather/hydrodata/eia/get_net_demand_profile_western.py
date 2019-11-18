@@ -1,5 +1,6 @@
-from powersimdata.scenario.scenario import Scenario
 from powersimdata.input.grid import Grid
+
+
 def get_net_demand_profile_western(state,s):
     """Get the net demand profile of a specific state based on Western basecase scenario 2016
     :param str state: the query state
@@ -9,16 +10,17 @@ def get_net_demand_profile_western(state,s):
     """
     
     state_name = {'WA':{'Washington'},
-              'OR':{'Oregon'},
-              'CA':{'Northern California','Bay Area','Central California','Southwest California','Southeast California'},
-              'NV':{'Nevada'},
-              'AZ':{'Arizona'},
-              'UT':{'Utah'},
-              'NM':{'New Mexico Western'},
-              'CO':{'Colorado'},
-              'WY':{'Wyoming'},
-              'ID':{'Idaho'},
-              'MT':{'Montana Western'},
+                  'OR':{'Oregon'},
+                  'CA':{'Northern California','Bay Area','Central California',
+                        'Southwest California','Southeast California'},
+                  'NV':{'Nevada'},
+                  'AZ':{'Arizona'},
+                  'UT':{'Utah'},
+                  'NM':{'New Mexico Western'},
+                  'CO':{'Colorado'},
+                  'WY':{'Wyoming'},
+                  'ID':{'Idaho'},
+                  'MT':{'Montana Western'},
               }
               
     if state not in state_name:
@@ -26,28 +28,19 @@ def get_net_demand_profile_western(state,s):
                   (state, list(state_name.keys())))
         raise Exception('Invalid state')
         
-    #load Western basecase scenario 2016 and the corresponding profiles
+    # load Western basecase scenario 2016 and the corresponding profiles
     wind = s.state.get_wind()
     solar = s.state.get_solar()
     demand = s.state.get_demand()
     western = Grid(['Western'])
     plant = western.plant
                   
-    wind_plant_id_list = []
-    for plantid in wind.columns:
-        if plant.loc[plantid]['zone_name'] in state_name[state]:
-            wind_plant_id_list.append(plantid)
-    solar_plant_id_list = []
-    for plantid in solar.columns:
-        if plant.loc[plantid]['zone_name'] in state_name[state]:
-            solar_plant_id_list.append(plantid)
-            
+    wind_plant_id_list = list(plant[(plant.type == 'wind') & (plant.zone_name.isin(state_name[state]))].index)
+    solar_plant_id_list = list(plant[(plant.type == 'solar') & (plant.zone_name.isin(state_name[state]))].index)
     windsum = wind[wind_plant_id_list].sum(axis = 1)
     solarsum = solar[solar_plant_id_list].sum(axis = 1)
     
-    zone_id_list = []
-    for zonename in state_name[state]:
-        zone_id_list.append(western.zone2id[zonename])
+    zone_id_list = [western.zone2id[zonename] for zonename in state_name[state]]
     demandsum = demand[zone_id_list].sum(axis = 1)
     netdemand = [demandsum[i] - windsum[i] - solarsum[i] for i in demandsum.index]
     
