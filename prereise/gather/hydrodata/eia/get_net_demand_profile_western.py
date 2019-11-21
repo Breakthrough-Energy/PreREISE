@@ -6,7 +6,7 @@ def get_net_demand_profile_western(state,s):
     :param str state: the query state
     :param powersimdata.scenario.scenario.Scenario s: scenario instance
     :return: (*list*) netdemand -- net demand profile of the query state in a list of length 8784
-    :raise Exception: if state is invalid.
+    :raise ValueError: if state is invalid.
     """
     
     state_name = {'WA':{'Washington'},
@@ -21,12 +21,12 @@ def get_net_demand_profile_western(state,s):
                   'WY':{'Wyoming'},
                   'ID':{'Idaho'},
                   'MT':{'Montana Western'},
-              }
+                  }
               
     if state not in state_name:
         print("%s is incorrect. Possible states are: %s" %
-                  (state, list(state_name.keys())))
-        raise Exception('Invalid state')
+              (state, list(state_name.keys())))
+        raise ValueError('Invalid state')
         
     # load Western basecase scenario 2016 and the corresponding profiles
     wind = s.state.get_wind()
