@@ -7,7 +7,7 @@ def get_hourly_plant_level_hydro_profile(total_profile,state):
     :param list total_profile: total hydro profile in the query state
     :param str state: the query state
     :return: (*pandas.DataFrame*) hydro_v2 -- hourly hydro profile for each plant in the query state
-    :raise Exception: if state is invalid.
+    :raise ValueError: if state is invalid.
     """
     state_name = {'WA':{'Washington'},
                   'OR':{'Oregon'},
@@ -24,9 +24,9 @@ def get_hourly_plant_level_hydro_profile(total_profile,state):
                   }
     if state not in state_name:
         print("%s is incorrect. Possible states are: %s" %
-                  (state, list(state_name.keys())))
-        raise Exception('Invalid state')
-
+              (state, list(state_name.keys())))
+        raise ValueError('Invalid state')
+        
     western = Grid(['Western'])
     
     # Group hydro plants in the query state from the plant DataFrame of the Grid object.
