@@ -1,1 +1,1 @@
-__all__ = ['eia','data']
+__all__ = ['eia']

@@ -15,8 +15,10 @@ def get_profile(hydro_plant, start='2016-01-01-00', end='2016-12-31-23'):
     """
     start = pd.Timestamp(start)
     end = pd.Timestamp(end)
+    
+    filedir = os.path.join(os.path.join(os.path.dirname(__file__), '..'),'data')
 
-    scaler = pd.read_csv(os.path.dirname(__file__) + '/cf.csv', header=None,
+    scaler = pd.read_csv(filedir + '/cf.csv', header=None,
                          index_col=0, names=['timestamp', 'cf'])
     scaler.index = pd.to_datetime(scaler.index)
     scaler = scaler.reindex(pd.date_range(start=scaler.index[0],
