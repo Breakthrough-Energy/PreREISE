@@ -178,7 +178,7 @@ location of the plant. As a result, the profile of all the hydro plants in the
 grid will have the same shape. Only the power output will differ (the scale of
 the profile).
 
-Check out the ***[eia_demo.ipynb][hydro_notebook]*** notebook for demo.
+Check out the ***[hydro_v1_demo.ipynb][hydro_v1_notebook]*** notebook for demo.
 
 #### ii. Hydro v2
 ##### a. Western
@@ -347,7 +347,7 @@ test_call.test()
 [NSRDB_naive_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb
 [NSRDB_sam_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb
 [hydro_cf]: https://www.eia.gov/electricity/annual/html/epa_04_08_b.html
-[hydro_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/eia_demo.ipynb
+[hydro_v1_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/hydro_v1_demo.ipynb
 [demand_doc]: https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf
 [demand_notebook]:https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/assemble_ba_from_excel_demo.ipynb
 [demand_anomaly]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/ba_anomaly_detection_demo.ipynb
