@@ -34,7 +34,7 @@ def get_monthly_net_generation(state,filename,fuel_type):
               (fuel_type, list(all_fuel_type.keys())))
         raise ValueError('Invalid fuel_type')
         
-    filedir = os.path.join(os.path.join(os.path.dirname(__file__), '..'),'data')
+    filedir = os.path.join(os.path.dirname(__file__),'data')
     plant_generation = pd.read_excel(io = os.path.join(filedir,filename),
                                      header = 0, usecols = 'A,D,G,I,P,CB:CM',skiprows = range(5))
     
