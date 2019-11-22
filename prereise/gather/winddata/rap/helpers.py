@@ -1,10 +1,12 @@
 import math
-import os
+from os import path
 
 import numpy as np
 import pandas as pd
 
-PowerCurves = pd.read_csv(os.path.dirname(__file__) + '/../IECPowerCurves.csv')
+filename = 'PowerCurves.csv'
+filepath = path.abspath(path.join(path.dirname(__file__), '..', filename))
+PowerCurves = pd.read_csv(filepath, index_col=0, header=None).T
 
 
 def ll2uv(lon, lat):
@@ -49,8 +51,9 @@ def get_power(wspd, turbine):
     :param str turbine: class of turbine.
     :return: (*float*) -- normalized power.
     """
-    match = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & \
-            (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
+    # "* 2" gives us ceil and floor with steps of 0.5
+    match = (PowerCurves['Speed bin (m/s)'] * 2 <= np.ceil(wspd * 2)) & \
+            (PowerCurves['Speed bin (m/s)'] * 2 >= np.floor(wspd * 2))
     if not any(match):
         return 0
     return np.interp(wspd,
