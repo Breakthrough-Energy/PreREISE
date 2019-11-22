@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from prereise.gather.solardata.ga_wind import helpers
+from prereise.gather.solardata.ga_wind.helpers import ll2ij
+from prereise.gather.solardata.helpers import get_plant_info_unique_location
 
 
 def retrieve_data(solar_plant, hs_api_key, start_date='2007-01-01',
@@ -23,20 +24,8 @@ def retrieve_data(solar_plant, hs_api_key, start_date='2007-01-01',
         *'ts'* and *'ts_id'* as columns. The power output is in MWh.
     """
 
-    # Information on solar plants
-    n_target = len(solar_plant)
-
     # Identify unique location
-    coord = OrderedDict()
-    for i in range(n_target):
-        key = (str(solar_plant.lon.values[i]),
-               str(solar_plant.lat.values[i]))
-        if key not in coord.keys():
-            coord[key] = [(solar_plant.index[i],
-                           solar_plant.GenMWMax.values[i])]
-        else:
-            coord[key].append((solar_plant.index[i],
-                               solar_plant.GenMWMax.values[i]))
+    coord = get_plant_info_unique_location(solar_plant)
 
     # Build query
     hs_endpoint = 'https://developer.nrel.gov/api/hsds/'
@@ -53,8 +42,7 @@ def retrieve_data(solar_plant, hs_api_key, start_date='2007-01-01',
     lat_origin, lon_origin = f['coordinates'][0][0]
     ij = {}
     for key in coord.keys():
-        ij[key] = helpers.ll2ij(lon_origin, lat_origin,
-                                float(key[0]), float(key[1]))
+        ij[key] = ll2ij(lon_origin, lat_origin, float(key[0]), float(key[1]))
 
     # Extract time series
     dt = f['datetime']

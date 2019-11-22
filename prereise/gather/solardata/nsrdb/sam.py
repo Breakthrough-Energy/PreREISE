@@ -1,14 +1,14 @@
-from collections import OrderedDict
 from datetime import timedelta
-
 import numpy as np
 import pandas as pd
 from py3samsdk import PySSC
 from tqdm import tqdm
 
+from prereise.gather.solardata.helpers import get_plant_info_unique_location
 
-def get_frac(interconnect):
-    """Returns fraction of solar plants using no tracking (fix), single-axis or
+
+def get_pv_tracking_ratio_interconnect(interconnect):
+    """Returns ratio of solar plants using no tracking (fix), single-axis or
         double-axis tracking in specified interconnection.
 
     :param str interconnect: interconnection.
@@ -23,8 +23,8 @@ def get_frac(interconnect):
     elif interconnect is 'Eastern':
         return [0.713, 0.286, 0.001]
     else:
-        raise Exception("Wrong interconnect. "
-                        "Choose from Eastern | Western | Texas")
+        raise ValueError("Wrong interconnect. "
+                         "Choose from Eastern | Western | Texas")
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
@@ -33,7 +33,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'GenMWMax' as columns and *'plant_id'* as index.
-    :param str email: email used for API key \ 
+    :param str email: email used for API key
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
     :param str ssc_lib: path to System Adviser Model (SAM) SAM Simulation Core
@@ -56,20 +56,8 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
         dates = pd.date_range(start="%s-01-01-00" % year,
                               freq='H', periods=365*24)
 
-    # Information on solar plants
-    n_target = len(solar_plant)
-
     # Identify unique location
-    coord = OrderedDict()
-    for i in range(n_target):
-        key = (str(solar_plant.lon.values[i]),
-               str(solar_plant.lat.values[i]))
-        if key not in coord.keys():
-            coord[key] = [(solar_plant.index[i],
-                           solar_plant.GenMWMax.values[i])]
-        else:
-            coord[key].append((solar_plant.index[i],
-                               solar_plant.GenMWMax.values[i]))
+    coord = get_plant_info_unique_location(solar_plant)
 
     # Build query
     attributes = 'dhi,dni,wind_speed,air_temperature'
@@ -88,6 +76,8 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
         'attributes={attr}'.format(attr=attributes)
 
     data = pd.DataFrame({'Pout': [], 'plant_id': [], 'ts': [], 'ts_id': []})
+
+    ilr = 1.25
 
     for key in tqdm(coord.keys(), total=len(coord)):
         query = 'wkt=POINT({lon}%20{lat})'.format(lon=key[0], lat=key[1])
@@ -131,8 +121,9 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
             for j, axis in enumerate([0, 2, 4]):
                 core = ssc.data_create()
                 ssc.data_set_table(core, 'solar_resource_data', resource)
-                ssc.data_set_number(core, 'system_capacity', i[1] * 1000.)
-                ssc.data_set_number(core, 'dc_ac_ratio', 1.1)
+                # capacity in KW (DC)
+                ssc.data_set_number(core, 'system_capacity', i[1] * 1000. * ilr)
+                ssc.data_set_number(core, 'dc_ac_ratio', ilr)
                 ssc.data_set_number(core, 'tilt', 30)
                 ssc.data_set_number(core, 'azimuth', 180)
                 ssc.data_set_number(core, 'inv_eff', 94)
@@ -144,11 +135,12 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                 mod = ssc.module_create('pvwattsv5')
                 ssc.module_exec(mod, core)
 
+                ratio = get_pv_tracking_ratio_interconnect(interconnect)[j]
                 if j == 0:
-                    power = get_frac(interconnect)[j] * \
+                    power = ratio * \
                             np.array(ssc.data_get_array(core, 'gen')) / 1000
                 else:
-                    power = power + get_frac(interconnect)[j] * \
+                    power = power + ratio * \
                             np.array(ssc.data_get_array(core, 'gen')) / 1000
 
                 ssc.data_free(core)

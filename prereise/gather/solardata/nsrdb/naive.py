@@ -1,8 +1,8 @@
-from collections import OrderedDict
-
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
+from prereise.gather.solardata.helpers import get_plant_info_unique_location
 
 
 def retrieve_data(solar_plant, email, api_key, year='2016'):
@@ -19,20 +19,8 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
         *'ts'* and *'ts_id'* as columns. The power output is in MWh.
     """
 
-    # Information on solar plants
-    n_target = len(solar_plant)
-
     # Identify unique location
-    coord = OrderedDict()
-    for i in range(n_target):
-        key = (str(solar_plant.lon.values[i]),
-               str(solar_plant.lat.values[i]))
-        if key not in coord.keys():
-            coord[key] = [(solar_plant.index[i],
-                           solar_plant.GenMWMax.values[i])]
-        else:
-            coord[key].append((solar_plant.index[i],
-                               solar_plant.GenMWMax.values[i]))
+    coord = get_plant_info_unique_location(solar_plant)
 
     # Build query
     attributes = 'ghi'
