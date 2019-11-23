@@ -86,18 +86,24 @@ def angular_distance(uv1, uv2):
     return angle
 
 
-def get_power(wspd, turbine):
+def get_power(wspd, turbine, default='IEC class 2'):
     """Convert wind speed to power using NREL turbine power curves.
 
     :param float wspd: wind speed (in m/s).
-    :param str turbine: class of turbine.
+    :param str default: default turbine name.
+    :param str turbine: turbine name, IEC class, or state code for average.
     :return: (*float*) -- normalized power.
     """
-    return np.interp(wspd,
-                     PowerCurves[turbine].index.values,
-                     PowerCurves[turbine].values,
-                     left=0, right=0)
 
+    if turbine in StatePowerCurves.index:
+        curve = StatePowerCurves[turbine]
+    else:
+        try:
+            curve = PowerCurves[turbine]
+        except KeyError:
+            print(turbine, 'not found, defaulting to', default)
+            curve = PowerCurves[default]
+    return np.interp(wspd, curve.index.values, curve.values, left=0, right=0)
 
 def to_reise(data):
     """Format data for REISE.
