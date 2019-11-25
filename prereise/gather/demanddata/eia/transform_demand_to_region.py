@@ -8,9 +8,19 @@ def transform_ba_to_region(demand, mapping):
     """
     agg_demand = pd.DataFrame(index=demand.index)
     for key in mapping:
-        print(f'{key} regional demand was summed from {mapping[key]}')
-        if demand[mapping[key]].shape[1] > 1:
-            agg_demand[key] = demand[mapping[key]].sum(axis=1)
+        mapping_BAs = mapping[key]
+        validColumns = list(set(mapping_BAs) & set(demand.columns))
+        if len(validColumns) < len(mapping_BAs):
+            print()
+            print('******************************')
+            print(f'Missing BA columns for {key}!')
+            print(f'Original columns: {mapping_BAs}')
+            print('******************************')
+
+        print(f'{key} regional demand was summed from {validColumns}')
+        print()
+        if demand[validColumns].shape[1] > 1:
+            agg_demand[key] = demand[validColumns].sum(axis=1)
         else:
-            agg_demand[key] = demand[mapping[key]]
+            agg_demand[key] = demand[validColumns]
     return agg_demand
