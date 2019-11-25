@@ -5,26 +5,9 @@ from py3samsdk import PySSC
 from tqdm import tqdm
 
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
-
-
-def get_pv_tracking_ratio_interconnect(interconnect):
-    """Returns ratio of solar plants using no tracking (fix), single-axis or
-        double-axis tracking in specified interconnection.
-
-    :param str interconnect: interconnection.
-    raise ValueError: if interconnection does not exist.
-    :return: (*list*) -- three coefficients. One for each technology.
-    """
-
-    if interconnect is 'Western':
-        return [0.2870468, 0.6745755, 0.0383777]
-    elif interconnect is 'Texas':
-        return [0.08, 0.46, 0.46]
-    elif interconnect is 'Eastern':
-        return [0.713, 0.286, 0.001]
-    else:
-        raise ValueError("Wrong interconnect. "
-                         "Choose from Eastern | Western | Texas")
+from prereise.gather.solardata.pv_tracking import (get_pv_tracking_data,
+                                                   get_pv_tracking_ratio_state)
+from prereise.gather.solardata.constants import ZONE_ID_TO_STATE
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
@@ -77,6 +60,14 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
 
     data = pd.DataFrame({'Pout': [], 'plant_id': [], 'ts': [], 'ts_id': []})
 
+    # PV tracking ratios
+    pv_info = get_pv_tracking_data()
+    zone_id = solar_plant.zone_id.unique()
+    frac = {}
+    for i in zone_id:
+        frac[i] = get_pv_tracking_ratio_state(pv_info, ZONE_ID_TO_STATE[i])
+
+    # Inverter Loading Ratio
     ilr = 1.25
 
     for key in tqdm(coord.keys(), total=len(coord)):
@@ -135,7 +126,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                 mod = ssc.module_create('pvwattsv5')
                 ssc.module_exec(mod, core)
 
-                ratio = get_pv_tracking_ratio_interconnect(interconnect)[j]
+                ratio = frac[solar_plant.loc[i[0]].zone_id][j]
                 if j == 0:
                     power = ratio * \
                             np.array(ssc.data_get_array(core, 'gen')) / 1000
