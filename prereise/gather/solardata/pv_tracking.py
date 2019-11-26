@@ -13,11 +13,12 @@ def get_pv_tracking_data():
     file = os.path.dirname(__file__) + '/data/3_3_Solar_Y2016.xlsx'
 
     solar_plant_info = pd.read_excel(io=file, header=0,
-                                     usecols='C,D,E,J,M,S,T,U',
+                                     usecols='C,E,J,M,S,T,U',
                                      skiprows=range(1)).fillna('N')
-
+    solar_plant_info.set_index('Plant Code', drop=True, inplace=True)
     pv_info = solar_plant_info[solar_plant_info['Prime Mover'] == 'PV'].copy()
-
+    pv_info.drop('Prime Mover', axis=1, inplace=True)
+    
     return pv_info
 
 
