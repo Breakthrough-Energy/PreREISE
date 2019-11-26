@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from prereise.gather.solardata.constants import ZONE_ID_TO_STATE
+from prereise.gather.constants import ZONE_ID_TO_STATE
 
 
 def get_pv_tracking_data():

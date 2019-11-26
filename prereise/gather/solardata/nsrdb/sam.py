@@ -7,7 +7,7 @@ from tqdm import tqdm
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
 from prereise.gather.solardata.pv_tracking import (get_pv_tracking_data,
                                                    get_pv_tracking_ratio_state)
-from prereise.gather.solardata.constants import ZONE_ID_TO_STATE
+from prereise.gather.constants import ZONE_ID_TO_STATE
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
@@ -106,7 +106,6 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
                                                 freq='H')})
             data_site['ts_id'] = range(1, len(data_site)+1)
             data_site['plant_id'] = i[0]
-            interconnect = solar_plant.loc[i[0]].interconnect
 
             power = 0
             for j, axis in enumerate([0, 2, 4]):
