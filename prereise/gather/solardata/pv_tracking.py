@@ -15,7 +15,6 @@ def get_pv_tracking_data():
     solar_plant_info = pd.read_excel(io=file, header=0,
                                      usecols='C,E,J,M,S,T,U',
                                      skiprows=range(1)).fillna('N')
-    solar_plant_info.set_index('Plant Code', drop=True, inplace=True)
     pv_info = solar_plant_info[solar_plant_info['Prime Mover'] == 'PV'].copy()
     pv_info.drop('Prime Mover', axis=1, inplace=True)
     
