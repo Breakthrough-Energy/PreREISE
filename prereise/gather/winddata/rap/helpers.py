@@ -1,5 +1,7 @@
 import math
+import os
 from os import path
+import re
 
 import numpy as np
 import pandas as pd
@@ -20,7 +22,10 @@ def _shift_turbine_curve(turbine_curve, hub_height, maxspd, new_curve_res):
     shifted_x = turbine_curve.index * wspd_scale_factor
     shifted_curve = np.interp(
         curve_x, shifted_x, turbine_curve, left=0, right=0)
+    shifted_curve = pd.Series(data=shifted_curve, index=curve_x)
+    shifted_curve.index.name = 'Speed bin (m/s)'
     return shifted_curve
+
 
 def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2'):
     """Parse Form 860 and turbine curves to obtain average state curves.
@@ -34,11 +39,11 @@ def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2'):
     print('building state_power_curves')
     mfg_col = 'Predominant Turbine Manufacturer'
     model_col = 'Predominant Turbine Model Number'
+    capacity_col = 'Nameplate Capacity (MW)'
     hubheight_col = 'Turbine Hub Height (Feet)'
     new_curve_res = 0.01            # resolution: m/s
 
     states = Form860['State'].unique()
-    base_x = PowerCurves.index.to_numpy()
     curve_x = np.arange(0, maxspd + new_curve_res, new_curve_res)
     state_curves = pd.DataFrame(curve_x, columns=['Speed bin (m/s)'])
     for s in states:
@@ -47,7 +52,7 @@ def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2'):
         state_wind_farms = Form860[Form860['State'] == s]
         for i, f in enumerate(state_wind_farms.index):
             # Look up attributes from Form 860
-            farm_capacity = state_wind_farms['Nameplate Capacity (MW)'].iloc[i]
+            farm_capacity = state_wind_farms[capacity_col].iloc[i]
             hub_height = state_wind_farms[hubheight_col].iloc[i]
             turbine_mfg = state_wind_farms[mfg_col].iloc[i]
             turbine_model = state_wind_farms[model_col].iloc[i]
@@ -60,7 +65,7 @@ def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2'):
             shifted_curve = _shift_turbine_curve(
                 turbine_curve, hub_height, maxspd, new_curve_res)
             # Add to cumulative totals
-            cumulative_curve += shifted_curve * farm_capacity
+            cumulative_curve += shifted_curve.to_numpy() * farm_capacity
             cumulative_capacity += farm_capacity
         # Normalize based on cumulative capacity
         state_curves[s] = cumulative_curve / cumulative_capacity
@@ -122,7 +127,12 @@ def get_form_860(data_dir, year=2016):
     try:
         form_860 = pd.read_csv(form_860_path, skiprows=1)
     except FileNotFoundError:
-        err_msg = ' '.join(['form data for year', str(year), 'not found.'])
+        regex_str = r'3_2_Wind_Y(\d{4}).csv'
+        matching_years = [
+            re.match(regex_str, f).group(1)
+            for f in os.listdir(data_dir) if re.match(regex_str, f)]
+        err_msg = ' '.join(['form data for year', str(year), 'not found. '])
+        err_msg += 'Years with data: ' + ', '.join(matching_years)
         raise ValueError(err_msg)
     return form_860
 
@@ -135,7 +145,7 @@ def get_power(wspd, turbine, default='IEC class 2'):
     :param str turbine: turbine name, IEC class, or state code for average.
     :return: (*float*) -- normalized power.
     """
-    if turbine in StatePowerCurves.index:
+    if turbine in StatePowerCurves.columns:
         curve = StatePowerCurves[turbine]
     else:
         try:
@@ -177,7 +187,7 @@ PowerCurves = pd.read_csv(powercurves_path, index_col=0, header=None).T
 PowerCurves.set_index('Speed bin (m/s)', inplace=True)
 statepowercurves_path = path.join(data_dir, 'StatePowerCurves.csv')
 try:
-    StatePowerCurves = pd.read_csv(statepowercurves_path)
+    StatePowerCurves = pd.read_csv(statepowercurves_path, index_col=0)
 except FileNotFoundError:
     StatePowerCurves = build_state_curves(Form860, PowerCurves)
     StatePowerCurves.to_csv(statepowercurves_path)
