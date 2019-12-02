@@ -9,8 +9,9 @@ import requests
 from netCDF4 import Dataset
 from tqdm import tqdm
 
-from prereise.gather.winddata.rap.helpers import ll2uv, \
-    angular_distance, get_power
+from prereise.gather.winddata.rap.helpers import ll2uv, angular_distance
+from prereise.gather.winddata.rap.power_curves import get_power
+from prereise.gather.constants import ZONE_ID_TO_STATE
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
@@ -34,6 +35,8 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     lat_target = wind_farm.lat.values
     id_target = wind_farm.index.values
     capacity_target = wind_farm.GenMWMax.values
+    state_target = [ZONE_ID_TO_STATE[wind_farm.loc[i].zone_id]
+                    for i in id_target]
 
     # Build query
     link = 'https://www.ncei.noaa.gov/thredds/ncss/rap130anl/'
@@ -78,8 +81,8 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
         request = requests.get(query)
 
         data_tmp = pd.DataFrame({'plant_id': id_target,
-                                 'ts': [dt]*n_target,
-                                 'ts_id': [i+1]*n_target})
+                                 'ts': [dt] * n_target,
+                                 'ts_id': [i+1] * n_target})
 
         if request.status_code == 200:
             with open('tmp.nc', 'wb') as f:
@@ -105,10 +108,11 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
                              for j in range(n_target)]
             data_tmp['V'] = [v_wsp[target2grid[id_target[j]]]
                              for j in range(n_target)]
-            wspd = np.sqrt(pow(data_tmp['U'], 2) + pow(data_tmp['V'], 2))
-            data_tmp['Pout'] = [get_power(val, 'IEC class 2') *
-                                capacity_target[j]
-                                for j, val in enumerate(wspd)]
+            wspd_target = np.sqrt(pow(data_tmp['U'], 2) + pow(data_tmp['V'], 2))
+            power = [capacity_target[j] *
+                     get_power(wspd_target[j], state_target[j])
+                     for j in range(n_target)]
+            data_tmp['Pout'] = power
 
             tmp.close()
             os.remove('tmp.nc')

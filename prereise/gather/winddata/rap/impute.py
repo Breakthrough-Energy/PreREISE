@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from prereise.gather.winddata.rap.helpers import get_power
+from prereise.gather.winddata.rap.power_curves import get_power
 
 
 def simple(data, wind_farm, inplace=True):

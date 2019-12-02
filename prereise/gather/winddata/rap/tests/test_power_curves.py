@@ -5,8 +5,9 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 import pandas as pd
 
-from prereise.gather.winddata.rap.helpers import \
-    PowerCurves, build_state_curves, _shift_turbine_curve
+from prereise.gather.winddata.rap.power_curves import (PowerCurves,
+                                                       build_state_curves,
+                                                       _shift_turbine_curve)
 
 
 def _first_one(curve):
