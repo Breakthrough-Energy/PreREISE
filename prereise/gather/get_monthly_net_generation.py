@@ -1,9 +1,8 @@
-import os
 import pandas as pd
 import numpy as np
 
 
-def get_monthly_net_generation(state,filename,fuel_type):
+def get_monthly_net_generation(state,filename,fuel_type,trim_eia_form_923):
     """Get monthly total net generation for the query fuel type in the query state in 2016 from EIA923
     :param str state: the query state
     :param str filename: name of the reference file
@@ -33,10 +32,9 @@ def get_monthly_net_generation(state,filename,fuel_type):
         print("%s is incorrect. Possible fuel types are: %s" %
               (fuel_type, list(all_fuel_type.keys())))
         raise ValueError('Invalid fuel_type')
-        
-    filedir = os.path.join(os.path.dirname(__file__),'data')
-    plant_generation = pd.read_excel(io = os.path.join(filedir,filename),
-                                     header = 0, usecols = 'A,D,G,I,P,CB:CM',skiprows = range(5))
+    
+    # Get trimmed EIA form 923 with only necessary columns
+    plant_generation = trim_eia_form_923(filename)
     
     # Filter by state and fuel type
     net_generation_by_plant = plant_generation[(plant_generation['Plant State'] == state) &
