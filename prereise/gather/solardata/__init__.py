@@ -1,1 +1,1 @@
-__all__ = ['constants', 'helpers', 'pv_tracking', 'ga_wind', 'nsrdb']
+__all__ = ['constants', 'helpers', 'pv_tracking', 'ga_wind', 'nsrdb', 'tests']
