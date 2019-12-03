@@ -10,11 +10,16 @@ def get_pv_tracking_data():
     :return: (*pandas.DataFrame*) -- solar pv plant information as found in
         form EIA860
     """
-    file = os.path.dirname(__file__) + '/data/3_3_Solar_Y2016.xlsx'
+    file = os.path.join(
+        os.path.dirname(__file__), 'data', '3_3_Solar_Y2016.csv')
 
-    solar_plant_info = pd.read_excel(io=file, header=0,
-                                     usecols='C,E,J,M,S,T,U',
-                                     skiprows=range(1)).fillna('N')
+    solar_plant_info = pd.read_csv(file, skiprows=range(1),
+                                   usecols=['Plant Code', 'State',
+                                            'Prime Mover',
+                                            'Nameplate Capacity (MW)',
+                                            'Single-Axis Tracking?',
+                                            'Dual-Axis Tracking?',
+                                            'Fixed Tilt?']).fillna('N')
     pv_info = solar_plant_info[solar_plant_info['Prime Mover'] == 'PV'].copy()
     pv_info.drop('Prime Mover', axis=1, inplace=True)
     
