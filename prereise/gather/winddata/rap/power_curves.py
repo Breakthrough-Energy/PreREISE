@@ -4,6 +4,7 @@ import re
 
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 
 
 def _shift_turbine_curve(turbine_curve, hub_height, maxspd, new_curve_res):
@@ -26,13 +27,15 @@ def _shift_turbine_curve(turbine_curve, hub_height, maxspd, new_curve_res):
     return shifted_curve
 
 
-def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2'):
+def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2',
+                       rsd=0):
     """Parse Form 860 and turbine curves to obtain average state curves.
 
     :param pandas.DataFrame Form860: EIA Form 860 data.
     :param pandas.DataFrame PowerCurves: turbine power curves.
     :param float maxspd: maximum x value for state curves.
     :param str default: turbine curve name for turbines not in PowerCurves.
+    :param float rsd: relative standard deviation for spatiotemporal smoothing.
     :return: (*pandas.DataFrame*) - DataFrame of state curves.
     """
     print('building state_power_curves')
@@ -69,6 +72,34 @@ def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2'):
         # Normalize based on cumulative capacity
         state_curves[s] = cumulative_curve / cumulative_capacity
     state_curves.set_index('Speed bin (m/s)', inplace=True)
+
+    if rsd > 0:
+        smoothed_state_curves = pd.DataFrame(
+            index=state_curves.index, columns=state_curves.columns)
+        for s in states:
+            x = state_curves.index
+            y = np.zeros_like(x)
+            for i, w in enumerate(x):
+                if w == 0:
+                    continue
+                sd = max(1.5, rsd * w)
+                min_point = w - 3 * sd
+                max_point = w + 3 * sd
+                sample_points = np.logical_and((x > min_point),(x < max_point))
+                cdf_points = norm.cdf(x[sample_points], loc=w, scale=sd)
+                pdf_points = np.concatenate((np.zeros(1), np.diff(cdf_points)))
+                #pdf_points *= 1 / np.sum(pdf_points)
+                y[i] = np.dot(pdf_points, state_curves[s][sample_points])
+            smoothed_state_curves[s] = y
+            testing = False
+            if testing:
+                plt.plot(state_curves[s])
+                plt.plot(smoothed_state_curves[s])
+                plt.plot(smoothed_state_curves[s] - state_curves[s])
+                plt.plot((0,30), (0,0), 'k-')
+                plt.show()
+        state_curves = smoothed_state_curves
+
     return state_curves
 
 
@@ -129,5 +160,5 @@ statepowercurves_path = path.join(data_dir, 'StatePowerCurves.csv')
 try:
     StatePowerCurves = pd.read_csv(statepowercurves_path, index_col=0)
 except FileNotFoundError:
-    StatePowerCurves = build_state_curves(Form860, PowerCurves)
+    StatePowerCurves = build_state_curves(Form860, PowerCurves, rsd=0.2)
     StatePowerCurves.to_csv(statepowercurves_path)
