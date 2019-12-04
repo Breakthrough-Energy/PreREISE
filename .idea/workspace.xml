@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e0b60ed2-c079-4a26-b50b-a5e2c490f602" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/prereise/gather/demanddata/eia/demo/demo_Western_v5/Western_demand_v5_demo.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/prereise/gather/demanddata/eia/demo/demo_Western_v5/Western_demand_v5_demo.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prereise/gather/demanddata/eia/download_map_demand.py" beforeDir="false" afterPath="$PROJECT_DIR$/prereise/gather/demanddata/eia/download_map_demand.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prereise/gather/demanddata/eia/fill_missing_demand.py" beforeDir="false" afterPath="$PROJECT_DIR$/prereise/gather/demanddata/eia/fill_missing_demand.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prereise/gather/demanddata/eia/find_fix_outliers.py" beforeDir="false" afterPath="$PROJECT_DIR$/prereise/gather/demanddata/eia/find_fix_outliers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prereise/gather/demanddata/eia/map_grid_buses_to_county.py" beforeDir="false" afterPath="$PROJECT_DIR$/prereise/gather/demanddata/eia/map_grid_buses_to_county.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prereise/gather/demanddata/eia/transform_ba_to_loadzone.py" beforeDir="false" afterPath="$PROJECT_DIR$/prereise/gather/demanddata/eia/transform_ba_to_loadzone.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prereise/gather/demanddata/eia/transform_demand_to_region.py" beforeDir="false" afterPath="$PROJECT_DIR$/prereise/gather/demanddata/eia/transform_demand_to_region.py" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="PreREISE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IgnoredFileRootStore">
+    <option name="generatedRoots">
+      <set>
+        <option value="C:\Users\dmuldrew\GitHub\PreREISE\.idea" />
+      </set>
+    </option>
+  </component>
+  <component name="ProjectId" id="1TwpLzBSaMr9WfwpKWRaKp1xF0V" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e0b60ed2-c079-4a26-b50b-a5e2c490f602" name="Default Changelist" comment="" />
+      <created>1574380959596</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1574380959596</updated>
+      <workItem from="1574380963592" duration="105000" />
+      <workItem from="1574381223228" duration="3086000" />
+      <workItem from="1574709979400" duration="21000" />
+      <workItem from="1574710216545" duration="1260000" />
+      <workItem from="1574810128590" duration="606000" />
+      <workItem from="1574894227988" duration="4360000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
