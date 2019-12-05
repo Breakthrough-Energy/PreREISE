@@ -91,13 +91,6 @@ def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2',
                 #pdf_points *= 1 / np.sum(pdf_points)
                 y[i] = np.dot(pdf_points, state_curves[s][sample_points])
             smoothed_state_curves[s] = y
-            testing = False
-            if testing:
-                plt.plot(state_curves[s])
-                plt.plot(smoothed_state_curves[s])
-                plt.plot(smoothed_state_curves[s] - state_curves[s])
-                plt.plot((0,30), (0,0), 'k-')
-                plt.show()
         state_curves = smoothed_state_curves
 
     return state_curves
@@ -160,5 +153,5 @@ statepowercurves_path = path.join(data_dir, 'StatePowerCurves.csv')
 try:
     StatePowerCurves = pd.read_csv(statepowercurves_path, index_col=0)
 except FileNotFoundError:
-    StatePowerCurves = build_state_curves(Form860, PowerCurves, rsd=0.2)
+    StatePowerCurves = build_state_curves(Form860, PowerCurves, rsd=0.4)
     StatePowerCurves.to_csv(statepowercurves_path)
