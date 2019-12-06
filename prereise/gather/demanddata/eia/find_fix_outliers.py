@@ -1,5 +1,23 @@
 import numpy as np
+import pandas as pd
 
+def fix_dataframe_outliers(demand):
+    """Make a dataframe of demand with outliers replaced with values    
+        interpolated from the non-outlier edge points using slope_interpolate
+        
+    :param pandas.Dataframe demand: demand data frame with UTC time index
+        and BA name as column name
+    :return: (*pandas.DataFrame*) -- data frame with anamolaus demand values
+        replaced by interpolated values
+    """
+    demand_fix_outliers = pd.DataFrame(index=demand.index)
+    for ba in demand.columns.to_list():
+        print()
+        print(ba)
+        demand_ba = demand[ba]
+        outlier_output = slope_interpolate(pd.DataFrame(demand_ba))
+        demand_fix_outliers[ba] = outlier_output[ba]
+    return demand_fix_outliers
 
 def slope_interpolate(ba_df):
     """Look for demand outliers by applying a z-score threshold to the demand
@@ -42,7 +60,7 @@ def slope_interpolate(ba_df):
     df['delta_zscore'] = np.abs((df['delta'] - delta_mu)/delta_sigma)
 
     # Find the outliers
-    outlier_index_list = df.loc[df['delta_zscore'] > 3].index
+    outlier_index_list = df.loc[df['delta_zscore'] > 5].index
 
     hour_save = -1
     for i in outlier_index_list:
@@ -68,7 +86,7 @@ def slope_interpolate(ba_df):
 
         num = next_save - hour_save
 
-        if num > 5:
+        if num > 4:
             print('Too many zeros near ', i, '! Review data!')
 
         start = df.iloc[hour_save-1][ba_name]
