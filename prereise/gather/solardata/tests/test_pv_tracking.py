@@ -7,44 +7,50 @@ from prereise.gather.solardata.pv_tracking import get_pv_tracking_ratio_state
 pv_info = create_mock_pv_info()
 
 
+def test_state_type():
+    state = 'AZ'
+    with pytest.raises(TypeError, match='state must be a list'):
+        get_pv_tracking_ratio_state(pv_info, state)
+
+
 def test_state_exists():
-    state = 'Tatooine'
+    state = ['Tatooine']
     with pytest.raises(ValueError, match='Invalid State'):
         get_pv_tracking_ratio_state(pv_info, state)
 
 
 def test_state_without_no_solar_return_none():
-    state = 'MT'
+    state = ['MT']
     assert get_pv_tracking_ratio_state(pv_info, state) == None
 
 
 def test_state_with_solar_return_3ple():
-    state = 'UT'
+    state = ['UT']
     ratio = get_pv_tracking_ratio_state(pv_info, state)
     assert type(ratio) is tuple
     assert len(ratio) == 3
 
 
 def test_sum_ratio_state_with_single_plant_and_tracking_system():
-    state = 'UT'
+    state = ['UT']
     ratio = get_pv_tracking_ratio_state(pv_info, state)
     assert sum(ratio) == 1
 
 
 def test_sum_ratio_state_with_single_plant_and_multiple_tracking_systems():
-    state = 'WA'
+    state = ['WA']
     ratio = get_pv_tracking_ratio_state(pv_info, state)
     assert sum(ratio) == 1
 
 
 def test_sum_ratio_state_with_multiple_plants_and_tracking_systems():
-    state = 'CA'
+    state = ['CA']
     ratio = get_pv_tracking_ratio_state(pv_info, state)
     assert sum(ratio) == 1
 
 
 def test_ratio_state_with_single_plant_and_unique_tracking():
-    state = 'UT'
+    state = ['UT']
     ratio = get_pv_tracking_ratio_state(pv_info, state)
     assert ratio[0] == 0
     assert ratio[1] == 0
@@ -52,7 +58,7 @@ def test_ratio_state_with_single_plant_and_unique_tracking():
 
 
 def test_ratio_state_with_single_plant_and_multiple_tracking():
-    state = 'WA'
+    state = ['WA']
     ratio = get_pv_tracking_ratio_state(pv_info, state)
     assert ratio[0] == 0.5
     assert ratio[1] == 0.5
@@ -60,7 +66,7 @@ def test_ratio_state_with_single_plant_and_multiple_tracking():
 
 
 def test_ratio_state_with_multiple_plants_and_tracking_systems():
-    state = 'CA'
+    state = ['CA']
     ratio = get_pv_tracking_ratio_state(pv_info, state)
     assert ratio == (1. / 10, 6. / 10, 3. / 10)
     
