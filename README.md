@@ -58,12 +58,33 @@ primarily of a numerical weather model and an analysis system to initialize
 that model. RAP provides, every hour ranging from May 2012 to date, the U and
 V components of the wind speed at 80 meter above ground on a 13x13 square
 kilometer resolution grid every hour. Data can be retrieved using the NetCDF
-Subset Service. Information on this interface is described [here][NetCDF].
+Subset Service. Information on this interface is described [here][NetCDF]. Note
+that the dataset is incomplete (33 hours are missing in 2016) and,
+consequently, missing entries need to be imputed.
 
-Note that the dataset is incomplete (33 hours are missing in 2016) and,
-consequently, missing entries need to be imputed. Afterwards, wind speed is
-converted to power for all the wind farms in the network using the *IEC class 2*
-power curve provided by NREL in the [WIND Toolkit documentation][WIND_doc].
+Once the U and V componentso of the wind are converted to a non-directional
+wind speed magnitude, this speed is converted to power using wind turbine power
+curves. Since real wind farms are not currently mapped to TAMU network farms, a
+capacity-weighted state average wind turbine power curve is created for each
+state based on the turbine types reported in  EIA Form 860. The wind turbine
+curve for each real wind farm is looked up from a database of curves (or the
+*IEC class 2* power curve provided by NREL in the
+[WIND Toolkit documentation][WIND_doc]) is used for turbines without curves in
+the database), and scaled from the real hub heights to 80m hub heights using an
+alpha of 0.15. These height-scaled, turbine-specific curves are averaged to
+obtain a state curve translating wind speed to normalized power. States without
+wind farms in EIA Form 860 are represented by the *IEC class 2* power curve.
+
+Each turbine curve represents the instantaneous power from a single turbine for
+a given wind speed. To account for spatio-temporal variations in wind speed
+(i.e. an hourly average wind speed that varies through the hour, and a
+point-specific wind speed that varies throughout the wind farm), a distribution
+is used: a normal distribution with standard deviation of 40% of the average
+wind speed. This distribution tends to boost the power produced at lower
+wind speeds (since the power curve in this region is convex) and lower the
+power produced at higher wind speeds (since the power curve in this region is
+concave as the turbine tops out, and shuts down at higher wind speeds). This
+tracks with the wind-farm level data shown in NREL's validation report.
 
 Check out the ***[rap_demo.ipynb][RAP_notebook]*** notebook for demo.
 
