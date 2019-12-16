@@ -1,15 +1,16 @@
 # PreREISE
-This package defines the scenario and calls the MATLAB simulation engine. The
-name stands for pre Renewable Energy Integration Study Engine.
+This package defines the scenario and calls the [MATLAB][MATLAB] simulation
+engine. The name stands for pre Renewable Energy Integration Study Engine.
 
 
 
 ## 1. Setup/Install
-This package requires MATLAB, MATPOWER and Gurobi.
+This package requires [MATLAB][MATLAB], [MATPOWER][MATPOWER] and
+[Gurobi][Gurobi].
 
 
 ### A. MATLAB
-Install MATLAB and proceed as follows:  
+Install [MATLAB][MATLAB] and proceed as follows:  
 ```
 cd "matlabroot\extern\engines\python"
 python setup.py install
@@ -24,7 +25,8 @@ for Mac or Linux systems.
 
 
 ### B. MATPOWER
-Download MATPOWER and add the following directories in ***add_path.m***:
+Download [MATPOWER][MATPOWER] and add the following directories in
+***add_path.m***:
 ```
 <MATPOWER>        — core MATPOWER functions
 <MATPOWER>/most   — core MOST functions
@@ -59,14 +61,14 @@ that model. RAP provides, every hour ranging from May 2012 to date, the U and
 V components of the wind speed at 80 meter above ground on a 13x13 square
 kilometer resolution grid every hour. Data can be retrieved using the NetCDF
 Subset Service. Information on this interface is described [here][NetCDF]. Note
-that the dataset is incomplete (33 hours are missing in 2016) and,
-consequently, missing entries need to be imputed.
+that the dataset is incomplete and, consequently, missing entries need to be
+imputed.
 
-Once the U and V componentso of the wind are converted to a non-directional
-wind speed magnitude, this speed is converted to power using wind turbine power
-curves. Since real wind farms are not currently mapped to TAMU network farms, a
-capacity-weighted state average wind turbine power curve is created for each
-state based on the turbine types reported in  EIA Form 860. The wind turbine
+Once the U and V components of the wind are converted to a non-directional
+wind speed magnitude, this speed is converted to power using wind turbine
+power curves. Since real wind farms are not currently mapped to TAMU network
+farms, a capacity-weighted average wind turbine power curve is created for each
+state based on the turbine types reported in EIA Form 860. The wind turbine
 curve for each real wind farm is looked up from a database of curves (or the
 *IEC class 2* power curve provided by NREL in the
 [WIND Toolkit documentation][WIND_doc]) is used for turbines without curves in
@@ -257,6 +259,9 @@ from prereise.call.test import test_call
 test_call.test()
 ```
 
+[MATLAB]: https://www.mathworks.com/products/matlab.html
+[MATPOWER]: https://matpower.org
+[Gurobi]: https://www.gurobi.com
 [RAP]: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
 [RAP_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb
 [NetCDF]: https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html
