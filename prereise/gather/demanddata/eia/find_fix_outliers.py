@@ -13,8 +13,6 @@ def fix_dataframe_outliers(demand):
     """
     demand_fix_outliers = pd.DataFrame(index=demand.index)
     for ba in demand.columns.to_list():
-        print()
-        print(ba)
         demand_ba = demand[ba]
         outlier_output = slope_interpolate(pd.DataFrame(demand_ba))
         demand_fix_outliers[ba] = outlier_output[ba]

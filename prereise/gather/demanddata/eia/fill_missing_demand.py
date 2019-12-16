@@ -22,14 +22,28 @@ def replace_with_shifted_demand(demand, start, end):
     column_names = ['look_back1day', 'look_forward1day', 'look_back2day', 'look_forward2day', 'look_back1week',
                     'look_forward1week', 'dayofweek']
 
-    day_map = {0: ['look_forward1day'], 1: ['look_forward1day', 'look_back1day'], 2: ['look_forward1day', 'look_back1day'],
-               3: ['look_forward1day', 'look_back1day'], 4: ['look_back1day'], 5: ['look_forward1day]', 6: ['look_back1day']}
-    more_days_map = {0: ['look_forward2day'], 1: ['look_forward2day'], 2: ['look_back2day', 'look_forward2day'],
-                     3: ['look_back2day'], 4: ['look_back2day'], 5: ['look_back1week', 'look_forward1week'],
+    day_map = {0: ['look_forward1day'],
+               1: ['look_forward1day', 'look_back1day'],
+               2: ['look_forward1day', 'look_back1day'],
+               3: ['look_forward1day', 'look_back1day'],
+               4: ['look_back1day'],
+               5: ['look_forward1day'],
+               6: ['look_back1day']}
+
+    more_days_map = {0: ['look_forward2day'],
+                     1: ['look_forward2day'],
+                     2: ['look_back2day', 'look_forward2day'],
+                     3: ['look_back2day'],
+                     4: ['look_back2day'],
+                     5: ['look_back1week', 'look_forward1week'],
                      6: ['look_back1week', 'look_forward1week']}
-    more_more_days_map = {0: ['look_back1week', 'look_forward1week'], 1: ['look_back1week', 'look_forward1week'],
-                          2: ['look_back1week', 'look_forward1week'], 3: ['look_back1week', 'look_forward1week'],
-                          4: ['look_back1week', 'look_forward1week'], 5: ['look_back1week', 'look_forward1week'],
+
+    more_more_days_map = {0: ['look_back1week', 'look_forward1week'],
+                          1: ['look_back1week', 'look_forward1week'],
+                          2: ['look_back1week', 'look_forward1week'],
+                          3: ['look_back1week', 'look_forward1week'],
+                          4: ['look_back1week', 'look_forward1week'],
+                          5: ['look_back1week', 'look_forward1week'],
                           6: ['look_back1week', 'look_forward1week']}
 
     filled_demand = pd.DataFrame(index=demand.index)
