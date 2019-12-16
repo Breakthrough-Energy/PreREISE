@@ -74,5 +74,21 @@ ZONE_ID_TO_STATE = {
     305: 'TX',
     306: 'TX',
     307: 'TX',
-    308: 'TX',
-    }
+    308: 'TX'
+}
+
+INTERCONNECT_TO_STATE = {
+    'Eastern': ['ME', 'NH', 'VT', 'MA', 'RI', 'CT', 'NY', 'NJ', 'PA', 'DE',
+                'MD', 'VA', 'NC', 'SC', 'GA', 'FL', 'AL', 'MS', 'TN', 'KY',
+                'WV', 'OH', 'MI', 'IN', 'IL', 'WI', 'MN', 'IA', 'MO', 'AR',
+                'LA', 'OK', 'KS', 'NE', 'SD', 'ND'],
+    'Texas': ['TX'],
+    'Western': ['WA', 'OR', 'CA', 'NV', 'AZ', 'UT', 'NM', 'CO', 'WY', 'ID',
+                'MT']
+}
+
+STATE_TO_INTERCONNECT = {}
+for k, v in INTERCONNECT_TO_STATE.items():
+    for s in v:
+        STATE_TO_INTERCONNECT[s] = k
+

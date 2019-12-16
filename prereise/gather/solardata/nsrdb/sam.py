@@ -7,7 +7,9 @@ from tqdm import tqdm
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
 from prereise.gather.solardata.pv_tracking import (get_pv_tracking_data,
                                                    get_pv_tracking_ratio_state)
-from prereise.gather.constants import ZONE_ID_TO_STATE
+from prereise.gather.constants import (ZONE_ID_TO_STATE,
+                                       INTERCONNECT_TO_STATE,
+                                       STATE_TO_INTERCONNECT)
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
@@ -61,11 +63,17 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
     data = pd.DataFrame({'Pout': [], 'plant_id': [], 'ts': [], 'ts_id': []})
 
     # PV tracking ratios
+    # By state and by interconnect when EIA data do not have any solar PV in
+    # the state
     pv_info = get_pv_tracking_data()
     zone_id = solar_plant.zone_id.unique()
     frac = {}
     for i in zone_id:
-        frac[i] = get_pv_tracking_ratio_state(pv_info, ZONE_ID_TO_STATE[i])
+        state = ZONE_ID_TO_STATE[i]
+        frac[i] = get_pv_tracking_ratio_state(pv_info, [state])
+        if frac[i] is None:
+            frac[i] = get_pv_tracking_ratio_state(
+                pv_info, INTERCONNECT_TO_STATE[STATE_TO_INTERCONNECT[state]])
 
     # Inverter Loading Ratio
     ilr = 1.25

@@ -125,12 +125,21 @@ with other meteorological parameters must first be retrieved from NSRDB for
 each site. This information are then fed to the SAM Simulation Core (SCC) and
 the power output is retrieved. The SSC reflect the technology used: photovoltaic
 (PV), solar water heating and concentrating solar power (CSP). The
-*[PVWatts v5][SAM_pvwatts]* model is used for all the solar plants in the grid.
-The default values of the parameters of the *PVWatts* model are untouched. Only
-the system size and the array type (fixed open rack, backtracked, 1-axis and
-2-axis) is set for each solar plant.
+[*PVWatts v5*][SAM_pvwatts] model is used for all the solar plants in the grid.
+The system size (in DC units) and the array type (fixed open rack, backtracked,
+1-axis and 2-axis) is set for each solar plant whereas a unique value of 1.25
+is used for the DC to AC ratio (see article from EIA on inverter loading ratios
+[here](https://www.eia.gov/todayinenergy/detail.php?id=35372)). Otherwise, all
+other input parameters of the *PVWatts* model are set to their default values.
+EIA reports in [form 860](https://www.eia.gov/electricity/data/eia860/. ) the
+array type used by each solar PV plant. For each plant in our network, the
+array type is a combination of the three technology that is calculated using
+the capacity weighted average of the array type of all the plants in form 860
+that are located in the same state. If no plants are reported in form 860 for a
+particular state we then use the information of all the plants belonging to the
+same interconnect.
 
-The naive and the SAM methods are used in the 
+The naive and the SAM methods are used in the
 ***[nsrdb_naive_demo.ipynb][NSRDB_naive_notebook]*** and
 ***[nsrdb_sam_demo.ipynb][NSRDB_sam_notebook]*** demo notebooks, respectively.
 

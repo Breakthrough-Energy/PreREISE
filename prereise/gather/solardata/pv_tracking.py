@@ -32,19 +32,23 @@ def get_pv_tracking_ratio_state(pv_info, state):
 
     :param pandas.DataFrame pv_info: solar pv plant information as found in
         form EIA860 as returned by :func:`get_pv_tracking_data`.
-    :param str state: the query state.
+    :param list state: the query state(s).
     :return: (*tuple*) -- tracking technology proportion (fix, 1-axis, 2-axis)
         for the query state in 2016.
     :raise ValueError: if state is invalid.
     """
 
-    if state not in set(ZONE_ID_TO_STATE.values()):
-        raise ValueError('Invalid State')
+    if not isinstance(state, list):
+        raise TypeError('state must be a list')
 
-    pv_info_state = pv_info[pv_info['State'] == state].copy()
+    for s in state:
+        if s not in set(ZONE_ID_TO_STATE.values()):
+            raise ValueError('Invalid State: %s' % s)
 
-    if len(pv_info_state) == 0:
-        print("No solar PV plant in %s" % state)
+    pv_info_state = pv_info[pv_info['State'].isin(state)].copy()
+
+    if pv_info_state.empty:
+        print("No solar PV plant in %s" % ", ".join(state))
         return
 
     fix = 0
