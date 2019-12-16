@@ -157,6 +157,49 @@ Check out the ***[eia_demo.ipynb][hydro_notebook]*** notebook for demo.
 
 
 ### D. Demand Data
+
+*Eastern V5*
+
+Demand data are obtained from EIA, to whom Balancing Authorities have submitted
+their data. The data can be obtained using an API as demonstrated in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]*** notebook.
+
+Module `get_eia_data` contains functions that converts the data into data frames
+for further processing, as performed in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]*** .
+
+To output the demand profile, cleaning steps were applied to the EIA data for Eastern V5. We used adjacent demand data to fill missing values using a series of rules:
+
+1. Monday: look forward one day
+2. Tues - Thurs: average of look forward one day and look back one day
+3. Fri: look back one day
+4. Sat: look forward one day
+5. Sun: look back one day
+
+If data is still missing after applying the above rules, week ahead and week behind data is used:
+
+1. Monday: look forward two days 
+2. Tues: look forward two days
+3. Wed: average of look forward two days and look back two days
+4. Thurs: look back two days
+5. Fri: look back two days
+6. Sat - Sun: average of look back one week and look forward one week
+
+If data is still missing after applying the above rules, week ahead and week behind data is used:
+
+1. Mon - Sun: average of look back one week and look forward one week
+
+The next step was outlier detection. The underlying physical rationale is that demand
+changes are mostly driven by weather temperature changes (first or higher
+order), and thermal mass limits the rate at which demand values can change. Outliers were detected using a z-score threshold value of 3. These outliers are then replaced by linear interpolation.
+
+The BA counts were then distributed across each region where the BA operates,
+using the region populations as weights. For example, if a BA operates in both
+WA and OR, the counts for WA are weighted by the fraction of the total counts
+in WA relative to the total population of WA and OR.
+
+Lastly, buses were mapped to counties. This step requires an input data file that stores the list of counties in each BA area territory. Some data cleaning was necessary to deal with inconsistent county names. We also implemented a check if there are buses where BA is empty/not found, which is due to bus being outside of United States. These were fixed manually by assigning the bus to the nearest county. 
+
+*Legacy Description*
+
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted
 their data. The data can be obtained either by direct download from their
 database using an API or by download of Excel spreadsheets. A API key is
@@ -175,7 +218,7 @@ for further processing.
 
 To test EIA download (This requires an EIA API key):
 ```python
-from prereise.gather.demanddata.eia.test import test_eia_download
+from prereise.gather.demanddata.eia.tests import test_eia_download
 
 test_eia_download.test_eia_download()
 ```
