@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def fix_dataframe_outliers(demand):
     """Make a dataframe of demand with outliers replaced with values    
         interpolated from the non-outlier edge points using slope_interpolate
@@ -18,6 +19,7 @@ def fix_dataframe_outliers(demand):
         outlier_output = slope_interpolate(pd.DataFrame(demand_ba))
         demand_fix_outliers[ba] = outlier_output[ba]
     return demand_fix_outliers
+
 
 def slope_interpolate(ba_df):
     """Look for demand outliers by applying a z-score threshold to the demand
