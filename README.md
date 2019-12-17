@@ -181,6 +181,14 @@ Check out the ***[eia_demo.ipynb][hydro_notebook]*** notebook for demo.
 
 ### D. Demand Data
 
+*Eastern V6*
+
+In this version,  we replace overall MISO and SPP demand with subarea demand obtained directly from contact at the BAs.
+ We use overall numbers from eia and use the fractional subarea demand as the basis to split the MISO and SPP demand.
+ 
+ The overall procedure is similar to v5 except we generate subarea ba_to_loadzone mapping as well as prepare subarea 
+ demand from files.
+
 *Eastern V5*
 
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted
