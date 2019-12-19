@@ -11,6 +11,8 @@ from tqdm import tqdm
 
 from prereise.gather.winddata.rap.helpers import ll2uv, angular_distance
 from prereise.gather.winddata.rap.power_curves import get_power
+from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
+from prereise.gather.winddata.rap.power_curves import get_state_power_curves
 from prereise.gather.constants import ZONE_ID_TO_STATE
 
 
@@ -27,6 +29,10 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
         80-m above ground level are in m/s. Second element is a list of missing
         files.
     """
+
+    # Information on wind turbines & state average tubrine curves
+    tpc = get_turbine_power_curves()
+    spc = get_state_power_curves()
 
     # Information on wind farms
     n_target = len(wind_farm)
@@ -110,7 +116,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
                              for j in range(n_target)]
             wspd_target = np.sqrt(pow(data_tmp['U'], 2) + pow(data_tmp['V'], 2))
             power = [capacity_target[j] *
-                     get_power(wspd_target[j], state_target[j])
+                     get_power(tpc, spc, wspd_target[j], state_target[j])
                      for j in range(n_target)]
             data_tmp['Pout'] = power
 

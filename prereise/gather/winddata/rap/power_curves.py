@@ -7,6 +7,9 @@ import pandas as pd
 from scipy.stats import norm
 
 
+data_dir = path.abspath(path.join(path.dirname(__file__), '..', 'data'))
+
+
 def _shift_turbine_curve(turbine_curve, hub_height, maxspd, new_curve_res):
     """Shift a turbine curve based on a given hub height.
 
@@ -77,20 +80,19 @@ def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2',
         smoothed_state_curves = pd.DataFrame(
             index=state_curves.index, columns=state_curves.columns)
         for s in states:
-            x = state_curves.index
-            y = np.zeros_like(x)
-            for i, w in enumerate(x):
-                if w == 0:
+            xs = state_curves.index
+            ys = np.zeros_like(xs)
+            for i, x in enumerate(xs):
+                if x == 0:
                     continue
-                sd = max(1.5, rsd * w)
-                min_point = w - 3 * sd
-                max_point = w + 3 * sd
-                sample_points = np.logical_and((x > min_point),(x < max_point))
-                cdf_points = norm.cdf(x[sample_points], loc=w, scale=sd)
+                sd = max(1.5, rsd * x)
+                min_point = x - 3 * sd
+                max_point = x + 3 * sd
+                sample_points = np.logical_and(xs > min_point, xs < max_point)
+                cdf_points = norm.cdf(xs[sample_points], loc=x, scale=sd)
                 pdf_points = np.concatenate((np.zeros(1), np.diff(cdf_points)))
-                #pdf_points *= 1 / np.sum(pdf_points)
-                y[i] = np.dot(pdf_points, state_curves[s][sample_points])
-            smoothed_state_curves[s] = y
+                ys[i] = np.dot(pdf_points, state_curves[s][sample_points])
+            smoothed_state_curves[s] = ys
         state_curves = smoothed_state_curves
 
     return state_curves
@@ -109,25 +111,27 @@ def get_form_860(data_dir, year=2016):
         raise ValueError('data_dir is not a valid directory')
     if not isinstance(year, int):
         raise TypeError('year is not an int')
-
-    form_860_filename = ''.join(['3_2_Wind_Y', str(year), '.csv'])
-    form_860_path = path.join(data_dir, form_860_filename)
-    try:
-        form_860 = pd.read_csv(form_860_path, skiprows=1)
-    except FileNotFoundError:
-        regex_str = r'3_2_Wind_Y(\d{4}).csv'
-        matching_years = [
-            re.match(regex_str, f).group(1)
-            for f in os.listdir(data_dir) if re.match(regex_str, f)]
-        err_msg = ' '.join(['form data for year', str(year), 'not found. '])
-        err_msg += 'Years with data: ' + ', '.join(matching_years)
+    regex_str = r'3_2_Wind_Y(\d{4}).csv'
+    valid_years = [
+        int(re.match(regex_str, f).group(1))
+        for f in os.listdir(data_dir) if re.match(regex_str, f)]
+    if year not in valid_years:
+        err_msg = f'form data for year {year} not found. '
+        err_msg += 'Years with data: ' + ', '.join(str(valid_years))
         raise ValueError(err_msg)
+
+    form_860_filename = f'3_2_Wind_Y{year}.csv'
+    form_860_path = path.join(data_dir, form_860_filename)
+    form_860 = pd.read_csv(form_860_path, skiprows=1)
     return form_860
 
 
-def get_power(wspd, turbine, default='IEC class 2'):
+def get_power(PowerCurves, StatePowerCurves, wspd, turbine,
+              default='IEC class 2'):
     """Convert wind speed to power using NREL turbine power curves.
 
+    :param pandas.DataFrame PowerCurves: turbine power curves data.
+    :param pandas.DataFrame StatePowerCurves: state average power curves data.
     :param float wspd: wind speed (in m/s).
     :param str default: default turbine name.
     :param str turbine: turbine name, IEC class, or state code for average.
@@ -144,14 +148,32 @@ def get_power(wspd, turbine, default='IEC class 2'):
     return np.interp(wspd, curve.index.values, curve.values, left=0, right=0)
 
 
-data_dir = path.abspath(path.join(path.dirname(__file__), '..', 'data'))
-Form860 = get_form_860(data_dir)
-powercurves_path = path.join(data_dir, 'PowerCurves.csv')
-PowerCurves = pd.read_csv(powercurves_path, index_col=0, header=None).T
-PowerCurves.set_index('Speed bin (m/s)', inplace=True)
-statepowercurves_path = path.join(data_dir, 'StatePowerCurves.csv')
-try:
-    StatePowerCurves = pd.read_csv(statepowercurves_path, index_col=0)
-except FileNotFoundError:
-    StatePowerCurves = build_state_curves(Form860, PowerCurves, rsd=0.4)
-    StatePowerCurves.to_csv(statepowercurves_path)
+def get_turbine_power_curves(filename='PowerCurves.csv'):
+    """Load turbine power curves from csv.
+
+    :param str filename: filename (not path) of csv file to read from.
+    :return: (*pandas.DataFrame*) -- normalized turbine power curves.
+    """
+    powercurves_path = path.join(data_dir, filename)
+    PowerCurves = pd.read_csv(powercurves_path, index_col=0, header=None).T
+    PowerCurves.set_index('Speed bin (m/s)', inplace=True)
+    return PowerCurves
+
+
+def get_state_power_curves(filename='StatePowerCurves.csv', rsd=0.4):
+    """Load state power curves from csv, if the csv is present. Otherwise,
+    construct them from EIA form 860 data and turbine curves.
+
+    :param str filename: filename (not path) of csv file to read from.
+    :param float rsd: relative standard deviation, for wind speed distribution.
+    :return: (*pandas.DataFrame*) -- normalized state power curves.
+    """
+    PowerCurves = get_turbine_power_curves()
+    Form860 = get_form_860(data_dir)
+    statepowercurves_path = path.join(data_dir, filename)
+    try:
+        StatePowerCurves = pd.read_csv(statepowercurves_path, index_col=0)
+    except FileNotFoundError:
+        StatePowerCurves = build_state_curves(Form860, PowerCurves, rsd=rsd)
+        StatePowerCurves.to_csv(statepowercurves_path)
+    return StatePowerCurves

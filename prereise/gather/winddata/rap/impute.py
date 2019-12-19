@@ -3,6 +3,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from prereise.gather.winddata.rap.power_curves import get_power
+from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
+from prereise.gather.winddata.rap.power_curves import get_state_power_curves
 
 
 def simple(data, wind_farm, inplace=True):
@@ -23,6 +25,10 @@ def simple(data, wind_farm, inplace=True):
         data_impute = data
     else:
         data_impute = data.copy()
+
+    # Information on wind turbines & state average tubrine curves
+    tpc = get_turbine_power_curves()
+    spc = get_state_power_curves()
 
     # Locate missing data
     to_impute = data[data.U.isna()].index
@@ -54,7 +60,8 @@ def simple(data, wind_farm, inplace=True):
         data_impute.at[j, 'V'] = min_v + (max_v - min_v) * np.random.random()
         wspd = np.sqrt(data.loc[j].U**2 + data.loc[j].V**2)
         capacity = wind_farm.loc[k].GenMWMax
-        data_impute.at[j, 'Pout'] = get_power(wspd, 'IEC class 2') * capacity
+        normalized_power = get_power(tpc, spc, wspd, 'IEC class 2')
+        data_impute.at[j, 'Pout'] = normalized_power * capacity
 
     if not inplace:
         return data_impute

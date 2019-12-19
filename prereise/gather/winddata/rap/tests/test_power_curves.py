@@ -1,13 +1,20 @@
 import math
+from os import path
 import unittest
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 import pandas as pd
 
-from prereise.gather.winddata.rap.power_curves import (PowerCurves,
-                                                       build_state_curves,
-                                                       _shift_turbine_curve)
+from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
+from prereise.gather.winddata.rap.power_curves import get_state_power_curves
+from prereise.gather.winddata.rap.power_curves import build_state_curves
+from prereise.gather.winddata.rap.power_curves import _shift_turbine_curve
+from prereise.gather.winddata.rap.power_curves import get_power
+from prereise.gather.winddata.rap.power_curves import get_form_860
+
+
+data_dir = path.abspath(path.join(path.dirname(__file__), '..', '..', 'data'))
 
 
 def _first_one(curve):
@@ -45,6 +52,7 @@ class TestBuildStateCurves(unittest.TestCase):
         self.form_860 = form_860
 
     def test_build_state_curves(self):
+        PowerCurves = get_turbine_power_curves()
         maxspd = 25
         new_curve_res = 0.01
         expected_length = math.ceil(maxspd / new_curve_res) + 1
@@ -86,6 +94,9 @@ class TestBuildStateCurves(unittest.TestCase):
 
 class TestShiftTurbineCurve(unittest.TestCase):
     
+    def setUp(self):
+        self.PowerCurves = get_turbine_power_curves()
+
     def _check_curve_structure(self, shifted_curve, maxspd, new_curve_res):
         expected_length = math.ceil(maxspd / new_curve_res) + 1
         expected_max = math.ceil(maxspd / new_curve_res) * new_curve_res
@@ -96,7 +107,7 @@ class TestShiftTurbineCurve(unittest.TestCase):
         self.assertEqual(shifted_curve.to_numpy().shape, (expected_length,))
 
     def test_shift_turbine_curve_higher_hub(self):
-        original = PowerCurves['IEC class 2']
+        original = self.PowerCurves['IEC class 2']
         shifted = _shift_turbine_curve(
             original, hub_height=270, maxspd=26, new_curve_res=0.01)
         self._check_curve_structure(shifted, maxspd=26, new_curve_res=0.01)
@@ -104,7 +115,7 @@ class TestShiftTurbineCurve(unittest.TestCase):
         self.assertTrue(_last_one(shifted) < _last_one(original))
 
     def test_shift_turbine_curve_lower_hub(self):
-        original = PowerCurves['IEC class 2']
+        original = self.PowerCurves['IEC class 2']
         shifted = _shift_turbine_curve(
             original, hub_height=260, maxspd=29, new_curve_res=0.02)
         self._check_curve_structure(shifted, maxspd=29, new_curve_res=0.02)
@@ -112,9 +123,97 @@ class TestShiftTurbineCurve(unittest.TestCase):
         self.assertTrue(_last_one(shifted) > _last_one(original))
 
     def test_shift_turbine_curve_sameheight_hub(self):
-        original = PowerCurves['IEC class 2']
+        original = self.PowerCurves['IEC class 2']
         shifted = _shift_turbine_curve(
             original, hub_height=262.467, maxspd=30, new_curve_res=0.05)
         self._check_curve_structure(shifted, maxspd=30, new_curve_res=0.05)
         self.assertTrue(_first_one(shifted) == _first_one(original))
         self.assertTrue(_last_one(shifted) == _last_one(original))
+
+
+class TestGetPower(unittest.TestCase):
+
+    def setUp(self):
+        self.tpc = get_turbine_power_curves()
+        self.spc = get_state_power_curves()
+
+    def test_get_power_default_zero(self):
+        power = get_power(self.tpc, self.spc, 0, 'foo')
+        self.assertIsInstance(power, float)
+        self.assertEqual(power, 0)
+
+    def test_get_power_default_five(self):
+        power = get_power(self.tpc, self.spc, 5, 'foo')
+        self.assertIsInstance(power, float)
+        self.assertEqual(power, 0.1031)
+
+    def test_get_power_default_ten(self):
+        power = get_power(self.tpc, self.spc, 10, 'foo')
+        self.assertIsInstance(power, float)
+        self.assertEqual(power, 0.8554)
+
+    def test_get_power_default_twenty(self):
+        power = get_power(self.tpc, self.spc, 20, 'foo')
+        self.assertIsInstance(power, float)
+        self.assertEqual(power, 1)
+
+    def test_get_power_default_thirty(self):
+        power = get_power(self.tpc, self.spc, 30, 'foo')
+        self.assertIsInstance(power, float)
+        self.assertEqual(power, 0)
+
+    def test_get_power_badstate_ten_different_default(self):
+        # Defaults to IEC class 2
+        power = get_power(self.tpc, self.spc, 10, 'AR', default='GE 1.5 SLE')
+        self.assertIsInstance(power, float)
+        self.assertEqual(power, 0.802)
+
+    def test_get_power_named_ten(self):
+        power = get_power(self.tpc, self.spc, 10, 'GE 1.5 SLE')
+        self.assertIsInstance(power, float)
+        self.assertEqual(power, 0.802)
+
+    def test_get_power_named_ten2(self):
+        power = get_power(self.tpc, self.spc, 10, 'Vestas V100-1.8')
+        self.assertIsInstance(power, float)
+        self.assertAlmostEqual(power, 0.971666667)
+
+
+class TestGetForm860(unittest.TestCase):
+
+    def test_bad_dir(self):
+        bad_dir = path.abspath(path.join(path.dirname(__file__), '..', 'foo'))
+        with self.assertRaises(ValueError):
+            form_860 = get_form_860(bad_dir)
+
+    def test_default_year(self):
+        form_860 = get_form_860(data_dir)
+        self.assertIsInstance(form_860, pd.DataFrame)
+
+    def test_good_year(self):
+        form_860 = get_form_860(data_dir)
+        self.assertIsInstance(form_860, pd.DataFrame)
+
+    def test_bad_year(self):
+        with self.assertRaises(ValueError):
+            form_860 = get_form_860(data_dir, year=3000)
+
+    def test_year_str(self):
+        with self.assertRaises(TypeError):
+            form_860 = get_form_860(data_dir, year='2016')
+
+
+class TestGetTurbinePowerCurves(unittest.TestCase):
+
+    def test_get_turbine_power_curves(self):
+        PowerCurves = get_turbine_power_curves()
+        self.assertIsInstance(PowerCurves, pd.DataFrame)
+        self.assertEqual(PowerCurves.index.name, 'Speed bin (m/s)')
+
+
+class TestGetStatePowerCurves(unittest.TestCase):
+
+    def test_get_state_power_curves(self):
+        StatePowerCurves = get_state_power_curves()
+        self.assertIsInstance(StatePowerCurves, pd.DataFrame)
+        self.assertEqual(StatePowerCurves.index.name, 'Speed bin (m/s)')
