@@ -1,10 +1,6 @@
 import math
-import os
 
-import numpy as np
 import pandas as pd
-
-PowerCurves = pd.read_csv(os.path.dirname(__file__) + '/../IECPowerCurves.csv')
 
 
 def ll2uv(lon, lat):
@@ -40,22 +36,6 @@ def angular_distance(uv1, uv2):
     angle = math.degrees(math.acos(cos_angle))
 
     return angle
-
-
-def get_power(wspd, turbine):
-    """Convert wind speed to power using NREL turbine power curves.
-
-    :param float wspd: wind speed (in m/s).
-    :param str turbine: class of turbine.
-    :return: (*float*) -- normalized power.
-    """
-    match = (PowerCurves['Speed bin (m/s)'] <= np.ceil(wspd)) & \
-            (PowerCurves['Speed bin (m/s)'] >= np.floor(wspd))
-    if not any(match):
-        return 0
-    return np.interp(wspd,
-                     PowerCurves[turbine][match].index.values,
-                     PowerCurves[turbine][match].values)
 
 
 def to_reise(data):

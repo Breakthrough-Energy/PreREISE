@@ -1,15 +1,16 @@
 # PreREISE
-This package defines the scenario and calls the MATLAB simulation engine. The
-name stands for pre Renewable Energy Integration Study Engine.
+This package defines the scenario and calls the [MATLAB][MATLAB] simulation
+engine. The name stands for pre Renewable Energy Integration Study Engine.
 
 
 
 ## 1. Setup/Install
-This package requires MATLAB, MATPOWER and Gurobi.
+This package requires [MATLAB][MATLAB], [MATPOWER][MATPOWER] and
+[Gurobi][Gurobi].
 
 
 ### A. MATLAB
-Install MATLAB and proceed as follows:  
+Install [MATLAB][MATLAB] and proceed as follows:  
 ```
 cd "matlabroot\extern\engines\python"
 python setup.py install
@@ -24,7 +25,8 @@ for Mac or Linux systems.
 
 
 ### B. MATPOWER
-Download MATPOWER and add the following directories in ***add_path.m***:
+Download [MATPOWER][MATPOWER] and add the following directories in
+***add_path.m***:
 ```
 <MATPOWER>        — core MATPOWER functions
 <MATPOWER>/most   — core MOST functions
@@ -58,12 +60,33 @@ primarily of a numerical weather model and an analysis system to initialize
 that model. RAP provides, every hour ranging from May 2012 to date, the U and
 V components of the wind speed at 80 meter above ground on a 13x13 square
 kilometer resolution grid every hour. Data can be retrieved using the NetCDF
-Subset Service. Information on this interface is described [here][NetCDF].
+Subset Service. Information on this interface is described [here][NetCDF]. Note
+that the dataset is incomplete and, consequently, missing entries need to be
+imputed.
 
-Note that the dataset is incomplete (33 hours are missing in 2016) and,
-consequently, missing entries need to be imputed. Afterwards, wind speed is
-converted to power for all the wind farms in the network using the *IEC class 2*
-power curve provided by NREL in the [WIND Toolkit documentation][WIND_doc].
+Once the U and V components of the wind are converted to a non-directional
+wind speed magnitude, this speed is converted to power using wind turbine
+power curves. Since real wind farms are not currently mapped to TAMU network
+farms, a capacity-weighted average wind turbine power curve is created for each
+state based on the turbine types reported in EIA Form 860. The wind turbine
+curve for each real wind farm is looked up from a database of curves (or the
+*IEC class 2* power curve provided by NREL in the
+[WIND Toolkit documentation][WIND_doc]) is used for turbines without curves in
+the database), and scaled from the real hub heights to 80m hub heights using an
+alpha of 0.15. These height-scaled, turbine-specific curves are averaged to
+obtain a state curve translating wind speed to normalized power. States without
+wind farms in EIA Form 860 are represented by the *IEC class 2* power curve.
+
+Each turbine curve represents the instantaneous power from a single turbine for
+a given wind speed. To account for spatio-temporal variations in wind speed
+(i.e. an hourly average wind speed that varies through the hour, and a
+point-specific wind speed that varies throughout the wind farm), a distribution
+is used: a normal distribution with standard deviation of 40% of the average
+wind speed. This distribution tends to boost the power produced at lower
+wind speeds (since the power curve in this region is convex) and lower the
+power produced at higher wind speeds (since the power curve in this region is
+concave as the turbine tops out, and shuts down at higher wind speeds). This
+tracks with the wind-farm level data shown in NREL's validation report.
 
 Check out the ***[rap_demo.ipynb][RAP_notebook]*** notebook for demo.
 
@@ -236,6 +259,9 @@ from prereise.call.test import test_call
 test_call.test()
 ```
 
+[MATLAB]: https://www.mathworks.com/products/matlab.html
+[MATPOWER]: https://matpower.org
+[Gurobi]: https://www.gurobi.com
 [RAP]: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
 [RAP_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb
 [NetCDF]: https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html
