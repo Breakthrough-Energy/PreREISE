@@ -1,1 +1,1 @@
-__all__ = ['test_eia_download', 'test_from_excel', 'test_slope_interpolate']
+__all__ = ['test_clean_data', 'test_get_eia_data', 'test_map_ba']
