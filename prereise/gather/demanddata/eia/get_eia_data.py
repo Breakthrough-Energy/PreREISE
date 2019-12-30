@@ -67,14 +67,16 @@ def from_excel(directory, series_list, start_date, end_date):
 
 
 def get_BA_demand(ba_code_list, start_date, end_date, api_key):
-    """ Downloads the demand between the start and end dates for a list of BAs
-        :param pandas.DataFrame ba_code_list: List of balancing authorities to download from eia
-        :param datetime.datetime start_date: beginning bound for the demand dataframe
+    """ Downloads the demand between the start and end dates for a list of
+        balancing authorities
+        :param pandas.DataFrame ba_code_list: List of BAs to download from eia
+        :param datetime.datetime start_date: beginning bound for the demand df
         :param datetime.datetime end_date: end bound for the demand dataframe
         :return: (*pandas.DataFrame*) -- dataframe with columns of demand by BA
     """
     series_list = [f'EBA.{ba}-ALL.D.H' for ba in ba_code_list]
-    return from_download(api_key, start_date, end_date, offset_days=0, series_list=series_list)
+    return from_download(
+        api_key, start_date, end_date, offset_days=0, series_list=series_list)
 
 
 class EIAgov(object):
