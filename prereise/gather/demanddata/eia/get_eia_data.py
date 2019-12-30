@@ -8,7 +8,7 @@ from pandas.tseries.offsets import DateOffset
 
 
 def from_download(tok, start_date, end_date, offset_days, series_list):
-    """Downloads and assemble dataset of demand data per balancing authority \ 
+    """Downloads and assemble dataset of demand data per balancing authority \
         for desired date range.
 
     :param str tok: token obtained by registering with EIA.
@@ -66,14 +66,25 @@ def from_excel(directory, series_list, start_date, end_date):
     return df_all
 
 
+def get_BA_demand(ba_code_list, start_date, end_date, api_key):
+    """ Downloads the demand between the start and end dates for a list of BAs
+        :param pandas.DataFrame ba_code_list: List of balancing authorities to download from eia
+        :param datetime.datetime start_date: beginning bound for the demand dataframe
+        :param datetime.datetime end_date: end bound for the demand dataframe
+        :return: (*pandas.DataFrame*) -- dataframe with columns of demand by BA
+    """
+    series_list = [f'EBA.{ba}-ALL.D.H' for ba in ba_code_list]
+    return from_download(api_key, start_date, end_date, offset_days=0, series_list=series_list)
+
+
 class EIAgov(object):
     """Copied from `this link <https://quantcorner.wordpress.com/\
         2014/11/18/downloading-eias-data-with-python/>`_.
-    
+
     :param str token: EIA token.
     :param list series: id code(s) of the series to be downloaded.
     """
-    
+
     def __init__(self, token, series):
         self.token = token
         self.series = series
@@ -130,3 +141,5 @@ class EIAgov(object):
             df[self.series[j]] = data
 
         return df
+
+

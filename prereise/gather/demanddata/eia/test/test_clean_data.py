@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from prereise.gather.demanddata.eia import find_fix_outliers
+from prereise.gather.demanddata.eia.clean_data import slope_interpolate
 
 
 def test_slope_interpolate():
@@ -15,7 +15,7 @@ def test_slope_interpolate():
                      parse_dates=True)
     orig_fall = ba['PSCO'].to_frame().copy()
 
-    fixed = find_fix_outliers.slope_interpolate(orig_fall)
+    fixed = slope_interpolate(orig_fall)
     fixed.rename(columns={'PSCO': 'PSCO3'}, inplace=True)
 
     combine = pd.concat([orig_fall, fixed], axis=1)
