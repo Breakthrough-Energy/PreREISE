@@ -23,17 +23,18 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
 
     timespan = pd.date_range(start_date,
                              end_date - DateOffset(days=offset_days),
+                             tz='UTC',
                              freq='H')
     df_all = pd.DataFrame(index=timespan)
-
+    
     for ba in series_list:
         print('Downloading', ba)
         d = EIAgov(tok, [ba])
         df = d.get_data()
-        df.index = pd.to_datetime(df['Date'])
-        df.drop(columns=['Date'], inplace=True)
-        df_all = pd.concat([df_all, df], axis=1)
-
+        if df is not None:
+            df.index = pd.to_datetime(df['Date'])
+            df.drop(columns=['Date'], inplace=True)
+            df_all = pd.concat([df_all, df], axis=1)
     return df_all
 
 
@@ -75,8 +76,10 @@ def get_BA_demand(ba_code_list, start_date, end_date, api_key):
         :return: (*pandas.DataFrame*) -- dataframe with columns of demand by BA
     """
     series_list = [f'EBA.{ba}-ALL.D.H' for ba in ba_code_list]
-    return from_download(
+    df = from_download(
         api_key, start_date, end_date, offset_days=0, series_list=series_list)
+    df.columns = [ba.replace('EBA.', '').replace('-ALL.D.H', '') for ba in df.columns]
+    return df
 
 
 class EIAgov(object):
@@ -123,6 +126,15 @@ class EIAgov(object):
         """
 
         date_ = self.raw(self.series[0])
+
+        if 'data' in date_.keys() and 'error' in date_['data'].keys():
+            e = date_['data']['error']
+            print(f'ERROR: {self.series[0]} not found. {e}')
+            return None
+        if len(date_['series']) == 0:
+            print(f'ERROR: {self.series[0]} was found but has no data')
+            return None
+
         date_series = date_['series'][0]['data']
         endi = len(date_series)
         date = []
