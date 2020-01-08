@@ -26,7 +26,7 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
                              tz='UTC',
                              freq='H')
     df_all = pd.DataFrame(index=timespan)
-    
+
     for ba in series_list:
         print('Downloading', ba)
         d = EIAgov(tok, [ba])
@@ -67,18 +67,20 @@ def from_excel(directory, series_list, start_date, end_date):
     return df_all
 
 
-def get_BA_demand(ba_code_list, start_date, end_date, api_key):
+def get_ba_demand(ba_code_list, start_date, end_date, api_key):
     """ Downloads the demand between the start and end dates for a list of
         balancing authorities
-        :param pandas.DataFrame ba_code_list: List of BAs to download from eia
-        :param datetime.datetime start_date: beginning bound for the demand df
-        :param datetime.datetime end_date: end bound for the demand dataframe
-        :return: (*pandas.DataFrame*) -- dataframe with columns of demand by BA
+    :param pandas.DataFrame ba_code_list: List of BAs to download from eia
+    :param datetime.datetime start_date: beginning bound for the demand df
+    :param datetime.datetime end_date: end bound for the demand dataframe
+    :param string api_key: api key to fetch data
+    :return: (*pandas.DataFrame*) -- dataframe with columns of demand by BA
     """
     series_list = [f'EBA.{ba}-ALL.D.H' for ba in ba_code_list]
     df = from_download(
         api_key, start_date, end_date, offset_days=0, series_list=series_list)
-    df.columns = [ba.replace('EBA.', '').replace('-ALL.D.H', '') for ba in df.columns]
+    df.columns = [ba.replace('EBA.', '').replace('-ALL.D.H', '')
+                  for ba in df.columns]
     return df
 
 
@@ -155,5 +157,3 @@ class EIAgov(object):
             df[self.series[j]] = data
 
         return df
-
-

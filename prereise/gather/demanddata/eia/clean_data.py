@@ -1,13 +1,14 @@
 import numpy as np
 import pandas as pd
 
+
 def fix_dataframe_outliers(demand):
     """Make a dataframe of demand with outliers replaced with values
         interpolated from the non-outlier edge points using slope_interpolate
 
     :param pandas.Dataframe demand: demand data frame with UTC time index
         and BA name as column name
-    :return: (*pandas.DataFrame*) -- data frame with anamolaus demand values
+    :return: (*pandas.DataFrame*) -- data frame with anomalous demand values
         replaced by interpolated values
     """
     demand_fix_outliers = pd.DataFrame(index=demand.index)
@@ -104,6 +105,21 @@ def slope_interpolate(ba_df):
             save_me = df.iloc[j][ba_name]
             df.iloc[j][ba_name] = start + (j - hour_save + 1)*dee
             print(j, save_me, df.iloc[j][ba_name])
+
+    return df
+
+def si_helper(df, ba_name, next_save, hour_save):
+    num = next_save - hour_save
+
+    if num > 4:
+        print('Too many zeros near ', i, '! Review data!')
+
+    start = df.iloc[hour_save - 1][ba_name]
+    dee = (df.iloc[next_save - 1][ba_name] - start) / num
+    for j in range(hour_save - 1, next_save):
+        save_me = df.iloc[j][ba_name]
+        df.iloc[j][ba_name] = start + (j - hour_save + 1) * dee
+        print(j, save_me, df.iloc[j][ba_name])
 
     return df
 
