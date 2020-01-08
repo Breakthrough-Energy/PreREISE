@@ -57,7 +57,7 @@ def slope_interpolate(ba_df):
     df['delta'] = df[ba_name].diff()
     delta_mu = df['delta'].describe().loc['mean']
     delta_sigma = df['delta'].describe().loc['std']
-    df['delta_zscore'] = np.abs((df['delta'] - delta_mu)/delta_sigma)
+    df['delta_zscore'] = np.abs((df['delta'] - delta_mu) / delta_sigma)
 
     # Find the outliers
     outlier_index_list = df.loc[df['delta_zscore'] > 5].index
@@ -79,7 +79,7 @@ def slope_interpolate(ba_df):
         # otherwise since it may not capture the periodic patterns.
         # Print a warning
 
-        if df.iloc[hour_index-1][ba_name] == 0:
+        if df.iloc[hour_index - 1][ba_name] == 0:
             next_save = hour_index + 1
             continue
 
@@ -88,38 +88,23 @@ def slope_interpolate(ba_df):
         if num > 4:
             print('Too many zeros near ', i, '! Review data!')
 
-        start = df.iloc[hour_save-1][ba_name]
-        dee = (df.iloc[next_save-1][ba_name] - start)/num
-        for j in range(hour_save-1, next_save):
+        start = df.iloc[hour_save - 1][ba_name]
+        dee = (df.iloc[next_save - 1][ba_name] - start) / num
+        for j in range(hour_save - 1, next_save):
             save_me = df.iloc[j][ba_name]
-            df.iloc[j][ba_name] = start + (j - hour_save + 1)*dee
+            df.iloc[j][ba_name] = start + (j - hour_save + 1) * dee
             print(j, save_me, df.iloc[j][ba_name])
         hour_save = hour_index
         next_save = hour_index + 1
 
     if hour_save != -1:
         num = next_save - hour_save
-        start = df.iloc[hour_save-1][ba_name]
-        dee = (df.iloc[next_save-1][ba_name] - start)/num
-        for j in range(hour_save-1, next_save):
+        start = df.iloc[hour_save - 1][ba_name]
+        dee = (df.iloc[next_save - 1][ba_name] - start) / num
+        for j in range(hour_save - 1, next_save):
             save_me = df.iloc[j][ba_name]
-            df.iloc[j][ba_name] = start + (j - hour_save + 1)*dee
+            df.iloc[j][ba_name] = start + (j - hour_save + 1) * dee
             print(j, save_me, df.iloc[j][ba_name])
-
-    return df
-
-def si_helper(df, ba_name, next_save, hour_save):
-    num = next_save - hour_save
-
-    if num > 4:
-        print('Too many zeros near ', i, '! Review data!')
-
-    start = df.iloc[hour_save - 1][ba_name]
-    dee = (df.iloc[next_save - 1][ba_name] - start) / num
-    for j in range(hour_save - 1, next_save):
-        save_me = df.iloc[j][ba_name]
-        df.iloc[j][ba_name] = start + (j - hour_save + 1) * dee
-        print(j, save_me, df.iloc[j][ba_name])
 
     return df
 
@@ -127,11 +112,11 @@ def si_helper(df, ba_name, next_save, hour_save):
 def replace_with_shifted_demand(demand, start, end):
     """ Replaces missing data within overall demand dataframe with averages
         of nearby shifted demand
-        :param pandas.DataFrame demand: Dataframe with hourly demand where the
-            columns are BA regions
-        :param datetime.datetime start: Datetime for start of period of interest
-        :param datetime.datetime end: Datetime for end of period of interest
-        :return: (*pandas.DataFrame*) -- df with missing demand data filled in
+    :param pandas.DataFrame demand: Dataframe with hourly demand where the
+        columns are BA regions
+    :param datetime.datetime start: Datetime for start of period of interest
+    :param datetime.datetime end: Datetime for end of period of interest
+    :return: (*pandas.DataFrame*) -- df with missing demand data filled in
     """
     look_back1day = demand.shift(1, freq='D')
     look_back2day = demand.shift(2, freq='D')
@@ -140,9 +125,14 @@ def replace_with_shifted_demand(demand, start, end):
     look_forward2day = demand.shift(-2, freq='D')
     look_forward1week = demand.shift(-7, freq='D')
 
-    shifted_demand = pd.concat([demand, look_back1day, look_forward1day,
-                                look_back2day, look_forward2day, look_back1week,
-                                look_forward1week], axis=1)
+    shifted_demand = pd.concat([demand,
+                                look_back1day,
+                                look_forward1day,
+                                look_back2day,
+                                look_forward2day,
+                                look_back1week,
+                                look_forward1week],
+                               axis=1)
     shifted_demand = shifted_demand.loc[start:end]
     shifted_demand['dayofweek'] = shifted_demand.index.dayofweek
     column_names = ['look_back1day', 'look_forward1day', 'look_back2day',
@@ -188,14 +178,14 @@ def replace_with_shifted_demand(demand, start, end):
 
 def fill_ba_demand(df_ba, ba_name, day_map):
     """ Replaces missing data in BA demand and returns result
-        :param pandas.DataFrame df_ba: dataframe for BA demand, shifted demand,
-            and day of the week
-        :param str ba_name: Name of the BA in dataframe
-        :param dict day_map: Mapping for replacing missing demand data with
-            shifted demand
-        :return: (*pandas.DataFrame*) --  BA dataseries with demand filled in
+    :param pandas.DataFrame df_ba: dataframe for BA demand, shifted demand,
+        and day of the week
+    :param str ba_name: Name of the BA in dataframe
+    :param dict day_map: Mapping for replacing missing demand data with
+        shifted demand
+    :return: (*pandas.DataFrame*) --  BA dataseries with demand filled in
     """
     for day in range(0, 7):
-        df_ba.loc[(df_ba.dayofweek == day) & (df_ba[ba_name].isna()), ba_name] \
-            = df_ba[day_map[day]].mean(axis=1)
+        df_ba.loc[(df_ba.dayofweek == day) & (df_ba[ba_name].isna()),
+                  ba_name] = df_ba[day_map[day]].mean(axis=1)
     return df_ba[ba_name]
