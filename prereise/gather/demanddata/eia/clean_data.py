@@ -118,6 +118,9 @@ def replace_with_shifted_demand(demand, start, end):
     :param datetime.datetime end: Datetime for end of period of interest
     :return: (*pandas.DataFrame*) -- df with missing demand data filled in
     """
+
+    # Create a dataframe where each column is the same demand data,
+    # but shifted by a specific time interval
     look_back1day = demand.shift(1, freq='D')
     look_back2day = demand.shift(2, freq='D')
     look_back1week = demand.shift(7, freq='D')
@@ -133,12 +136,17 @@ def replace_with_shifted_demand(demand, start, end):
                                 look_back1week,
                                 look_forward1week],
                                axis=1)
+
+    # Include only the dates we care about
     shifted_demand = shifted_demand.loc[start:end]
     shifted_demand['dayofweek'] = shifted_demand.index.dayofweek
     column_names = ['look_back1day', 'look_forward1day', 'look_back2day',
                     'look_forward2day', 'look_back1week', 'look_forward1week',
                     'dayofweek']
 
+    # Dicts of weekdays. 0 = Monday, 1 = Tuesday, etc.
+    # day_map: attempt to shift the data by only one day if possible
+    # Do not fill in Mon-Fri with the weekend days and vice versa
     day_map = {0: ['look_forward1day'],
                1: ['look_forward1day', 'look_back1day'],
                2: ['look_forward1day', 'look_back1day'],
@@ -147,6 +155,7 @@ def replace_with_shifted_demand(demand, start, end):
                5: ['look_forward1day'],
                6: ['look_back1day']}
 
+    # If we are still missing data, look two days
     more_days_map = {0: ['look_forward2day'],
                      1: ['look_forward2day'],
                      2: ['look_back2day', 'look_forward2day'],
@@ -155,6 +164,7 @@ def replace_with_shifted_demand(demand, start, end):
                      5: ['look_back1week', 'look_forward1week'],
                      6: ['look_back1week', 'look_forward1week']}
 
+    # Finally, check for data exactly one week ago / one week from date
     more_more_days_map = {0: ['look_back1week', 'look_forward1week'],
                           1: ['look_back1week', 'look_forward1week'],
                           2: ['look_back1week', 'look_forward1week'],
@@ -163,6 +173,8 @@ def replace_with_shifted_demand(demand, start, end):
                           5: ['look_back1week', 'look_forward1week'],
                           6: ['look_back1week', 'look_forward1week']}
 
+    # Attempt to shift demand data,
+    # getting progressively more aggressive if necessary
     filled_demand = pd.DataFrame(index=demand.index)
     for baName in demand.columns:
         shifted_demand_ba = shifted_demand[[baName, 'dayofweek']]
