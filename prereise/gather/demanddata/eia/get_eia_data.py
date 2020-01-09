@@ -8,7 +8,7 @@ from pandas.tseries.offsets import DateOffset
 
 
 def from_download(tok, start_date, end_date, offset_days, series_list):
-    """Downloads and assemble dataset of demand data per balancing authority \ 
+    """Downloads and assemble dataset of demand data per balancing authority \
         for desired date range.
 
     :param str tok: token obtained by registering with EIA.
@@ -23,6 +23,7 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
 
     timespan = pd.date_range(start_date,
                              end_date - DateOffset(days=offset_days),
+                             tz='UTC',
                              freq='H')
     df_all = pd.DataFrame(index=timespan)
 
@@ -30,10 +31,10 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
         print('Downloading', ba)
         d = EIAgov(tok, [ba])
         df = d.get_data()
-        df.index = pd.to_datetime(df['Date'])
-        df.drop(columns=['Date'], inplace=True)
-        df_all = pd.concat([df_all, df], axis=1)
-
+        if df is not None:
+            df.index = pd.to_datetime(df['Date'])
+            df.drop(columns=['Date'], inplace=True)
+            df_all = pd.concat([df_all, df], axis=1)
     return df_all
 
 
@@ -66,14 +67,31 @@ def from_excel(directory, series_list, start_date, end_date):
     return df_all
 
 
+def get_ba_demand(ba_code_list, start_date, end_date, api_key):
+    """ Downloads the demand between the start and end dates for a list of
+        balancing authorities
+    :param pandas.DataFrame ba_code_list: List of BAs to download from eia
+    :param datetime.datetime start_date: beginning bound for the demand df
+    :param datetime.datetime end_date: end bound for the demand dataframe
+    :param string api_key: api key to fetch data
+    :return: (*pandas.DataFrame*) -- dataframe with columns of demand by BA
+    """
+    series_list = [f'EBA.{ba}-ALL.D.H' for ba in ba_code_list]
+    df = from_download(
+        api_key, start_date, end_date, offset_days=0, series_list=series_list)
+    df.columns = [ba.replace('EBA.', '').replace('-ALL.D.H', '')
+                  for ba in df.columns]
+    return df
+
+
 class EIAgov(object):
     """Copied from `this link <https://quantcorner.wordpress.com/\
         2014/11/18/downloading-eias-data-with-python/>`_.
-    
+
     :param str token: EIA token.
     :param list series: id code(s) of the series to be downloaded.
     """
-    
+
     def __init__(self, token, series):
         self.token = token
         self.series = series
@@ -110,6 +128,15 @@ class EIAgov(object):
         """
 
         date_ = self.raw(self.series[0])
+
+        if 'data' in date_.keys() and 'error' in date_['data'].keys():
+            e = date_['data']['error']
+            print(f'ERROR: {self.series[0]} not found. {e}')
+            return None
+        if len(date_['series']) == 0:
+            print(f'ERROR: {self.series[0]} was found but has no data')
+            return None
+
         date_series = date_['series'][0]['data']
         endi = len(date_series)
         date = []
