@@ -109,25 +109,26 @@ def gaussian(data, wind_farm, inplace=True, curve='state'):
 
     n_target = len(wind_farm)
     select = None
-    for i, j in tqdm(enumerate(to_impute), total=len(to_impute)):
+    for i, hour in tqdm(enumerate(to_impute), total=len(to_impute)):
+        # Only run the similar-selection function the first time
         if i % n_target == 0:
-            select = _select_similar(data, dates, j)
+            select = _select_similar(data, dates, hour)
 
-        k = data.loc[j].plant_id
-        select_plant = select[select.plant_id == k]
+        plant_id = data.loc[hour].plant_id
+        select_plant = select[select.plant_id == plant_id]
 
         uv_data = np.array([select_plant['U'].to_numpy(),
                             select_plant['V'].to_numpy()])
         cov = np.cov(uv_data)
         mean = np.mean(uv_data, axis=1)
         sample = np.random.multivariate_normal(mean=mean, cov=cov, size=1)
-        data_impute.at[j, 'U'] = sample[0][0]
-        data_impute.at[j, 'V'] = sample[0][1]
+        data_impute.at[hour, 'U'] = sample[0][0]
+        data_impute.at[hour, 'V'] = sample[0][1]
 
-        wspd = np.sqrt(data.loc[j].U**2 + data.loc[j].V**2)
-        capacity = wind_farm.loc[k].GenMWMax
+        wspd = np.sqrt(data.loc[hour].U**2 + data.loc[hour].V**2)
+        capacity = wind_farm.loc[plant_id].GenMWMax
         normalized_power = get_power(tpc, spc, wspd, 'IEC class 2')
-        data_impute.at[j, 'Pout'] = normalized_power * capacity
+        data_impute.at[hour, 'Pout'] = normalized_power * capacity
 
     if not inplace:
         return data_impute
