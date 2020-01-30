@@ -8,8 +8,8 @@ from prereise.gather.solardata.helpers import get_plant_info_unique_location
 from prereise.gather.solardata.pv_tracking import (get_pv_tracking_data,
                                                    get_pv_tracking_ratio_state)
 from prereise.gather.constants import (ZONE_ID_TO_STATE,
-                                       INTERCONNECT_TO_STATE,
-                                       STATE_TO_INTERCONNECT)
+                                       interconnect2state,
+                                       state2interconnect)
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
@@ -73,7 +73,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
         frac[i] = get_pv_tracking_ratio_state(pv_info, [state])
         if frac[i] is None:
             frac[i] = get_pv_tracking_ratio_state(
-                pv_info, INTERCONNECT_TO_STATE[STATE_TO_INTERCONNECT[state]])
+                pv_info, interconnect2state[state2interconnect[state]])
 
     # Inverter Loading Ratio
     ilr = 1.25

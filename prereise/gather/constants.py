@@ -161,7 +161,7 @@ loadzone2state = {
         'Virginia Tidewater': 'Virginia'
 }
 
-INTERCONNECT_TO_STATE = {
+interconnect2state = {
     'Eastern': ['ME', 'NH', 'VT', 'MA', 'RI', 'CT', 'NY', 'NJ', 'PA', 'DE',
                 'MD', 'VA', 'NC', 'SC', 'GA', 'FL', 'AL', 'MS', 'TN', 'KY',
                 'WV', 'OH', 'MI', 'IN', 'IL', 'WI', 'MN', 'IA', 'MO', 'AR',
@@ -171,8 +171,8 @@ INTERCONNECT_TO_STATE = {
                 'MT']
 }
 
-STATE_TO_INTERCONNECT = {}
-for k, v in INTERCONNECT_TO_STATE.items():
+state2interconnect = {}
+for k, v in interconnect2state.items():
     for s in v:
-        STATE_TO_INTERCONNECT[s] = k
+        state2interconnect[s] = k
 
