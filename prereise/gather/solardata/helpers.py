@@ -47,9 +47,9 @@ def get_plant_info_unique_location(plant):
                str(plant.lat.values[i]))
         if key not in coord.keys():
             coord[key] = [(plant.index[i],
-                           plant.GenMWMax.values[i])]
+                           plant.Pmax.values[i])]
         else:
             coord[key].append((plant.index[i],
-                               plant.GenMWMax.values[i]))
+                               plant.Pmax.values[i]))
 
     return coord

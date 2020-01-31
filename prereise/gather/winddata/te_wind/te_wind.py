@@ -182,7 +182,7 @@ def get_profile(power, wind_farm, closest_site):
     :param pandas.DataFrame power: data frame with *'site_id'* as columns
         and timestamp as indices. Same structure as the one returned by
         :func:`dict2frame`.
-    :param pandas.DataFrame wind_farm: data frame with *'GenMWMax'* as
+    :param pandas.DataFrame wind_farm: data frame with *'Pmax'* as
         column and *'plant_id'* as indices.
     :param pandas.DataFrame closest_site: data frame with *'site_id'*,
         '*capacity*' and *'dist'* as columns and *'plant_id'* as indices. It is
@@ -191,8 +191,8 @@ def get_profile(power, wind_farm, closest_site):
         *'plant_id'* as columns and timestamp as indices.
     """
     profile = pd.DataFrame(index=power.index, columns=wind_farm.index.values)
-    for plant_id, GenMWMax in wind_farm['GenMWMax'].iteritems():
+    for plant_id, Pmax in wind_farm['Pmax'].iteritems():
         site_id = closest_site.loc[plant_id, 'site_id']
-        profile[plant_id] = power[site_id] * GenMWMax
+        profile[plant_id] = power[site_id] * Pmax
 
     return profile.resample('H').mean()

@@ -10,7 +10,7 @@ def retrieve_data(solar_plant, email, api_key, year='2016'):
         using a simple normalization.
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
-        *'GenMWMax' as columns and *'plant_id'* as index.
+        *'Pmax' as columns and *'plant_id'* as index.
     :param str email: email used for API key
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.

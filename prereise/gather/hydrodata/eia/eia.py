@@ -6,7 +6,7 @@ def get_profile(hydro_plant, start='2016-01-01-00', end='2016-12-31-23'):
     """Creates hydro profile from monthly capacity factors reported by EIA
         `here <https://www.eia.gov/electricity/annual/html/epa_04_08_b.html>`_.
 
-    :param pandas.DataFrame hydro_plant: data frame with *'GenMWMax'* as
+    :param pandas.DataFrame hydro_plant: data frame with *'Pmax'* as
         column and *'plant_id'* as indices.
     :param string start: starting date.
     :param string end: ending date.
@@ -40,7 +40,7 @@ def get_profile(hydro_plant, start='2016-01-01-00', end='2016-12-31-23'):
 
     data = scaler.copy()
     for i in hydro_plant.index:
-        data[i] = data.cf * hydro_plant.loc[i].GenMWMax
+        data[i] = data.cf * hydro_plant.loc[i].Pmax
 
     data.drop('cf', inplace=True, axis=1)
 
