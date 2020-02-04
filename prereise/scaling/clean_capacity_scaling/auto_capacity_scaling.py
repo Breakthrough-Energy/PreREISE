@@ -13,12 +13,6 @@ class AbstractStrategy:
         """
         self.targets[target.name] = target
 
-    # def SetSolarPercentageOfAddedCapacity()
-
-    # def PlotProgress()
-
-    # def ExportProgressToExcel()
-
 
 class IndependentManager(AbstractStrategy):
     def __init__(self):
@@ -50,20 +44,20 @@ class CollaborativeManager(AbstractStrategy):
 
         :return:
         """
-        total_CE_shortfall = 0
+        total_ce_shortfall = 0
         for tar in self.targets:
-            total_CE_shortfall  += self.targets[tar].CE_shortfall
-        return total_CE_shortfall
+            total_ce_shortfall  += self.targets[tar].CE_shortfall
+        return total_ce_shortfall
 
     def calculate_total_prev_ce_generation(self):
         """
 
         :return:
         """
-        total_prev_CE_generation = 0
+        total_prev_ce_generation = 0
         for tar in self.targets:
-            total_prev_CE_generation += self.targets[tar].prev_CE_generation
-        return total_prev_CE_generation
+            total_prev_ce_generation += self.targets[tar].prev_CE_generation
+        return total_prev_ce_generation
 
     def calculate_added_capacity(self, solar_percentage=None):
         """
@@ -77,17 +71,17 @@ class CollaborativeManager(AbstractStrategy):
         if solar_percentage is None:
             solar_percentage = solar_prev_capacity/(solar_prev_capacity + wind_prev_capacity)
 
-        CE_shortfall = self.calculate_total_shortfall()
+        ce_shortfall = self.calculate_total_shortfall()
         solar_exp_cap_factor = self.calculate_total_expected_capacity('solar')
         wind_exp_cap_factor = self.calculate_total_expected_capacity('wind')
 
         if solar_percentage != 0:
             ac_scaling_factor = (1-solar_percentage)/solar_percentage
-            solar_added_capacity = 1000/8784*CE_shortfall/(solar_exp_cap_factor+wind_exp_cap_factor*ac_scaling_factor)
+            solar_added_capacity = 1000/8784*ce_shortfall/(solar_exp_cap_factor+wind_exp_cap_factor*ac_scaling_factor)
             wind_added_capacity = ac_scaling_factor*solar_added_capacity
         else:
             solar_added_capacity = 0
-            wind_added_capacity = 1000/8784*CE_shortfall/wind_exp_cap_factor
+            wind_added_capacity = 1000/8784*ce_shortfall/wind_exp_cap_factor
         return solar_added_capacity, wind_added_capacity
 
     def calculate_total_capacity(self, category):
@@ -145,7 +139,6 @@ class CollaborativeManager(AbstractStrategy):
         return solar_cap_scaling, wind_cap_scaling
 
 
-# input for units such as power gen and time period
 class TargetManager:
 
     def __init__(self, name, ce_target_percentage, ce_category, total_demand):
@@ -163,15 +156,10 @@ class TargetManager:
         self.CE_target_percentage = ce_target_percentage
         self.CE_target = self.total_demand * self.CE_target_percentage
 
-        #self.external_CE_historical_amount = 0
-
         self.allowed_resources = ['geo', 'solar', 'wind']
         self.resources = {}
 
         self.CE_shortfall = 0
-
-    def calculate_next_capacities(self, demand):
-        pass
 
     def calculate_added_capacity(self, solar_percentage = None):
         """
@@ -201,12 +189,12 @@ class TargetManager:
 
         :return:
         """
-        # prev_CE_generation = the sum of all prev_generation in the list of allowed resources
-        prev_CE_generation = 0
+        # prev_ce_generation = the sum of all prev_generation in the list of allowed resources
+        prev_ce_generation = 0
         for res in self.allowed_resources:
-            prev_CE_generation = prev_CE_generation + self.resources[res].prev_generation
-        self.prev_CE_generation = prev_CE_generation
-        return prev_CE_generation
+            prev_ce_generation = prev_ce_generation + self.resources[res].prev_generation
+        self.prev_CE_generation = prev_ce_generation
+        return prev_ce_generation
 
     def add_resource(self, resource):
         """
@@ -267,10 +255,6 @@ class TargetManager:
         """
         self.allowed_resources =  allowed_resources
 
-    # def SetAddlSolarCurtailment()
-
-    # def SetAddlWindCurtailment()
-
 
 class Resource:
     def __init__(self, name, prev_scenario_num):
@@ -318,9 +302,6 @@ class Resource:
         :return:
         """
         self.addl_curtailment = addl_curtailment
-
-    def get_info_from_scenario(self):
-        pass
 
     def calculate_expected_cap_factor(self):
         """

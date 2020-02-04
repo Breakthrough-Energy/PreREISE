@@ -1,8 +1,10 @@
 from prereise.scaling.clean_capacity_scaling.auto_capacity_scaling import Resource, TargetManager, CollaborativeManager, AbstractStrategy
 from pytest import approx
 
+
 def test_logic():
     assert 1==1
+
 
 def test_expected_cap_factor():
     solar = Resource('solar', 3)
@@ -14,6 +16,7 @@ def test_expected_cap_factor():
     result = solar.calculate_expected_cap_factor()
     assert result == 0.15
 
+
 def test_calculate_next_capacity():
     solar = Resource('solar', 3)
     solar.set_capacity(0.25, 3700, 0.25)
@@ -24,34 +27,41 @@ def test_calculate_next_capacity():
     result = solar.calculate_next_capacity(4482)
     assert result == 8182
 
+
 def test_calculate_ce_target():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     assert target.CE_target == 50000
+
 
 def test_calculate_ce_shortfall_prev_gt_external():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     result = target.calculate_ce_shortfall(28774.16, 0)
     assert result == approx(21225.84)
 
+
 def test_calculate_ce_shortfall_external_gt_prev():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     result = target.calculate_ce_shortfall(28774.16, 40000)
     assert result == 10000
+
 
 def test_calculate_ce_no_shortfall_prev_gt_external():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     result = target.calculate_ce_shortfall(68774.16, 56000)
     assert result == 0
 
+
 def test_calculate_ce_no_shortfall_external_gt_prev():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     result = target.calculate_ce_shortfall(68774.16, 70000)
     assert result == 0
 
+
 def test_calculate_ce_overgeneration_prev_gt_external():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     result = target.calculate_ce_overgeneration(28774.16, 0)
     assert result == 0
+
 
 def test_calculate_ce_overgeneration_external_gt_prev():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
@@ -63,10 +73,12 @@ def test_calculate_ce_no_overgeneration_prev_gt_external():
     result = target.calculate_ce_overgeneration(68774.16, 56000)
     assert result == approx(18774.16)
 
+
 def test_calculate_ce_no_overgeneration_external_gt_prev():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     result = target.calculate_ce_overgeneration(68774.16, 70000)
     assert result == 20000
+
 
 def test_add_resource_solar():
     solar = Resource('solar', 3)
@@ -79,6 +91,7 @@ def test_add_resource_solar():
     target.add_resource(solar)
     
     assert target.resources['solar'] == solar
+
 
 def test_cal_prev_solar():
     solar = Resource('solar', 3)
@@ -130,11 +143,13 @@ def test_cal_prev_Pacific():
     result = target.calculate_prev_ce_generation()
     assert result == 28774
 
+
 def test_set_allowed_resources():
     target = TargetManager('Pacific', 0.25, 'renewables', 200000)
     allowed_resources = ['solar','wind', 'geo']
     target.set_allowed_resources(allowed_resources)
     assert target.allowed_resources == allowed_resources
+
 
 def test_independent_capacity_strategy():
     solar = Resource('solar', 3)
@@ -175,6 +190,7 @@ def test_independent_capacity_strategy():
     solar_added, wind_added = target.calculate_added_capacity()
     assert wind_added == approx(4360.459)
     assert solar_added == approx(4481.582)
+
 
 def test_independent_capacity_strategy_Atlantic_2():
     solar = Resource('solar', 3)
@@ -227,6 +243,7 @@ def test_independent_capacity_strategy_Atlantic_2():
     assert solar_added == approx(8928.948)
     assert wind_added == approx(8716.354)
 
+
 def test_independent_capacity_strategy_Pacific_3():
     solar = Resource('solar', 3)
     solar.set_capacity(0.25, 3700, 0.215379)
@@ -277,6 +294,7 @@ def test_independent_capacity_strategy_Pacific_3():
     solar_added, wind_added = target.calculate_added_capacity()
     assert solar_added == approx(4933.333)
     assert wind_added == approx(4800)
+
 
 def test_independent_capacity_strategy_Atlantic_4():
     solar = Resource('solar', 3)
@@ -329,6 +347,7 @@ def test_independent_capacity_strategy_Atlantic_4():
     assert solar_added == approx(14413.636)
     assert wind_added == approx(14070.455)
 
+
 def test_independent_capacity_strategy_Pacific_external_6():
     solar = Resource('solar', 3)
     solar.set_capacity(0.25, 3700, 0.215379)
@@ -378,6 +397,7 @@ def test_independent_capacity_strategy_Pacific_external_6():
     solar_added, wind_added = target.calculate_added_capacity()
     assert solar_added == approx(2055.556)
     assert wind_added == approx(2000)
+
 
 def test_independent_capacity_strategy_Pacific_solar0_7():
     solar = Resource('solar', 3)
@@ -429,6 +449,7 @@ def test_independent_capacity_strategy_Pacific_solar0_7():
     assert solar_added == approx(0)
     assert wind_added == approx(7854.545)
 
+
 def test_independent_capacity_strategy_Pacific_solar75_8():
     solar = Resource('solar', 3)
     solar.set_capacity(0.25, 3700, 0.215379)
@@ -478,6 +499,7 @@ def test_independent_capacity_strategy_Pacific_solar75_8():
     solar_added, wind_added = target.calculate_added_capacity(0.75)
     assert solar_added == approx(8246.26)
     assert wind_added == approx(2748.753)
+
 
 def test_independent_capacity_strategy_Pacific_solar100_9():
     solar = Resource('solar', 3)
@@ -529,6 +551,7 @@ def test_independent_capacity_strategy_Pacific_solar100_9():
     assert solar_added == approx(12685.714)
     assert wind_added == 0
 
+
 def test_independent_capacity_strategy_windcurtail_10():
     solar = Resource('solar', 3)
     solar.set_capacity(0.25, 3700, 0.215379)
@@ -578,6 +601,7 @@ def test_independent_capacity_strategy_windcurtail_10():
     solar_added, wind_added = target.calculate_added_capacity(0.75)
     assert solar_added == approx(8703.117)
     assert wind_added == approx(2901.039)
+
 
 def test_collaborative_capacity_strategy():
     # create Pacific
