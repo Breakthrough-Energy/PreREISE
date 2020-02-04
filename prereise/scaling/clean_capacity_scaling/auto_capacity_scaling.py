@@ -1,6 +1,6 @@
 class AbstractStrategy:
     """
-
+    Base class for strategy objects, contains common functions
     """
     def __init__(self):
         self.targets = {}
@@ -15,6 +15,9 @@ class AbstractStrategy:
 
 
 class IndependentManager(AbstractStrategy):
+    """
+    Independent strategy manager
+    """
     def __init__(self):
         AbstractStrategy.__init__(self)
 
@@ -36,6 +39,9 @@ class IndependentManager(AbstractStrategy):
 
 
 class CollaborativeManager(AbstractStrategy):
+    """
+    Collaborative strategy manager
+    """
     def __init__(self):
         AbstractStrategy.__init__(self)
 
@@ -56,7 +62,7 @@ class CollaborativeManager(AbstractStrategy):
         """
         total_prev_ce_generation = 0
         for tar in self.targets:
-            total_prev_ce_generation += self.targets[tar].prev_CE_generation
+            total_prev_ce_generation += self.targets[tar].calculate_prev_ce_generation()
         return total_prev_ce_generation
 
     def calculate_added_capacity(self, solar_percentage=None):
@@ -112,7 +118,8 @@ class CollaborativeManager(AbstractStrategy):
         :param category:
         :return:
         """
-        total_cap_factor = (self.calculate_total_generation(category) / self.calculate_total_capacity(category)) * (1000 / 8784)
+        total_cap_factor = (self.calculate_total_generation(category) /
+                            (self.calculate_total_capacity(category)) * (1000/8784))
         return total_cap_factor
 
     def calculate_total_expected_capacity(self, category, addl_curtailment=0):
@@ -161,11 +168,11 @@ class TargetManager:
 
         self.CE_shortfall = 0
 
-    def calculate_added_capacity(self, solar_percentage = None):
+    def calculate_added_capacity(self, solar_percentage=None):
         """
-
+        Calculate added capacity, maintains solar wind ratio by default
         :param solar_percentage:
-        :return:
+        :return: tuple of solar and wind added capacity values
         """
         solar = self.resources['solar']
         wind = self.resources['wind']
@@ -187,21 +194,19 @@ class TargetManager:
 
     def calculate_prev_ce_generation(self):
         """
-
-        :return:
+        Calculates total generation from allowed resources
+        :return: total generation from allowed resources
         """
         # prev_ce_generation = the sum of all prev_generation in the list of allowed resources
         prev_ce_generation = 0
         for res in self.allowed_resources:
             prev_ce_generation = prev_ce_generation + self.resources[res].prev_generation
-        self.prev_CE_generation = prev_ce_generation
         return prev_ce_generation
 
     def add_resource(self, resource):
         """
-
+        Adds resource to TargetManager
         :param resource:
-        :return:
         """
         self.resources[resource.name] = resource
 
@@ -211,7 +216,7 @@ class TargetManager:
 
     def calculate_ce_shortfall(self, prev_CE_generation, external_CE_historical_amount):
         """
-
+        Calculates the clean energy shortfall for target area
         :param prev_CE_generation:
         :param external_CE_historical_amount:
         :return:
@@ -262,12 +267,13 @@ class Resource:
         self.name = name
         self.prev_scenario_num = prev_scenario_num
         self.no_congestion_cap_factor = 0
-        self.prev_capacity = 0
-        self.prev_cap_factor = 0
-        self.prev_generation = 0
-        self.prev_curtailment = 0
+        self.prev_capacity = None
+        self.prev_cap_factor = None
+        self.prev_generation = None
+        self.prev_curtailment = None
         self.addl_curtailment = 0
 
+    # todo: calculate directly from scenario results
     def set_capacity(self, no_congestion_cap_factor, prev_capacity, prev_cap_factor):
         """
 
@@ -280,6 +286,7 @@ class Resource:
         self.prev_capacity = prev_capacity
         self.prev_cap_factor = prev_cap_factor
 
+    # todo: calculate directly from scenario results
     def set_generation(self, prev_generation):
         """
 
@@ -288,6 +295,7 @@ class Resource:
         """
         self.prev_generation = prev_generation
 
+    # todo: calculate directly from scenario results
     def set_curtailment(self, prev_curtailment):
         """
 
@@ -295,7 +303,7 @@ class Resource:
         :return:
         """
         self.prev_curtailment = prev_curtailment
-        
+
     def set_addl_curtailment(self, addl_curtailment):
         """
 
