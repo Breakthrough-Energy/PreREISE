@@ -175,12 +175,13 @@ class TargetManager:
 
         if solar_percentage != 0:
             ac_scaling_factor = (1-solar_percentage)/solar_percentage
-            solar.added_capacity = 1000/8784*ce_shortfall/(solar.exp_cap_factor+wind.exp_cap_factor*ac_scaling_factor)
+            solar.added_capacity = 1000/8784*ce_shortfall/(solar.calculate_expected_cap_factor()
+                                                           + wind.calculate_expected_cap_factor()*ac_scaling_factor)
             wind.added_capacity = ac_scaling_factor*solar.added_capacity
 
         else:
             solar.added_capacity = 0
-            wind.added_capacity = 1000/8784*ce_shortfall/wind.exp_cap_factor
+            wind.added_capacity = 1000/8784*ce_shortfall/wind.calculate_expected_cap_factor()
 
         return solar.added_capacity, wind.added_capacity
 
@@ -309,7 +310,6 @@ class Resource:
         :return:
         """
         exp_cap_factor = self.prev_cap_factor * (1-self.addl_curtailment)
-        self.exp_cap_factor = exp_cap_factor
         return exp_cap_factor
 
     def calculate_next_capacity(self, added_capacity):
