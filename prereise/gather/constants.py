@@ -77,7 +77,91 @@ ZONE_ID_TO_STATE = {
     308: 'TX'
 }
 
-INTERCONNECT_TO_STATE = {
+# Map state abbreviations to state
+abv2state = {
+        'AK': 'Alaska',
+        'AL': 'Alabama',
+        'AR': 'Arkansas',
+        'AZ': 'Arizona',
+        'CA': 'California',
+        'CO': 'Colorado',
+        'CT': 'Connecticut',
+        'DE': 'Delaware',
+        'FL': 'Florida',
+        'GA': 'Georgia',
+        'HI': 'Hawaii',
+        'IA': 'Iowa',
+        'ID': 'Idaho',
+        'IL': 'Illinois',
+        'IN': 'Indiana',
+        'KS': 'Kansas',
+        'KY': 'Kentucky',
+        'LA': 'Louisiana',
+        'MA': 'Massachusetts',
+        'MD': 'Maryland',
+        'ME': 'Maine',
+        'MI': 'Michigan',
+        'MN': 'Minnesota',
+        'MO': 'Missouri',
+        'MS': 'Mississippi',
+        'MT': 'Montana',
+        'NC': 'North Carolina',
+        'ND': 'North Dakota',
+        'NE': 'Nebraska',
+        'NH': 'New Hampshire',
+        'NJ': 'New Jersey',
+        'NM': 'New Mexico',
+        'NV': 'Nevada',
+        'NY': 'New York',
+        'OH': 'Ohio',
+        'OK': 'Oklahoma',
+        'OR': 'Oregon',
+        'PA': 'Pennsylvania',
+        'RI': 'Rhode Island',
+        'SC': 'South Carolina',
+        'SD': 'South Dakota',
+        'TN': 'Tennessee',
+        'TX': 'Texas',
+        'UT': 'Utah',
+        'VA': 'Virginia',
+        'VT': 'Vermont',
+        'WA': 'Washington',
+        'WI': 'Wisconsin',
+        'WV': 'West Virginia',
+        'WY': 'Wyoming'
+}
+
+# Map loadzone to state
+loadzone2state = {
+        'Florida Panhandle': 'Florida',
+        'Florida North': 'Florida',
+        'Florida South': 'Florida',
+        'Georgia North': 'Georgia',
+        'Georgia South': 'Georgia',
+        'Chicago North Illinois': 'Illinois',
+        'Illinois Downstate': 'Illinois',
+        'Michigan Northern': 'Michigan',
+        'Michigan Southern': 'Michigan',
+        'Minnesota Northern': 'Minnesota',
+        'Minnesota Southern': 'Minnesota',
+        'Missouri East': 'Missouri',
+        'Missouri West': 'Missouri',
+        'Montana Eastern': 'Montana',
+        'New York City': 'New York',
+        'Western North Carolina': 'North Carolina',
+        'New Mexico Eastern': 'New Mexico',
+        'Upstate New York': 'New York',
+        'Ohio River': 'Ohio',
+        'Ohio Lake Erie': 'Ohio',
+        'Pennsylvania Eastern': 'Pennsylvania',
+        'Pennsylvania Western': 'Pennsylvania',
+        'East Texas': 'Texas',
+        'Texas Panhandle': 'Texas',
+        'Virginia Mountains': 'Virginia',
+        'Virginia Tidewater': 'Virginia'
+}
+
+interconnect2state = {
     'Eastern': ['ME', 'NH', 'VT', 'MA', 'RI', 'CT', 'NY', 'NJ', 'PA', 'DE',
                 'MD', 'VA', 'NC', 'SC', 'GA', 'FL', 'AL', 'MS', 'TN', 'KY',
                 'WV', 'OH', 'MI', 'IN', 'IL', 'WI', 'MN', 'IA', 'MO', 'AR',
@@ -87,8 +171,8 @@ INTERCONNECT_TO_STATE = {
                 'MT']
 }
 
-STATE_TO_INTERCONNECT = {}
-for k, v in INTERCONNECT_TO_STATE.items():
+state2interconnect = {}
+for k, v in interconnect2state.items():
     for s in v:
-        STATE_TO_INTERCONNECT[s] = k
+        state2interconnect[s] = k
 
