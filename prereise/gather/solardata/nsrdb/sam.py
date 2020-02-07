@@ -17,7 +17,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
         the System Adviser Model (SAM).
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
-        *'GenMWMax' as columns and *'plant_id'* as index.
+        *'Pmax' as columns and *'plant_id'* as index.
     :param str email: email used for API key
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
