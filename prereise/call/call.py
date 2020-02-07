@@ -129,6 +129,33 @@ def scenario_matlab_call(scenario_info, start_index, end_index):
     eng.quit()
 
 
+def scenario_julia_call(scenario_info, start_index, end_index):
+    """
+    Starts a Julia engine, runs the add_path file to load Julia code.
+    Then, loads the data path and runs the scenario.
+
+    :param dict scenario_info: scenario information.
+    :param int start_index: start index.
+    :param int end_index: end index.
+    """
+
+    from julia import Main
+    Main.path_str = const.REISE_LOCATION
+    Main.eval("push!(LOAD_PATH, path_str)")
+    from julia import REISE
+
+    interval = int(scenario_info['interval'].split('H', 1)[0])
+    n_interval = end_index - start_index + 1
+
+    input_dir = os.path.join(const.EXECUTE_DIR,
+                             'scenario_%s' % scenario_info['id'])
+    output_dir = os.path.join(const.EXECUTE_DIR,
+                              'scenario_%s/output/' % scenario_info['id'])
+
+    REISE.run_scenario(interval, n_interval, start_index, input_dir, output_dir)
+    Main.eval('exit()')
+
+
 if __name__ == "__main__":
     import sys
 
