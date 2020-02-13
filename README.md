@@ -183,11 +183,13 @@ Check out the ***[eia_demo.ipynb][hydro_notebook]*** notebook for demo.
 
 *Eastern V6*
 
-In this version,  we replace overall MISO and SPP demand with subarea demand obtained directly from contact at the BAs.
- We use overall numbers from eia and use the fractional subarea demand as the basis to split the MISO and SPP demand.
+The two BAs, SPP and MISO, consist of big areas from north to south. It is unlikely that the whole area covered by these big BAs have the same hourly profile shape. Eastern demand v6 addresses the issue by further splitting these two BAs into subareas. We replace overall MISO and SPP demand with subarea demand obtained directly from contact at the BAs.
+We use overall numbers from eia and use the fractional subarea demand as the basis to split the MISO and SPP demand.
  
- The overall procedure is similar to v5 except we generate subarea ba_to_loadzone mapping as well as prepare subarea 
- demand from files.
+The hourly subarea demand profiles for SPP and MISO is reported on their offical websites respectively (check [SPP hourly load](https://marketplace.spp.org/pages/hourly-load), [MISO hourly load](https://www.misoenergy.org/markets-and-operations/real-time--market-data/market-reports/#nt=%2FMarketReportType%3ADay-Ahead&t=10&p=0&s=MarketReportPublished&sd=desc)). The geographical definitions of these subareas are obtained directly from contact at the BAs via either customer service or internal request mangament system (check [RMS](https://spprms.issuetrak.com/Login.asp)). Given the geographical definitions, i.e. list of counties for each subarea, each bus is mapped to the subarea it belongs to.
+ 
+The overall procedure is similar to v5 except we generate subarea ba_to_loadzone mapping as well as prepare subarea 
+demand from files.
 
 *Eastern V5*
 
