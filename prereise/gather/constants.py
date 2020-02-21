@@ -161,6 +161,77 @@ loadzone2state = {
         'Virginia Tidewater': 'Virginia'
 }
 
+# Map state to loadzone
+state2loadzone = {
+        'Washington': {'Washington'},
+        'Oregon': {'Oregon'},
+        'California': {'Bay Area', 'Central California', 'Northern California',
+                       'Southeast California', 'Southwest California'},
+        'Nevada': {'Nevada'},
+        'Arizona': {'Arizona'},
+        'Utah': {'Utah'},
+        'New Mexico': {'New Mexico Eastern', 'New Mexico Western'},
+        'Colorado': {'Colorado'},
+        'Wyoming': {'Wyoming'},
+        'Idaho': {'Idaho'},
+        'Montana': {'Montana Eastern', 'Montana Western'},
+        'Maine': {'Maine'},
+        'New Hampshire': {'New Hampshire'},
+        'Vermont': {'Vermont'},
+        'Massachusetts': {'Massachusetts'},
+        'Rhode Island': {'Rhode Island'},
+        'Connecticut': {'Connecticut'},
+        'New York': {'New York City', 'Upstate New York'},
+        'New Jersey': {'New Jersey'},
+        'Pennsylvania': {'Pennsylvania Eastern', 'Pennsylvania Western'},
+        'Delaware': {'Delaware'},
+        'Maryland': {'Maryland'},
+        'Virginia': {'Virginia Mountains', 'Virginia Tidewater'},
+        'North Carolina': {'North Carolina', 'Western North Carolina'},
+        'South Carolina': {'South Carolina'},
+        'Georgia': {'Georgia North', 'Georgia South'},
+        'Florida': {'Florida North', 'Florida Panhandle', 'Florida South'},
+        'Alabama': {'Alabama'},
+        'Mississippi': {'Mississippi'},
+        'Tennessee': {'Tennessee'},
+        'Kentucky': {'Kentucky'},
+        'West Virginia': {'West Virginia'},
+        'Ohio': {'Ohio Lake Erie', 'Ohio River'},
+        'Michigan': {'Michigan Northern', 'Michigan Southern'},
+        'Indiana': {'Indiana'},
+        'Illinois': {'Chicago North Illinois', 'Illinois Downstate'},
+        'Wisconsin': {'Wisconsin'},
+        'Minnesota': {'Minnesota Northern', 'Minnesota Southern'},
+        'Iowa': {'Iowa'},
+        'Missouri': {'Missouri East', 'Missouri West'},
+        'Arkansas': {'Arkansas'},
+        'Louisiana': {'Louisiana'},
+        'Texas': {'Coast', 'East', 'East Texas', 'El Paso', 'Far West', 'North', 'North Central',
+                  'South', 'South Central', 'Texas Panhandle', 'West'},
+        'Oklahoma': {'Oklahoma'},
+        'Kansas': {'Kansas'},
+        'Nebraska': {'Nebraska'},
+        'South Dakota': {'South Dakota'},
+        'North Dakota': {'North Dakota'}
+}
+
+interconnect2loadzone = {
+    'Texas': {'Far West', 'North', 'West', 'South', 'North Central', 'South Central', 'Coast', 'East'},
+    'Western': {'Washington', 'Oregon', 'Northern California', 'Bay Area', 'Central California', 'Southwest California',
+                'Southeast California', 'Nevada', 'Arizona', 'Utah', 'New Mexico Western', 'Colorado', 'Wyoming',
+                'Idaho', 'Montana Western', 'El Paso'},
+    'Eastern': {'Maine', 'New Hampshire', 'Vermont', 'Massachusetts', 'Rhode Island', 'Connecticut', 'New York City',
+                'Upstate New York', 'New Jersey', 'Pennsylvania Eastern', 'Pennsylvania Western', 'Delaware',
+                'Maryland', 'Virginia Mountains', 'Virginia Tidewater', 'North Carolina', 'Western North Carolina',
+                'South Carolina', 'Georgia North', 'Georgia South', 'Florida Panhandle', 'Florida North',
+                'Florida South', 'Alabama', 'Mississippi', 'Tennessee', 'Kentucky', 'West Virginia',
+                'Ohio River', 'Ohio Lake Erie', 'Michigan Northern', 'Michigan Southern', 'Indiana',
+                'Chicago North Illinois', 'Illinois Downstate', 'Wisconsin', 'Minnesota Northern', 'Minnesota Southern',
+                'Iowa', 'Missouri East', 'Missouri West', 'Arkansas', 'Louisiana', 'East Texas', 'Texas Panhandle',
+                'New Mexico Eastern', 'Oklahoma', 'Kansas', 'Nebraska', 'South Dakota', 'North Dakota',
+                'Montana Eastern'}
+}
+
 interconnect2state = {
     'Eastern': ['ME', 'NH', 'VT', 'MA', 'RI', 'CT', 'NY', 'NJ', 'PA', 'DE',
                 'MD', 'VA', 'NC', 'SC', 'GA', 'FL', 'AL', 'MS', 'TN', 'KY',
@@ -175,4 +246,3 @@ state2interconnect = {}
 for k, v in interconnect2state.items():
     for s in v:
         state2interconnect[s] = k
-
