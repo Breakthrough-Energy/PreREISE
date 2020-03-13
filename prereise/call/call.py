@@ -145,7 +145,7 @@ def scenario_julia_call(scenario_info, start_index, end_index):
     from julia import REISE
 
     interval = int(scenario_info['interval'].split('H', 1)[0])
-    n_interval = end_index - start_index + 1
+    n_interval = (end_index - start_index) / interval
 
     input_dir = os.path.join(const.EXECUTE_DIR,
                              'scenario_%s' % scenario_info['id'])
