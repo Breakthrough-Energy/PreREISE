@@ -140,7 +140,7 @@ def scenario_julia_call(scenario_info, start_index, end_index):
     """
 
     from julia import Main
-    Main.path_str = const.REISE_LOCATION
+    Main.path_str = const.REISE_JL_LOCATION
     Main.eval("push!(LOAD_PATH, path_str)")
     from julia import REISE
 
