@@ -29,6 +29,12 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
         80-m above ground level are in m/s. Second element is a list of missing
         files.
     """
+    # Define query box boundaries using the most northern, southern, eastern
+    # and western. Add 1deg in each direction
+    north_box = wind_farm.lat.max() + 1
+    south_box = wind_farm.lat.min() - 1
+    west_box = wind_farm.lon.min() - 1
+    east_box = wind_farm.lon.max() + 1
 
     # Information on wind turbines & state average tubrine curves
     tpc = get_turbine_power_curves()
@@ -45,7 +51,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
                     for i in id_target]
 
     # Build query
-    link = 'https://www.ncei.noaa.gov/thredds/ncss/rap130anl/'
+    link = 'https://www.ncdc.noaa.gov/thredds/ncss/rap130anl/'
 
     start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
@@ -63,7 +69,8 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     var_v = 'v-component_of_wind_height_above_ground'
     var = 'var=' + var_u + '&' + 'var=' + var_v
 
-    box = 'north=49&west=-122&east=-102&south=32' + '&' + \
+    box = 'north=%s&west=%s&east=%s&south=%s' % \
+          (north_box, west_box, east_box, south_box) + '&' + \
           'disableProjSubset=on&horizStride=1&addLatLon=true'
 
     extension = 'accept=netCDF'
