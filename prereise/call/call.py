@@ -1,6 +1,6 @@
 from prereise.call import const
+from prereise.call.helpers import sec2hms
 
-import datetime
 import matlab.engine
 import numpy as np
 import os
@@ -8,7 +8,7 @@ import pandas as pd
 
 from collections import OrderedDict
 from multiprocessing import Process
-from timeit import default_timer as timer
+from time import time
 
 
 def get_scenario(scenario_id):
@@ -74,7 +74,7 @@ def launch_scenario_performance(scenario_id, n_parallel_call=1):
     parallel_call_list = np.array_split(range(start_index, end_index + 1),
                                         n_parallel_call)
     proc = []
-    start = timer()
+    start = time()
     for i in parallel_call_list:
         p = Process(target=scenario_matlab_call,
                     args=(scenario_info, int(i[0]), int(i[-1]),))
@@ -82,16 +82,16 @@ def launch_scenario_performance(scenario_id, n_parallel_call=1):
         proc.append(p)
     for p in proc:
         p.join()
-    end = timer()
+    end = time()
 
     # Update status in ExecuteList.csv on server
     insert_in_file(const.EXECUTE_LIST, scenario_info['id'], '2', 'finished')
 
-    runtime = datetime.timedelta(seconds=(end - start))
+    runtime = round(end - start)
     print('Run time: %s' % str(runtime))
+    hours, minutes, seconds = sec2hms(runtime)
     insert_in_file(const.SCENARIO_LIST, scenario_info['id'], '14',
-                   "%s:%s" % (runtime.seconds//3600,
-                              (runtime.seconds//60) % 60))
+                   '%d:%02d' % (hours, minutes))
 
 
 def scenario_matlab_call(scenario_info, start_index, end_index):
