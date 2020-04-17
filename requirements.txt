@@ -1,7 +1,6 @@
 bokeh==1.1.0
 h5py==2.9.0
 h5pyd==0.3.3
-matlabengineforpython
 matplotlib==3.0.2
 netCDF4==1.4.2
 numpy==1.16.0
@@ -12,6 +11,7 @@ pyproj==1.9.6
 pytest==4.5.0
 python-dateutil==2.7.5
 requests==2.21.0
-shapely==1.6.4.post2
+scipy==1.2.0
+shapely==1.7.0
 tqdm==4.29.1
 xlrd==1.2.0
