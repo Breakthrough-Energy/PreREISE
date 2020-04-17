@@ -19,8 +19,8 @@ from powersimdata.utility.constants import ZONE_ID_TO_STATE
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     """Retrieve wind speed data from NOAA's server.
 
-    :param pandas.DataFrame wind_farm: data frame with *'lat'*, *'lon'* and
-        *'Pmax'* as columns and *'plant_id'*  as index.
+    :param pandas.DataFrame wind_farm: data frame with *'lat'*, *'lon'*,
+        *'Pmax'*, and *'type'* as columns and *'plant_id'*  as index.
     :param str start_date: start date.
     :param str end_date: end date (inclusive).
     :return: (*tuple*) -- First element is a pandas data frame with
@@ -47,7 +47,8 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     lat_target = wind_farm.lat.values
     id_target = wind_farm.index.values
     capacity_target = wind_farm.Pmax.values
-    state_target = [ZONE_ID_TO_STATE[wind_farm.loc[i].zone_id]
+    state_target = ['Offshore' if wind_farm.loc[i].type == 'wind_offshore'
+                    else ZONE_ID_TO_STATE[wind_farm.loc[i].zone_id]
                     for i in id_target]
 
     # Build query
