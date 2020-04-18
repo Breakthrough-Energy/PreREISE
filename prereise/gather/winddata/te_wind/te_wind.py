@@ -109,7 +109,7 @@ def get_data(site, date_range):
         frame.
     """
 
-    wtk_url = "https://h2oq9ul559.execute-api.us-west-2.amazonaws.com/dev"
+    wtk_url = "https://f9g6p4cbvi.execute-api.us-west-2.amazonaws.com/prod"
 
     # Retrieving data from NREL server
     utc = True
