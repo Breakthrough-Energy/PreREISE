@@ -127,11 +127,11 @@ def get_form_860(data_dir, year=2016):
         int(re.match(regex_str, f).group(1))
         for f in os.listdir(data_dir) if re.match(regex_str, f)]
     if year not in valid_years:
-        err_msg = f'form data for year {year} not found. '
+        err_msg = 'form data for year {year} not found. '.format(year=year)
         err_msg += 'Years with data: ' + ', '.join(str(valid_years))
         raise ValueError(err_msg)
 
-    form_860_filename = f'3_2_Wind_Y{year}.csv'
+    form_860_filename = '3_2_Wind_Y{year}.csv'.format(year=year)
     form_860_path = path.join(data_dir, form_860_filename)
     form_860 = pd.read_csv(form_860_path, skiprows=1)
     return form_860
