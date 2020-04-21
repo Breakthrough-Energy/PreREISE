@@ -1,45 +1,11 @@
 # PreREISE
-This package defines the scenario and calls the [MATLAB][MATLAB] simulation
-engine. The name stands for pre Renewable Energy Integration Study Engine.
+This package gathers and builds demand, hydro, solar, and wind profiles. The 
+profiles are needed to run scenarios on the U.S. electrical grid.
+
 
 
 
 ## 1. Setup/Install
-This package requires [MATLAB][MATLAB], [MATPOWER][MATPOWER] and
-[Gurobi][Gurobi].
-
-
-### A. MATLAB
-Install [MATLAB][MATLAB] and proceed as follows:  
-```
-cd "matlabroot\extern\engines\python"
-python setup.py install
-```
-for Windows systems.
-
-```
-cd "matlabroot/extern/engines/python"
-python setup.py install
-```
-for Mac or Linux systems.
-
-
-### B. MATPOWER
-Download [MATPOWER][MATPOWER] and add the following directories in
-***add_path.m***:
-```
-<MATPOWER>        — core MATPOWER functions
-<MATPOWER>/most   — core MOST functions
-```
-
-
-### C. Gurobi
-Install Gurobi and add MATLAB path to ***add_path.m***:
-```
-<GUROBI>/<os>/matlab
-```
-
-### D. PreREISE
 In the PreREISE package, locate the ***setup.py*** file and type:
 `pip3 install .`. The other option is to update the PYTHONPATH environment
 variable.
@@ -48,7 +14,7 @@ variable.
 
 
 ## 2. Gather Data for Simulation
-This module aims at gathering the required data for the simulation.
+This module aims at gathering the required data for building the profiles
 
 ### Profile Naming Convention
 We call the time series profiles directly generated from mathematical/heuristic
@@ -407,28 +373,6 @@ The ***[ba_anomaly_detection_demo.ipynb][demand_anomaly]*** notebook illustrates
 usage.
 
 
-
-## 3. Start simulation
-Simulation can only be launched on server. After setting up the scenario, the
-simulation engine can be called and the simulation can be started as follows:
-```python
-from prereise.call.call import launch_scenario_performance
-
-scenario_id = '0'
-launch_scenario_performance(scenario_id)
-```
-where the argument is the *scenario id*.
-
-To test, run:
-```python
-from prereise.call.test import test_call
-
-test_call.test()
-```
-
-[MATLAB]: https://www.mathworks.com/products/matlab.html
-[MATPOWER]: https://matpower.org
-[Gurobi]: https://www.gurobi.com
 [RAP]: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
 [RAP_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb
 [NetCDF]: https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html
