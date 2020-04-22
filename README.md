@@ -1,5 +1,5 @@
 # PreREISE
-This package gathers and builds demand, hydro, solar, and wind profiles. The 
+This package gathers and builds demand, hydro, solar, and wind profiles. The
 profiles are needed to run scenarios on the U.S. electrical grid.
 
 
@@ -51,15 +51,20 @@ The following tables maintain an up-to-date summary of the existing raw profiles
 
 | Wind Profiles        | Methodology   | Dimension     | Notes
 | -------------------- |:--------------|:-------------:|:------------|
-| texas_wind_v2        | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*87|
+| texas_wind_v2        | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*87| [bug][issue #71]
 | western_wind_v2      | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*243 |
-| texaswestern_wind_v2 | texas_wind_v2 + western_wind_v2 | 8784*330 | existing profiles concatenation
-| eastern_wind_v2      | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*576 | bug (see issue [#71](https://github.com/intvenlab/PreREISE/issues/71))
-| eastern_wind_v4.1    | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>EIA 860</li><li>bug (see issue [#71](https://github.com/intvenlab/PreREISE/issues/71))</li>
-| usa_wind_v4.1        | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*928 | <li>EIA 860</li><li>bug (see issue [#71](https://github.com/intvenlab/PreREISE/issues/71))</li>
-| eastern_wind_v5      | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>EIA 860</li><li>bug (see issue [#71](https://github.com/intvenlab/PreREISE/issues/71))</li><li>new Pmax in Eastern</li>
+| texaswestern_wind_v2 | texas_wind_v2 + western_wind_v2 | 8784*330 | <li>existing profiles concatenation</li><li>[bug][issue #71]</li>
+| eastern_wind_v2      | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*576 | [bug][issue #71]
+| eastern_wind_v4.1    | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>EIA 860</li><li>[bug][issue #71]
+| usa_wind_v4.1        | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*928 | <li>EIA 860</li><li>[bug][issue #71]</li>
+| eastern_wind_v5      | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>EIA 860</li><li>[bug][issue #71]</li><li>new Pmax in Eastern</li>
 | eastern_wind_v5.2.1  | RAP:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*640 | <li>EIA 860</li><li>new Pmax in Eastern</li>
-| usa_wind_v5.2.1  | RAP:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*970 | <li>EIA 860</li><li>new Pmax in Eastern</li>
+| usa_wind_v5.2.1  | RAP:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*970 | EIA 860</li><li>new Pmax in Eastern</li>
+| texas_wind_v5 | RAP:<li>wind speed at 80m</li><li>unique power curve<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*87 | EIA 860
+| western_wind_v5.1 | RAP:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*267 | EIA 860
+| texaswestern_wind_v5.1 | texas_wind_v5 + western_wind_v5.1 | 8784*354 | existing profiles concatenation
+| eastern_wind_v5.3 | RAP:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*687 | EIA 860
+| usa_wind_v5.3 | eastern_wind_v5.3 + texas_wind_v5 + western_wind_v5.1 | 8784*1041 | existing profiles concatenation
 
 <!--Profiles no longer in use:
 western_wind_v1
@@ -399,3 +404,4 @@ usage.
 [CAISO_outlook]: http://www.caiso.com/TodaysOutlook/Pages/default.aspx
 [hydro_v2_western_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/western_hydro_v2_demo.ipynb
 [hydro_v2_texas_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/texas_hydro_v2_demo.ipynb
+[issue #71]: https://github.com/intvenlab/PreREISE/issues/71
