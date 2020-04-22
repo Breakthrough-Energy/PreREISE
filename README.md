@@ -51,19 +51,19 @@ The following tables maintain an up-to-date summary of the existing raw profiles
 
 | Wind Profiles        | Methodology   | Dimension     | Notes
 | -------------------- |:--------------|:-------------:|:------------|
-| texas_wind_v2        | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*87| [bug][issue #71]
-| western_wind_v2      | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*243 |
+| texas_wind_v2        | [RAP]:<li>wind speed at 80m</li><li>[NREL IEC-2][WIND_doc] power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*87| [bug][issue #71]
+| western_wind_v2      | [RAP]:<li>wind speed at 80m</li><li>[NREL IEC-2][WIND_doc] power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*243 |
 | texaswestern_wind_v2 | texas_wind_v2 + western_wind_v2 | 8784*330 | <li>existing profiles concatenation</li><li>[bug][issue #71]</li>
-| eastern_wind_v2      | RAP:<li>wind speed at 80m</li><li>NREL IEC-2 power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*576 | [bug][issue #71]
-| eastern_wind_v4.1    | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>EIA 860</li><li>[bug][issue #71]
-| usa_wind_v4.1        | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*928 | <li>EIA 860</li><li>[bug][issue #71]</li>
-| eastern_wind_v5      | RAP:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>EIA 860</li><li>[bug][issue #71]</li><li>new Pmax in Eastern</li>
-| eastern_wind_v5.2.1  | RAP:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*640 | <li>EIA 860</li><li>new Pmax in Eastern</li>
-| usa_wind_v5.2.1  | RAP:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*970 | EIA 860</li><li>new Pmax in Eastern</li>
-| texas_wind_v5 | RAP:<li>wind speed at 80m</li><li>unique power curve<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*87 | EIA 860
-| western_wind_v5.1 | RAP:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*267 | EIA 860
+| eastern_wind_v2      | [RAP]:<li>wind speed at 80m</li><li>[NREL IEC-2][WIND_doc] power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*576 | [bug][issue #71]
+| eastern_wind_v4.1    | [RAP]:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>[EIA 860]</li><li>[bug][issue #71]
+| usa_wind_v4.1        | [RAP]:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*928 | <li>[EIA 860]</li><li>[bug][issue #71]</li>
+| eastern_wind_v5      | [RAP]:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>[EIA 860]</li><li>[bug][issue #71]</li><li>new Pmax in Eastern</li>
+| eastern_wind_v5.2.1  | [RAP]:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*640 | <li>[EIA 860]</li><li>new Pmax in Eastern</li>
+| usa_wind_v5.2.1  | [RAP]:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*970 | [EIA 860]</li><li>new Pmax in Eastern</li>
+| texas_wind_v5 | [RAP]:<li>wind speed at 80m</li><li>unique power curve<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*87 | [EIA 860]
+| western_wind_v5.1 | [RAP]:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*267 | [EIA 860]
 | texaswestern_wind_v5.1 | texas_wind_v5 + western_wind_v5.1 | 8784*354 | existing profiles concatenation
-| eastern_wind_v5.3 | RAP:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*687 | EIA 860
+| eastern_wind_v5.3 | [RAP]:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*687 | [EIA 860]
 | usa_wind_v5.3 | eastern_wind_v5.3 + texas_wind_v5 + western_wind_v5.1 | 8784*1041 | existing profiles concatenation
 
 <!--Profiles no longer in use:
@@ -77,25 +77,25 @@ eastern_wind_v3.1
 
 | Solar Profiles        | Methodology  | Dimension     | Notes
 | --------------------- |:-------------|:-------------:|:------------|
-| western_solar_v2      | SAM + PVWatts v5:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*391 | EIA 860
-| texas_solar_v2        | SAM + PVWatts v5:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*22| EIA 860
-| eastern_solar_v2      | SAM + PVWatts v5:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*571 | EIA 860
+| western_solar_v2      | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*391 | [EIA 860]
+| texas_solar_v2        | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*22| [EIA 860]
+| eastern_solar_v2      | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*571 | [EIA 860]
 | texaswestern_solar_v2 | texas_solar_v2 + western_solar_v2 | 8784*413 | existing profiles concatenation
-| eastern_solar_v3.1    | SAM + PVWatts v5:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State</li> | 8784*612 | EIA 860
-| usa_solar_v3.1        | SAM + PVWatts v5:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State</li>| 8784*1025 | EIA 860
-| eastern_solar_v4      | SAM + PVWatts v5:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State </li> | 8784*612 | <li>EIA 860</li><li>new Pmax in Eastern</li>
-| eastern_solar_v4.2    | SAM + PVWatts v5:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State | 8784*670| <li>EIA 860</li><li>new Pmax in Eastern</li>
-| usa_solar_v4.2    | SAM + PVWatts v5:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State | 8784*1083| <li>EIA 860</li><li>new Pmax in Eastern</li>
+| eastern_solar_v3.1    | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State</li> | 8784*612 | [EIA 860]
+| usa_solar_v3.1        | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State</li>| 8784*1025 | [EIA 860]
+| eastern_solar_v4      | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State </li> | 8784*612 | <li>[EIA 860]</li><li>new Pmax in Eastern</li>
+| eastern_solar_v4.2    | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State | 8784*670| <li>[EIA 860]</li><li>new Pmax in Eastern</li>
+| usa_solar_v4.2    | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State | 8784*1083| <li>[EIA 860]</li><li>new Pmax in Eastern</li>
 
 
 | Hydro Profiles  | Methodology   | Dimension     | Notes
 | ------------- |:-------------:|:-------------:|:------------:|
-| western_hydro_v2 | dams/net demand shape + historical total profile | 8784*715 | US Army Corps and EIA 923
-| texas_hydro_v2 | historical total profile decomposition | 8784*22 | ERCOT
+| western_hydro_v2 | dams/net demand shape + historical total profile | 8784*715 | [US Army Corps][USACE_dataquery] and [EIA 923]
+| texas_hydro_v2 | historical total profile decomposition | 8784*22 | [ERCOT][ERCOT_generation]
 | texaswestern_hydro_v2 | western_hydro_v2 + texas_hydro_v2 | 8784*737 | existing profiles concatenation
-| eastern_hydro_v1 | monthly capacity factors in the U.S. | 8784*2306 | EIA annual data
+| eastern_hydro_v1 | monthly capacity factors in the U.S. | 8784*2306 | [EIA Table 4.08.B][hydro_cf]
 | usa_hydro_v3 | texaswestern_hydro_v2 + eastern_hydro_v3 | 8784*3043 | existing profiles concatenation
-| eastern_hydro_v3 | net demand shape + historical BA/total profiles | 8784*2306 | EIA 923 and BA websites
+| eastern_hydro_v3 | net demand shape + historical BA/total profiles | 8784*2306 | [EIA 923] and BA websites
 | eastern_hydro_v4 | scale eastern_hydro_v3 for rebased grid | 8784*2306 | existing profile scaling
 
 <!--Profiles no longer in use:
@@ -106,11 +106,11 @@ texaswestern_hydro_v1
 
 | Demand Profiles  | Methodology   | Dimension     | Notes
 | ------------- |:-------------:|:-------------:|:------------:|
-| western_demand_v4 | BA County mapping + population proportion | 8784*16 | EIA 930 and EIA 860
+| western_demand_v4 | BA County mapping + population proportion | 8784*16 | [EIA 930] and [EIA 860]
 | texas_demand_ercot | historical load data | 8784*8 | ERCOT
 | texaswestern_demand_v4 | western_demand_v4 + texas_demand_ercot | 8784*24 | existing profiles concatenation
-| eastern_demand_v5 | Bus BA mapping + PD proportion | 8784*52 | EIA 930
-| eastern_demand_v6 | Bus BA/BA subarea mapping + PD proportion | 8784*52 | EIA 930 and MISO/SPP contacts
+| eastern_demand_v5 | Bus BA mapping + PD proportion | 8784*52 | [EIA 930]
+| eastern_demand_v6 | Bus BA/BA subarea mapping + PD proportion | 8784*52 | [EIA 930] and MISO/SPP contacts
 | usa_demand_v6 | texaswestern_demand_v4 + eastern_demand_v6 | 8784*76 | existing profiles concatenation
 
 <!--Profiles no longer in use:
@@ -139,14 +139,15 @@ Once the U and V components of the wind are converted to a non-directional
 wind speed magnitude, this speed is converted to power using wind turbine
 power curves. Since real wind farms are not currently mapped to TAMU network
 farms, a capacity-weighted average wind turbine power curve is created for each
-state based on the turbine types reported in EIA Form 860. The wind turbine
-curve for each real wind farm is looked up from a database of curves (or the
-*IEC class 2* power curve provided by NREL in the
+state based on the turbine types reported in [EIA Form 860][EIA 860]. The wind
+turbine curve for each real wind farm is looked up from a database of curves
+(or the *IEC class 2* power curve provided by NREL in the
 [WIND Toolkit documentation][WIND_doc]) is used for turbines without curves in
 the database), and scaled from the real hub heights to 80m hub heights using an
 alpha of 0.15. These height-scaled, turbine-specific curves are averaged to
 obtain a state curve translating wind speed to normalized power. States without
-wind farms in EIA Form 860 are represented by the *IEC class 2* power curve.
+wind farms in [EIA Form 860][EIA 860] are represented by the *IEC class 2*
+power curve.
 
 Each turbine curve represents the instantaneous power from a single turbine for
 a given wind speed. To account for spatio-temporal variations in wind speed
@@ -253,28 +254,61 @@ Check out the ***[hydro_v1_demo.ipynb][hydro_v1_notebook]*** notebook for demo.
 
 #### ii. Hydro v2
 ##### a. Western
-Hydro hourly profile v2 for Western consists of two components: profile shape to capture the hourly variance and monthly total generation to capture the historical summation. EIA published monthly total generation for each hydro plant by state in form EIA923 (available [here][EIA923]).
+Hydro hourly profile v2 for Western consists of two components: profile shape
+to capture the hourly variance and monthly total generation to capture the
+historical summation. EIA published monthly total generation for each hydro
+plant by state in form EIA 923 (available [here][EIA 923]).
 
-Given that Washington state has the most hydro generation in the Western Interconnection, we use the aggregated generation of the top 20 US Army Corps managed hydro dams in Northwestern US (primarily in WA) as the shape of this hydro profile v2 for all the states in Western except for California and Wyoming. The data is obtained via US Army Corps of Engineers Northwestern Division DataQuery Tool 2.0 at <http://www.nwd-wc.usace.army.mil/dd/common/dataquery/www/>.
+Given that Washington state has the most hydro generation in the Western
+Interconnection, we use the aggregated generation of the top 20 US Army Corps
+managed hydro dams in Northwestern US (primarily in WA) as the shape of this
+hydro profile v2 for all the states in Western except for California and
+Wyoming. The data is obtained via [US Army Corps of Engineers Northwestern
+Division DataQuery Tool 2.0][USACE_dataquery].
 
-Observed from system daily outlook of California ISO (available [here][CAISO_outlook]), the hydro generation profile follows closely to the net demand profile. Thus, we construct the shape curve of hydro profile v2 in CA using the net demand profile of CA in the basecase scenario (Scenario 87). As for Wyoming, due to the small name plate capacities of the hydro generators, we simply apply a constant shape curve to avoid peak-hour violation of maximum capacity.
+Observed from system daily outlook of California ISO (available
+[here][CAISO_outlook]), the hydro generation profile follows closely to the net
+demand profile. Thus, we construct the shape curve of hydro profile v2 in CA
+using the net demand profile of CA in the base case scenario (Scenario 87). As
+for Wyoming, due to the small name plate capacities of the hydro generators, we
+simply apply a constant shape curve to avoid peak-hour violation of maximum
+capacity.
 
-The final hydro profile v2 is built by scaling the corresponding shape curves based on the monthly total generation record in each state, then decomposing into plant-level profiles proportional to the generator capacities. Check out the ***[western_hydro_v2_demo.ipynb][hydro_v2_western_notebook]*** notebook for demo.
+The final hydro profile v2 is built by scaling the corresponding shape curves
+based on the monthly total generation record in each state, then decomposing
+into plant-level profiles proportional to the generator capacities. Check out the ***[western_hydro_v2_demo.ipynb][hydro_v2_western_notebook]*** notebook for demo.
 
 ##### b.Texas
-The Electric Reliability Council of Texas (ERCOT) published actual generation by fuel type for each 15 minute settlement interval. For details, see the fuel mix report at <http://www.ercot.com/gridinfo/generation/>. Given this time-series historical data, similarly with the western case, the final hydro profile v2 for Texas is constructed by decomposing the total hydro generation profile proportional to the generator capacities. Check out the ***[texas_hydro_v2_demo.ipynb][hydro_v2_texas_notebook]*** notebook for demo.
+The Electric Reliability Council of Texas (ERCOT) published actual generation
+by fuel type for each 15 minute settlement interval. For details, see the fuel
+mix report available [here][ERCOT_generation]. Given this time-series historical
+data, similarly with the western case, the final hydro profile v2 for Texas is
+constructed by decomposing the total hydro generation profile proportional to
+the generator capacities. Check out the ***[texas_hydro_v2_demo.ipynb][hydro_v2_texas_notebook]*** notebook for demo.
 
 ### D. Demand Data
 
 *Eastern V6*
 
-The two BAs, SPP and MISO, consist of big areas from north to south. It is unlikely that the whole area covered by these big BAs have the same hourly profile shape. Eastern demand v6 addresses the issue by further splitting these two BAs into subareas. We replace overall MISO and SPP demand with subarea demand obtained directly from contact at the BAs.
-We use overall numbers from eia and use the fractional subarea demand as the basis to split the MISO and SPP demand.
+The two BAs, SPP and MISO, consist of big areas from north to south. It is
+unlikely that the whole area covered by these big BAs have the same hourly
+profile shape. Eastern demand v6 addresses the issue by further splitting
+these two BAs into subareas. We replace overall MISO and SPP demand with
+subarea demand obtained directly from contact at the BAs. We use overall
+numbers from EIA and use the fractional subarea demand as the basis to split
+the MISO and SPP demand.
 
-The hourly subarea demand profiles for SPP and MISO is reported on their offical websites respectively (check [SPP hourly load](https://marketplace.spp.org/pages/hourly-load), [MISO hourly load](https://www.misoenergy.org/markets-and-operations/real-time--market-data/market-reports/#nt=%2FMarketReportType%3ADay-Ahead&t=10&p=0&s=MarketReportPublished&sd=desc)). The geographical definitions of these subareas are obtained directly from contact at the BAs via either customer service or internal request mangament system (check [RMS](https://spprms.issuetrak.com/Login.asp)). Given the geographical definitions, i.e. list of counties for each subarea, each bus is mapped to the subarea it belongs to.
+The hourly subarea demand profiles for SPP and MISO is reported on their
+official websites respectively (check
+[SPP hourly load](https://marketplace.spp.org/pages/hourly-load),
+[MISO hourly load](https://www.misoenergy.org/markets-and-operations/real-time--market-data/market-reports/#nt=%2FMarketReportType%3ADay-Ahead&t=10&p=0&s=MarketReportPublished&sd=desc)). The geographical definitions of these subareas are obtained directly from
+contact at the BAs via either customer service or internal request management
+system (check [RMS](https://spprms.issuetrak.com/Login.asp)). Given the
+geographical definitions, i.e. list of counties for each subarea, each bus is
+mapped to the subarea it belongs to.
 
-The overall procedure is similar to v5 except we generate subarea ba_to_loadzone mapping as well as prepare subarea
-demand from files.
+The overall procedure is similar to v5 except we generate subarea
+ba_to_loadzone mapping as well as prepare subarea demand from files.
 
 *Eastern V5*
 
@@ -284,37 +318,48 @@ their data. The data can be obtained using an API as demonstrated in ***[eastern
 Module `get_eia_data` contains functions that converts the data into data frames
 for further processing, as performed in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]*** .
 
-To output the demand profile, cleaning steps were applied to the EIA data for Eastern V5. We used adjacent demand data to fill missing values using a series of rules:
+To output the demand profile, cleaning steps were applied to the EIA data for
+Eastern V5. We used adjacent demand data to fill missing values using a series
+of rules:
 
 1. Monday: look forward one day
-2. Tues - Thurs: average of look forward one day and look back one day
-3. Fri: look back one day
-4. Sat: look forward one day
-5. Sun: look back one day
+2. Tuesday - Thursday: average of look forward one day and look back one day
+3. Friday: look back one day
+4. Saturday: look forward one day
+5. Sunday: look back one day
 
-If data is still missing after applying the above rules, week ahead and week behind data is used:
+If data is still missing after applying the above rules, week ahead and week
+behind data is used:
 
 1. Monday: look forward two days
-2. Tues: look forward two days
-3. Wed: average of look forward two days and look back two days
-4. Thurs: look back two days
-5. Fri: look back two days
-6. Sat - Sun: average of look back one week and look forward one week
+2. Tuesday: look forward two days
+3. Wednesday: average of look forward two days and look back two days
+4. Thursday: look back two days
+5. Friday: look back two days
+6. Saturday - Sun: average of look back one week and look forward one week
 
-If data is still missing after applying the above rules, week ahead and week behind data is used:
+If data is still missing after applying the above rules, week ahead and week
+behind data is used:
 
-1. Mon - Sun: average of look back one week and look forward one week
+1. Monday - Sunday: average of look back one week and look forward one week
 
-The next step was outlier detection. The underlying physical rationale is that demand
-changes are mostly driven by weather temperature changes (first or higher
-order), and thermal mass limits the rate at which demand values can change. Outliers were detected using a z-score threshold value of 3. These outliers are then replaced by linear interpolation.
+The next step was outlier detection. The underlying physical rationale is that
+demand changes are mostly driven by weather temperature changes (first or
+higher order), and thermal mass limits the rate at which demand values can
+change. Outliers were detected using a z-score threshold value of 3. These
+outliers are then replaced by linear interpolation.
 
 The BA counts were then distributed across each region where the BA operates,
 using the region populations as weights. For example, if a BA operates in both
 WA and OR, the counts for WA are weighted by the fraction of the total counts
 in WA relative to the total population of WA and OR.
 
-Lastly, buses were mapped to counties. This step requires an input data file that stores the list of counties in each BA area territory. Some data cleaning was necessary to deal with inconsistent county names. We also implemented a check if there are buses where BA is empty/not found, which is due to bus being outside of United States. These were fixed manually by assigning the bus to the nearest county.
+Lastly, buses were mapped to counties. This step requires an input data file
+that stores the list of counties in each BA area territory. Some data cleaning
+was necessary to deal with inconsistent county names. We also implemented a
+check if there are buses where BA is empty/not found, which is due to bus being
+outside of United States. These were fixed manually by assigning the bus to the
+nearest county.
 
 *Legacy Description*
 
@@ -400,8 +445,12 @@ usage.
 [demand_doc]: https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf
 [demand_notebook]:https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/assemble_ba_from_excel_demo.ipynb
 [demand_anomaly]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/ba_anomaly_detection_demo.ipynb
-[EIA923]: https://www.eia.gov/electricity/data/eia923/
+[EIA 923]: https://www.eia.gov/electricity/data/eia923/
 [CAISO_outlook]: http://www.caiso.com/TodaysOutlook/Pages/default.aspx
 [hydro_v2_western_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/western_hydro_v2_demo.ipynb
 [hydro_v2_texas_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/texas_hydro_v2_demo.ipynb
 [issue #71]: https://github.com/intvenlab/PreREISE/issues/71
+[EIA 860]: https://www.eia.gov/electricity/data/eia860/
+[ERCOT_generation]: http://www.ercot.com/gridinfo/generation/
+[USACE_dataquery]: http://www.nwd-wc.usace.army.mil/dd/common/dataquery/www/
+[EIA 930]: https://www.eia.gov/opendata/
