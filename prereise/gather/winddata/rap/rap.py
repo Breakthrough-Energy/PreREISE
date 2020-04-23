@@ -13,7 +13,7 @@ from prereise.gather.winddata.rap.helpers import ll2uv, angular_distance
 from prereise.gather.winddata.rap.power_curves import get_power
 from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
 from prereise.gather.winddata.rap.power_curves import get_state_power_curves
-from prereise.gather.constants import ZONE_ID_TO_STATE
+from powersimdata.utility.constants import ZONE_ID_TO_STATE
 
 
 def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
