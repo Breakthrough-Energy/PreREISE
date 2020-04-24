@@ -7,9 +7,9 @@ from tqdm import tqdm
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
 from prereise.gather.solardata.pv_tracking import (get_pv_tracking_data,
                                                    get_pv_tracking_ratio_state)
-from prereise.gather.constants import (ZONE_ID_TO_STATE,
-                                       interconnect2state,
-                                       state2interconnect)
+from powersimdata.utility.constants import (ZONE_ID_TO_STATE,
+                                            interconnect2state,
+                                            state2interconnect)
 
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year='2016'):
