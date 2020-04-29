@@ -76,16 +76,27 @@ def build_state_curves(Form860, PowerCurves, maxspd=30, default='IEC class 2',
         state_curves[s] = cumulative_curve / cumulative_capacity
     state_curves.set_index('Speed bin (m/s)', inplace=True)
 
+    # Add an 'Offshore' state with a representative curve
+    hub_height = 393.701        # 120 meters, in feet to match Form860 data
+    turbine_curve = PowerCurves['Vestas V164-8.0']
+    shifted_curve = _shift_turbine_curve(
+        turbine_curve, hub_height, maxspd, new_curve_res)
+    state_curves['Offshore'] = shifted_curve.to_numpy()
+    offshore_rsd = 0.25
+
     if rsd > 0:
         smoothed_state_curves = pd.DataFrame(
             index=state_curves.index, columns=state_curves.columns)
-        for s in states:
+        for s in state_curves.columns:
             xs = state_curves.index
             ys = np.zeros_like(xs)
             for i, x in enumerate(xs):
                 if x == 0:
                     continue
-                sd = max(1.5, rsd * x)
+                if s == 'Offshore':
+                    sd = max(1.5, offshore_rsd * x)
+                else:
+                    sd = max(1.5, rsd * x)
                 min_point = x - 3 * sd
                 max_point = x + 3 * sd
                 sample_points = np.logical_and(xs > min_point, xs < max_point)
@@ -116,11 +127,11 @@ def get_form_860(data_dir, year=2016):
         int(re.match(regex_str, f).group(1))
         for f in os.listdir(data_dir) if re.match(regex_str, f)]
     if year not in valid_years:
-        err_msg = f'form data for year {year} not found. '
+        err_msg = 'form data for year {year} not found. '.format(year=year)
         err_msg += 'Years with data: ' + ', '.join(str(valid_years))
         raise ValueError(err_msg)
 
-    form_860_filename = f'3_2_Wind_Y{year}.csv'
+    form_860_filename = '3_2_Wind_Y{year}.csv'.format(year=year)
     form_860_path = path.join(data_dir, form_860_filename)
     form_860 = pd.read_csv(form_860_path, skiprows=1)
     return form_860
