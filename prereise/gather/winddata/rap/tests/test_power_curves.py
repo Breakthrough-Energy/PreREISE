@@ -57,7 +57,7 @@ class TestBuildStateCurves(unittest.TestCase):
         new_curve_res = 0.01
         expected_length = math.ceil(maxspd / new_curve_res) + 1
         expected_max = math.ceil(maxspd / new_curve_res) * new_curve_res
-        expected_states = self.form_860['State'].unique()
+        expected_states = list(self.form_860['State'].unique()) + ['Offshore']
         expected_shape = (expected_length, len(expected_states))
 
         state_curves = build_state_curves(self.form_860, PowerCurves, maxspd)
