@@ -20,7 +20,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     """Retrieve wind speed data from NOAA's server.
 
     :param pandas.DataFrame wind_farm: data frame with *'lat'*, *'lon'*,
-        *'Pmax'*, and *'type'* as columns and *'plant_id'*  as index.
+        *'Pmax'*, *'type'* and *'zone_id'* as columns and *'plant_id'* as index.
     :param str start_date: start date.
     :param str end_date: end date (inclusive).
     :return: (*tuple*) -- First element is a pandas data frame with
@@ -52,7 +52,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
                     for i in id_target]
 
     # Build query
-    link = 'https://www.ncdc.noaa.gov/thredds/ncss/rap130anl/'
+    link = 'https://www.ncdc.noaa.gov/thredds/ncss/model-rap130/'
 
     start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
@@ -79,15 +79,18 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     # Download files and fill out data frame
     missing = []
     target2grid = OrderedDict()
-    data = pd.DataFrame({'plant_id': [],
-                         'U': [],
-                         'V': [],
-                         'Pout': [],
-                         'ts': [],
-                         'ts_id': []})
+    size = len(files) * n_target
+    data = pd.DataFrame({'plant_id': [0] * size,
+                         'ts': [np.nan] * size,
+                         'ts_id': [0] * size,
+                         'U': [0] * size,
+                         'V': [0] * size,
+                         'Pout': [0] * size})
+
     dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     step = datetime.timedelta(hours=1)
 
+    first = True
     for i, file in tqdm(enumerate(files), total=len(files)):
         if i != 0 and i % 2500 == 0:
             time.sleep(300)
@@ -108,7 +111,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
             v_wsp = tmp.variables[var_v][0, 1, :, :].flatten()
 
             n_grid = len(lon_grid)
-            if data.empty:
+            if first:
                 # The angular distance is calculated once. The target to grid
                 # correspondence is stored in a dictionary.
                 for j in range(n_target):
@@ -117,6 +120,7 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
                              ll2uv(lon_grid[k], lat_grid[k]))
                              for k in range(n_grid)]
                     target2grid[id_target[j]] = np.argmin(angle)
+                first = False
 
             data_tmp['U'] = [u_wsp[target2grid[id_target[j]]]
                              for j in range(n_target)]
@@ -138,12 +142,15 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
             data_tmp['V'] = [np.nan] * n_target
             data_tmp['Pout'] = [np.nan] * n_target
 
-        data = data.append(data_tmp, ignore_index=True, sort=False)
+        data.iloc[i*n_target:(i+1)*n_target, :] = data_tmp.values
         dt += step
 
     # Format data frame
     data['plant_id'] = data['plant_id'].astype(np.int32)
     data['ts_id'] = data['ts_id'].astype(np.int32)
+    data['U'] = data['U'].astype(np.float32)
+    data['V'] = data['V'].astype(np.float32)
+    data['Pout'] = data['Pout'].astype(np.float32)
 
     data.sort_values(by=['ts_id', 'plant_id'], inplace=True)
     data.reset_index(inplace=True, drop=True)
