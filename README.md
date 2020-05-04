@@ -248,7 +248,7 @@ Demand data are obtained from EIA, to whom Balancing Authorities have submitted
 their data. The data can be obtained using an API as demonstrated in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]*** notebook.
 
 Module `get_eia_data` contains functions that converts the data into data frames
-for further processing, as performed in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]*** .
+for further processing, as performed in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]***.
 
 To output the demand profile, cleaning steps were applied to the EIA data for
 Eastern V5. We used adjacent demand data to fill missing values using a series
@@ -381,6 +381,7 @@ usage.
 [CAISO_outlook]: http://www.caiso.com/TodaysOutlook/Pages/default.aspx
 [hydro_v2_western_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/western_hydro_v2_demo.ipynb
 [hydro_v2_texas_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/texas_hydro_v2_demo.ipynb
+[eastern_demand_v5_demo]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/demo_Eastern_v5/eastern_demand_v5_demo.ipynb
 [issue #71]: https://github.com/intvenlab/PreREISE/issues/71
 [EIA 860]: https://www.eia.gov/electricity/data/eia860/
 [ERCOT_generation]: http://www.ercot.com/gridinfo/generation/
