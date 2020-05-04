@@ -12,7 +12,6 @@ variable.
 
 
 
-
 ## 2. Gather Data for Simulation
 This module aims at gathering the required data for building the profiles
 
@@ -47,78 +46,11 @@ fixes/changes but have exactly same dimensionality.
 the latest profiles among the interconnections it combines.
 ---
 
-The following tables maintain an up-to-date summary of the existing raw profiles.
-
-| Wind Profiles        | Methodology   | Dimension     | Notes
-| -------------------- |:--------------|:-------------:|:------------|
-| texas_wind_v2        | [RAP]:<li>wind speed at 80m</li><li>[NREL IEC-2][WIND_doc] power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*87| [bug][issue #71]
-| western_wind_v2      | [RAP]:<li>wind speed at 80m</li><li>[NREL IEC-2][WIND_doc] power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*243 |
-| texaswestern_wind_v2 | texas_wind_v2 + western_wind_v2 | 8784*330 | <li>existing profiles concatenation</li><li>[bug][issue #71]</li>
-| eastern_wind_v2      | [RAP]:<li>wind speed at 80m</li><li>[NREL IEC-2][WIND_doc] power curve</li><li>10% loss factor</li><li>random distributions for imputation</li> | 8784*576 | [bug][issue #71]
-| eastern_wind_v4.1    | [RAP]:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>[EIA 860]</li><li>[bug][issue #71]
-| usa_wind_v4.1        | [RAP]:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*928 | <li>[EIA 860]</li><li>[bug][issue #71]</li>
-| eastern_wind_v5      | [RAP]:<li>wind speed at 80m</li><li>power curve per state<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*598 | <li>[EIA 860]</li><li>[bug][issue #71]</li><li>new Pmax in Eastern</li>
-| eastern_wind_v5.2.1  | [RAP]:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*640 | <li>[EIA 860]</li><li>new Pmax in Eastern</li>
-| usa_wind_v5.2.1  | [RAP]:<li>wind speed at 80m</li><li>power curve per state <li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*970 | [EIA 860]</li><li>new Pmax in Eastern</li>
-| texas_wind_v5 | [RAP]:<li>wind speed at 80m</li><li>unique power curve<li>gaussian with std=0.4 for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*87 | [EIA 860]
-| western_wind_v5.1 | [RAP]:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*267 | [EIA 860]
-| texaswestern_wind_v5.1 | texas_wind_v5 + western_wind_v5.1 | 8784*354 | existing profiles concatenation
-| eastern_wind_v5.3 | [RAP]:<li>wind speed at 80m</li><li>power curve per state for onshore and unique power curve for offshore<li>gaussian with std=0.4 (onshore) and 0.25 (offshore) for smoothing</li><li>10% loss factor</li><li>gaussian distributions for imputation</li> | 8784*687 | [EIA 860]
-| usa_wind_v5.3 | eastern_wind_v5.3 + texas_wind_v5 + western_wind_v5.1 | 8784*1041 | existing profiles concatenation
-
-<!--Profiles no longer in use:
-western_wind_v1
-texas_wind_v1
-texaswestern_wind_v1
-eastern_wind_v1
-eastern_wind_v3
-eastern_wind_v3.1
--->
-
-| Solar Profiles        | Methodology  | Dimension     | Notes
-| --------------------- |:-------------|:-------------:|:------------|
-| western_solar_v2      | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*391 | [EIA 860]
-| texas_solar_v2        | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*22| [EIA 860]
-| eastern_solar_v2      | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.1</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in interconnect</li> | 8784*571 | [EIA 860]
-| texaswestern_solar_v2 | texas_solar_v2 + western_solar_v2 | 8784*413 | existing profiles concatenation
-| eastern_solar_v3.1    | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State</li> | 8784*612 | [EIA 860]
-| usa_solar_v3.1        | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State</li>| 8784*1025 | [EIA 860]
-| eastern_solar_v4      | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State </li> | 8784*612 | <li>[EIA 860]</li><li>new Pmax in Eastern</li>
-| eastern_solar_v4.2    | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State | 8784*670| <li>[EIA 860]</li><li>new Pmax in Eastern</li>
-| usa_solar_v4.2    | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State | 8784*1083| <li>[EIA 860]</li><li>new Pmax in Eastern</li>
-
-
-| Hydro Profiles  | Methodology   | Dimension     | Notes
-| ------------- |:-------------:|:-------------:|:------------:|
-| western_hydro_v2 | dams/net demand shape + historical total profile | 8784*715 | [US Army Corps][USACE_dataquery] and [EIA 923]
-| texas_hydro_v2 | historical total profile decomposition | 8784*22 | [ERCOT][ERCOT_generation]
-| texaswestern_hydro_v2 | western_hydro_v2 + texas_hydro_v2 | 8784*737 | existing profiles concatenation
-| eastern_hydro_v1 | monthly capacity factors in the U.S. | 8784*2306 | [EIA Table 4.08.B][hydro_cf]
-| usa_hydro_v3 | texaswestern_hydro_v2 + eastern_hydro_v3 | 8784*3043 | existing profiles concatenation
-| eastern_hydro_v3 | net demand shape + historical BA/total profiles | 8784*2306 | [EIA 923] and BA websites
-| eastern_hydro_v4 | scale eastern_hydro_v3 for rebased grid | 8784*2306 | existing profile scaling
-
-<!--Profiles no longer in use:
-western_hydro_v1
-texas_hydro_v1
-texaswestern_hydro_v1
--->
-
-| Demand Profiles  | Methodology   | Dimension     | Notes
-| ------------- |:-------------:|:-------------:|:------------:|
-| western_demand_v4 | BA County mapping + population proportion | 8784*16 | [EIA 930] and [EIA 860]
-| texas_demand_ercot | historical load data | 8784*8 | ERCOT
-| texaswestern_demand_v4 | western_demand_v4 + texas_demand_ercot | 8784*24 | existing profiles concatenation
-| eastern_demand_v5 | Bus BA mapping + PD proportion | 8784*52 | [EIA 930]
-| eastern_demand_v6 | Bus BA/BA subarea mapping + PD proportion | 8784*52 | [EIA 930] and MISO/SPP contacts
-| usa_demand_v6 | texaswestern_demand_v4 + eastern_demand_v6 | 8784*76 | existing profiles concatenation
-
-<!--Profiles no longer in use:
- western_demand_v3
- western_demand_ca2020
- western_demand_ca2030
- -->
-
+The list of profiles created can be consulted through the following links:
+* [demand][demand_profiles]
+* [hydro][hydro_profiles]
+* [solar][solar_profiles]
+* [wind][wind_profiles]
 
 
 ### A. Wind data
@@ -454,3 +386,7 @@ usage.
 [ERCOT_generation]: http://www.ercot.com/gridinfo/generation/
 [USACE_dataquery]: http://www.nwd-wc.usace.army.mil/dd/common/dataquery/www/
 [EIA 930]: https://www.eia.gov/opendata/
+[demand_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/demand_profiles.md
+[hydro_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/hydro_profiles.md
+[solar_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/solar_profiles.md
+[wind_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/wind_profiles.md
