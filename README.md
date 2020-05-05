@@ -92,7 +92,7 @@ power produced at higher wind speeds (since the power curve in this region is
 concave as the turbine tops out, and shuts down at higher wind speeds). This
 tracks with the wind-farm level data shown in NREL's validation report.
 
-Check out the ***[rap_demo.ipynb][RAP_notebook]*** notebook for demo.
+Check out the **[rap_demo.ipynb][RAP_notebook]** notebook for demo.
 
 #### ii. Techno-Economic Wind Integration National Dataset Toolkit
 The [Techno-Economic WIND (Wind Integration National Dataset) Toolkit][WIND_web]
@@ -104,7 +104,7 @@ atmospheric variables. Data can be accessed via an [API][WIND_api].
 The closest site to the wind farm in the network is found in the NREL dataset
 and the associated power estimate is simply scaled to the plant capacity to
 obtain a wind power output profile. The procedure is illustrated in the
-***[te_wind_demo.ipynb][TE_WIND_notebook]*** notebook.
+**[te_wind_demo.ipynb][TE_WIND_notebook]** notebook.
 
 Also, a test can be run as follows:
 ```python
@@ -132,7 +132,7 @@ the plant capacity. Note that other factors can possibly affect the conversion
 from solar radiation at ground to power such as the temperature at the site as
 well as many system configuration including tracking technology.
 
-Check out the ***[ga_wind_demo.ipynb][GA_WIND_notebook]*** notebook for demo.
+Check out the **[ga_wind_demo.ipynb][GA_WIND_notebook]** notebook for demo.
 
 #### ii. The National Solar Radiation Database
 [NSRDB (National Solar Radiation Database)][NSRDB_web] provides 1-hour
@@ -167,8 +167,8 @@ particular state we then use the information of all the plants belonging to the
 same interconnect.
 
 The naive and the SAM methods are used in the
-***[nsrdb_naive_demo.ipynb][NSRDB_naive_notebook]*** and
-***[nsrdb_sam_demo.ipynb][NSRDB_sam_notebook]*** demo notebooks, respectively.
+**[nsrdb_naive_demo.ipynb][NSRDB_naive_notebook]** and
+**[nsrdb_sam_demo.ipynb][NSRDB_sam_notebook]** demo notebooks, respectively.
 
 
 ### C. Hydro Data
@@ -182,7 +182,7 @@ location of the plant. As a result, the profile of all the hydro plants in the
 grid will have the same shape. Only the power output will differ (the scale of
 the profile).
 
-Check out the ***[hydro_v1_demo.ipynb][hydro_v1_notebook]*** notebook for demo.
+Check out the **[hydro_v1_demo.ipynb][hydro_v1_notebook]** notebook for demo.
 
 #### ii. Hydro v2
 ##### a. Western
@@ -208,7 +208,7 @@ capacity.
 
 The final hydro profile v2 is built by scaling the corresponding shape curves
 based on the monthly total generation record in each state, then decomposing
-into plant-level profiles proportional to the generator capacities. Check out the ***[western_hydro_v2_demo.ipynb][hydro_v2_western_notebook]*** notebook for demo.
+into plant-level profiles proportional to the generator capacities. Check out the **[western_hydro_v2_demo.ipynb][hydro_v2_western_notebook]** notebook for demo.
 
 ##### b.Texas
 The Electric Reliability Council of Texas (ERCOT) published actual generation
@@ -216,7 +216,7 @@ by fuel type for each 15 minute settlement interval. For details, see the fuel
 mix report available [here][ERCOT_generation]. Given this time-series historical
 data, similarly with the western case, the final hydro profile v2 for Texas is
 constructed by decomposing the total hydro generation profile proportional to
-the generator capacities. Check out the ***[texas_hydro_v2_demo.ipynb][hydro_v2_texas_notebook]*** notebook for demo.
+the generator capacities. Check out the **[texas_hydro_v2_demo.ipynb][hydro_v2_texas_notebook]** notebook for demo.
 
 ### D. Demand Data
 
@@ -245,10 +245,10 @@ ba_to_loadzone mapping as well as prepare subarea demand from files.
 *Eastern V5*
 
 Demand data are obtained from EIA, to whom Balancing Authorities have submitted
-their data. The data can be obtained using an API as demonstrated in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]*** notebook.
+their data. The data can be obtained using an API as demonstrated in **[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]** notebook.
 
 Module `get_eia_data` contains functions that converts the data into data frames
-for further processing, as performed in ***[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]***.
+for further processing, as performed in **[eastern_demand_v5_demo.ipynb][eastern_demand_v5_demo]**.
 
 To output the demand profile, cleaning steps were applied to the EIA data for
 Eastern V5. We used adjacent demand data to fill missing values using a series
@@ -324,7 +324,7 @@ from prereise.gather.demanddata.eia.tests import test_get_eia_data
 test_get_eia_data.test_from_excel()
 ```
 
-The ***[assemble_ba_from_excel_demo.ipynb][demand_notebook]*** notebook illustrates
+The **[assemble_ba_from_excel_demo.ipynb][demand_notebook]** notebook illustrates
 usage.
 
 To output the demand profile, cleaning steps were applied to the EIA data:  
@@ -351,7 +351,7 @@ from prereise.gather.demanddata.eia.tests import test_clean_data
 
 test_clean_data.test_slope_interpolate()
 ```
-The ***[ba_anomaly_detection_demo.ipynb][demand_anomaly]*** notebook illustrates
+The **[ba_anomaly_detection_demo.ipynb][demand_anomaly]** notebook illustrates
 usage.
 
 
