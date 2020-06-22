@@ -15,6 +15,7 @@
 | texas_solar_v4.1    | [NSRDB][NSRDB_web] + [SAM][SAM_web] + [PVWatts v5][SAM_pvwatts]:<li>DC/AC=1.25</li><li>inverter efficiency=0.94</li><li>tilt angle=30deg</li><li>array type: [0, 2, 4] in proportion to technology used in State | 8784*36 | <li>[EIA 860]</li>
 | texaswestern_solar_v4.1    | texas_solar_v4.1 + western_solar_v4.1 | 8784*469 | existing profiles concatenation
 | usa_solar_v4.3    | texaswestern_solar_v4.1 + eastern_solar_v4.2 | 8784*1139 | existing profiles concatenation
+| usa_solar_v4.3.1  | re-ordered usa_solar_v4.3 | 8784*1139 | ensuring columns are ordered by plant_id
 
 [NSRDB_web]: https://nsrdb.nrel.gov/
 [SAM_web]: https://sam.nrel.gov/
