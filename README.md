@@ -1,3 +1,5 @@
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 # PreREISE
 This package gathers and builds demand, hydro, solar, and wind profiles. The
 profiles are needed to run scenarios on the U.S. electrical grid.
