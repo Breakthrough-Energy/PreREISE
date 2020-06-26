@@ -16,7 +16,7 @@ from prereise.gather.winddata.rap.power_curves import get_state_power_curves
 from powersimdata.utility.constants import ZONE_ID_TO_STATE
 
 
-def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
+def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     """Retrieve wind speed data from NOAA's server.
 
     :param pandas.DataFrame wind_farm: data frame with *'lat'*, *'lon'*,
@@ -47,66 +47,75 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
     lat_target = wind_farm.lat.values
     id_target = wind_farm.index.values
     capacity_target = wind_farm.Pmax.values
-    state_target = ['Offshore' if wind_farm.loc[i].type == 'wind_offshore'
-                    else ZONE_ID_TO_STATE[wind_farm.loc[i].zone_id]
-                    for i in id_target]
+    state_target = [
+        "Offshore"
+        if wind_farm.loc[i].type == "wind_offshore"
+        else ZONE_ID_TO_STATE[wind_farm.loc[i].zone_id]
+        for i in id_target
+    ]
 
     # Build query
-    link = 'https://www.ncdc.noaa.gov/thredds/ncss/model-rap130/'
+    link = "https://www.ncdc.noaa.gov/thredds/ncss/model-rap130/"
 
-    start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    start = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.datetime.strptime(end_date, "%Y-%m-%d")
     step = datetime.timedelta(days=1)
 
     files = []
     while start <= end:
-        ts = start.strftime('%Y%m%d')
-        url = link + ts[:6] + '/' + ts + '/rap_130_' + ts
+        ts = start.strftime("%Y%m%d")
+        url = link + ts[:6] + "/" + ts + "/rap_130_" + ts
         for h in range(10000, 12400, 100):
-            files.append(url + '_' + str(h)[1:] + '_000.grb2?')
+            files.append(url + "_" + str(h)[1:] + "_000.grb2?")
         start += step
 
-    var_u = 'u-component_of_wind_height_above_ground'
-    var_v = 'v-component_of_wind_height_above_ground'
-    var = 'var=' + var_u + '&' + 'var=' + var_v
+    var_u = "u-component_of_wind_height_above_ground"
+    var_v = "v-component_of_wind_height_above_ground"
+    var = "var=" + var_u + "&" + "var=" + var_v
 
-    box = 'north=%s&west=%s&east=%s&south=%s' % \
-          (north_box, west_box, east_box, south_box) + '&' + \
-          'disableProjSubset=on&horizStride=1&addLatLon=true'
+    box = (
+        "north=%s&west=%s&east=%s&south=%s" % (north_box, west_box, east_box, south_box)
+        + "&"
+        + "disableProjSubset=on&horizStride=1&addLatLon=true"
+    )
 
-    extension = 'accept=netCDF'
+    extension = "accept=netCDF"
 
     # Download files and fill out data frame
     missing = []
     target2grid = OrderedDict()
     size = len(files) * n_target
-    data = pd.DataFrame({'plant_id': [0] * size,
-                         'ts': [np.nan] * size,
-                         'ts_id': [0] * size,
-                         'U': [0] * size,
-                         'V': [0] * size,
-                         'Pout': [0] * size})
+    data = pd.DataFrame(
+        {
+            "plant_id": [0] * size,
+            "ts": [np.nan] * size,
+            "ts_id": [0] * size,
+            "U": [0] * size,
+            "V": [0] * size,
+            "Pout": [0] * size,
+        }
+    )
 
-    dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
     step = datetime.timedelta(hours=1)
 
     first = True
     for i, file in tqdm(enumerate(files), total=len(files)):
         if i != 0 and i % 2500 == 0:
             time.sleep(300)
-        query = file + var + '&' + box + '&' + extension
+        query = file + var + "&" + box + "&" + extension
         request = requests.get(query)
 
-        data_tmp = pd.DataFrame({'plant_id': id_target,
-                                 'ts': [dt] * n_target,
-                                 'ts_id': [i+1] * n_target})
+        data_tmp = pd.DataFrame(
+            {"plant_id": id_target, "ts": [dt] * n_target, "ts_id": [i + 1] * n_target}
+        )
 
         if request.status_code == 200:
-            with open('tmp.nc', 'wb') as f:
+            with open("tmp.nc", "wb") as f:
                 f.write(request.content)
-            tmp = Dataset('tmp.nc', 'r')
-            lon_grid = tmp.variables['lon'][:].flatten()
-            lat_grid = tmp.variables['lat'][:].flatten()
+            tmp = Dataset("tmp.nc", "r")
+            lon_grid = tmp.variables["lon"][:].flatten()
+            lat_grid = tmp.variables["lat"][:].flatten()
             u_wsp = tmp.variables[var_u][0, 1, :, :].flatten()
             v_wsp = tmp.variables[var_v][0, 1, :, :].flatten()
 
@@ -116,43 +125,44 @@ def retrieve_data(wind_farm, start_date='2016-01-01', end_date='2016-12-31'):
                 # correspondence is stored in a dictionary.
                 for j in range(n_target):
                     uv_target = ll2uv(lon_target[j], lat_target[j])
-                    angle = [angular_distance(uv_target,
-                             ll2uv(lon_grid[k], lat_grid[k]))
-                             for k in range(n_grid)]
+                    angle = [
+                        angular_distance(uv_target, ll2uv(lon_grid[k], lat_grid[k]))
+                        for k in range(n_grid)
+                    ]
                     target2grid[id_target[j]] = np.argmin(angle)
                 first = False
 
-            data_tmp['U'] = [u_wsp[target2grid[id_target[j]]]
-                             for j in range(n_target)]
-            data_tmp['V'] = [v_wsp[target2grid[id_target[j]]]
-                             for j in range(n_target)]
-            wspd_target = np.sqrt(pow(data_tmp['U'], 2) + pow(data_tmp['V'], 2))
-            power = [capacity_target[j] *
-                     get_power(tpc, spc, wspd_target[j], state_target[j])
-                     for j in range(n_target)]
-            data_tmp['Pout'] = power
+            data_tmp["U"] = [u_wsp[target2grid[id_target[j]]] for j in range(n_target)]
+            data_tmp["V"] = [v_wsp[target2grid[id_target[j]]] for j in range(n_target)]
+            wspd_target = np.sqrt(pow(data_tmp["U"], 2) + pow(data_tmp["V"], 2))
+            power = [
+                capacity_target[j]
+                * get_power(tpc, spc, wspd_target[j], state_target[j])
+                for j in range(n_target)
+            ]
+            data_tmp["Pout"] = power
 
             tmp.close()
-            os.remove('tmp.nc')
+            os.remove("tmp.nc")
         else:
             missing.append(file)
 
             # missing data are set to NaN.
-            data_tmp['U'] = [np.nan] * n_target
-            data_tmp['V'] = [np.nan] * n_target
-            data_tmp['Pout'] = [np.nan] * n_target
+            data_tmp["U"] = [np.nan] * n_target
+            data_tmp["V"] = [np.nan] * n_target
+            data_tmp["Pout"] = [np.nan] * n_target
 
-        data.iloc[i*n_target:(i+1)*n_target, :] = data_tmp.values
+        data.iloc[i * n_target : (i + 1) * n_target, :] = data_tmp.values
         dt += step
 
     # Format data frame
-    data['plant_id'] = data['plant_id'].astype(np.int32)
-    data['ts_id'] = data['ts_id'].astype(np.int32)
-    data['U'] = data['U'].astype(np.float32)
-    data['V'] = data['V'].astype(np.float32)
-    data['Pout'] = data['Pout'].astype(np.float32)
+    data["plant_id"] = data["plant_id"].astype(np.int32)
+    data["ts_id"] = data["ts_id"].astype(np.int32)
+    data["U"] = data["U"].astype(np.float32)
+    data["V"] = data["V"].astype(np.float32)
+    data["Pout"] = data["Pout"].astype(np.float32)
 
-    data.sort_values(by=['ts_id', 'plant_id'], inplace=True)
+    data.sort_values(by=["ts_id", "plant_id"], inplace=True)
     data.reset_index(inplace=True, drop=True)
 
     return data, missing

@@ -54,13 +54,13 @@ def slope_interpolate(ba_df):
     df = ba_df.copy()
     ba_name = df.columns[0]
 
-    df['delta'] = df[ba_name].diff()
-    delta_mu = df['delta'].describe().loc['mean']
-    delta_sigma = df['delta'].describe().loc['std']
-    df['delta_zscore'] = np.abs((df['delta'] - delta_mu) / delta_sigma)
+    df["delta"] = df[ba_name].diff()
+    delta_mu = df["delta"].describe().loc["mean"]
+    delta_sigma = df["delta"].describe().loc["std"]
+    df["delta_zscore"] = np.abs((df["delta"] - delta_mu) / delta_sigma)
 
     # Find the outliers
-    outlier_index_list = df.loc[df['delta_zscore'] > 5].index
+    outlier_index_list = df.loc[df["delta_zscore"] > 5].index
 
     hour_save = -1
     for i in outlier_index_list:
@@ -86,7 +86,7 @@ def slope_interpolate(ba_df):
         num = next_save - hour_save
 
         if num > 4:
-            print('Too many zeros near ', i, '! Review data!')
+            print("Too many zeros near ", i, "! Review data!")
 
         start = df.iloc[hour_save - 1][ba_name]
         dee = (df.iloc[next_save - 1][ba_name] - start) / num
@@ -121,70 +121,87 @@ def replace_with_shifted_demand(demand, start, end):
 
     # Create a dataframe where each column is the same demand data,
     # but shifted by a specific time interval
-    look_back1day = demand.shift(1, freq='D')
-    look_back2day = demand.shift(2, freq='D')
-    look_back1week = demand.shift(7, freq='D')
-    look_forward1day = demand.shift(-1, freq='D')
-    look_forward2day = demand.shift(-2, freq='D')
-    look_forward1week = demand.shift(-7, freq='D')
+    look_back1day = demand.shift(1, freq="D")
+    look_back2day = demand.shift(2, freq="D")
+    look_back1week = demand.shift(7, freq="D")
+    look_forward1day = demand.shift(-1, freq="D")
+    look_forward2day = demand.shift(-2, freq="D")
+    look_forward1week = demand.shift(-7, freq="D")
 
-    shifted_demand = pd.concat([demand,
-                                look_back1day,
-                                look_forward1day,
-                                look_back2day,
-                                look_forward2day,
-                                look_back1week,
-                                look_forward1week],
-                               axis=1)
+    shifted_demand = pd.concat(
+        [
+            demand,
+            look_back1day,
+            look_forward1day,
+            look_back2day,
+            look_forward2day,
+            look_back1week,
+            look_forward1week,
+        ],
+        axis=1,
+    )
 
     # Include only the dates we care about
     shifted_demand = shifted_demand.loc[start:end]
-    shifted_demand['dayofweek'] = shifted_demand.index.dayofweek
-    column_names = ['look_back1day', 'look_forward1day', 'look_back2day',
-                    'look_forward2day', 'look_back1week', 'look_forward1week',
-                    'dayofweek']
+    shifted_demand["dayofweek"] = shifted_demand.index.dayofweek
+    column_names = [
+        "look_back1day",
+        "look_forward1day",
+        "look_back2day",
+        "look_forward2day",
+        "look_back1week",
+        "look_forward1week",
+        "dayofweek",
+    ]
 
     # Dicts of weekdays. 0 = Monday, 1 = Tuesday, etc.
     # day_map: attempt to shift the data by only one day if possible
     # Do not fill in Mon-Fri with the weekend days and vice versa
-    day_map = {0: ['look_forward1day'],
-               1: ['look_forward1day', 'look_back1day'],
-               2: ['look_forward1day', 'look_back1day'],
-               3: ['look_forward1day', 'look_back1day'],
-               4: ['look_back1day'],
-               5: ['look_forward1day'],
-               6: ['look_back1day']}
+    day_map = {
+        0: ["look_forward1day"],
+        1: ["look_forward1day", "look_back1day"],
+        2: ["look_forward1day", "look_back1day"],
+        3: ["look_forward1day", "look_back1day"],
+        4: ["look_back1day"],
+        5: ["look_forward1day"],
+        6: ["look_back1day"],
+    }
 
     # If we are still missing data, look two days
-    more_days_map = {0: ['look_forward2day'],
-                     1: ['look_forward2day'],
-                     2: ['look_back2day', 'look_forward2day'],
-                     3: ['look_back2day'],
-                     4: ['look_back2day'],
-                     5: ['look_back1week', 'look_forward1week'],
-                     6: ['look_back1week', 'look_forward1week']}
+    more_days_map = {
+        0: ["look_forward2day"],
+        1: ["look_forward2day"],
+        2: ["look_back2day", "look_forward2day"],
+        3: ["look_back2day"],
+        4: ["look_back2day"],
+        5: ["look_back1week", "look_forward1week"],
+        6: ["look_back1week", "look_forward1week"],
+    }
 
     # Finally, check for data exactly one week ago / one week from date
-    more_more_days_map = {0: ['look_back1week', 'look_forward1week'],
-                          1: ['look_back1week', 'look_forward1week'],
-                          2: ['look_back1week', 'look_forward1week'],
-                          3: ['look_back1week', 'look_forward1week'],
-                          4: ['look_back1week', 'look_forward1week'],
-                          5: ['look_back1week', 'look_forward1week'],
-                          6: ['look_back1week', 'look_forward1week']}
+    more_more_days_map = {
+        0: ["look_back1week", "look_forward1week"],
+        1: ["look_back1week", "look_forward1week"],
+        2: ["look_back1week", "look_forward1week"],
+        3: ["look_back1week", "look_forward1week"],
+        4: ["look_back1week", "look_forward1week"],
+        5: ["look_back1week", "look_forward1week"],
+        6: ["look_back1week", "look_forward1week"],
+    }
 
     # Attempt to shift demand data,
     # getting progressively more aggressive if necessary
     filled_demand = pd.DataFrame(index=demand.index)
     for baName in demand.columns:
-        shifted_demand_ba = shifted_demand[[baName, 'dayofweek']]
+        shifted_demand_ba = shifted_demand[[baName, "dayofweek"]]
         shifted_demand_ba.columns = [baName] + column_names
+        shifted_demand_ba[baName] = fill_ba_demand(shifted_demand_ba, baName, day_map)
         shifted_demand_ba[baName] = fill_ba_demand(
-            shifted_demand_ba, baName, day_map)
-        shifted_demand_ba[baName] = fill_ba_demand(
-            shifted_demand_ba, baName, more_days_map)
+            shifted_demand_ba, baName, more_days_map
+        )
         filled_demand[baName] = fill_ba_demand(
-            shifted_demand_ba, baName, more_more_days_map)
+            shifted_demand_ba, baName, more_more_days_map
+        )
     return filled_demand
 
 
@@ -198,6 +215,7 @@ def fill_ba_demand(df_ba, ba_name, day_map):
     :return: (*pandas.DataFrame*) --  BA dataseries with demand filled in
     """
     for day in range(0, 7):
-        df_ba.loc[(df_ba.dayofweek == day) & (df_ba[ba_name].isna()),
-                  ba_name] = df_ba[day_map[day]].mean(axis=1)
+        df_ba.loc[(df_ba.dayofweek == day) & (df_ba[ba_name].isna()), ba_name] = df_ba[
+            day_map[day]
+        ].mean(axis=1)
     return df_ba[ba_name]

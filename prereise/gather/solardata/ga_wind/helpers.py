@@ -25,6 +25,6 @@ def ll2ij(lon_origin, lat_origin, lon, lat):
     delta = np.subtract(target_xy, origin_xy)
 
     # 2-km grid resolution
-    ij = [int(round(x/2000)) for x in delta]
+    ij = [int(round(x / 2000)) for x in delta]
 
     return tuple(reversed(ij))
