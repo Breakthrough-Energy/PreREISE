@@ -21,10 +21,18 @@ def _great_circle_distance(lat1, lon1, lat2, lon2):
     radius = 6368
 
     def haversine(x):
-        return math.sin(x/2)**2
-    return radius*2 * math.asin(math.sqrt(haversine(lat2-lat1) +
-                                          math.cos(lat1) * math.cos(lat2) *
-                                          haversine(lon2-lon1)))
+        return math.sin(x / 2) ** 2
+
+    return (
+        radius
+        * 2
+        * math.asin(
+            math.sqrt(
+                haversine(lat2 - lat1)
+                + math.cos(lat1) * math.cos(lat2) * haversine(lon2 - lon1)
+            )
+        )
+    )
 
 
 def get_nrel_site(state):
@@ -37,28 +45,30 @@ def get_nrel_site(state):
     site = None
 
     for s in state:
-        coord = np.column_stack((states[s]['lons'], states[s]['lats']))
+        coord = np.column_stack((states[s]["lons"], states[s]["lats"]))
 
         # Prepare coordinates for call
         # Convert into string format
         out_tot = []
         for i in coord:
-            out = str(i[0]) + ' ' + str(i[1]) + ','
+            out = str(i[0]) + " " + str(i[1]) + ","
             out_tot.append(out)
-        out = str(coord[0][0]) + ' ' + str(coord[0][1])
+        out = str(coord[0][0]) + " " + str(coord[0][1])
         out_tot.append(out)
-        str1 = ''.join(out_tot)
-        str_final = 'POLYGON((' + str1 + '))'
-        print('Retrieving nrel sites for ' + s)
+        str1 = "".join(out_tot)
+        str_final = "POLYGON((" + str1 + "))"
+        print("Retrieving nrel sites for " + s)
         site_tmp = get_3tiersites_from_wkt(str_final)
-        print('Got ' + str(site_tmp.shape[0]) + ' sites in ' + s)
+        print("Got " + str(site_tmp.shape[0]) + " sites in " + s)
         site_tmp = site_tmp.reset_index()
         if site is not None:
-            site = site.append(site_tmp[['site_id', 'lat', 'lon', 'capacity',
-                                         'capacity_factor']])
+            site = site.append(
+                site_tmp[["site_id", "lat", "lon", "capacity", "capacity_factor"]]
+            )
         else:
-            site = site_tmp[['site_id', 'lat', 'lon', 'capacity',
-                             'capacity_factor']].copy()
+            site = site_tmp[
+                ["site_id", "lat", "lon", "capacity", "capacity_factor"]
+            ].copy()
     return site
 
 
@@ -74,21 +84,21 @@ def site2farm(site, wind_farm):
     :return: (*pandas.DataFrame*) -- data frame with *'site_id'*, '*capacity*'
         and *'dist'* as columns and *'plant_id'* as indices.
     """
-    closest_site = pd.DataFrame(index=wind_farm.index,
-                                columns=['site_id', 'capacity', 'dist'])
+    closest_site = pd.DataFrame(
+        index=wind_farm.index, columns=["site_id", "capacity", "dist"]
+    )
     # Iterate trough wind farms and find closest NREL site
-    for i, row in enumerate(tqdm(wind_farm.itertuples(),
-                                 total=wind_farm.shape[0])):
-        dist = site.apply(lambda row_site:
-                          _great_circle_distance(row_site['lat'],
-                                                 row_site['lon'],
-                                                 row[1], row[2]), axis=1)
+    for i, row in enumerate(tqdm(wind_farm.itertuples(), total=wind_farm.shape[0])):
+        dist = site.apply(
+            lambda row_site: _great_circle_distance(
+                row_site["lat"], row_site["lon"], row[1], row[2]
+            ),
+            axis=1,
+        )
         closest_site.iloc[i].dist = dist.min()
-        closest_site.iloc[i].site_id = (site['site_id'][dist ==
-                                                        dist.min()].values[0])
-        closest_site.iloc[i].capacity = (site['capacity'][dist ==
-                                                          dist.min()].values[0])
-    closest_site.index.name = 'plant_id'
+        closest_site.iloc[i].site_id = site["site_id"][dist == dist.min()].values[0]
+        closest_site.iloc[i].capacity = site["capacity"][dist == dist.min()].values[0]
+    closest_site.index.name = "plant_id"
     closest_site.site_id = closest_site.site_id.astype(int)
     closest_site.capacity = closest_site.capacity.astype(float)
     closest_site.dist = closest_site.dist.astype(float)
@@ -125,25 +135,35 @@ def get_data(site, date_range):
     for y in tqdm(helper.index.year.unique()):
         for m in tqdm(helper[str(y)].index.month.unique(), desc=str(y)):
             if m < 10:
-                month = str(y) + '-0' + str(m)
+                month = str(y) + "-0" + str(m)
             else:
-                month = str(y) + '-' + str(m)
+                month = str(y) + "-" + str(m)
             data[month] = {}
             start = helper[month].index[0]
             end = helper[month].index[-1]
             attributes = ["power", "wind_speed"]
 
-            for row in tqdm(site.drop_duplicates(subset='site_id').itertuples(),
-                            desc=month,
-                            total=len(site.drop_duplicates(subset='site_id'))):
+            for row in tqdm(
+                site.drop_duplicates(subset="site_id").itertuples(),
+                desc=month,
+                total=len(site.drop_duplicates(subset="site_id")),
+            ):
                 site_id = row[1]
                 capacity = row[2]
-                tqdm.write('Call ' + str(site_id) + ' ' + str(start) + ' ' +
-                           str(end))
-                data[month][site_id] = get_nc_data_from_url(
-                    wtk_url+"/met", site_id, start, end, attributes, utc=utc,
-                    leap_day=leap_day)/capacity
-    print('Done retrieving data from NREL server')
+                tqdm.write("Call " + str(site_id) + " " + str(start) + " " + str(end))
+                data[month][site_id] = (
+                    get_nc_data_from_url(
+                        wtk_url + "/met",
+                        site_id,
+                        start,
+                        end,
+                        attributes,
+                        utc=utc,
+                        leap_day=leap_day,
+                    )
+                    / capacity
+                )
+    print("Done retrieving data from NREL server")
     return data
 
 
@@ -161,18 +181,18 @@ def dict2frame(data, date_range, closest_site):
     :return: (*list*) -- Two data frames, one for power and one for wind speed.
         Column is *'site_id'* and indices are timestamp.
     """
-    power = pd.DataFrame(index=date_range,
-                         columns=closest_site['site_id'].drop_duplicates(),
-                         dtype=float)
-    wsp = pd.DataFrame(index=date_range,
-                       columns=closest_site['site_id'].drop_duplicates(),
-                       dtype=float)
+    power = pd.DataFrame(
+        index=date_range, columns=closest_site["site_id"].drop_duplicates(), dtype=float
+    )
+    wsp = pd.DataFrame(
+        index=date_range, columns=closest_site["site_id"].drop_duplicates(), dtype=float
+    )
 
     for month in data:
         print(month)
         for site_id in tqdm(data[month]):
-            power.loc[month, site_id] = data[month][site_id]['power'].values
-            wsp.loc[month, site_id] = data[month][site_id]['wind_speed'].values
+            power.loc[month, site_id] = data[month][site_id]["power"].values
+            wsp.loc[month, site_id] = data[month][site_id]["wind_speed"].values
     return [power, wsp]
 
 
@@ -191,8 +211,8 @@ def get_profile(power, wind_farm, closest_site):
         *'plant_id'* as columns and timestamp as indices.
     """
     profile = pd.DataFrame(index=power.index, columns=wind_farm.index.values)
-    for plant_id, Pmax in wind_farm['Pmax'].iteritems():
-        site_id = closest_site.loc[plant_id, 'site_id']
+    for plant_id, Pmax in wind_farm["Pmax"].iteritems():
+        site_id = closest_site.loc[plant_id, "site_id"]
         profile[plant_id] = power[site_id] * Pmax
 
-    return profile.resample('H').mean()
+    return profile.resample("H").mean()

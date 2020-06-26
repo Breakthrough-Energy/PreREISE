@@ -10,19 +10,24 @@ def get_pv_tracking_data():
     :return: (*pandas.DataFrame*) -- solar pv plant information as found in
         form EIA860
     """
-    file = os.path.join(
-        os.path.dirname(__file__), 'data', '3_3_Solar_Y2016.csv')
+    file = os.path.join(os.path.dirname(__file__), "data", "3_3_Solar_Y2016.csv")
 
-    solar_plant_info = pd.read_csv(file, skiprows=range(1),
-                                   usecols=['Plant Code', 'State',
-                                            'Prime Mover',
-                                            'Nameplate Capacity (MW)',
-                                            'Single-Axis Tracking?',
-                                            'Dual-Axis Tracking?',
-                                            'Fixed Tilt?']).fillna('N')
-    pv_info = solar_plant_info[solar_plant_info['Prime Mover'] == 'PV'].copy()
-    pv_info.drop('Prime Mover', axis=1, inplace=True)
-    
+    solar_plant_info = pd.read_csv(
+        file,
+        skiprows=range(1),
+        usecols=[
+            "Plant Code",
+            "State",
+            "Prime Mover",
+            "Nameplate Capacity (MW)",
+            "Single-Axis Tracking?",
+            "Dual-Axis Tracking?",
+            "Fixed Tilt?",
+        ],
+    ).fillna("N")
+    pv_info = solar_plant_info[solar_plant_info["Prime Mover"] == "PV"].copy()
+    pv_info.drop("Prime Mover", axis=1, inplace=True)
+
     return pv_info
 
 
@@ -39,13 +44,13 @@ def get_pv_tracking_ratio_state(pv_info, state):
     """
 
     if not isinstance(state, list):
-        raise TypeError('state must be a list')
+        raise TypeError("state must be a list")
 
     for s in state:
         if s not in set(ZONE_ID_TO_STATE.values()):
-            raise ValueError('Invalid State: %s' % s)
+            raise ValueError("Invalid State: %s" % s)
 
-    pv_info_state = pv_info[pv_info['State'].isin(state)].copy()
+    pv_info_state = pv_info[pv_info["State"].isin(state)].copy()
 
     if pv_info_state.empty:
         print("No solar PV plant in %s" % ", ".join(state))
@@ -56,15 +61,15 @@ def get_pv_tracking_ratio_state(pv_info, state):
     dual = 0
     total_capacity = 0
     for i in pv_info_state.index:
-        capacity = pv_info_state.loc[i]['Nameplate Capacity (MW)']
-        if pv_info_state.loc[i]['Single-Axis Tracking?'] == 'Y':
+        capacity = pv_info_state.loc[i]["Nameplate Capacity (MW)"]
+        if pv_info_state.loc[i]["Single-Axis Tracking?"] == "Y":
             single += capacity
             total_capacity += capacity
-        if pv_info_state.loc[i]['Dual-Axis Tracking?'] == 'Y':
+        if pv_info_state.loc[i]["Dual-Axis Tracking?"] == "Y":
             dual += capacity
             total_capacity += capacity
-        if pv_info_state.loc[i]['Fixed Tilt?'] == 'Y':
+        if pv_info_state.loc[i]["Fixed Tilt?"] == "Y":
             fix += capacity
             total_capacity += capacity
 
-    return fix/total_capacity, single/total_capacity, dual/total_capacity
+    return fix / total_capacity, single / total_capacity, dual / total_capacity
