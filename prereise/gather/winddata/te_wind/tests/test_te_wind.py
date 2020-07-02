@@ -1,7 +1,9 @@
+import pytest
 from powersimdata.input.grid import Grid
 from prereise.gather.winddata.te_wind import te_wind
 
 
+@pytest.mark.integration
 def test():
     """Prints power output profile of wind farms in Washington state.
 
