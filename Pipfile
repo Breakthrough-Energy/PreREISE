@@ -1,0 +1,27 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+bokeh = "==2.0.2"
+h5py = "==2.9.0"
+h5pyd = "==0.3.3"
+matplotlib = "==3.2.1"
+numpy = "==1.18.5"
+pandas = "==1.0.4"
+py3samsdk = {editable = true, git = "https://github.com/sjschneider/py3samsdk.git"}
+pyproj = "==1.9.6"
+pywtk = {editable = true, git = "https://github.com/NREL/pywtk.git"}
+pytest = "==5.4.3"
+python-dateutil = "==2.7.5"
+requests = "==2.21.0"
+scipy = "==1.4.1"
+tqdm = "==4.29.1"
+xlrd = "==1.2.0"
+Flask = "==1.1.2"
+netCDF4 = "==1.5.3"
+Shapely = "==1.7.0"
+powersimdata = {editable = true, path = "../PowerSimData"}
