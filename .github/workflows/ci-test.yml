@@ -16,22 +16,26 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: PreREISE
+
       - name: Checkout PowerSimData
         uses: actions/checkout@v2
         with:
           repository: intvenlab/PowerSimData
           token: ${{ secrets.CI_TOKEN_CLONE_REPO }}
           path: PowerSimData
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pipenv
           pipenv install --python=${{ matrix.python-version }}
         working-directory: PreREISE
+
       - name: Test with pytest
         run: |
           pipenv run pytest . -m 'not integration'
