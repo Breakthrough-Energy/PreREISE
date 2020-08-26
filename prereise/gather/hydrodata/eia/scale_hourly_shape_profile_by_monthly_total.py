@@ -5,7 +5,7 @@ def scale_hourly_shape_profile_by_monthly_total(
     :param list hourly_profile: list of hourly profile
     :param list monthly_total: list of monthly total
     :param bool leap_year: indicates the query year is a leap year or not
-    :return: (*list*) -- scaled_hourly_profile  
+    :return: (*list*) -- scaled_hourly_profile
     """
     if leap_year:
         days_per_month = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]

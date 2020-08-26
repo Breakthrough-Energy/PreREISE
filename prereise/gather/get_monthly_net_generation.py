@@ -7,7 +7,7 @@ def get_monthly_net_generation(state, filename, fuel_type, trim_eia_form_923):
     :param str state: the query state
     :param str filename: name of the reference file
     :param str fuel_type: the query type of fuel
-    :return: (*list*) EIA_net_generation -- monthly net generation of the query fuel type in the query 
+    :return: (*list*) EIA_net_generation -- monthly net generation of the query fuel type in the query
         state in a list of length 12
     :raise ValueError: if state is invalid.
     :raise ValueError: if fuel_type is invalid.

@@ -12,11 +12,11 @@ from prereise.gather.demanddata.eia import get_eia_data
 @pytest.mark.skip(reason="Need API key")
 def test_eia_download():
     """Check data frame assembled from data download by API call from EIA. Test
-        checks that the correct number of files are downloaded and correct
-        number of columns are created.
+    checks that the correct number of files are downloaded and correct
+    number of columns are created.
 
-        Token string can be obtained by registering
-        `here <https://www.eia.gov/opendata/>`_.
+    Token string can be obtained by registering
+    `here <https://www.eia.gov/opendata/>`_.
     """
     print(
         "A API key is required for the API download. The key "
@@ -42,7 +42,7 @@ def test_eia_download():
 
 def test_from_excel():
     """Tests data frame assembled from Excel spreadsheets manually downloaded
-        from EIA. Test checks that correct number of columns are created.
+    from EIA. Test checks that correct number of columns are created.
     """
 
     dir1 = os.path.join(os.path.dirname(__file__), "data")

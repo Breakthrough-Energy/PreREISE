@@ -5,9 +5,7 @@ from prereise.gather.winddata.te_wind import te_wind
 
 @pytest.mark.integration
 def test():
-    """Prints power output profile of wind farms in Washington state.
-
-    """
+    """Prints power output profile of wind farms in Washington state."""
     site = te_wind.get_nrel_site(["WA"])
 
     grid = Grid(["Western"])
