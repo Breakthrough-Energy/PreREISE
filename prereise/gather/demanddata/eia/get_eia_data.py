@@ -68,7 +68,7 @@ def from_excel(directory, series_list, start_date, end_date):
 
 
 def get_ba_demand(ba_code_list, start_date, end_date, api_key):
-    """ Downloads the demand between the start and end dates for a list of
+    """Downloads the demand between the start and end dates for a list of
         balancing authorities
     :param pandas.DataFrame ba_code_list: List of BAs to download from eia
     :param datetime.datetime start_date: beginning bound for the demand df

@@ -110,7 +110,7 @@ def slope_interpolate(ba_df):
 
 
 def replace_with_shifted_demand(demand, start, end):
-    """ Replaces missing data within overall demand dataframe with averages
+    """Replaces missing data within overall demand dataframe with averages
         of nearby shifted demand
     :param pandas.DataFrame demand: Dataframe with hourly demand where the
         columns are BA regions
@@ -206,7 +206,7 @@ def replace_with_shifted_demand(demand, start, end):
 
 
 def fill_ba_demand(df_ba, ba_name, day_map):
-    """ Replaces missing data in BA demand and returns result
+    """Replaces missing data in BA demand and returns result
     :param pandas.DataFrame df_ba: dataframe for BA demand, shifted demand,
         and day of the week
     :param str ba_name: Name of the BA in dataframe
