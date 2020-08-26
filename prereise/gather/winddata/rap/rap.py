@@ -13,7 +13,7 @@ from powersimdata.utility.distance import ll2uv, angular_distance
 from prereise.gather.winddata.rap.power_curves import get_power
 from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
 from prereise.gather.winddata.rap.power_curves import get_state_power_curves
-from powersimdata.utility.constants import ZONE_ID_TO_STATE
+from powersimdata.network.usa_tamu.constants.zones import id2state
 
 
 def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
@@ -50,7 +50,7 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     state_target = [
         "Offshore"
         if wind_farm.loc[i].type == "wind_offshore"
-        else ZONE_ID_TO_STATE[wind_farm.loc[i].zone_id]
+        else id2state[wind_farm.loc[i].zone_id]
         for i in id_target
     ]
 

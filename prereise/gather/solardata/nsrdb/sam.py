@@ -9,8 +9,8 @@ from prereise.gather.solardata.pv_tracking import (
     get_pv_tracking_data,
     get_pv_tracking_ratio_state,
 )
+from powersimdata.network.usa_tamu.constants.zones import id2state
 from powersimdata.utility.constants import (
-    ZONE_ID_TO_STATE,
     interconnect2state,
     state2interconnect,
 )
@@ -78,7 +78,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
     zone_id = solar_plant.zone_id.unique()
     frac = {}
     for i in zone_id:
-        state = ZONE_ID_TO_STATE[i]
+        state = id2state[i]
         frac[i] = get_pv_tracking_ratio_state(pv_info, [state])
         if frac[i] is None:
             frac[i] = get_pv_tracking_ratio_state(
