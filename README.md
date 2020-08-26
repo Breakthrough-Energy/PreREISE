@@ -13,6 +13,8 @@ In the PreREISE package, locate the ***setup.py*** file and type:
 `pip3 install .`. The other option is to update the PYTHONPATH environment
 variable.
 
+If using pipenv, you can install the pinned dependencies from the lock file
+using `pipenv sync --dev`.
 
 
 ## 2. Gather Data for Simulation
