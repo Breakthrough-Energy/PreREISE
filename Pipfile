@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 bokeh = "==2.0.2"
-h5py = "==2.9.0"
+h5py = "==2.10.0"
 h5pyd = "==0.3.3"
 matplotlib = "==3.2.1"
 numpy = "==1.18.5"
