@@ -8,7 +8,7 @@ cffi==1.14.2
 cftime==1.2.1
 chardet==3.0.4
 click==7.1.2
-cryptography==3.0
+cryptography==3.1
 cycler==0.10.0
 Flask==1.1.2
 geographiclib==1.50
@@ -23,17 +23,18 @@ jsonpickle==1.4.1
 kiwisolver==1.2.0
 MarkupSafe==1.1.1
 matplotlib==3.2.1
-more-itertools==8.4.0
+more-itertools==8.5.0
 mypy-extensions==0.4.3
 netCDF4==1.5.3
 numpy==1.18.5
 packaging==20.4
 pandas==1.0.4
-paramiko==2.7.1
+paramiko==2.7.2
 pathspec==0.8.0
 Pillow==7.2.0
 pluggy==0.13.1
 -e ../PowerSimData
+psycopg2==2.8.5
 py==1.9.0
 -e git+https://github.com/sjschneider/py3samsdk.git@27c9340659b0b7fb7c38e458de354c8a8ad137e8#egg=py3samsdk
 pycparser==2.20
