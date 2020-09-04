@@ -1,5 +1,5 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-![Pytest](https://github.com/intvenlab/PreREISE/workflows/Run%20pytest/badge.svg)
+![Pytest](https://github.com/Breakthrough-Energy/PreREISE/workflows/Run%20pytest/badge.svg)
 
 # PreREISE
 This package gathers and builds demand, hydro, solar, and wind profiles. The
@@ -359,40 +359,39 @@ test_clean_data.test_slope_interpolate()
 The **[ba_anomaly_detection_demo.ipynb][demand_anomaly]** notebook illustrates
 usage.
 
-
 [RAP]: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
-[RAP_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb
+[RAP_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb
 [NetCDF]: https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html
 [WIND_doc]: https://www.nrel.gov/docs/fy14osti/61714.pdf
 [WIND_web]: https://www.nrel.gov/grid/wind-toolkit.html
 [WIND_api]: https://developer.nrel.gov/docs/wind/wind-toolkit/
-[TE_WIND_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/winddata/te_wind/demo/te_wind_demo.ipynb
+[TE_WIND_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/winddata/te_wind/demo/te_wind_demo.ipynb
 [NREL_notebooks]: https://github.com/NREL/hsds-examples
-[GA_WIND_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/ga_wind/demo/ga_wind_demo.ipynb
+[GA_WIND_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/solardata/ga_wind/demo/ga_wind_demo.ipynb
 [NSRDB_web]: https://nsrdb.nrel.gov/
 [NSRDB_api]: https://developer.nrel.gov/docs/solar/nsrdb/
 [NSRDB_signup]: https://developer.nrel.gov/signup/
 [SAM_web]: https://sam.nrel.gov/
 [SAM_sdk]: https://sam.nrel.gov/sdk
 [SAM_pvwatts]: https://www.nrel.gov/docs/fy14osti/62641.pdf
-[NSRDB_naive_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb
-[NSRDB_sam_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb
+[NSRDB_naive_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb
+[NSRDB_sam_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb
 [hydro_cf]: https://www.eia.gov/electricity/annual/html/epa_04_08_b.html
-[hydro_v1_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/hydro_v1_demo.ipynb
+[hydro_v1_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/hydro_v1_demo.ipynb
 [demand_doc]: https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf
-[demand_notebook]:https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/assemble_ba_from_excel_demo.ipynb
-[demand_anomaly]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/ba_anomaly_detection_demo.ipynb
+[demand_notebook]:https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/assemble_ba_from_excel_demo.ipynb
+[demand_anomaly]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/ba_anomaly_detection_demo.ipynb
 [EIA 923]: https://www.eia.gov/electricity/data/eia923/
 [CAISO_outlook]: http://www.caiso.com/TodaysOutlook/Pages/default.aspx
-[hydro_v2_western_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/western_hydro_v2_demo.ipynb
-[hydro_v2_texas_notebook]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/texas_hydro_v2_demo.ipynb
-[eastern_demand_v5_demo]: https://github.com/intvenlab/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/demo_Eastern_v5/eastern_demand_v5_demo.ipynb
-[issue #71]: https://github.com/intvenlab/PreREISE/issues/71
+[hydro_v2_western_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/western_hydro_v2_demo.ipynb
+[hydro_v2_texas_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/texas_hydro_v2_demo.ipynb
+[eastern_demand_v5_demo]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/demo_Eastern_v5/eastern_demand_v5_demo.ipynb
+[issue #71]: https://github.com/Breakthrough-Energy/PreREISE/issues/71
 [EIA 860]: https://www.eia.gov/electricity/data/eia860/
 [ERCOT_generation]: http://www.ercot.com/gridinfo/generation/
 [USACE_dataquery]: http://www.nwd-wc.usace.army.mil/dd/common/dataquery/www/
 [EIA 930]: https://www.eia.gov/opendata/
-[demand_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/demand_profiles.md
-[hydro_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/hydro_profiles.md
-[solar_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/solar_profiles.md
-[wind_profiles]: https://github.com/intvenlab/PreREISE/blob/develop/docs/wind_profiles.md
+[demand_profiles]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/docs/demand_profiles.md
+[hydro_profiles]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/docs/hydro_profiles.md
+[solar_profiles]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/docs/solar_profiles.md
+[wind_profiles]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/docs/wind_profiles.md
