@@ -4,6 +4,7 @@ import numpy as np
 
 def get_monthly_net_generation(state, filename, fuel_type, trim_eia_form_923):
     """Get monthly total net generation for the query fuel type in the query state in 2016 from EIA923
+
     :param str state: the query state
     :param str filename: name of the reference file
     :param str fuel_type: the query type of fuel

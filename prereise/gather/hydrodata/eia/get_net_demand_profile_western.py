@@ -3,6 +3,7 @@ from powersimdata.input.grid import Grid
 
 def get_net_demand_profile_western(state, s):
     """Get the net demand profile of a specific state based on Western basecase scenario 2016
+
     :param str state: the query state
     :param powersimdata.scenario.scenario.Scenario s: scenario instance
     :return: (*list*) netdemand -- net demand profile of the query state in a list of length 8784

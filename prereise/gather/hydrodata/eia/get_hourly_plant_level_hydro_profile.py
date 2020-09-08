@@ -4,6 +4,7 @@ from powersimdata.input.grid import Grid
 
 def get_hourly_plant_level_hydro_profile(total_profile, state):
     """Decompose total hydro profile into plant level profile based on hydro generator capacities in the query state
+
     :param list total_profile: total hydro profile in the query state
     :param str state: the query state
     :return: (*pandas.DataFrame*) hydro_v2 -- hourly hydro profile for each plant in the query state
