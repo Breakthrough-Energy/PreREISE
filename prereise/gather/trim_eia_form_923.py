@@ -4,6 +4,7 @@ import pandas as pd
 
 def trim_eia_form_923(filename):
     """Get rid of unnecessary columns of EIA form 923 for get_monthly_net_generation.py
+
     :param str filename: name of the reference file
     :return: (*pandas.DataFrame*) plant_generation -- trimmed EIA 923 with only necessary columns
     """

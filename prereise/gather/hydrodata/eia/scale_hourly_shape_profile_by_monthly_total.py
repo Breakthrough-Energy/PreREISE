@@ -2,6 +2,7 @@ def scale_hourly_shape_profile_by_monthly_total(
     hourly_profile, monthly_total, leap_year=True
 ):
     """Scale hourly shape profile based on monthly total profile
+
     :param list hourly_profile: list of hourly profile
     :param list monthly_total: list of monthly total
     :param bool leap_year: indicates the query year is a leap year or not
