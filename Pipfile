@@ -12,7 +12,7 @@ h5py = "==2.10.0"
 h5pyd = "==0.3.3"
 matplotlib = "==3.2.1"
 numpy = "==1.18.5"
-pandas = "==1.0.4"
+pandas = "~=1.1.2"
 py3samsdk = {editable = true, git = "https://github.com/sjschneider/py3samsdk.git"}
 pyproj = "==1.9.6"
 pywtk = {editable = true, git = "https://github.com/NREL/pywtk.git"}
