@@ -99,25 +99,6 @@ tracks with the wind-farm level data shown in NREL's validation report.
 
 Check out the **[rap_demo.ipynb][RAP_notebook]** notebook for demo.
 
-#### ii. Techno-Economic Wind Integration National Dataset Toolkit
-The [Techno-Economic WIND (Wind Integration National Dataset) Toolkit][WIND_web]
-provides 5-min resolution data for 7 years, ranging from 2007 to 2013, at
-120,000 points within the continental U.S. selected for their wind resource.
-This set contains power estimates and forecasts along with a subset of
-atmospheric variables. Data can be accessed via an [API][WIND_api].
-
-The closest site to the wind farm in the network is found in the NREL dataset
-and the associated power estimate is simply scaled to the plant capacity to
-obtain a wind power output profile. The procedure is illustrated in the
-**[te_wind_demo.ipynb][TE_WIND_notebook]** notebook.
-
-Also, a test can be run as follows:
-```python
-from prereise.gather.winddata.te_wind.test import te_wind_test
-
-te_wind_test.test()
-```
-
 
 ### B. Solar data
 
