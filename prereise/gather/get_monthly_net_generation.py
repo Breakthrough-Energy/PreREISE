@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def get_monthly_net_generation(state, filename, fuel_type, trim_eia_form_923):

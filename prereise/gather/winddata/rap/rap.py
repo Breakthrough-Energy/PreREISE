@@ -7,13 +7,15 @@ import numpy as np
 import pandas as pd
 import requests
 from netCDF4 import Dataset
+from powersimdata.network.usa_tamu.constants.zones import id2state
+from powersimdata.utility.distance import angular_distance, ll2uv
 from tqdm import tqdm
 
-from powersimdata.utility.distance import ll2uv, angular_distance
-from prereise.gather.winddata.rap.power_curves import get_power
-from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
-from prereise.gather.winddata.rap.power_curves import get_state_power_curves
-from powersimdata.network.usa_tamu.constants.zones import id2state
+from prereise.gather.winddata.rap.power_curves import (
+    get_power,
+    get_state_power_curves,
+    get_turbine_power_curves,
+)
 
 
 def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):

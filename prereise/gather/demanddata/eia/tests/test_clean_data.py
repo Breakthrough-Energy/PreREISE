@@ -1,7 +1,9 @@
-from prereise.gather.demanddata.eia.clean_data import slope_interpolate
-import pandas as pd
 from random import random
+
 import numpy as np
+import pandas as pd
+
+from prereise.gather.demanddata.eia.clean_data import slope_interpolate
 
 
 def test_slope_interpolate():

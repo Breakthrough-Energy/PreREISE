@@ -1,4 +1,6 @@
-from prereise.gather.get_monthly_net_generation import get_monthly_net_generation
+from prereise.gather.get_monthly_net_generation import (
+    get_monthly_net_generation,
+)
 from prereise.gather.tests.mock_generation_data_frame import (
     create_mock_generation_data_frame,
 )

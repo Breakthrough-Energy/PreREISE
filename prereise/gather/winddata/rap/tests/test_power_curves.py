@@ -1,18 +1,19 @@
 import math
-from os import path
 import unittest
+from os import path
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal
 import pandas as pd
+from numpy.testing import assert_array_almost_equal
 
-from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
-from prereise.gather.winddata.rap.power_curves import get_state_power_curves
-from prereise.gather.winddata.rap.power_curves import build_state_curves
-from prereise.gather.winddata.rap.power_curves import _shift_turbine_curve
-from prereise.gather.winddata.rap.power_curves import get_power
-from prereise.gather.winddata.rap.power_curves import get_form_860
-
+from prereise.gather.winddata.rap.power_curves import (
+    _shift_turbine_curve,
+    build_state_curves,
+    get_form_860,
+    get_power,
+    get_state_power_curves,
+    get_turbine_power_curves,
+)
 
 data_dir = path.abspath(path.join(path.dirname(__file__), "..", "..", "data"))
 
