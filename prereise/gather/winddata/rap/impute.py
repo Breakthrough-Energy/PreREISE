@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from prereise.gather.winddata.rap.power_curves import get_power
-from prereise.gather.winddata.rap.power_curves import get_turbine_power_curves
-from prereise.gather.winddata.rap.power_curves import get_state_power_curves
+from prereise.gather.winddata.rap.power_curves import (
+    get_power,
+    get_state_power_curves,
+    get_turbine_power_curves,
+)
 
 
 def _check_curve(curve):

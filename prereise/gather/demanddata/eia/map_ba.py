@@ -1,5 +1,5 @@
-import requests
 import pandas as pd
+import requests
 
 
 def transform_ba_to_region(demand, mapping):

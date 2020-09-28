@@ -1,11 +1,10 @@
 import os
-from os import path
 import re
+from os import path
 
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
-
 
 data_dir = path.abspath(path.join(path.dirname(__file__), "..", "data"))
 

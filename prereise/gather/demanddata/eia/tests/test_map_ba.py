@@ -1,9 +1,10 @@
 import pandas as pd
+from pandas.util.testing import assert_series_equal
+
 from prereise.gather.demanddata.eia.map_ba import (
     map_to_loadzone,
     transform_ba_to_region,
 )
-from pandas.util.testing import assert_series_equal
 
 
 def test_loadzone_mapping_case():

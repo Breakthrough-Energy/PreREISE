@@ -1,8 +1,7 @@
 import pytest
 
-from prereise.gather.solardata.tests.mock_pv_info import create_mock_pv_info
 from prereise.gather.solardata.pv_tracking import get_pv_tracking_ratio_state
-
+from prereise.gather.solardata.tests.mock_pv_info import create_mock_pv_info
 
 pv_info = create_mock_pv_info()
 
