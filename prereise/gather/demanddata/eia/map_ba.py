@@ -3,15 +3,11 @@ import requests
 
 
 def transform_ba_to_region(demand, mapping):
-    """Transforms column of demand dataframe to regions defined by
-    dictionary mapping
+    """Transform column of demand data frame to regions defined by dictionary mapping.
 
-    :param demand: dataframe for the demand
-    :type demand: pandas.DataFrame
-    :param mapping: dictionary mapping of BA columns to regions
-    :type mapping: dict
-    :return: dataframe with demand columns according to region
-    :rtype: pandas.DataFrame
+    :param pandas.DataFrame demand: data frame for the demand.
+    :param dict mapping: dictionary mapping of BA columns to regions.
+    :return: (*pandas.DataFrame*) -- data frame with demand columns according to region.
     """
     agg_demand = pd.DataFrame(index=demand.index)
     for key in mapping:
@@ -34,16 +30,13 @@ def transform_ba_to_region(demand, mapping):
 
 
 def map_to_loadzone(agg_demand, bus_map):
-    """Transforms columns of demand dataframe from BA regions to load zones
-    according to bus_map
+    """Transform columns of demand data frame from BA regions to load zones.
 
-    :param agg_demand: dataframe for the aggregated region demand
-    :type agg_demand: pandas.DataFrame
-    :param bus_map: dataframe used to map BA regions to load zones using
-        Pd weighting
-    :type bus_map: pandas.DataFrame
-    :return: new dataframe with demand columns according to load_zone
-    :rtype: pandas.DataFrame
+    :param pandas.DataFrame agg_demand: data frame for the aggregated region demand.
+    :param pandas.DataFrame bus_map: data frame used to map BA regions to load zones
+        using real power demand weighting.
+    :return: (*pandas.DataFrame*) -- data frame with demand columns according to load
+        zone.
     """
     ba_agg = bus_map[["BA", "Pd"]].groupby("BA").sum().rename(columns={"Pd": "PdTotal"})
 
@@ -70,14 +63,12 @@ def map_to_loadzone(agg_demand, bus_map):
 
 
 def map_grid_buses_to_county(grid):
-    """Find the county in the U.S. territory that each load bus
-    in the query grid belongs to
+    """Find the county in the U.S. territory that each load bus in the query grid
+    belongs to.
 
-    :param grid: the name of the query grid
-    :type grid: Grid
-    :return: data frame of counties that load buses locate,
-        list of bus indexes that no county matches
-    :rtype: pandas.DataFrame, list
+    :param powersimdata.input.grid.Grid grid: a Grid object.
+    :return: (*tuple*) -- first element is a data frame of counties that load buses
+        locate. Second element is a list of bus indices that no county matches.
     """
     bus_ba_map = grid.bus[grid.bus["Pd"] > 0][["Pd", "lat", "lon"]].copy()
     bus_ba_map.loc[:, "County"] = None

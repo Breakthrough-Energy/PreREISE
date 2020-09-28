@@ -8,17 +8,17 @@ from pandas.tseries.offsets import DateOffset
 
 
 def from_download(tok, start_date, end_date, offset_days, series_list):
-    """Downloads and assemble dataset of demand data per balancing authority
-    for desired date range.
+    """Download and assemble dataset of demand data per balancing authority for desired
+    date range.
 
     :param str tok: token obtained by registering with EIA.
-    :param datetime.datetime start_date: start date.
-    :param datetime.datetime end_date: end data.
+    :param pandas.Timestamp/numpy.datetime64/datetime.datetime start_date: start date.
+    :param pandas.Timestamp/numpy.datetime64/datetime.datetime end_date: end data.
     :param list series_list: list of demand series names provided by EIA, e.g.,
         ['EBA.AVA-ALL.D.H', 'EBA.AZPS-ALL.D.H'].
     :param int offset_days: number of business days for data to stabilize.
-    :return: (*pandas.DataFrame*) -- data frame indexed with hourly UTC time and
-        BA series name for column names.
+    :return: (*pandas.DataFrame*) -- data frame with UTC timestamp as indices and
+        BA series name as column names.
     """
 
     timespan = pd.date_range(
@@ -38,15 +38,15 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
 
 
 def from_excel(directory, series_list, start_date, end_date):
-    """Assembles EIA balancing authority (BA) data from pre-downloaded Excel
+    """Assemble EIA balancing authority (BA) data from pre-downloaded Excel
     spreadsheets. The spreadsheets contain data from July 2015 to present.
 
     :param str directory: location of Excel files.
     :param list series_list: list of BA initials, e.g., ['PSE',BPAT','CISO'].
     :param datetime.datetime start_date: desired start of dataset.
     :param datetime.datetime end_date: desired end of dataset.
-    :return: (*pandas.DataFrame*) -- data frame indexed with hourly UTC time and
-        BA series name for column names.
+    :return: (*pandas.DataFrame*) -- data frame with UTC timestamp as indices and
+        BA series name as column names.
     """
     timespan = pd.date_range(start_date, end_date, freq="H")
     df_all = pd.DataFrame(index=timespan)
@@ -68,14 +68,15 @@ def from_excel(directory, series_list, start_date, end_date):
 
 
 def get_ba_demand(ba_code_list, start_date, end_date, api_key):
-    """Downloads the demand between the start and end dates for a list of
-    balancing authorities
+    """Download the demand between two dates for a list of balancing authorities.
 
-    :param pandas.DataFrame ba_code_list: List of BAs to download from eia
-    :param datetime.datetime start_date: beginning bound for the demand df
-    :param datetime.datetime end_date: end bound for the demand dataframe
-    :param string api_key: api key to fetch data
-    :return: (*pandas.DataFrame*) -- dataframe with columns of demand by BA
+    :param pandas.DataFrame ba_code_list: List of BAs to download from eia.
+    :param pandas.Timestamp/numpy.datetime64/datetime.datetime start_date: beginning
+        bound for the demand data frame.
+    :param pandas.Timestamp/numpy.datetime64/datetime.datetime end_date: end bound for
+        the demand data frame.
+    :param string api_key: api key to fetch data.
+    :return: (*pandas.DataFrame*) -- data frame with columns of demand by BA.
     """
     series_list = [f"EBA.{ba}-ALL.D.H" for ba in ba_code_list]
     df = from_download(
@@ -87,7 +88,7 @@ def get_ba_demand(ba_code_list, start_date, end_date, api_key):
 
 class EIAgov(object):
     """Copied from `this link <https://quantcorner.wordpress.com/\
-    2014/11/18/downloading-eias-data-with-python/>`_.
+        2014/11/18/downloading-eias-data-with-python/>`_.
 
     :param str token: EIA token.
     :param list series: id code(s) of the series to be downloaded.
@@ -98,9 +99,9 @@ class EIAgov(object):
         self.series = series
 
     def raw(self, ser):
-        """Downloads json files from EIA.
+        """Download json files from EIA.
 
-        :param str ser: list of filenames.
+        :param str ser: list of file names.
         :raises keyError: when URL or file are either not found or not valid.
         """
 
@@ -127,7 +128,7 @@ class EIAgov(object):
             print("Reason: ", e.reason)
 
     def get_data(self):
-        """Converts json files into data frame.
+        """Convert json files into data frame.
 
         :return: (*pandas.DataFrame*) -- data frame.
         """
