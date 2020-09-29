@@ -22,7 +22,7 @@ def retrieve_data(solar_plant, email, api_key, year="2016"):
     # Identify unique location
     coord = get_plant_info_unique_location(solar_plant)
 
-    base_url = "http://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv"
+    base_url = "https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv"
     payload = {
         "api_key": api_key,
         "names": year,
