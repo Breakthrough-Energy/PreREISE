@@ -51,12 +51,6 @@ fixes/changes but have exactly same dimensionality.
 the latest profiles among the interconnections it combines.
 ---
 
-The list of profiles created can be consulted through the following links:
-* [demand][demand_profiles]
-* [hydro][hydro_profiles]
-* [solar][solar_profiles]
-* [wind][wind_profiles]
-
 
 ### A. Wind data
 
