@@ -7,7 +7,7 @@ from prereise.gather.solardata.helpers import get_plant_info_unique_location
 
 def retrieve_data(solar_plant, email, api_key, year="2016"):
     """Retrieve irradiance data from NSRDB and calculate the power output
-        using a simple normalization.
+    using a simple normalization.
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'Pmax' as columns and *'plant_id'* as index.

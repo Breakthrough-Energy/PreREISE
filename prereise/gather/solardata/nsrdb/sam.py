@@ -19,7 +19,7 @@ from prereise.gather.solardata.pv_tracking import (
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
     """Retrieves irradiance data from NSRDB and calculate the power output using
-        the System Adviser Model (SAM).
+    the System Adviser Model (SAM).
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'Pmax' as columns and *'plant_id'* as index.

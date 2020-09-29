@@ -32,8 +32,7 @@ def get_pv_tracking_data():
 
 
 def get_pv_tracking_ratio_state(pv_info, state):
-    """Get solar PV tracking technology ratios for the query state in 2016 from
-        EIA860
+    """Get solar PV tracking technology ratios for the query state in 2016 from EIA860
 
     :param pandas.DataFrame pv_info: solar pv plant information as found in
         form EIA860 as returned by :func:`get_pv_tracking_data`.
