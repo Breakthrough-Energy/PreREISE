@@ -3,7 +3,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 from powersimdata.network.usa_tamu.constants.zones import (
-    id2state,
+    id2abv,
     interconnect2state,
     state2interconnect,
 )
@@ -69,7 +69,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
     zone_id = solar_plant.zone_id.unique()
     frac = {}
     for i in zone_id:
-        state = id2state[i]
+        state = id2abv[i]
         frac[i] = get_pv_tracking_ratio_state(pv_info, [state])
         if frac[i] is None:
             frac[i] = get_pv_tracking_ratio_state(
