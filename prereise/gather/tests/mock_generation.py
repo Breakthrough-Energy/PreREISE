@@ -2,8 +2,9 @@ import pandas as pd
 
 
 def create_mock_generation_data_frame():
-    """Create mock EIA 923 generation data frame
-    :return: (*pandas.DataFrame*) -- mock data frame
+    """Create mock EIA 923 generation data frame.
+
+    :return: (*pandas.DataFrame*) -- mock data frame.
     """
     mock_data = {
         "Plant id": [1, 2, 3, 4, 5, 6, 7, 8],
