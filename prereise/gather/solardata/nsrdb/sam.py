@@ -3,7 +3,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 from powersimdata.network.usa_tamu.constants.zones import (
-    id2state,
+    id2abv,
     interconnect2state,
     state2interconnect,
 )
@@ -19,7 +19,7 @@ from prereise.gather.solardata.pv_tracking import (
 
 def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
     """Retrieves irradiance data from NSRDB and calculate the power output using
-        the System Adviser Model (SAM).
+    the System Adviser Model (SAM).
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'Pmax' as columns and *'plant_id'* as index.
@@ -47,28 +47,18 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
     # Identify unique location
     coord = get_plant_info_unique_location(solar_plant)
 
-    # Build query
-    attributes = "dhi,dni,wind_speed,air_temperature"
-    interval = "60"
-    utc = "true"
-
-    # URL
-    url = "http://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?"
-    url = url + "api_key={key}".format(key=api_key)
-
-    payload = (
-        "names={year}".format(year=year)
-        + "&"
-        + "leap_day={leap}".format(leap="false")
-        + "&"
-        + "interval={interval}".format(interval=interval)
-        + "&"
-        + "utc={utc}".format(utc=utc)
-        + "&"
-        + "email={email}".format(email=email)
-        + "&"
-        + "attributes={attr}".format(attr=attributes)
-    )
+    base_url = "https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv"
+    payload = {
+        "api_key": api_key,
+        "names": year,
+        "leap_day": "false",
+        "interval": "60",
+        "utc": "true",
+        "email": email,
+        "attributes": "dhi,dni,wind_speed,air_temperature",
+    }
+    qs = "&".join([f"{key}={value}" for key, value in payload.items()])
+    url = f"{base_url}?{qs}"
 
     data = pd.DataFrame({"Pout": [], "plant_id": [], "ts": [], "ts_id": []})
 
@@ -79,7 +69,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
     zone_id = solar_plant.zone_id.unique()
     frac = {}
     for i in zone_id:
-        state = id2state[i]
+        state = id2abv[i]
         frac[i] = get_pv_tracking_ratio_state(pv_info, [state])
         if frac[i] is None:
             frac[i] = get_pv_tracking_ratio_state(
@@ -91,11 +81,12 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
 
     for key in tqdm(coord.keys(), total=len(coord)):
         query = "wkt=POINT({lon}%20{lat})".format(lon=key[0], lat=key[1])
+        current_url = f"{url}&{query}"
 
-        info = pd.read_csv(url + "&" + payload + "&" + query, nrows=1)
+        info = pd.read_csv(current_url, nrows=1)
         tz, elevation = info["Local Time Zone"], info["Elevation"]
 
-        data_resource = pd.read_csv(url + "&" + payload + "&" + query, skiprows=2)
+        data_resource = pd.read_csv(current_url, skiprows=2)
         data_resource.set_index(
             dates + timedelta(hours=int(tz.values[0])), inplace=True
         )

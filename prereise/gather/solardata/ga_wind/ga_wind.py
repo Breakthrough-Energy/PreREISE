@@ -14,7 +14,7 @@ def retrieve_data(
     solar_plant, hs_api_key, start_date="2007-01-01", end_date="2014-01-01"
 ):
     """Retrieves irradiance data from Gridded Atmospheric Wind Integration
-        National dataset.
+    National dataset.
 
     :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
         *'Pmax'* as columns and *'plant_id'* as indices.

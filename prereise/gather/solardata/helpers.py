@@ -34,7 +34,7 @@ def to_reise(data):
 
 def get_plant_info_unique_location(plant):
     """Identify unique location and return relevant information of plants at
-        location.
+    location.
 
     :param pandas.DataFrame plant: plant data frame.
     :return: (*dict*) -- keys are coordinates of location. Values is a list of

@@ -4,7 +4,7 @@ import pandas as pd
 
 def fix_dataframe_outliers(demand):
     """Make a dataframe of demand with outliers replaced with values
-        interpolated from the non-outlier edge points using slope_interpolate
+    interpolated from the non-outlier edge points using slope_interpolate
 
     :param pandas.Dataframe demand: demand data frame with UTC time index
         and BA name as column name
@@ -21,10 +21,10 @@ def fix_dataframe_outliers(demand):
 
 def slope_interpolate(ba_df):
     """Look for demand outliers by applying a z-score threshold to the demand
-        slope. Loop through all the outliers detected, determine the non-outlier
-        edge points and then interpolate a line joining these 2 edge points. The
-        line value at the timestamp of the the outlier event is used to replace
-        the anomalous value.
+    slope. Loop through all the outliers detected, determine the non-outlier
+    edge points and then interpolate a line joining these 2 edge points. The
+    line value at the timestamp of the the outlier event is used to replace
+    the anomalous value.
 
     :param pandas.DataFrame ba_df: demand data frame with UTC time as index and
         BA name as column name
@@ -111,7 +111,7 @@ def slope_interpolate(ba_df):
 
 def replace_with_shifted_demand(demand, start, end):
     """Replaces missing data within overall demand dataframe with averages
-        of nearby shifted demand
+    of nearby shifted demand
 
     :param pandas.DataFrame demand: Dataframe with hourly demand where the
         columns are BA regions

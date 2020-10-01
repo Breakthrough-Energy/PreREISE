@@ -4,7 +4,7 @@ import requests
 
 def transform_ba_to_region(demand, mapping):
     """Transforms column of demand dataframe to regions defined by
-        dictionary mapping
+    dictionary mapping
 
     :param demand: dataframe for the demand
     :type demand: pandas.DataFrame
@@ -35,7 +35,7 @@ def transform_ba_to_region(demand, mapping):
 
 def map_to_loadzone(agg_demand, bus_map):
     """Transforms columns of demand dataframe from BA regions to load zones
-        according to bus_map
+    according to bus_map
 
     :param agg_demand: dataframe for the aggregated region demand
     :type agg_demand: pandas.DataFrame
@@ -71,7 +71,7 @@ def map_to_loadzone(agg_demand, bus_map):
 
 def map_grid_buses_to_county(grid):
     """Find the county in the U.S. territory that each load bus
-        in the query grid belongs to
+    in the query grid belongs to
 
     :param grid: the name of the query grid
     :type grid: Grid

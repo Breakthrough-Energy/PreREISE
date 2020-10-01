@@ -8,8 +8,8 @@ from pandas.tseries.offsets import DateOffset
 
 
 def from_download(tok, start_date, end_date, offset_days, series_list):
-    """Downloads and assemble dataset of demand data per balancing authority \
-        for desired date range.
+    """Downloads and assemble dataset of demand data per balancing authority
+    for desired date range.
 
     :param str tok: token obtained by registering with EIA.
     :param datetime.datetime start_date: start date.
@@ -39,7 +39,7 @@ def from_download(tok, start_date, end_date, offset_days, series_list):
 
 def from_excel(directory, series_list, start_date, end_date):
     """Assembles EIA balancing authority (BA) data from pre-downloaded Excel
-        spreadsheets. The spreadsheets contain data from July 2015 to present.
+    spreadsheets. The spreadsheets contain data from July 2015 to present.
 
     :param str directory: location of Excel files.
     :param list series_list: list of BA initials, e.g., ['PSE',BPAT','CISO'].
@@ -69,7 +69,7 @@ def from_excel(directory, series_list, start_date, end_date):
 
 def get_ba_demand(ba_code_list, start_date, end_date, api_key):
     """Downloads the demand between the start and end dates for a list of
-        balancing authorities
+    balancing authorities
 
     :param pandas.DataFrame ba_code_list: List of BAs to download from eia
     :param datetime.datetime start_date: beginning bound for the demand df
@@ -87,7 +87,7 @@ def get_ba_demand(ba_code_list, start_date, end_date, api_key):
 
 class EIAgov(object):
     """Copied from `this link <https://quantcorner.wordpress.com/\
-        2014/11/18/downloading-eias-data-with-python/>`_.
+    2014/11/18/downloading-eias-data-with-python/>`_.
 
     :param str token: EIA token.
     :param list series: id code(s) of the series to be downloaded.
