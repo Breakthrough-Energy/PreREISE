@@ -1,5 +1,6 @@
 import pandas as pd
 import requests
+from tqdm import tqdm
 
 
 def transform_ba_to_region(demand, mapping):
@@ -58,7 +59,6 @@ def map_to_loadzone(agg_demand, bus_map):
                 zone_demand[zone_name] = (
                     zone_scaling_df.loc[zone_name, "zone_scaling"] * agg_demand[ba_name]
                 )
-    print(zone_demand.values.T.tolist())
     return zone_demand
 
 
@@ -77,8 +77,7 @@ def map_grid_buses_to_county(grid):
     url = "https://geo.fcc.gov/api/census/block/find"
     # defining a params dict for the parameters to be sent to the API
     bus_no_county_match = []
-    for index, row in bus_ba_map.iterrows():
-        print(index)
+    for index, row in tqdm(bus_ba_map.iterrows(), total=len(bus_ba_map)):
         params = {
             "latitude": row["lat"],
             "longitude": row["lon"],
@@ -90,6 +89,6 @@ def map_grid_buses_to_county(grid):
         try:
             county_name = r["County"]["name"] + "__ " + r["State"]["code"]
             bus_ba_map.loc[index, "County"] = county_name
-        except KeyError:
+        except TypeError:
             bus_no_county_match.append(index)
     return bus_ba_map, bus_no_county_match
