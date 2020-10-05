@@ -2,12 +2,13 @@ from datetime import timedelta
 
 import numpy as np
 import pandas as pd
+import PySAM.Pvwattsv7 as PVWatts
+import PySAM.PySSC as pssc
 from powersimdata.network.usa_tamu.constants.zones import (
+    abv2interconnect,
     id2abv,
-    interconnect2state,
-    state2interconnect,
+    interconnect2abv,
 )
-from py3samsdk import PySSC
 from tqdm import tqdm
 
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
@@ -17,7 +18,7 @@ from prereise.gather.solardata.pv_tracking import (
 )
 
 
-def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
+def retrieve_data(solar_plant, email, api_key, year="2016"):
     """Retrieves irradiance data from NSRDB and calculate the power output using
     the System Adviser Model (SAM).
 
@@ -26,8 +27,6 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
     :param str email: email used for API key
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
-    :param str ssc_lib: path to System Adviser Model (SAM) SAM Simulation Core
-        (SSC) library.
     :param str year: year.
     :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
         *'ts'* and *'ts_id'* as columns. The power output is in MWh.
@@ -73,7 +72,7 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
         frac[i] = get_pv_tracking_ratio_state(pv_info, [state])
         if frac[i] is None:
             frac[i] = get_pv_tracking_ratio_state(
-                pv_info, interconnect2state[state2interconnect[state]]
+                pv_info, list(interconnect2abv[abv2interconnect[state]])
             )
 
     # Inverter Loading Ratio
@@ -86,29 +85,29 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
         info = pd.read_csv(current_url, nrows=1)
         tz, elevation = info["Local Time Zone"], info["Elevation"]
 
-        data_resource = pd.read_csv(current_url, skiprows=2)
+        data_resource = pd.read_csv(current_url, dtype=float, skiprows=2)
         data_resource.set_index(
             dates + timedelta(hours=int(tz.values[0])), inplace=True
         )
 
         # SAM
-        ssc = PySSC(ssc_lib)
+        ssc = pssc.PySSC()
 
-        resource = ssc.data_create()
-        ssc.data_set_number(resource, "lat", float(key[1]))
-        ssc.data_set_number(resource, "lon", float(key[0]))
-        ssc.data_set_number(resource, "tz", tz)
-        ssc.data_set_number(resource, "elev", elevation)
-        ssc.data_set_array(resource, "year", data_resource.index.year)
-        ssc.data_set_array(resource, "month", data_resource.index.month)
-        ssc.data_set_array(resource, "day", data_resource.index.day)
-        ssc.data_set_array(resource, "hour", data_resource.index.hour)
-        ssc.data_set_array(resource, "minute", data_resource.index.minute)
-        ssc.data_set_array(resource, "dn", data_resource["DNI"])
-        ssc.data_set_array(resource, "df", data_resource["DHI"])
-        ssc.data_set_array(resource, "wspd", data_resource["Wind Speed"])
-        ssc.data_set_array(resource, "tdry", data_resource["Temperature"])
-
+        solar_data = {
+            "lat": float(key[1]),
+            "lon": float(key[0]),
+            "tz": float(tz),
+            "elev": float(elevation),
+            "year": data_resource.index.year.tolist(),
+            "month": data_resource.index.month.tolist(),
+            "day": data_resource.index.day.tolist(),
+            "hour": data_resource.index.hour.tolist(),
+            "minute": data_resource.index.minute.tolist(),
+            "dn": data_resource["DNI"].tolist(),
+            "df": data_resource["DHI"].tolist(),
+            "wspd": data_resource["Wind Speed"].tolist(),
+            "tdry": data_resource["Temperature"].tolist(),
+        }
         for i in coord[key]:
             data_site = pd.DataFrame(
                 {
@@ -122,32 +121,26 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
 
             power = 0
             for j, axis in enumerate([0, 2, 4]):
-                core = ssc.data_create()
-                ssc.data_set_table(core, "solar_resource_data", resource)
-                # capacity in KW (DC)
-                ssc.data_set_number(core, "system_capacity", i[1] * 1000.0 * ilr)
-                ssc.data_set_number(core, "dc_ac_ratio", ilr)
-                ssc.data_set_number(core, "tilt", 30)
-                ssc.data_set_number(core, "azimuth", 180)
-                ssc.data_set_number(core, "inv_eff", 94)
-                ssc.data_set_number(core, "losses", 14)
-                ssc.data_set_number(core, "array_type", axis)
-                ssc.data_set_number(core, "gcr", 0.4)
-                ssc.data_set_number(core, "adjust:constant", 0)
+                pv_dict = {
+                    # capacity in KW (DC)
+                    "system_capacity": i[1] * 1000.0 * ilr,
+                    "dc_ac_ratio": ilr,
+                    "tilt": 30,
+                    "azimuth": 180,
+                    "inv_eff": 94,
+                    "losses": 14,
+                    "array_type": axis,
+                    "gcr": 0.4,
+                    "adjust:constant": 0,
+                }
 
-                mod = ssc.module_create("pvwattsv5")
-                ssc.module_exec(mod, core)
+                pv_dat = pssc.dict_to_ssc_table(pv_dict, "pvwattsv7")
+                pv = PVWatts.wrap(pv_dat)
+                pv.SolarResource.assign({"solar_resource_data": solar_data})
+                pv.execute()
 
                 ratio = frac[solar_plant.loc[i[0]].zone_id][j]
-                if j == 0:
-                    power = ratio * np.array(ssc.data_get_array(core, "gen")) / 1000
-                else:
-                    power = (
-                        power + ratio * np.array(ssc.data_get_array(core, "gen")) / 1000
-                    )
-
-                ssc.data_free(core)
-                ssc.module_free(mod)
+                power += ratio * np.array(pv.Outputs.gen) / 1000
 
             if is_leap_year is True:
                 data_site["Pout"] = np.insert(
@@ -157,8 +150,6 @@ def retrieve_data(solar_plant, email, api_key, ssc_lib, year="2016"):
                 data_site["Pout"] = power
 
             data = data.append(data_site, ignore_index=True, sort=False)
-
-        ssc.data_free(resource)
 
     data["plant_id"] = data["plant_id"].astype(np.int32)
     data["ts_id"] = data["ts_id"].astype(np.int32)

@@ -132,7 +132,7 @@ with other meteorological parameters must first be retrieved from NSRDB for
 each site. This information are then fed to the SAM Simulation Core (SCC) and
 the power output is retrieved. The SSC reflect the technology used: photovoltaic
 (PV), solar water heating and concentrating solar power (CSP). The
-[*PVWatts v5*][SAM_pvwatts] model is used for all the solar plants in the grid.
+[*PVWatts v7*][SAM_pvwatts] model is used for all the solar plants in the grid.
 The system size (in DC units) and the array type (fixed open rack, backtracked,
 1-axis and 2-axis) is set for each solar plant whereas a unique value of 1.25
 is used for the DC to AC ratio (see article from EIA on inverter loading ratios
@@ -348,7 +348,7 @@ usage.
 [NSRDB_signup]: https://developer.nrel.gov/signup/
 [SAM_web]: https://sam.nrel.gov/
 [SAM_sdk]: https://sam.nrel.gov/sdk
-[SAM_pvwatts]: https://www.nrel.gov/docs/fy14osti/62641.pdf
+[SAM_pvwatts]: https://nrel-pysam.readthedocs.io/en/master/modules/Pvwattsv7.html
 [NSRDB_naive_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_naive_demo.ipynb
 [NSRDB_sam_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/solardata/nsrdb/demo/nsrdb_sam_demo.ipynb
 [hydro_cf]: https://www.eia.gov/electricity/annual/html/epa_04_08_b.html
