@@ -3,6 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
+from prereise.gather.solardata.nsrdb.nrel_api import NrelApi
 
 
 def retrieve_data(solar_plant, email, api_key, year="2016"):
@@ -22,24 +23,12 @@ def retrieve_data(solar_plant, email, api_key, year="2016"):
     # Identify unique location
     coord = get_plant_info_unique_location(solar_plant)
 
-    base_url = "https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv"
-    payload = {
-        "api_key": api_key,
-        "names": year,
-        "leap_day": "true",
-        "interval": "60",
-        "utc": "true",
-        "email": email,
-        "attributes": "ghi",
-    }
-    qs = "&".join([f"{key}={value}" for key, value in payload.items()])
-    url = f"{base_url}?{qs}"
+    api = NrelApi(email, api_key)
 
     data = pd.DataFrame({"Pout": [], "plant_id": [], "ts": [], "ts_id": []})
 
     for key in tqdm(coord.keys(), total=len(coord)):
-        query = "wkt=POINT({lon}%20{lat})".format(lon=key[0], lat=key[1])
-        data_loc = pd.read_csv(f"{url}&{query}", skiprows=2)
+        data_loc = api.get_psm3_at(lat=key[1], lon=key[0], leap_day=True).data_resource
         ghi = data_loc.GHI.values
         data_loc = pd.DataFrame({"Pout": ghi})
         data_loc["Pout"] /= max(ghi)

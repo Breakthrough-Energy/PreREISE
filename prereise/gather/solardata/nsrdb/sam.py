@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 import numpy as np
 import pandas as pd
 import PySAM.Pvwattsv7 as PVWatts
@@ -12,13 +10,14 @@ from powersimdata.network.usa_tamu.constants.zones import (
 from tqdm import tqdm
 
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
+from prereise.gather.solardata.nsrdb.nrel_api import NrelApi
 from prereise.gather.solardata.pv_tracking import (
     get_pv_tracking_data,
     get_pv_tracking_ratio_state,
 )
 
 
-def retrieve_data(solar_plant, email, api_key, year="2016"):
+def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
     """Retrieves irradiance data from NSRDB and calculate the power output using
     the System Adviser Model (SAM).
 
@@ -46,19 +45,6 @@ def retrieve_data(solar_plant, email, api_key, year="2016"):
     # Identify unique location
     coord = get_plant_info_unique_location(solar_plant)
 
-    base_url = "https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv"
-    payload = {
-        "api_key": api_key,
-        "names": year,
-        "leap_day": "false",
-        "interval": "60",
-        "utc": "true",
-        "email": email,
-        "attributes": "dhi,dni,wind_speed,air_temperature",
-    }
-    qs = "&".join([f"{key}={value}" for key, value in payload.items()])
-    url = f"{base_url}?{qs}"
-
     data = pd.DataFrame({"Pout": [], "plant_id": [], "ts": [], "ts_id": []})
 
     # PV tracking ratios
@@ -77,37 +63,14 @@ def retrieve_data(solar_plant, email, api_key, year="2016"):
 
     # Inverter Loading Ratio
     ilr = 1.25
+    api = NrelApi(email, api_key, rate_limit)
 
     for key in tqdm(coord.keys(), total=len(coord)):
-        query = "wkt=POINT({lon}%20{lat})".format(lon=key[0], lat=key[1])
-        current_url = f"{url}&{query}"
 
-        info = pd.read_csv(current_url, nrows=1)
-        tz, elevation = info["Local Time Zone"], info["Elevation"]
+        solar_data = api.get_psm3_at(lat=key[1], lon=key[0], dates=dates).to_dict()
 
-        data_resource = pd.read_csv(current_url, dtype=float, skiprows=2)
-        data_resource.set_index(
-            dates + timedelta(hours=int(tz.values[0])), inplace=True
-        )
-
-        # SAM
         ssc = pssc.PySSC()
 
-        solar_data = {
-            "lat": float(key[1]),
-            "lon": float(key[0]),
-            "tz": float(tz),
-            "elev": float(elevation),
-            "year": data_resource.index.year.tolist(),
-            "month": data_resource.index.month.tolist(),
-            "day": data_resource.index.day.tolist(),
-            "hour": data_resource.index.hour.tolist(),
-            "minute": data_resource.index.minute.tolist(),
-            "dn": data_resource["DNI"].tolist(),
-            "df": data_resource["DHI"].tolist(),
-            "wspd": data_resource["Wind Speed"].tolist(),
-            "tdry": data_resource["Temperature"].tolist(),
-        }
         for i in coord[key]:
             data_site = pd.DataFrame(
                 {
