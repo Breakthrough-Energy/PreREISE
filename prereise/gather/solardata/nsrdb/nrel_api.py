@@ -58,7 +58,7 @@ class NrelApi:
         self.api_key = api_key
         self.interval = rate_limit
 
-    def _build_url(self, lat, lon, year="2016", leap_day=False):
+    def _build_url(self, lat, lon, attributes, year="2016", leap_day=False):
         """Construct url with formatted query string for downloading psm3
         (physical solar model) data
         :param str lat: latitude of the plant
@@ -75,7 +75,7 @@ class NrelApi:
             "interval": "60",
             "utc": "true",
             "email": self.email,
-            "attributes": "dhi,dni,wind_speed,air_temperature",
+            "attributes": attributes,
             "wkt": f"POINT({lon}%20{lat})",
         }
         query = "&".join([f"{key}={value}" for key, value in payload.items()])

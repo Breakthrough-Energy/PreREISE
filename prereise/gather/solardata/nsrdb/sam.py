@@ -67,7 +67,12 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
 
     for key in tqdm(coord.keys(), total=len(coord)):
 
-        solar_data = api.get_psm3_at(lat=key[1], lon=key[0], dates=dates).to_dict()
+        solar_data = api.get_psm3_at(
+            lat=key[1],
+            lon=key[0],
+            attributes="dhi,dni,wind_speed,air_temperature",
+            dates=dates,
+        ).to_dict()
 
         ssc = pssc.PySSC()
 

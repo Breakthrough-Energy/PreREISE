@@ -28,7 +28,9 @@ def retrieve_data(solar_plant, email, api_key, year="2016"):
     data = pd.DataFrame({"Pout": [], "plant_id": [], "ts": [], "ts_id": []})
 
     for key in tqdm(coord.keys(), total=len(coord)):
-        data_loc = api.get_psm3_at(lat=key[1], lon=key[0], leap_day=True).data_resource
+        data_loc = api.get_psm3_at(
+            lat=key[1], lon=key[0], attributes="ghi", leap_day=True
+        ).data_resource
         ghi = data_loc.GHI.values
         data_loc = pd.DataFrame({"Pout": ghi})
         data_loc["Pout"] /= max(ghi)
