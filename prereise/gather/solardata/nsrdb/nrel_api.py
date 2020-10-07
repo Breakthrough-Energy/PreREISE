@@ -1,8 +1,8 @@
-import time
 from dataclasses import dataclass
-from datetime import timedelta
 
 import pandas as pd
+
+from prereise.gather.rate_limit import RateLimit
 
 
 @dataclass
@@ -55,20 +55,7 @@ class NrelApi:
 
         self.email = email
         self.api_key = api_key
-        self.rate_limit = rate_limit
-        self.last_request_at = None
-
-    def _rate_limited(self, request_func):
-        if self.rate_limit is None:
-            return request_func()
-        if self.last_request_at is None:
-            self.last_request_at = time.time()
-        remaining = time.time() - self.last_request_at
-        if remaining < self.rate_limit:
-            time.sleep(remaining)
-        result = request_func()
-        self.last_request_at = time.time()
-        return result
+        self.limiter = RateLimit(rate_limit)
 
     def _build_url(self, lat, lon, year="2016", leap_day=False):
         """Construct url with formatted query string for downloading psm3
@@ -103,10 +90,10 @@ class NrelApi:
         series for the given year and location
         """
         url = self._build_url(lat, lon, year, leap_day)
-        info = self._rate_limited(lambda: pd.read_csv(url, nrows=1))
+        info = self.limiter.invoke(lambda: pd.read_csv(url, nrows=1))
         tz, elevation = info["Local Time Zone"], info["Elevation"]
 
-        data_resource = self._rate_limited(
+        data_resource = self.limiter.invoke(
             lambda: pd.read_csv(url, dtype=float, skiprows=2)
         )
         if dates is not None:
