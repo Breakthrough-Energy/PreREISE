@@ -63,6 +63,7 @@ class NrelApi:
         (physical solar model) data
         :param str lat: latitude of the plant
         :param str lon: longitude of the plant
+        :param str attributes: comma separated list of attributes to query
         :param str year: the year
         :param bool leap_day: whether to use a leap day
         :return: (*str*) -- the url to download csv data
@@ -81,16 +82,19 @@ class NrelApi:
         query = "&".join([f"{key}={value}" for key, value in payload.items()])
         return f"{base_url}?{query}"
 
-    def get_psm3_at(self, lat, lon, dates=None, year="2016", leap_day=False):
+    def get_psm3_at(self, lat, lon, attributes, year, leap_day, dates=None):
         """Get PSM3 data at a given point for the specified year.
         :param str lat: latitude of the plant
         :param str lon: longitude of the plant
+        :param str attributes: comma separated list of attributes to query
         :param str year: the year
         :param bool leap_day: whether to use a leap day
+        :param pd.DatetimeIndex dates: if provided, use to index the downloaded
+        data frame
         :return: (*Psm3Data*) -- a data class containing metadata and time
         series for the given year and location
         """
-        url = self._build_url(lat, lon, year, leap_day)
+        url = self._build_url(lat, lon, attributes, year, leap_day)
 
         @retry(interval=self.interval)
         def _get_info(url):

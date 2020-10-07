@@ -27,6 +27,7 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
     :param str year: year.
+    :param int/float rate_limit: minimum seconds to wait between requests to NREL
     :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
         *'ts'* and *'ts_id'* as columns. The power output is in MWh.
     """
@@ -66,11 +67,13 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
     api = NrelApi(email, api_key, rate_limit)
 
     for key in tqdm(coord.keys(), total=len(coord)):
-
+        lat, lon = key[1], key[0]
         solar_data = api.get_psm3_at(
-            lat=key[1],
-            lon=key[0],
+            lat,
+            lon,
             attributes="dhi,dni,wind_speed,air_temperature",
+            year=year,
+            leap_day=leap_day,
             dates=dates,
         ).to_dict()
 
