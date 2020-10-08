@@ -21,6 +21,7 @@ class Psm3Data:
     def to_dict(self):
         """Convert the data to the format expected by nrel-pysam for running
         SAM simulations
+
         :return: (*dict*) -- a dictionary which can be passed to the pvwattsv7
         module
         """
@@ -61,6 +62,7 @@ class NrelApi:
     def _build_url(self, lat, lon, attributes, year="2016", leap_day=False):
         """Construct url with formatted query string for downloading psm3
         (physical solar model) data
+
         :param str lat: latitude of the plant
         :param str lon: longitude of the plant
         :param str attributes: comma separated list of attributes to query
@@ -84,15 +86,15 @@ class NrelApi:
 
     def get_psm3_at(self, lat, lon, attributes, year, leap_day, dates=None):
         """Get PSM3 data at a given point for the specified year.
+
         :param str lat: latitude of the plant
         :param str lon: longitude of the plant
         :param str attributes: comma separated list of attributes to query
         :param str year: the year
         :param bool leap_day: whether to use a leap day
-        :param pd.DatetimeIndex dates: if provided, use to index the downloaded
-        data frame
-        :return: (*Psm3Data*) -- a data class containing metadata and time
-        series for the given year and location
+        :param pd.DatetimeIndex dates: if provided, use to index the downloaded data frame
+
+        :return: (*prereise.gather.solardata.nsrdb.nrel_api.Psm3Data*) -- a data class containing metadata and time series for the given year and location
         """
         url = self._build_url(lat, lon, attributes, year, leap_day)
 

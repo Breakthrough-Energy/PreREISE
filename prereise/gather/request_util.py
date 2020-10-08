@@ -6,8 +6,8 @@ from urllib.error import HTTPError
 
 class RateLimit:
     """Provides a way to call an arbitrary function at most once per interval.
-    :param int/float interval: the amount of time in seconds to wait between
-    actions
+
+    :param int/float interval: the amount of time in seconds to wait between actions
     """
 
     def __init__(self, interval=None):
@@ -17,6 +17,7 @@ class RateLimit:
 
     def invoke(self, action):
         """Call the action and return its value, waiting if necessary
+
         :param callable action: the thing to do
         :return: (*Any*) -- the return value of the action
         """
@@ -32,10 +33,11 @@ class RateLimit:
 
 def retry(retry_count=5, interval=None, allowed_exceptions=(HTTPError)):
     """Creates a decorator to handle retry logic.
+
     :param int retry_count: the max number of retries
     :param int/float interval: minimum spacing between retries
-    :param tuple allowed_exceptions: exceptions for which the function will be
-    retried, all others will be surfaced to the caller
+    :param tuple allowed_exceptions: exceptions for which the function will be retried, all others will be surfaced to the caller
+
     :return: (*Any*) -- the return value of the decorated function
     """
 
