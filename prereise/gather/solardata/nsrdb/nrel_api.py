@@ -18,6 +18,20 @@ class Psm3Data:
     elevation: float
     data_resource: pd.DataFrame
 
+    allowed_attrs = {
+        "dn": "DNI",
+        "df": "DHI",
+        "wspd": "Wind Speed",
+        "tdry": "Temperature",
+        "ghi": "GHI",
+    }
+
+    @staticmethod
+    def check_attrs(attributes):
+        for a in attributes.split(","):
+            if a not in allowed_attrs.keys():
+                raise ValueError(f"Unsupported attribute: {a}")
+
     def to_dict(self):
         """Convert the data to the format expected by nrel-pysam for running
         SAM simulations
@@ -25,7 +39,7 @@ class Psm3Data:
         :return: (*dict*) -- a dictionary which can be passed to the pvwattsv7
         module
         """
-        return {
+        result = {
             "lat": self.lat,
             "lon": self.lon,
             "tz": self.tz,
@@ -35,17 +49,25 @@ class Psm3Data:
             "day": self.data_resource.index.day.tolist(),
             "hour": self.data_resource.index.hour.tolist(),
             "minute": self.data_resource.index.minute.tolist(),
-            "dn": self.data_resource["DNI"].tolist(),
-            "df": self.data_resource["DHI"].tolist(),
-            "wspd": self.data_resource["Wind Speed"].tolist(),
-            "tdry": self.data_resource["Temperature"].tolist(),
         }
+        result.update(
+            {
+                k: self.data_resource[v].tolist()
+                for k, v in allowed_attrs.items()
+                if v in self.data_resource.columns
+            }
+        )
+        return result
 
 
 class NrelApi:
     """Provides an interface to the NREL API for PSM3 data. It supports
     downloading this data in csv format, which we use to calculate solar output
     of a set of plants. The user will need to provide an API key.
+    :param str email: email used for API key
+        `sign up <https://developer.nrel.gov/signup/>`_.
+    :param str api_key: API key.
+    :param int/float rate_limit: minimum seconds to wait between requests to NREL
     """
 
     def __init__(self, email, api_key, rate_limit=None):
@@ -96,6 +118,7 @@ class NrelApi:
 
         :return: (*prereise.gather.solardata.nsrdb.nrel_api.Psm3Data*) -- a data class containing metadata and time series for the given year and location
         """
+        Psm3Data.check_attrs(attributes)
         url = self._build_url(lat, lon, attributes, year, leap_day)
 
         @retry(interval=self.interval)

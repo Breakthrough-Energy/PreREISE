@@ -13,7 +13,7 @@ class RateLimit:
     def __init__(self, interval=None):
         """Constructor"""
         self.interval = interval
-        self.last_run_at = time.time()
+        self.last_run_at = time.time() - interval
 
     def invoke(self, action):
         """Call the action and return its value, waiting if necessary
