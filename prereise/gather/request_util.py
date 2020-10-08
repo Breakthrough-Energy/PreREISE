@@ -48,6 +48,7 @@ def retry(retry_count=5, interval=None, allowed_exceptions=(HTTPError)):
                 try:
                     return limiter.invoke(lambda: func(*args, **kwargs))
                 except allowed_exceptions as e:
+                    print(str(e))
                     pass
             print("Max retries reached!!")
 

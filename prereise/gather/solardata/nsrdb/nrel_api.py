@@ -113,4 +113,6 @@ class NrelApi:
             data_resource.set_index(
                 dates + timedelta(hours=int(tz.values[0])), inplace=True
             )
-        return Psm3Data(lat, lon, float(tz), float(elevation), data_resource)
+        return Psm3Data(
+            float(lat), float(lon), float(tz), float(elevation), data_resource
+        )

@@ -73,7 +73,7 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
             lon,
             attributes="dhi,dni,wind_speed,air_temperature",
             year=year,
-            leap_day=leap_day,
+            leap_day=False,
             dates=dates,
         ).to_dict()
 
