@@ -3,10 +3,13 @@ import os
 import platform
 import zipfile
 
+import pandas as pd
 import requests
 
+from powersimdata.network.usa_tamu.constants.zones import abv2state
 
-def download_data(es={"all"}, ta={"all"}, path=""):
+
+def download_data(es={"All"}, ta={"All"}, path=""):
     """Downloads the NREL EFS data for the specified electrification scenarios and
     technology advancements.
 
@@ -97,9 +100,123 @@ def download_data(es={"all"}, ta={"all"}, path=""):
                         os.remove(zip_path)
                     except NotImplementedError:
                         print("This compression is not supported by 7zip.")
+                        print("Extract the data manually.")
                 elif platform.system() == "Darwin":
+                    # TODO: Create the means to extract through the terminal
                     raise OSError("Other extraction methods not implemented in MacOS.")
                 elif platform.system() == "Linux":
+                    # TODO: Create the means to extract through the terminal
                     raise OSError("Other extraction methods not implemented in Linux.")
                 else:
                     raise OSError("Not a valid operating system.")
+
+
+def partition_by_sector(es, ta, year, sect={"all"}, path=""):
+    """Creates .csv files for each of the specified sectors given a specified
+    electrification scenario and technology advancement.
+
+    :param str es: An electrification scenario. Can choose one of: *'Reference'*,
+        *'Medium'*, or *'High'*.
+    :param str ta: A technology advancement. Can choose one of: *'Slow'*, *'Moderate'*,
+        or *'Rapid'*.
+    :param int year: The selected year's worth of demand data. Can choose one of: 2018,
+        2020, 2024, 2030, 2040, or 2050.
+    :param set/list sect: The sectors for which .csv files are to be created. Can
+        choose any of: *'Transportation'*, *'Residential'*, *'Commercial'*,
+        *'Industrial'*, or *'All'*. Defaults to *'All'*.
+    :param str path: The file path to which the sectoral data will be saved.
+    """
+
+    # Check that the inputs are of an appropriate type
+    if not isinstance(es, str):
+        raise TypeError("Electrification scenario must be input as a str.")
+    if not isinstance(ta, str):
+        raise TypeError("Technology advancement must be input as a str.")
+    if not isinstance(year, int):
+        raise TypeError("The year must be input as an int.")
+    if not isinstance(sect, (set, list)):
+        raise TypeError("Sector inputs must be input as a set or list.")
+    if not isinstance(path, str):
+        raise TypeError("The file path must be input as a str.")
+
+    # Check that the components of sect are str
+    if not all(isinstance(x, str) for x in sect):
+        raise TypeError("Each individual sector must be input as a str.")
+
+    # Reformat components of es, ta, and sect
+    es = es.capitalize()
+    ta = ta.capitalize()
+    sect = {x.capitalize() for x in sect}
+    if "All" in sect:
+        sect = {"Transportation", "Residential", "Commercial", "Industrial"}
+
+    # Check that the components of es, ta, year, and sect are valid
+    if es not in {"Reference", "Medium", "High"}:
+        raise ValueError(f"{es} is not a valid electrification scenario.")
+    if ta not in {"Slow", "Moderate", "Rapid"}:
+        raise ValueError(f"{ta} is not a valid technology advancement.")
+    if year not in {2018, 2020, 2024, 2030, 2040, 2050}:
+        raise ValueError(f"{year} is not a valid year.")
+    if not sect.issubset({"Transportation", "Residential", "Commercial", "Industrial"}):
+        invalid_sect = sect - {
+            "Transportation",
+            "Residential",
+            "Commercial",
+            "Industrial",
+        }
+        raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
+
+    # Access the actual path if not already provided
+    if len(path) == 0:
+        path = os.getcwd()
+        path = path.replace("\\", "/")
+
+    # Specify the file name and path
+    csv_name = "EFSLoadProfile_" + es + "_" + ta + ".csv"
+    if path.endswith("/"):
+        csv_path = path + csv_name
+    else:
+        csv_path = path + "/" + csv_name
+
+    # Download the specified NREL EFS dataset if it is not already downloaded
+    if not os.path.isfile(csv_path):
+        download_data({es}, {ta}, path)
+
+    # Load the data from the downloaded .csv file as a DataFrame
+    df = pd.read_csv(csv_path)
+
+    # Trim the DataFrame for only the specified year
+    df = df.loc[df["Year"] == year]
+
+    # Drop unnecessary "Year", "Electrification", and "TechnologyAdvancement" columns
+    df.drop(columns=["Year", "Electrification", "TechnologyAdvancement"], inplace=True)
+
+    # Sum by sector and state
+    df = df.groupby(["LocalHourID", "State", "Sector"], as_index=False).sum()
+
+    # Access the specified sectors
+    sect_ref = {}
+    sect_dem = {}
+    for i in sect:
+        sect_ref[i] = df.loc[df["Sector"] == i]
+
+        # Create new DataFrame, where indices and columns are from hours and states
+        sect_dem[i] = pd.DataFrame()
+        for j in sorted(list(set(abv2state) - {"AK", "HI"})):
+            sect_dem[i][j] = sect_ref[i].loc[sect_ref[i]["State"] == j, "LoadMW"].values
+            sect_dem[i].set_index(
+                pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+                inplace=True,
+            )
+            sect_dem[i].index.name = "UTC Time"
+
+        # Save the sectoral DataFrames to .csv files
+        new_csv_name = i + "_Demand_" + es + "_" + ta + "_" + str(year) + ".csv"
+        if path.endswith("/"):
+            new_csv_path = path + new_csv_name
+        else:
+            new_csv_path = path + "/" + new_csv_name
+        sect_dem[i].to_csv(new_csv_path)
+
+    # Delete the original .csv file
+    os.remove(csv_path)
