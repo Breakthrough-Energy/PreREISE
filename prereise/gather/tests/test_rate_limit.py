@@ -27,11 +27,11 @@ def sleepless(monkeypatch):
 
 def test_default_no_limit(sleepless):
     limiter = RateLimit()
-    _ = [limiter.invoke(lambda: i + 1) for i in range(10)]
+    _ = [limiter.invoke(lambda: "foo") for _ in range(10)]
     assert sleepless.time_sleeping == 0
 
 
 def test_sleep_occurrs(sleepless):
     limiter = RateLimit(24)
-    _ = [limiter.invoke(lambda: i + 1) for i in range(10)]
+    _ = [limiter.invoke(lambda: "foo") for _ in range(10)]
     assert sleepless.time_sleeping >= 240
