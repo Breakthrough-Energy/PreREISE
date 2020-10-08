@@ -5,7 +5,6 @@ import zipfile
 
 import pandas as pd
 import requests
-
 from powersimdata.network.usa_tamu.constants.zones import abv2state
 
 
@@ -204,11 +203,14 @@ def partition_by_sector(es, ta, year, sect={"all"}, path=""):
         sect_dem[i] = pd.DataFrame()
         for j in sorted(list(set(abv2state) - {"AK", "HI"})):
             sect_dem[i][j] = sect_ref[i].loc[sect_ref[i]["State"] == j, "LoadMW"].values
-            sect_dem[i].set_index(
-                pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
-                inplace=True,
-            )
-            sect_dem[i].index.name = "UTC Time"
+
+        # Add extra day for leap year and include time stamps
+        sect_dem[i] = account_for_leap_year(sect_dem[i])
+        sect_dem[i].set_index(
+            pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+            inplace=True,
+        )
+        sect_dem[i].index.name = "UTC Time"
 
         # Save the sectoral DataFrames to .csv files
         new_csv_name = i + "_Demand_" + es + "_" + ta + "_" + str(year) + ".csv"
@@ -220,3 +222,35 @@ def partition_by_sector(es, ta, year, sect={"all"}, path=""):
 
     # Delete the original .csv file
     os.remove(csv_path)
+
+
+def account_for_leap_year(df):
+    """Creates an additional day's worth of demand data to account for the additional
+    day that occurs during leap years. This function takes an 8760-hour DataFrame as
+    input and returns an 8784-hour DataFrame. To prevent the weekly structure of the
+    input DataFrame from being disrupted, the additional 24 hours of demand are merely
+    added to the end of hte input 8760-hour DataFrame for each state. The additional 24
+    hours of demand are set equal to the demand profile for January 2nd because January
+    2nd and December 31st occur on the same day of the week during a leap year.
+
+    :param pandas.DataFrame df: DataFrame of sectoral demand data. Rows are each hour
+        of the 8760 hours and Columns are the abbreviations of each state of the
+        contiguous U.S.
+    :return: (*pandas.DataFrame*) -- Sectoral demand data with 8784 hours and of a
+        similar form to the input DataFrame.
+    """
+
+    # Check the elements of the input DataFrame
+    if df.index.size != 8760:
+        raise ValueError("The input DataFrame does not have 8760 hours.")
+    if list(df.columns.values) != sorted(list(set(abv2state) - {"AK", "HI"})):
+        raise ValueError("The input DataFrame does not include all 48 states.")
+
+    # Get the demand for each state and each hour on January 2nd
+    jan2_dem = df.iloc[24:48]
+
+    # Append to the input DataFrame to create an 8784-hour profile
+    new_df = df.append(jan2_dem, ignore_index=True)
+
+    # Return the 8784-hour profile
+    return new_df
