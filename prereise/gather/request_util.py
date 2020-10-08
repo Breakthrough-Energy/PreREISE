@@ -13,7 +13,7 @@ class RateLimit:
     def __init__(self, interval=None):
         """Constructor"""
         self.interval = interval
-        self.last_run_at = time.time() - interval
+        self.last_run_at = None if interval is None else time.time() - interval
 
     def invoke(self, action):
         """Call the action and return its value, waiting if necessary
@@ -31,7 +31,7 @@ class RateLimit:
         return result
 
 
-def retry(retry_count=5, interval=None, allowed_exceptions=(HTTPError)):
+def retry(_func=None, retry_count=5, interval=None, allowed_exceptions=(HTTPError)):
     """Creates a decorator to handle retry logic.
 
     :param int retry_count: the max number of retries
@@ -56,4 +56,6 @@ def retry(retry_count=5, interval=None, allowed_exceptions=(HTTPError)):
 
         return wrapper
 
-    return decorator
+    if _func is None:
+        return decorator
+    return decorator(_func)

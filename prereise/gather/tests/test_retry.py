@@ -26,13 +26,12 @@ def test_return_value():
     assert 42 == return_something()
 
 
-def test_must_be_called():
+def test_decorate_without_call():
     @retry
-    def not_fully_decorated():
+    def still_works():
         return 42
 
-    with pytest.raises(TypeError):
-        not_fully_decorated()
+    assert 42 == still_works()
 
 
 def test_unhandled_exception():
