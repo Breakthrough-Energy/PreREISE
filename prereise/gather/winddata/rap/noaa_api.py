@@ -1,9 +1,7 @@
 import datetime
 from dataclasses import dataclass
-from io import BytesIO
 
 import requests
-from netCDF4 import Dataset
 
 
 @dataclass
@@ -24,15 +22,6 @@ class CoordBox:
         )
 
 
-"""
-201601/20160108/rap_130_20160108_0300_000.grb2?
-var=u-component_of_wind_height_above_ground&var=v-component_of_wind_height_above_ground
-&north=49.8203&west=-122.855&east=-96.2967&south=25.3307
-&disableProjSubset=on&horizStride=1&addLatLon=true
-&accept=netCDF
-"""
-
-
 class NoaaApi:
     """API client for downloading rap-130 data from NOAA.
 
@@ -49,13 +38,13 @@ class NoaaApi:
     def _set_params(self):
         """Set default query parameters that will be sent with each request"""
         extension = "accept=netCDF"
-        var_u = "u-component_of_wind_height_above_ground"
-        var_v = "v-component_of_wind_height_above_ground"
+        self.var_u = "u-component_of_wind_height_above_ground"
+        self.var_v = "v-component_of_wind_height_above_ground"
         self.params = [
             extension,
             self.box.to_query(),
-            f"var={var_u}",
-            f"var={var_v}",
+            f"var={self.var_u}",
+            f"var={self.var_v}",
             "disableProjSubset=on",
             "horizStride=1",
             "addLatLon=true",
@@ -93,7 +82,7 @@ class NoaaApi:
         url = NoaaApi.fallback_url if fallback else NoaaApi.base_url
         return url + time_slice + "&".join(self.params)
 
-    def get_hourly_data(self, start, end, check=True):
+    def get_hourly_data(self, start, end, check=False):
         """
         Return netCDF4 Dataset generator for the given query
         """
@@ -104,5 +93,5 @@ class NoaaApi:
             if response.status_code == 404:
                 url = self.build_url(time_slice, fallback=True)
                 response = httpfunc(url)
+
             yield response
-            # write to byte stream, open with Dataset
