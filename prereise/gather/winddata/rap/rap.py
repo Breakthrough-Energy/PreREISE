@@ -2,7 +2,6 @@ import datetime
 import os
 import time
 from collections import OrderedDict
-from io import BytesIO
 
 import numpy as np
 import pandas as pd
@@ -90,8 +89,7 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
         )
 
         if response.status_code == 200:
-            buf = BytesIO(response.content)
-            tmp = Dataset("tmp.nc", "r", memory=buf.getbuffer())
+            tmp = Dataset("tmp.nc", "r", memory=response.content)
             lon_grid = tmp.variables["lon"][:].flatten()
             lat_grid = tmp.variables["lat"][:].flatten()
             u_wsp = tmp.variables[noaa.var_u][0, 1, :, :].flatten()
