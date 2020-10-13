@@ -4,32 +4,16 @@ from dataclasses import dataclass
 import requests
 
 
-@dataclass
-class CoordBox:
-    north: float
-    south: float
-    west: float
-    east: float
-
-    def to_query(self):
-        return "&".join(
-            [
-                f"north={self.north}",
-                f"west={self.west}",
-                f"east={self.east}",
-                f"south={self.south}",
-            ]
-        )
-
-
 class NoaaApi:
     """API client for downloading rap-130 data from NOAA.
 
-    :param prereise.gather.winddata.rap.noaa_api.CoordBox box: geographic area
+    :param dict box: geographic area
     """
 
     base_url = "https://www.ncdc.noaa.gov/thredds/ncss/model-rap130/"
     fallback_url = "https://www.ncdc.noaa.gov/thredds/ncss/model-rap130-old/"
+    var_u = "u-component_of_wind_height_above_ground"
+    var_v = "v-component_of_wind_height_above_ground"
 
     def __init__(self, box):
         self.box = box
@@ -38,17 +22,14 @@ class NoaaApi:
     def _set_params(self):
         """Set default query parameters that will be sent with each request"""
         extension = "accept=netCDF"
-        self.var_u = "u-component_of_wind_height_above_ground"
-        self.var_v = "v-component_of_wind_height_above_ground"
         self.params = [
-            extension,
-            self.box.to_query(),
-            f"var={self.var_u}",
-            f"var={self.var_v}",
-            "disableProjSubset=on",
-            "horizStride=1",
-            "addLatLon=true",
-        ]
+            ("accept", "netCDF"),
+            ("var", NoaaApi.var_u),
+            ("var", NoaaApi.var_v),
+            ("disableProjSubset", "on"),
+            ("horizStride", "1"),
+            ("addLatLon", "true"),
+        ] + [(k, v) for k, v in self.box.items()]
 
     def get_url_list(self, start, end):
         """Enable calculating the final result size prior to download. Used for
@@ -64,6 +45,13 @@ class NoaaApi:
         return result
 
     def iter_hours(self, start, end):
+        """Iterate over the hours in the given range, yielding a path segment
+        matching the structure of NOAA's server
+
+        :param datetime start: the start date
+        :param datetime end: the end date
+        :return: (*Generator[str]*) -- path part of the url pertaining to time range
+        """
         step = datetime.timedelta(days=1)
         while start <= end:
             ts = start.strftime("%Y%m%d")
@@ -80,18 +68,29 @@ class NoaaApi:
         :return: (*str*) -- the url to download
         """
         url = NoaaApi.fallback_url if fallback else NoaaApi.base_url
-        return url + time_slice + "&".join(self.params)
+        return url + time_slice
 
-    def get_hourly_data(self, start, end, check=False):
+    def get_hourly_data(self, start, end):
+        """Iterate responses over the given time range
+
+        :param datetime start: the start date
+        :param datetime end: the end date
+        :return: (*Generator[requests.Response]*) -- yield the next http response
         """
-        Return netCDF4 Dataset generator for the given query
-        """
+
+        def download(time_slice, fallback=False):
+            url = self.build_url(time_slice, fallback)
+            return requests.get(url, stream=True, params=self.params)
+
         for time_slice in self.iter_hours(start, end):
-            url = self.build_url(time_slice)
-            httpfunc = lambda url: requests.head(url) if check else requests.get(url)
-            response = httpfunc(url)
+            response = download(time_slice)
             if response.status_code == 404:
-                url = self.build_url(time_slice, fallback=True)
-                response = httpfunc(url)
-
+                print(f"Got 404 response, trying fallback url. Original={url}")
+                download(time_slice, fallback=True)
+                if response.status_code == 404:
+                    print(
+                        "Content not found for the given range - it may be"
+                        + "available via tape archive, please contact NOAA for"
+                        + "support"
+                    )
             yield response

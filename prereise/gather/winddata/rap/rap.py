@@ -1,6 +1,5 @@
 import datetime
-import os
-import time
+import tempfile
 from collections import OrderedDict
 
 import numpy as np
@@ -10,7 +9,7 @@ from powersimdata.network.usa_tamu.constants.zones import id2abv
 from powersimdata.utility.distance import angular_distance, ll2uv
 from tqdm import tqdm
 
-from prereise.gather.winddata.rap.noaa_api import CoordBox, NoaaApi
+from prereise.gather.winddata.rap.noaa_api import NoaaApi
 from prereise.gather.winddata.rap.power_curves import (
     get_power,
     get_state_power_curves,
@@ -59,13 +58,13 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     start = datetime.datetime.strptime(start_date, "%Y-%m-%d")
     end = datetime.datetime.strptime(end_date, "%Y-%m-%d")
 
-    box = CoordBox(north_box, south_box, west_box, east_box)
+    box = {"north": north_box, "south": south_box, "west": west_box, "east": east_box}
     noaa = NoaaApi(box)
-    urls = noaa.get_url_list(start, end)
+    url_count = len(noaa.get_url_list(start, end))
 
     missing = []
     target2grid = OrderedDict()
-    size = len(urls) * n_target
+    size = url_count * n_target
     data = pd.DataFrame(
         {
             "plant_id": [0] * size,
@@ -82,18 +81,22 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
 
     first = True
     request_iter = enumerate(noaa.get_hourly_data(start, end))
-    for i, response in tqdm(request_iter, total=len(urls)):
+    for i, response in tqdm(request_iter, total=url_count):
 
         data_tmp = pd.DataFrame(
             {"plant_id": id_target, "ts": [dt] * n_target, "ts_id": [i + 1] * n_target}
         )
 
         if response.status_code == 200:
-            tmp = Dataset("tmp.nc", "r", memory=response.content)
+            with tempfile.NamedTemporaryFile() as f:
+                for chunk in response.iter_content(None):
+                    f.write(chunk)
+                tmp = Dataset(f.name, "r")
+
             lon_grid = tmp.variables["lon"][:].flatten()
             lat_grid = tmp.variables["lat"][:].flatten()
-            u_wsp = tmp.variables[noaa.var_u][0, 1, :, :].flatten()
-            v_wsp = tmp.variables[noaa.var_v][0, 1, :, :].flatten()
+            u_wsp = tmp.variables[NoaaApi.var_u][0, 1, :, :].flatten()
+            v_wsp = tmp.variables[NoaaApi.var_v][0, 1, :, :].flatten()
 
             n_grid = len(lon_grid)
             if first:
@@ -117,7 +120,6 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
                 for j in range(n_target)
             ]
             data_tmp["Pout"] = power
-
         else:
             missing.append(response.url)
 
