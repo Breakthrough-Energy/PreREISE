@@ -59,7 +59,7 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
 
     box = {"north": north_box, "south": south_box, "west": west_box, "east": east_box}
     noaa = NoaaApi(box)
-    url_count = len(noaa.get_url_list(start, end))
+    url_count = len(noaa.get_path_list(start, end))
 
     missing = []
     target2grid = OrderedDict()

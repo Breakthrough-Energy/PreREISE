@@ -39,10 +39,10 @@ def test_sleep_occurrs(sleepless):
 
 def test_decorator_with_default(sleepless):
     @rate_limit
-    def slow():
+    def fast():
         return "foo"
 
-    _ = [slow() for _ in range(10)]
+    _ = [fast() for _ in range(10)]
     assert sleepless.time_sleeping == 0
 
 
