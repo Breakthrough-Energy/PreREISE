@@ -57,6 +57,8 @@ def simple(data, wind_farm, inplace=True, curve="state"):
     _check_curve(curve)
     data_impute = data if inplace else data.copy()
     to_impute = _find_to_impute(data)
+    if to_impute is None:
+        return
 
     # Information on wind turbines & state average tubrine curves
     tpc = get_turbine_power_curves()
@@ -103,6 +105,8 @@ def gaussian(data, wind_farm, inplace=True, curve="state"):
     _check_curve(curve)
     data_impute = data if inplace else data.copy()
     to_impute = _find_to_impute(data)
+    if to_impute is None:
+        return
 
     # Information on wind turbines & state average tubrine curves
     tpc = get_turbine_power_curves()

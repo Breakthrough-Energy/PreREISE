@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from prereise.gather.request_util import RateLimit
+from prereise.gather.request_util import RateLimit, rate_limit
 
 
 class SleepCounter:
@@ -34,4 +34,22 @@ def test_default_no_limit(sleepless):
 def test_sleep_occurrs(sleepless):
     limiter = RateLimit(24)
     _ = [limiter.invoke(lambda: "foo") for _ in range(10)]
+    assert sleepless.time_sleeping >= 240 - 24  # no sleep on first iteration
+
+
+def test_decorator_with_default(sleepless):
+    @rate_limit
+    def fast():
+        return "foo"
+
+    _ = [fast() for _ in range(10)]
+    assert sleepless.time_sleeping == 0
+
+
+def test_decorator_with_limit(sleepless):
+    @rate_limit(interval=24)
+    def slow():
+        return "foo"
+
+    _ = [slow() for _ in range(10)]
     assert sleepless.time_sleeping >= 240 - 24  # no sleep on first iteration

@@ -1,16 +1,14 @@
 import datetime
-import os
-import time
 from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
-import requests
 from netCDF4 import Dataset
-from powersimdata.network.usa_tamu.constants.zones import id2state
+from powersimdata.network.usa_tamu.constants.zones import id2abv
 from powersimdata.utility.distance import angular_distance, ll2uv
 from tqdm import tqdm
 
+from prereise.gather.winddata.rap.noaa_api import NoaaApi
 from prereise.gather.winddata.rap.power_curves import (
     get_power,
     get_state_power_curves,
@@ -52,41 +50,20 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     state_target = [
         "Offshore"
         if wind_farm.loc[i].type == "wind_offshore"
-        else id2state[wind_farm.loc[i].zone_id]
+        else id2abv[wind_farm.loc[i].zone_id]
         for i in id_target
     ]
 
-    # Build query
-    link = "https://www.ncdc.noaa.gov/thredds/ncss/model-rap130/"
-
     start = datetime.datetime.strptime(start_date, "%Y-%m-%d")
     end = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-    step = datetime.timedelta(days=1)
 
-    files = []
-    while start <= end:
-        ts = start.strftime("%Y%m%d")
-        url = link + ts[:6] + "/" + ts + "/rap_130_" + ts
-        for h in range(10000, 12400, 100):
-            files.append(url + "_" + str(h)[1:] + "_000.grb2?")
-        start += step
+    box = {"north": north_box, "south": south_box, "west": west_box, "east": east_box}
+    noaa = NoaaApi(box)
+    url_count = len(noaa.get_path_list(start, end))
 
-    var_u = "u-component_of_wind_height_above_ground"
-    var_v = "v-component_of_wind_height_above_ground"
-    var = "var=" + var_u + "&" + "var=" + var_v
-
-    box = (
-        "north=%s&west=%s&east=%s&south=%s" % (north_box, west_box, east_box, south_box)
-        + "&"
-        + "disableProjSubset=on&horizStride=1&addLatLon=true"
-    )
-
-    extension = "accept=netCDF"
-
-    # Download files and fill out data frame
     missing = []
     target2grid = OrderedDict()
-    size = len(files) * n_target
+    size = url_count * n_target
     data = pd.DataFrame(
         {
             "plant_id": [0] * size,
@@ -102,24 +79,19 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     step = datetime.timedelta(hours=1)
 
     first = True
-    for i, file in tqdm(enumerate(files), total=len(files)):
-        if i != 0 and i % 2500 == 0:
-            time.sleep(300)
-        query = file + var + "&" + box + "&" + extension
-        request = requests.get(query)
+    request_iter = enumerate(noaa.get_hourly_data(start, end))
+    for i, response in tqdm(request_iter, total=url_count):
 
         data_tmp = pd.DataFrame(
             {"plant_id": id_target, "ts": [dt] * n_target, "ts_id": [i + 1] * n_target}
         )
 
-        if request.status_code == 200:
-            with open("tmp.nc", "wb") as f:
-                f.write(request.content)
-            tmp = Dataset("tmp.nc", "r")
+        if response.status_code == 200:
+            tmp = Dataset("tmp.nc", "r", memory=response.content)
             lon_grid = tmp.variables["lon"][:].flatten()
             lat_grid = tmp.variables["lat"][:].flatten()
-            u_wsp = tmp.variables[var_u][0, 1, :, :].flatten()
-            v_wsp = tmp.variables[var_v][0, 1, :, :].flatten()
+            u_wsp = tmp.variables[NoaaApi.var_u][0, 1, :, :].flatten()
+            v_wsp = tmp.variables[NoaaApi.var_v][0, 1, :, :].flatten()
 
             n_grid = len(lon_grid)
             if first:
@@ -143,11 +115,8 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
                 for j in range(n_target)
             ]
             data_tmp["Pout"] = power
-
-            tmp.close()
-            os.remove("tmp.nc")
         else:
-            missing.append(file)
+            missing.append(response.url)
 
             # missing data are set to NaN.
             data_tmp["U"] = [np.nan] * n_target
@@ -166,5 +135,4 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
 
     data.sort_values(by=["ts_id", "plant_id"], inplace=True)
     data.reset_index(inplace=True, drop=True)
-
     return data, missing

@@ -1,1 +1,1 @@
-__all__ = ["helpers", "impute", "rap"]
+__all__ = ["helpers", "impute", "rap", "noaa_api"]

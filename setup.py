@@ -10,12 +10,10 @@ setup(
     packages=find_packages(),
     package_data={
         "prereise": [
-            "gather/winddata/IECPowerCurves.csv",
-            "gather/hydrodata/data/cf.csv",
+            "gather/winddata/data/*.csv",
             "gather/data/EIA923_Schedules_2_3_4_5_M_12_2016_Final_Revision.xlsx",
-            "gather/hydrodata/data/hydro_gmt.csv",
-            "gather/hydrodata/data/texas_hydro_gmt.csv",
-            "gather/solardata/data/3_3_Solar_Y2016.csv",
+            "gather/hydrodata/data/*.csv",
+            "gather/solardata/data/*.csv",
         ]
     },
     zip_safe=False,
