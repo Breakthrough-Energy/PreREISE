@@ -41,9 +41,7 @@ def rate_limit(_func=None, interval=None):
 
         return wrapper
 
-    if _func is None:
-        return decorator
-    return decorator(_func)
+    return decorator if _func is None else decorator(_func)
 
 
 def retry(_func=None, retry_count=5, interval=None, allowed_exceptions=(HTTPError)):
@@ -71,6 +69,4 @@ def retry(_func=None, retry_count=5, interval=None, allowed_exceptions=(HTTPErro
 
         return wrapper
 
-    if _func is None:
-        return decorator
-    return decorator(_func)
+    return decorator if _func is None else decorator(_func)
