@@ -80,7 +80,7 @@ class NoaaApi:
 
         def download(time_slice, fallback=False):
             url = self.build_url(time_slice, fallback)
-            return requests.get(url, stream=True, params=self.params)
+            return requests.get(url, params=self.params)
 
         for time_slice in self.iter_hours(start, end):
             response = download(time_slice)

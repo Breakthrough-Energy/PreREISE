@@ -1,5 +1,4 @@
 import datetime
-import tempfile
 from collections import OrderedDict
 
 import numpy as np
@@ -88,11 +87,7 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
         )
 
         if response.status_code == 200:
-            with tempfile.NamedTemporaryFile() as f:
-                for chunk in response.iter_content(None):
-                    f.write(chunk)
-                tmp = Dataset(f.name, "r")
-
+            tmp = Dataset("tmp.nc", "r", memory=response.content)
             lon_grid = tmp.variables["lon"][:].flatten()
             lat_grid = tmp.variables["lat"][:].flatten()
             u_wsp = tmp.variables[NoaaApi.var_u][0, 1, :, :].flatten()
