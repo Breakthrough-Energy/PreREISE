@@ -4,6 +4,12 @@ from datetime import timedelta
 from urllib.error import HTTPError
 
 
+class TransientError(Exception):
+    """Used for errors which can be retried"""
+
+    pass
+
+
 class RateLimit:
     """Provides a way to call an arbitrary function at most once per interval.
 
@@ -56,10 +62,12 @@ def retry(_func=None, retry_count=5, interval=None, allowed_exceptions=(HTTPErro
 
     def decorator(func):
         limiter = RateLimit(interval)
+        func.retry_count = 0
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            for _ in range(retry_count):
+            for i in range(retry_count):
+                func.retry_count = i + 1
                 try:
                     return limiter.invoke(lambda: func(*args, **kwargs))
                 except allowed_exceptions as e:

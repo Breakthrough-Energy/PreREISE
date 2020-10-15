@@ -5,7 +5,7 @@ from io import BytesIO
 import pandas as pd
 import requests
 
-from prereise.gather.request_util import RateLimit, retry
+from prereise.gather.request_util import RateLimit, TransientError, retry
 
 
 @dataclass
@@ -130,9 +130,14 @@ class NrelApi:
         Psm3Data.check_attrs(attributes)
         url = self._build_url(lat, lon, attributes, year, leap_day)
 
-        @retry(interval=self.interval)
+        @retry(interval=self.interval, allowed_exceptions=(TransientError))
         def download(url):
-            return requests.get(url)
+            resp = requests.get(url)
+            if resp.status_code != 200:
+                raise TransientError(
+                    f"Failed with status={resp.status_code}, retry_count={download.retry_count}"
+                )
+            return resp
 
         resp = download(url)
 
