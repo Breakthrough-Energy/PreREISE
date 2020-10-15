@@ -19,17 +19,24 @@ class Psm3Data:
     data_resource: pd.DataFrame
 
     allowed_attrs = {
-        "dn": "DNI",
-        "df": "DHI",
-        "wspd": "Wind Speed",
-        "tdry": "Temperature",
+        "dni": "DNI",
+        "dhi": "DHI",
+        "wind_speed": "Wind Speed",
+        "air_temperature": "Temperature",
         "ghi": "GHI",
+    }
+
+    rename_attrs = {
+        "DHI": "df",
+        "DNI": "dn",
+        "Wind Speed": "wspd",
+        "Temperature": "tdry",
     }
 
     @staticmethod
     def check_attrs(attributes):
         for a in attributes.split(","):
-            if a not in allowed_attrs.keys():
+            if a not in Psm3Data.allowed_attrs.keys():
                 raise ValueError(f"Unsupported attribute: {a}")
 
     def to_dict(self):
@@ -52,8 +59,8 @@ class Psm3Data:
         }
         result.update(
             {
-                k: self.data_resource[v].tolist()
-                for k, v in allowed_attrs.items()
+                Psm3Data.rename_attrs[v]: self.data_resource[v].tolist()
+                for v in Psm3Data.allowed_attrs.values()
                 if v in self.data_resource.columns
             }
         )
