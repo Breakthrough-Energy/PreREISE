@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from io import BytesIO
 
 import pandas as pd
+import requests
 
 from prereise.gather.request_util import RateLimit, retry
 
@@ -129,17 +131,15 @@ class NrelApi:
         url = self._build_url(lat, lon, attributes, year, leap_day)
 
         @retry(interval=self.interval)
-        def _get_info(url):
-            return pd.read_csv(url, nrows=1)
+        def download(url):
+            return requests.get(url)
 
-        @retry(interval=self.interval)
-        def _get_data(url):
-            return pd.read_csv(url, dtype=float, skiprows=2)
+        resp = download(url)
 
-        info = _get_info(url)
+        info = pd.read_csv(BytesIO(resp.content), nrows=1)
+        data_resource = pd.read_csv(BytesIO(resp.content), dtype=float, skiprows=2)
+
         tz, elevation = info["Local Time Zone"], info["Elevation"]
-
-        data_resource = _get_data(url)
 
         if dates is not None:
             data_resource.set_index(
