@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from io import BytesIO
 
 import pandas as pd
+import requests
 
-from prereise.gather.request_util import RateLimit, retry
+from prereise.gather.request_util import RateLimit, TransientError, retry
 
 
 @dataclass
@@ -44,7 +46,7 @@ class Psm3Data:
         SAM simulations
 
         :return: (*dict*) -- a dictionary which can be passed to the pvwattsv7
-        module
+            module
         """
         result = {
             "lat": self.lat,
@@ -71,6 +73,7 @@ class NrelApi:
     """Provides an interface to the NREL API for PSM3 data. It supports
     downloading this data in csv format, which we use to calculate solar output
     of a set of plants. The user will need to provide an API key.
+
     :param str email: email used for API key
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
@@ -128,18 +131,23 @@ class NrelApi:
         Psm3Data.check_attrs(attributes)
         url = self._build_url(lat, lon, attributes, year, leap_day)
 
-        @retry(interval=self.interval)
-        def _get_info(url):
-            return pd.read_csv(url, nrows=1)
+        @retry(interval=self.interval, allowed_exceptions=(TransientError))
+        def download(url):
+            resp = requests.get(url)
+            if resp.status_code == 429:
+                raise TransientError(
+                    f"Too many requests, retry_count={download.retry_count}"
+                )
+            if resp.status_code != 200:
+                raise Exception(f"Request failed: status_code={resp.status_code}")
+            return resp
 
-        @retry(interval=self.interval)
-        def _get_data(url):
-            return pd.read_csv(url, dtype=float, skiprows=2)
+        resp = download(url)
 
-        info = _get_info(url)
+        info = pd.read_csv(BytesIO(resp.content), nrows=1)
+        data_resource = pd.read_csv(BytesIO(resp.content), dtype=float, skiprows=2)
+
         tz, elevation = info["Local Time Zone"], info["Elevation"]
-
-        data_resource = _get_data(url)
 
         if dates is not None:
             data_resource.set_index(
