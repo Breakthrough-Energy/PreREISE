@@ -46,7 +46,7 @@ class Psm3Data:
         SAM simulations
 
         :return: (*dict*) -- a dictionary which can be passed to the pvwattsv7
-        module
+            module
         """
         result = {
             "lat": self.lat,
@@ -73,6 +73,7 @@ class NrelApi:
     """Provides an interface to the NREL API for PSM3 data. It supports
     downloading this data in csv format, which we use to calculate solar output
     of a set of plants. The user will need to provide an API key.
+
     :param str email: email used for API key
         `sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
@@ -133,10 +134,12 @@ class NrelApi:
         @retry(interval=self.interval, allowed_exceptions=(TransientError))
         def download(url):
             resp = requests.get(url)
-            if resp.status_code != 200:
+            if resp.status_code == 429:
                 raise TransientError(
-                    f"Failed with status={resp.status_code}, retry_count={download.retry_count}"
+                    f"Too many requests, retry_count={download.retry_count}"
                 )
+            if resp.status_code != 200:
+                raise Exception(f"Request failed: status_code={resp.status_code}")
             return resp
 
         resp = download(url)
