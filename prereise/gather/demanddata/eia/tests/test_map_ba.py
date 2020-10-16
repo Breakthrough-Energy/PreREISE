@@ -1,5 +1,5 @@
 import pandas as pd
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 
 from prereise.gather.demanddata.eia.map_ba import (
     map_to_loadzone,
