@@ -11,8 +11,10 @@
 * Modifications to source files(s): None
 * Location: ***prereise/gather/data/EIA923_Schedules_2_3_4_5_M_12_2016_Final_Revision.xlsx***
 
+##### Legal Note
+* Acknowledge EIA as the source
 
-
+---
 ### Demand
 #### Southwest Power Pool (SPP)
 ##### Source
@@ -26,7 +28,10 @@
 * Modifications to source file(s): None
 * Location: ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/spp/load/****
 
----
+##### Legal Note
+* Data from this source may be freely copied and distributed except in connection with a commercial publication. 
+* This requirement must be passed on to any users of the data set.
+
 
 ##### Source
 * Name: Legacy BAs geographical coverage
@@ -39,6 +44,8 @@
 * Modifications to source file(s): None
 * Location: ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/spp/spp_counties_owners.xlsx***
 
+##### Legal Note
+* Legal review pending
 
 #### Midcontinent Independent System Operator (MISO)
 ##### Source
@@ -54,8 +61,11 @@
   * ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/miso/20151231_dfal_hist.xls***
   * ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/miso/20161231_dfal_hist.xls***
 
+##### Legal Note
+* Requesting attribution
+* Provide a copy of the final product to MISO
 
-
+---
 ### Hydro
 #### Energy Information Administration (EIA)
 ##### Source
@@ -69,7 +79,8 @@
 * Modifications to source file(s): extract 2015, 2016 and 2017 monthly capacity factors for conventional hydropower
 * Location: ***prereise/gather/data/hydrodata/data/usa_hydro_capacity_factors.csv***
 
----
+#### Legal Note
+* Acknowledge EIA as the source
 
 #### Electric Reliability Council of Texas (ERCOT)
 ##### Source
@@ -83,7 +94,8 @@
 * Modifications to source file(s): monthly files have been concatenated and timestamps have been converted to UTC.
 * Location: ***prereise/gather/data/hydrodata/data/texas_hydro_generation.csv***
 
----
+#### Legal Note
+* Disclose modifications
 
 #### U.S. Army Corps of Engineers (USACE)
 ##### Source
@@ -97,8 +109,10 @@
 * Modifications to source file(s): power output on 4/26/2019 16:00 UTC for two dams (WAN and PRD) exceeds their respective capacity. These outliers were replaced with an average of the hour before and after the outlier hour, for each of the two dams.
 * Location: ***prereise/gather/data/hydrodata/data/western_hydro_generation.csv***
 
+#### Legal Note
+* Public data
 
-
+---
 ### Solar
 #### Energy Information Administration (EIA)
 ##### Source
@@ -112,8 +126,10 @@
 * Modifications to source file(s): convert to `csv`
 * Location: ***prereise/gather/data/solardata/data/3_3_Solar_Y2016.csv***
 
+#### Legal Note
+* Acknowledge EIA as the source
 
-
+---
 ### Wind
 #### Energy Information Administration (EIA)
 ##### Source
@@ -126,3 +142,8 @@
 ##### Destination
 * Modifications to source file(s): convert to `csv`
 * Location: ***prereise/gather/data/winddata/data/3_2_Wind_Y2016.csv***
+
+#### Legal Note
+* Acknowledge EIA as the source
+
+---
