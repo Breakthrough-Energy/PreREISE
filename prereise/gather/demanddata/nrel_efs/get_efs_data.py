@@ -19,6 +19,14 @@ def download_data(es={"All"}, ta={"All"}, path=""):
         choose any of: *'Slow'*, *'Moderate'*, *'Rapid'*, or *'All'*. Defaults to
         *'All'*.
     :param str path: The file path to which the NREL EFS data will be downloaded.
+    :raises TypeError: if es and ta are not input as a set or list, if path is not
+        input as a str, or if the components of es and ta are not input as str.
+    :raises ValueError: if the components of es and ta are not valid.
+    :raises NotImplementedError: if the method for uncompressing a file that has been
+        compressed a certain way is not implemented.
+    :raises OSError: if the specified 7zip directory cannot be found (on Windows
+        machines) or if compression outside of Python's zipfile module is attempted on
+        non-Windows machines.
     """
 
     # Check that the inputs are of an appropriate type
@@ -110,7 +118,7 @@ def download_data(es={"All"}, ta={"All"}, path=""):
                     raise OSError("Not a valid operating system.")
 
 
-def partition_by_sector(es, ta, year, sect={"all"}, path=""):
+def partition_by_sector(es, ta, year, sect={"All"}, path="", save=True):
     """Creates .csv files for each of the specified sectors given a specified
     electrification scenario and technology advancement.
 
@@ -124,6 +132,14 @@ def partition_by_sector(es, ta, year, sect={"all"}, path=""):
         choose any of: *'Transportation'*, *'Residential'*, *'Commercial'*,
         *'Industrial'*, or *'All'*. Defaults to *'All'*.
     :param str path: The file path to which the sectoral data will be saved.
+    :param bool save: Determines whether or not the .csv file is saved. Defaults to
+        True.
+    :return: (*dict*) -- A dict of pandas.DataFrame objects that contain the specified
+        sectoral demand.
+    :raises TypeError: if es and ta are not input as str, if year is not input as an
+        int, if sect is not input as a set or list, if path is not input as a str, or
+        if the components of sect are not input as str.
+    :raises ValueError: if es, ta, year, or the components of sect are not valid.
     """
 
     # Check that the inputs are of an appropriate type
@@ -212,16 +228,20 @@ def partition_by_sector(es, ta, year, sect={"all"}, path=""):
         )
         sect_dem[i].index.name = "UTC Time"
 
-        # Save the sectoral DataFrames to .csv files
-        new_csv_name = i + "_Demand_" + es + "_" + ta + "_" + str(year) + ".csv"
-        if path.endswith("/"):
-            new_csv_path = path + new_csv_name
-        else:
-            new_csv_path = path + "/" + new_csv_name
-        sect_dem[i].to_csv(new_csv_path)
+        # Save the sectoral DataFrames to .csv files, if desired
+        if save == True:
+            new_csv_name = i + "_Demand_" + es + "_" + ta + "_" + str(year) + ".csv"
+            if path.endswith("/"):
+                new_csv_path = path + new_csv_name
+            else:
+                new_csv_path = path + "/" + new_csv_name
+            sect_dem[i].to_csv(new_csv_path)
 
     # Delete the original .csv file
     os.remove(csv_path)
+
+    # Return the dictionary containing the formatted sectoral demand data
+    return sect_dem
 
 
 def account_for_leap_year(df):
@@ -229,7 +249,7 @@ def account_for_leap_year(df):
     day that occurs during leap years. This function takes an 8760-hour DataFrame as
     input and returns an 8784-hour DataFrame. To prevent the weekly structure of the
     input DataFrame from being disrupted, the additional 24 hours of demand are merely
-    added to the end of hte input 8760-hour DataFrame for each state. The additional 24
+    added to the end of the input 8760-hour DataFrame for each state. The additional 24
     hours of demand are set equal to the demand profile for January 2nd because January
     2nd and December 31st occur on the same day of the week during a leap year.
 
@@ -238,6 +258,8 @@ def account_for_leap_year(df):
         contiguous U.S.
     :return: (*pandas.DataFrame*) -- Sectoral demand data with 8784 hours and of a
         similar form to the input DataFrame.
+    :raises ValueError: if the dimensions of the input DataFrame do not reflect 8760
+        hours or 48 states.
     """
 
     # Check the elements of the input DataFrame
