@@ -1,6 +1,7 @@
 import io
 import os
 import platform
+import subprocess
 import zipfile
 
 import pandas as pd
@@ -8,7 +9,7 @@ import requests
 from powersimdata.network.usa_tamu.constants.zones import abv2state
 
 
-def download_data(es={"All"}, ta={"All"}, path=""):
+def download_data(es={"All"}, ta={"All"}, fpath=""):
     """Downloads the NREL EFS data for the specified electrification scenarios and
     technology advancements.
 
@@ -18,8 +19,8 @@ def download_data(es={"All"}, ta={"All"}, path=""):
     :param set/list ta: The technology advancements that will be downloaded. Can
         choose any of: *'Slow'*, *'Moderate'*, *'Rapid'*, or *'All'*. Defaults to
         *'All'*.
-    :param str path: The file path to which the NREL EFS data will be downloaded.
-    :raises TypeError: if es and ta are not input as a set or list, if path is not
+    :param str fpath: The file path to which the NREL EFS data will be downloaded.
+    :raises TypeError: if es and ta are not input as a set or list, if fpath is not
         input as a str, or if the components of es and ta are not input as str.
     :raises ValueError: if the components of es and ta are not valid.
     :raises NotImplementedError: if the method for uncompressing a file that has been
@@ -34,7 +35,7 @@ def download_data(es={"All"}, ta={"All"}, path=""):
         raise TypeError("Electrification scenarios must be input as a set or list.")
     if not isinstance(ta, (set, list)):
         raise TypeError("Technology advancements must be input as a set or list.")
-    if not isinstance(path, str):
+    if not isinstance(fpath, str):
         raise TypeError("The file path must be input as a str.")
 
     # Check that the components of es and ta are str
@@ -60,9 +61,8 @@ def download_data(es={"All"}, ta={"All"}, path=""):
         raise ValueError(f'Invalid electrification scenarios: {", ".join(invalid_ta)}')
 
     # Access the actual path if not already provided
-    if len(path) == 0:
-        path = os.getcwd()
-        path = path.replace("\\", "/")
+    if len(fpath) == 0:
+        fpath = os.getcwd()
 
     # Download each of the specified load profiles
     for i in es:
@@ -71,19 +71,18 @@ def download_data(es={"All"}, ta={"All"}, path=""):
                 # Assign path and file names
                 zip_name = "EFSLoadProfile_" + i + "_" + j + ".zip"
                 url = "https://data.nrel.gov/system/files/126/" + zip_name
-                if path.endswith("/"):
-                    zip_path = path + zip_name
-                else:
-                    zip_path = path + "/" + zip_name
+                zip_path = os.path.join(fpath, zip_name)
 
                 # Try Python's zipfile module first
                 r = requests.get(url, stream=True)
                 if r.status_code != requests.codes.ok:
                     r.raise_for_status()
                 z = zipfile.ZipFile(io.BytesIO(r.content))
-                z.extractall(path)
+                z.extractall(fpath)
+                print("File successfully extracted!")
             except NotImplementedError:
                 print("This compression is not supported by the zipfile module.")
+                print("Trying other extraction methods supported by your OS.")
 
                 # Save a local copy of the .zip file for extraction
                 open(zip_name, "wb").write(r.content)
@@ -92,22 +91,26 @@ def download_data(es={"All"}, ta={"All"}, path=""):
                         # Try using 7zip, if it is installed
                         sz_path = "C:/Program Files/7-Zip/7z.exe"
                         if not os.path.isfile(sz_path):
-                            raise OSError(
-                                "7zip is not in this directory or is not installed."
+                            print(
+                                "7zip is not in this directory or is not "
+                                + "installed. Extract the data manually "
+                                + "(refer to documentation)."
                             )
-                        os.system(
+                            continue
+                        subprocess.check_call(
                             'cmd /c powershell -c & "'
                             + sz_path
                             + '" x "'
                             + zip_path
                             + '" -o"'
-                            + path
-                            + '"'
+                            + fpath
+                            + '" -y'
                         )
                         os.remove(zip_path)
-                    except NotImplementedError:
-                        print("This compression is not supported by 7zip.")
-                        print("Extract the data manually.")
+                        print("File successfully extracted!")
+                    except subprocess.CalledProcessError:
+                        print("This file could not be extracted using 7zip.")
+                        print("Extract the data manually (refer to documentation).")
                 elif platform.system() == "Darwin":
                     # TODO: Create the means to extract through the terminal
                     raise OSError("Other extraction methods not implemented in MacOS.")
@@ -118,7 +121,7 @@ def download_data(es={"All"}, ta={"All"}, path=""):
                     raise OSError("Not a valid operating system.")
 
 
-def partition_by_sector(es, ta, year, sect={"All"}, path="", save=True):
+def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
     """Creates .csv files for each of the specified sectors given a specified
     electrification scenario and technology advancement.
 
@@ -131,13 +134,13 @@ def partition_by_sector(es, ta, year, sect={"All"}, path="", save=True):
     :param set/list sect: The sectors for which .csv files are to be created. Can
         choose any of: *'Transportation'*, *'Residential'*, *'Commercial'*,
         *'Industrial'*, or *'All'*. Defaults to *'All'*.
-    :param str path: The file path to which the sectoral data will be saved.
+    :param str fpath: The file path to which the sectoral data will be saved.
     :param bool save: Determines whether or not the .csv file is saved. Defaults to
         True.
     :return: (*dict*) -- A dict of pandas.DataFrame objects that contain the specified
         sectoral demand.
     :raises TypeError: if es and ta are not input as str, if year is not input as an
-        int, if sect is not input as a set or list, if path is not input as a str, or
+        int, if sect is not input as a set or list, if fpath is not input as a str, or
         if the components of sect are not input as str.
     :raises ValueError: if es, ta, year, or the components of sect are not valid.
     """
@@ -151,7 +154,7 @@ def partition_by_sector(es, ta, year, sect={"All"}, path="", save=True):
         raise TypeError("The year must be input as an int.")
     if not isinstance(sect, (set, list)):
         raise TypeError("Sector inputs must be input as a set or list.")
-    if not isinstance(path, str):
+    if not isinstance(fpath, str):
         raise TypeError("The file path must be input as a str.")
 
     # Check that the components of sect are str
@@ -182,20 +185,16 @@ def partition_by_sector(es, ta, year, sect={"All"}, path="", save=True):
         raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
 
     # Access the actual path if not already provided
-    if len(path) == 0:
-        path = os.getcwd()
-        path = path.replace("\\", "/")
+    if len(fpath) == 0:
+        fpath = os.getcwd()
 
     # Specify the file name and path
     csv_name = "EFSLoadProfile_" + es + "_" + ta + ".csv"
-    if path.endswith("/"):
-        csv_path = path + csv_name
-    else:
-        csv_path = path + "/" + csv_name
+    csv_path = os.path.join(fpath, csv_name)
 
     # Download the specified NREL EFS dataset if it is not already downloaded
     if not os.path.isfile(csv_path):
-        download_data({es}, {ta}, path)
+        download_data({es}, {ta}, fpath)
 
     # Load the data from the downloaded .csv file as a DataFrame
     df = pd.read_csv(csv_path)
@@ -231,10 +230,7 @@ def partition_by_sector(es, ta, year, sect={"All"}, path="", save=True):
         # Save the sectoral DataFrames to .csv files, if desired
         if save == True:
             new_csv_name = i + "_Demand_" + es + "_" + ta + "_" + str(year) + ".csv"
-            if path.endswith("/"):
-                new_csv_path = path + new_csv_name
-            else:
-                new_csv_path = path + "/" + new_csv_name
+            new_csv_path = os.path.join(fpath, new_csv_name)
             sect_dem[i].to_csv(new_csv_path)
 
     # Delete the original .csv file

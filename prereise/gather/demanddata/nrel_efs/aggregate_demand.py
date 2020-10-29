@@ -1,6 +1,9 @@
 import pandas as pd
 from powersimdata.network.usa_tamu.constants.zones import abv2state
-from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_by_sector
+
+from prereise.gather.demanddata.nrel_efs.get_efs_data import (
+    partition_by_sector,
+)
 
 
 def combine_efs_demand(es, ta, year, local_sects=None, local_paths=None, save=None):
