@@ -6,15 +6,33 @@ This package gathers and builds demand, hydro, solar, and wind profiles. The
 profiles are needed to run scenarios on the U.S. electrical grid.
 
 
-
-
 ## 1. Setup/Install
-In the PreREISE package, locate the ***setup.py*** file and type:
-`pip3 install .`. The other option is to update the PYTHONPATH environment
-variable.
+Here are the instructions to install the **PreREISE** package. We strongly recommend that you pick one of the following options.
 
-If using pipenv, you can install the pinned dependencies from the lock file
-using `pipenv sync --dev`.
+
+### A. Using pipenv
+If not already done, install `pipenv` (see their [webpage](https://pipenv.pypa.io/en/latest/)) and run:
+```bash
+pipenv sync
+pipenv shell
+```
+in the root folder of the package. The first command will create a virtual environment and install the dependencies. The second command will activate the environment.
+
+
+### B. Using the ***requirements.txt*** file
+First create an environment using `venv` (more details [here](https://docs.python.org/3/library/venv.html)). Note that `venv` is included in the Python standard library and requires no additional installation. Then, activate your environment and run:
+```bash
+pip install -r requirements.txt
+```
+in the root folder of the package.
+
+
+### C. Path
+Whatever method you choose, if you wish to access the modules located in **PreREISE** from anywhere on your machine, do:
+```bash
+pip install .
+```
+in the root folder of your package or alternatively, setup the `PYTHONPATH` global variable.
 
 
 ## 2. Gather Data for Simulation
