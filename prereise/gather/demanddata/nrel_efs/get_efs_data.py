@@ -88,6 +88,7 @@ def download_data(es={"All"}, ta={"All"}, fpath=""):
                 open(zip_name, "wb").write(r.content)
                 if platform.system() == "Windows":
                     try:
+                        # Windows Command Line does not support this type of compression
                         # Try using 7zip, if it is installed
                         sz_path = "C:/Program Files/7-Zip/7z.exe"
                         if not os.path.isfile(sz_path):
@@ -111,14 +112,17 @@ def download_data(es={"All"}, ta={"All"}, fpath=""):
                     except subprocess.CalledProcessError:
                         print("This file could not be extracted using 7zip.")
                         print("Extract the data manually (refer to documentation).")
-                elif platform.system() == "Darwin":
-                    # TODO: Create the means to extract through the terminal
-                    raise OSError("Other extraction methods not implemented in MacOS.")
-                elif platform.system() == "Linux":
-                    # TODO: Create the means to extract through the terminal
-                    raise OSError("Other extraction methods not implemented in Linux.")
+                elif platform.system() in {"Darwin", "Linux"}:
+                    try:
+                        # Try unzipping using the Terminal
+                        subprocess.check_call("unzip -o " + zip_path + " -d " + fpath)
+                        os.remove(zip_path)
+                        print("File successfully extracted!")
+                    except subprocess.CalledProcessError:
+                        print("This file could not be extracted using the Terminal.")
+                        print("Extract the data manually (refer to documentation).")
                 else:
-                    raise OSError("Not a valid operating system.")
+                    raise OSError("This operating system is not supported.")
 
 
 def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
@@ -134,9 +138,10 @@ def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
     :param set/list sect: The sectors for which .csv files are to be created. Can
         choose any of: *'Transportation'*, *'Residential'*, *'Commercial'*,
         *'Industrial'*, or *'All'*. Defaults to *'All'*.
-    :param str fpath: The file path to which the sectoral data will be saved.
+    :param str fpath: The file path where the demand data might be saved and to where 
+        the sectoral data will be saved.
     :param bool save: Determines whether or not the .csv file is saved. Defaults to
-        True.
+        True. If the file is saved, it is saved to the same location as fpath.
     :return: (*dict*) -- A dict of pandas.DataFrame objects that contain the specified
         sectoral demand.
     :raises TypeError: if es and ta are not input as str, if year is not input as an
