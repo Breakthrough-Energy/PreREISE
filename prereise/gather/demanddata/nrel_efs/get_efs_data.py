@@ -138,7 +138,7 @@ def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
     :param set/list sect: The sectors for which .csv files are to be created. Can
         choose any of: *'Transportation'*, *'Residential'*, *'Commercial'*,
         *'Industrial'*, or *'All'*. Defaults to *'All'*.
-    :param str fpath: The file path where the demand data might be saved and to where 
+    :param str fpath: The file path where the demand data might be saved and to where
         the sectoral data will be saved.
     :param bool save: Determines whether or not the .csv file is saved. Defaults to
         True. If the file is saved, it is saved to the same location as fpath.

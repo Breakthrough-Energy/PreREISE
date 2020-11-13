@@ -1,6 +1,6 @@
 import pandas as pd
+from powersimdata.input.grid import Grid
 from powersimdata.network.usa_tamu.constants.zones import abv2state, id2abv
-from powersimdata.scenario.scenario import Scenario
 
 
 def map_to_loadzone(agg_dem, save=None):
@@ -32,11 +32,8 @@ def map_to_loadzone(agg_dem, save=None):
     if set(agg_dem.columns.values) != set(abv2state) - {"AK", "HI"}:
         raise ValueError("This data does not include all 48 states.")
 
-    # Create a dummy grid instance
-    s = Scenario("")
-    s.state.set_builder(["USA"])
-    s.state.builder.set_name("test", "dummy")
-    grid = s.state.get_grid()
+    # Grab the grid information
+    grid = Grid(["USA"])
 
     # Map the states to the load zone IDs
     abv2id = {}
