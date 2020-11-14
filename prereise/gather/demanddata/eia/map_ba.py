@@ -40,8 +40,7 @@ def get_demand_in_loadzone(agg_demand, bus_map):
     :return: (*pandas.DataFrame*) -- data frame with demand columns according
         to load zone.
     """
-    ba_agg = bus_map[["BA", "Pd"]].groupby("BA")\
-        .sum().rename(columns={"Pd": "PdTotal"})
+    ba_agg = bus_map[["BA", "Pd"]].groupby("BA").sum().rename(columns={"Pd": "PdTotal"})
 
     ba_scaling_factor = bus_map.merge(ba_agg, left_on="BA", right_on="BA")
     ba_scaling_factor = ba_scaling_factor.assign(
@@ -55,13 +54,11 @@ def get_demand_in_loadzone(agg_demand, bus_map):
         for zone_name in zone_scaling_df.index.get_level_values(0).to_list():
             if zone_name in zone_demand.columns.to_list():
                 zone_demand[zone_name] += (
-                    zone_scaling_df.loc[zone_name, "zone_scaling"]
-                    * agg_demand[ba_name]
+                    zone_scaling_df.loc[zone_name, "zone_scaling"] * agg_demand[ba_name]
                 )
             else:
                 zone_demand[zone_name] = (
-                    zone_scaling_df.loc[zone_name, "zone_scaling"]
-                    * agg_demand[ba_name]
+                    zone_scaling_df.loc[zone_name, "zone_scaling"] * agg_demand[ba_name]
                 )
     return zone_demand
 
@@ -83,8 +80,7 @@ def map_buses_to_county(bus_county_map):
     bus_county_map.loc[:, "County"] = None
     bus_county_map.loc[:, "BA"] = None
     bus_no_county_match = []
-    for index, row in tqdm(bus_county_map.iterrows(),
-                           total=len(bus_county_map)):
+    for index, row in tqdm(bus_county_map.iterrows(), total=len(bus_county_map)):
         params = {
             "latitude": row["lat"],
             "longitude": row["lon"],

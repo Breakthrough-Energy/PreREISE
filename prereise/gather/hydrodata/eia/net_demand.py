@@ -42,8 +42,9 @@ def get_net_demand_profile(state, scenario):
     wind_in_state = wind[wind_plant_in_state].sum(axis=1)
     solar_in_state = solar[solar_plant_in_state].sum(axis=1)
 
-    loadzone_in_state = [grid.zone2id[z] for z in abv2loadzone[state] if z
-                         in grid.zone2id]
+    loadzone_in_state = [
+        grid.zone2id[z] for z in abv2loadzone[state] if z in grid.zone2id
+    ]
     demand_in_state = demand[loadzone_in_state].sum(axis=1)
     net_demand_in_state = demand_in_state - wind_in_state - solar_in_state
 

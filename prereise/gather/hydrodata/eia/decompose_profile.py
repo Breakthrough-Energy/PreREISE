@@ -69,18 +69,17 @@ def get_profile_by_plant(plant_df, total_profile):
         raise TypeError("total_profile must be a pandas.Series object")
     if not all([float(val) == val for val in total_profile]):
         raise TypeError("total_profile must be all numbers")
-    if 'Pmax' not in plant_df.columns:
+    if "Pmax" not in plant_df.columns:
         raise ValueError("Pmax must be one of the columns of plant_df")
 
-    total_hydro_capacity = plant_df['Pmax'].sum()
-    res_profile = pd.DataFrame(index=total_profile.index,
-                               columns=plant_df.index)
+    total_hydro_capacity = plant_df["Pmax"].sum()
+    res_profile = pd.DataFrame(index=total_profile.index, columns=plant_df.index)
 
     for plantid in res_profile.columns:
         if total_hydro_capacity == 0:
             factor = 0
         else:
-            factor = plant_df.loc[plantid]['Pmax']/total_hydro_capacity
-        plant_profile = [val*factor for val in total_profile]
+            factor = plant_df.loc[plantid]["Pmax"] / total_hydro_capacity
+        plant_profile = [val * factor for val in total_profile]
         res_profile[plantid] = plant_profile.copy()
     return res_profile

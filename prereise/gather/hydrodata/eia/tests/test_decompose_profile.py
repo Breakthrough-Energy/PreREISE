@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from prereise.gather.hydrodata.eia.decompose_profile import \
-    get_profile_by_state
+from prereise.gather.hydrodata.eia.decompose_profile import (
+    get_profile_by_state,
+)
 
 
 def test_get_profile_argument_type():

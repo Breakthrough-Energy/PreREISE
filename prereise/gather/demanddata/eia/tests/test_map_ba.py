@@ -2,8 +2,8 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 
 from prereise.gather.demanddata.eia.map_ba import (
-    get_demand_in_loadzone,
     aggregate_ba_demand,
+    get_demand_in_loadzone,
 )
 
 

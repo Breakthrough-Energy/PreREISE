@@ -90,8 +90,7 @@ def get_monthly_net_generation(state, eia_form_923, resource, hps=True):
     # Get monthly total net generation by summing up across plants
     # with all positive values. Note that negative ones are included in
     # actual demand.
-    eia_net_generation = list(net_generation.apply(lambda x: x[x > 0]
-                                                   .sum()).values)
+    eia_net_generation = list(net_generation.apply(lambda x: x[x > 0].sum()).values)
 
     # If there is no such generator in the state, the function will return
     # a list of 0 instead of NaN.
