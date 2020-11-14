@@ -1,3 +1,7 @@
+## Third Party Data
+This package contains a variety of materials, including data sets and related materials. The third party data sets and related materials are provided by their respective publishers, and may be subject to separate and additional terms and conditions. The following summarizes the sources of the applicable data, and details regarding the applicable provider. Additional terms and conditions, including certain restrictions on commercial use, redistribution, or other similar restrictions, may apply to the applicable data sets. If you cannot comply with the terms of the applicable data collection, you may not use that data, and your ability to make use of this software package, and/or the results or output you are able to generate through its use may be impacted. Please review the information provided below, and the terms and conditions provided by the publisher at the original source for more information.
+
+
 ### Generation
 #### Energy Information Administration (EIA)
 ##### Source
@@ -11,8 +15,9 @@
 * Modifications to source files(s): None
 * Location: ***prereise/gather/data/EIA923_Schedules_2_3_4_5_M_12_2016_Final_Revision.xlsx***
 
-##### Legal Note
-* Acknowledge EIA as the source
+##### General Purpose
+The dataset is used to generate hydro profiles.
+
 
 ---
 ### Demand
@@ -28,9 +33,11 @@
 * Modifications to source file(s): None
 * Location: ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/spp/load/****
 
-##### Legal Note
-* Data from this source may be freely copied and distributed except in connection with a commercial publication. 
-* This requirement must be passed on to any users of the data set.
+##### General Purpose
+The dataset is used to generate demand profiles for the Eastern interconnection.
+
+##### Note
+Data from this source may be freely copied and distributed except in connection with a commercial publication.
 
 
 ##### Source
@@ -44,8 +51,12 @@
 * Modifications to source file(s): None
 * Location: ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/spp/spp_counties_owners.xlsx***
 
-##### Legal Note
-* Legal review pending
+##### General Purpose
+The dataset is used to generate demand profiles for the Eastern interconnection.
+
+##### Note
+Legal review pending
+
 
 #### Midcontinent Independent System Operator (MISO)
 ##### Source
@@ -61,9 +72,12 @@
   * ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/miso/20151231_dfal_hist.xls***
   * ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/miso/20161231_dfal_hist.xls***
 
-##### Legal Note
-* Requesting attribution
-* Provide a copy of the final product to MISO
+##### General Purpose
+The dataset is used to generate demand profiles for the Eastern interconnection.
+
+##### Note
+When using this dataset, provide a copy of the final product to MISO.
+
 
 ---
 ### Hydro
@@ -79,8 +93,9 @@
 * Modifications to source file(s): extract 2015, 2016 and 2017 monthly capacity factors for conventional hydropower
 * Location: ***prereise/gather/data/hydrodata/data/usa_hydro_capacity_factors.csv***
 
-#### Legal Note
-* Acknowledge EIA as the source
+##### General Purpose
+The dataset is used to generate hydro profiles.
+
 
 #### Electric Reliability Council of Texas (ERCOT)
 ##### Source
@@ -94,8 +109,12 @@
 * Modifications to source file(s): monthly files have been concatenated and timestamps have been converted to UTC.
 * Location: ***prereise/gather/data/hydrodata/data/texas_hydro_generation.csv***
 
-#### Legal Note
-* Disclose modifications
+##### General Purpose
+The dataset is used to generate hydro profiles for the Texas interconnection.
+
+#### Note
+Disclose modifications when redistributing this dataset in modified form.
+
 
 #### U.S. Army Corps of Engineers (USACE)
 ##### Source
@@ -109,8 +128,9 @@
 * Modifications to source file(s): power output on 4/26/2019 16:00 UTC for two dams (WAN and PRD) exceeds their respective capacity. These outliers were replaced with an average of the hour before and after the outlier hour, for each of the two dams.
 * Location: ***prereise/gather/data/hydrodata/data/western_hydro_generation.csv***
 
-#### Legal Note
-* Public data
+##### General Purpose
+The dataset is used to generate hydro profiles for the Western interconnection.
+
 
 ---
 ### Solar
@@ -126,8 +146,9 @@
 * Modifications to source file(s): convert to `csv`
 * Location: ***prereise/gather/data/solardata/data/3_3_Solar_Y2016.csv***
 
-#### Legal Note
-* Acknowledge EIA as the source
+##### General Purpose
+The dataset is used to generate solar profiles.
+
 
 ---
 ### Wind
@@ -143,7 +164,8 @@
 * Modifications to source file(s): convert to `csv`
 * Location: ***prereise/gather/data/winddata/data/3_2_Wind_Y2016.csv***
 
-#### Legal Note
-* Acknowledge EIA as the source
+##### General Purpose
+The dataset is used to generate wind profiles.
+
 
 ---
