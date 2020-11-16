@@ -7,7 +7,7 @@
 | texaswestern_hydro_v2 | western_hydro_v2 + texas_hydro_v2 | 8784*737 | existing profiles concatenation
 | eastern_hydro_v1 | monthly capacity factors in the U.S. | 8784*2306 | [EIA Table 4.08.B][hydro_cf]
 | usa_hydro_v3 | texaswestern_hydro_v2 + eastern_hydro_v3 | 8784*3043 | existing profiles concatenation
-| eastern_hydro_v3 | net demand shape + historical BA/total profiles | 8784*2306 | [EIA 923] and BA websites
+| eastern_hydro_v3 | net demand shape + historical BA/total profiles | 8784*2306 | [EIA 923] and ISO websites: [ISONE][ISO New England], [NYISO][NY ISO], [PJM][PJM], [SPP][Southwest Power Pool] 
 | eastern_hydro_v4 | scale eastern_hydro_v3 for rebased grid | 8784*2306 | existing profile scaling
 | usa_hydro_v4 | texaswestern_hydro_v2 + eastern_hydro_v4 | 8784*3043 | existing profiles concatenation
 
@@ -21,4 +21,8 @@ texaswestern_hydro_v1
 [hydro_cf]: https://www.eia.gov/electricity/annual/html/epa_04_08_b.html
 [USACE_dataquery]: http://www.nwd-wc.usace.army.mil/dd/common/dataquery/www/
 [EIA 923]: https://www.eia.gov/electricity/data/eia923/
+[ISO New England]: https://www.iso-ne.com/isoexpress/
+[NY ISO]: http://mis.nyiso.com/public/P-63list.htm
+[PJM]: http://dataminer2.pjm.com/feed/gen_by_fuel
+[Southwest Power Pool]: https://marketplace.spp.org/pages/generation-mix-historical
 

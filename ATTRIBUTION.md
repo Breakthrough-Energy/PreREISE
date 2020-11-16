@@ -2,6 +2,22 @@
 This package contains a variety of materials, including data sets and related materials. The third party data sets and related materials are provided by their respective publishers, and may be subject to separate and additional terms and conditions. The following summarizes the sources of the applicable data, and details regarding the applicable provider. Additional terms and conditions, including certain restrictions on commercial use, redistribution, or other similar restrictions, may apply to the applicable data sets. If you cannot comply with the terms of the applicable data collection, you may not use that data, and your ability to make use of this software package, and/or the results or output you are able to generate through its use may be impacted. Please review the information provided below, and the terms and conditions provided by the publisher at the original source for more information.
 
 
+### Geographical Information
+#### BA to County Mapping
+#### Source
+* Name: Counties in the United States
+* Author: mapchart.net
+* Description: An interactive map contains all the counties in the United
+ States
+* Source: https://mapchart.net
+* Exact source location: https://mapchart.net/usa-counties.html
+
+#### Destination
+* Modifications to source file(s): None
+* Location: ***prereise/gather/data/ba_to_county.txt***
+
+
+---
 ### Generation
 #### Energy Information Administration (EIA)
 ##### Source
@@ -31,14 +47,13 @@ The dataset is used to generate hydro profiles.
 
 ##### Destination
 * Modifications to source file(s): None
-* Location: ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/spp/load/****
+* Location: ***prereise/gather/demanddata/eia/demo/eastern_demand_v6_demo/spp/load/****
 
 ##### General Purpose
 The dataset is used to generate demand profiles for the Eastern interconnection.
 
 ##### Note
 Data from this source may be freely copied and distributed except in connection with a commercial publication.
-
 
 ##### Source
 * Name: Legacy BAs geographical coverage
@@ -49,7 +64,7 @@ Data from this source may be freely copied and distributed except in connection 
 
 ##### Destination
 * Modifications to source file(s): None
-* Location: ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/spp/spp_counties_owners.xlsx***
+* Location: ***prereise/gather/demanddata/eia/demo/eastern_demand_v6_demo/spp/spp_counties_owners.xlsx***
 
 ##### General Purpose
 The dataset is used to generate demand profiles for the Eastern interconnection.
@@ -69,8 +84,8 @@ Legal review pending
 ##### Destination
 * Modifications to source file(s): None
 * Location:
-  * ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/miso/20151231_dfal_hist.xls***
-  * ***prereise/gather/data/demanddata/eia/demo/eastern_demand_v6_demo/miso/20161231_dfal_hist.xls***
+  * ***prereise/gather/demanddata/eia/demo/eastern_demand_v6_demo/miso/20151231_dfal_hist.xls***
+  * ***prereise/gather/demanddata/eia/demo/eastern_demand_v6_demo/miso/20161231_dfal_hist.xls***
 
 ##### General Purpose
 The dataset is used to generate demand profiles for the Eastern interconnection.
@@ -91,7 +106,7 @@ When using this dataset, provide a copy of the final product to MISO.
 
 ##### Destination
 * Modifications to source file(s): extract 2015, 2016 and 2017 monthly capacity factors for conventional hydropower
-* Location: ***prereise/gather/data/hydrodata/data/usa_hydro_capacity_factors.csv***
+* Location: ***prereise/gather/hydrodata/data/usa_hydro_capacity_factors.csv***
 
 ##### General Purpose
 The dataset is used to generate hydro profiles.
@@ -107,12 +122,12 @@ The dataset is used to generate hydro profiles.
 
 ##### Destination
 * Modifications to source file(s): monthly files have been concatenated and timestamps have been converted to UTC.
-* Location: ***prereise/gather/data/hydrodata/data/texas_hydro_generation.csv***
+* Location: ***prereise/gather/hydrodata/data/ercot_hydro_2016.csv***
 
 ##### General Purpose
 The dataset is used to generate hydro profiles for the Texas interconnection.
 
-#### Note
+##### Note
 Disclose modifications when redistributing this dataset in modified form.
 
 
@@ -126,11 +141,85 @@ Disclose modifications when redistributing this dataset in modified form.
 
 ##### Destination
 * Modifications to source file(s): power output on 4/26/2019 16:00 UTC for two dams (WAN and PRD) exceeds their respective capacity. These outliers were replaced with an average of the hour before and after the outlier hour, for each of the two dams.
-* Location: ***prereise/gather/data/hydrodata/data/western_hydro_generation.csv***
+* Location: ***prereise/gather/hydrodata/data/usace_hydro_2019.csv***
 
 ##### General Purpose
 The dataset is used to generate hydro profiles for the Western interconnection.
 
+
+#### ISO New England (ISONE)
+##### Source
+* Name: Real-Time Maps and Charts
+* Author: ISONE
+* Description: real-time generation data by fuel type for ISONE in UTC.
+Temporal resolution is adjustable from 2 min to 20 min per sample.
+* Source: https://www.iso-ne.com/
+* Exact source location: https://www.iso-ne.com/isoexpress/
+
+##### Destination
+* Modifications to source file(s): Average of all samples during each hour was
+used. Data from all two-day files was concatenated into one csv file for the
+entire year of 2016. Data for 121 missing hours were imputed.
+* Location: ***prereise/gather/hydrodata/data/neiso_hydro_2016.csv***
+
+##### General Purpose
+The dataset is used to generate hydro profiles for the Eastern interconnection.
+
+#### Southwest Power Pool (SPP)
+##### Source
+* Name: SPP Integrated Marketplace
+* Author: SPP
+* Description: publicly available generation fuel mix data for SPP
+* Source: https://marketplace.spp.org
+* Exact source location: https://marketplace.spp.org/pages/generation-mix-historical
+
+##### Destination
+* Modifications to source file(s): Raw data is provided at 5 min interval and
+was averaged for the hour to create an hourly profile.
+* Location: ***prereise/gather/hydrodata/data/spp_hydro_2016.csv***
+
+##### General Purpose
+The dataset is used to generate hydro profiles for the Eastern interconnection.
+
+##### Note
+Data from this source may be freely copied and distributed except in
+connection with a commercial publication.
+
+#### New York Independent System Operator (NYISO)
+##### Source
+* Name: Open Access Same-Time Information System (OASIS)
+* Author: NYISO
+* Description: historical fuel mix generation data in various temporal
+resolution
+* Source: http://mis.nyiso.com/
+* Exact source location: http://mis.nyiso.com/public/P-63list.htm
+
+##### Destination
+* Modifications to source file(s): Data was reformatted into one excel file
+and averaged among the intervals within one hour. Data for missing hours was
+computed by averaging the non-blank hour before and after the missing hour.  
+* Location: ***prereise/gather/hydrodata/data/nyiso_hydro_2016.csv***
+
+##### General Purpose
+The dataset is used to generate hydro profiles for the Eastern interconnection.
+
+####  PJM Interconnection LLC (PJM)
+##### Source
+* Name: Data Miner 2
+* Author: PJM
+* Description: historical hourly hydro generation data for PJM in 2016
+* Source: http://dataminer2.pjm.com/
+* Exact source location: http://dataminer2.pjm.com/feed/gen_by_fuel
+
+##### Destination
+* Modifications to source file(s): Data for 2015 is not available from the
+tool and the time series data for 2016 is recorded in local time. The last 5
+hours of 2016 EST were used to represent the first 5 hours of the year to
+fill in that missing data.
+* Location: ***prereise/gather/hydrodata/data/pjm_hydro_2016.csv***
+
+##### General Purpose
+The dataset is used to generate hydro profiles for the Eastern interconnection.
 
 ---
 ### Solar
@@ -144,7 +233,7 @@ The dataset is used to generate hydro profiles for the Western interconnection.
 
 ##### Destination
 * Modifications to source file(s): convert to `csv`
-* Location: ***prereise/gather/data/solardata/data/3_3_Solar_Y2016.csv***
+* Location: ***prereise/gather/solardata/data/3_3_Solar_Y2016.csv***
 
 ##### General Purpose
 The dataset is used to generate solar profiles.
@@ -162,7 +251,7 @@ The dataset is used to generate solar profiles.
 
 ##### Destination
 * Modifications to source file(s): convert to `csv`
-* Location: ***prereise/gather/data/winddata/data/3_2_Wind_Y2016.csv***
+* Location: ***prereise/gather/winddata/data/3_2_Wind_Y2016.csv***
 
 ##### General Purpose
 The dataset is used to generate wind profiles.
