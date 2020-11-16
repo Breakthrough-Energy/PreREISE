@@ -400,6 +400,194 @@ test_clean_data.test_slope_interpolate()
 The **[ba_anomaly_detection_demo.ipynb][demand_anomaly]** notebook illustrates
 usage.
 
+### E. NREL Electrification Futures Study Demand Data
+
+The National Renewable Energy Laboratory (NREL) has developed the Electrification 
+Futures Study (EFS) to project and study future sectoral demand changes as a result 
+of impending widespread electrification. As a part of the EFS, NREL has published 
+multiple reports (dating back to 2017) that describe their process for projecting 
+demand-side growth and provide analysis of their preliminary results; all of NREL's 
+published EFS reports can be found [here][nrel_efs]. Accompanying their reports, NREL 
+has published data sets that include hourly load profiles that were developed using 
+processes described in the EFS reports. These hourly load profiles represent 
+state-by-state end-use electricity demand across four sectors (Transportation, 
+Residential Buildings, Commercial Buildings, and Industry) for three electrification 
+scenarios (Reference, Medium, and High) and three levels of technology advancements 
+(Slow, Moderate, and Rapid). Load profiles are provided for six separate years: 2018, 
+2020, 2024, 2030, 2040, and 2050. The base demand data sets and further accompanying 
+information can be found [here][nrel_base_dem]. In addition to demand growth 
+projections, NREL has also published data sets that include hourly profiles for flexible 
+load. These data sets indicate the amount of demand that is considered to be flexible, 
+as determined through the EFS. The flexibility demand profiles consider two scenarios of 
+flexibility (Base and Enhanced), in addition to the classifications for each sector, 
+electrification scenario, technology advancement, and year. The flexible demand data sets 
+and further accompanying information can be found [here][nrel_flex_dem].
+
+Widespread electrification can have a large impact on future power system planning 
+decisions and operation. While increased electricity demand can have obvious implications 
+for generation and transmission capacity planning, new electrified demand (e.g., electric 
+vehicles, air source heat pumps, and heat pump water heaters) offers large amounts of 
+potential operational flexibility to grid operators. This flexibility by demand-side 
+resources can result in demand shifting from times of peak demand to times of peak 
+renewable generation, presenting the opportunity to defer generation and transmission 
+capacity upgrades. To help electrification impacts be considered properly, this package 
+has the ability to access NREL's EFS demand data sets. Currently, users can access the 
+base demand profiles, allowing the impacts of demand growth due to vast electrification 
+to be explored. Modeling the impacts of demand-side flexibility will be included in a 
+future release.
+
+#### I. Downloading and Extracting EFS Demand Data
+
+The EFS demand data sets are stored on the 'NREL Data Catalog' in .zip files. The 'NREL 
+Data Catalog' contains nine .zip files, one for each combination of electrification 
+scenario and technology advancement. The .csv file compressed within the .zip file 
+contains the sectoral demand for each state and year. This data can be downloaded and 
+extracted using the following:
+
+```python
+from prereise.gather.demanddata.nrel_efs.get_efs_data import download_data
+
+download_data(es, ta, fpath)
+```
+
+where `es` is the set of electrification scenarios to be downloaded, `ta` is the set 
+of technology advancements to be downloaded, and `fpath` is the file path to which the 
+NREL EFS data will be downloaded. `es` and `ta` default to downloading each of the 
+electrification scenarios and technology advancements, respectively. `fpath` defaults to 
+downloading the EFS data to the current directory.
+
+Although downloading the .zip files is a simple task, extracting the .csv files using 
+Python is more challenging. The .zip files stored on the 'NREL Data Catalog' are compressed 
+using a compression method (Deflate64, or compression type 9) that is not currently supported 
+by `zipfile`, a popular Python package for working with .zip files. To extract the .csv files 
+in an automated fashion, it is necessary to use either the Command Prompt or the Terminal, 
+depending on the user's operating system. For machines running macOS or Linux, the Terminal's 
+extraction tools are capable of accessing the .csv file. However, Windows machines are unable 
+to extract the .csv files using the Command Prompt's extraction tools due to the compression 
+method. For Windows users with [7-Zip][7zip], the .csv file can be extracted, so long as 7-Zip 
+is installed in the default location. If none of these methods succeed in extracting the .csv 
+file, then users can extract the file manually by going to the .zip file's location and using 
+their extraction tool of choice. For instance, even though Windows' Command Prompt extraction 
+tools do not work, the native extraction tool built into Windows' File Explorer does work.
+
+#### II. Splitting the EFS Demand Data by Sector and Year
+
+The EFS demand data for a given electrification scenario and technology advancement is provided 
+for each sector and each year. Although the sectoral demand is eventually aggregated for a given 
+year (see next subsection), splitting the demand by sector can be useful, especially for users 
+that may only want to use a subset of the EFS sectoral demand (perhaps to pair with their own 
+sectoral demand data). EFS demand data for a single electrification scenario and technology 
+advancement pair can be split by sector as follows:
+
+```python
+from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_by_sector
+
+sect_dem = partition_by_sector(es, ta, year, sect, fpath, save)
+```
+
+where `es` is a string describing a single electrification scenario, `ta` is a string describing a 
+single technology advancement, `year` is an integer describing the included year, `sect` is a set 
+of the sectors to include, `fpath` is the file path where the demand data might be located and to 
+where the sectoral demand will be saved (if desired), and `save` is a boolean that indicates 
+whether the sectoral demand should be saved. `sect` defaults to including all of the sectors (i.e., 
+all sectoral demand is retained). `fpath` defaults to the current directory. `save` defaults to 
+`True` (i.e., the sectoral demand is each saved as its own .csv file). `partition_by_sector()` 
+returns `sect_dem`, which is a dictionary of DataFrames, where each DataFrame contains the demand 
+for one sector.
+
+`partition_by_sector()` checks the file path provided by `fpath` to determine if the demand data 
+is already downloaded and extracted. If the demand data is not present as a .csv file, then 
+`partition_by_sector()` uses `download_data()` to obtain the .csv file for the specified 
+electrification scenario and technology advancement. If the automated approach is not able to 
+extract the .csv file, `partition_by_sector()` will exit with an error and the user will need to 
+manually use their extraction method of choice (as was discussed in the prior subsection). If 
+manual extraction is required, the user can simply run `partition_by_sector()` again, making sure 
+that `fpath` points to the appropriate location where the .csv file is saved.
+
+#### III. Aggregating the Sectoral Demand Data
+
+For use in the grid model developed by Breakthrough Energy Sciences, all sectoral demand must be 
+aggregated within each location for each hour (i.e., only one demand data point per location per 
+hour). Thus, the sectoral demand must be aggregated together to obtain a single demand value for 
+each location and each hour. Aggregating sectoral demand can be accomplished as follows:
+
+```python
+from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
+
+agg_dem = combine_efs_demand(es, ta, year, local_sects, local_paths, save)
+```
+
+where `es` is a string describing a single electrification scenario, `ta` is a string describing a 
+single technology advancement, `year` is an integer describing the included year, `local_sects` is 
+a set containing the sector names for which .csv files of demand data are already stored locally, 
+`local_paths` is a set containing file paths and file names corresponding to the provided sectors, 
+and `save` is a string representing the desired file path and file name to which the aggregated 
+demand will be saved as a .csv file. For `local_sects` and `local_paths`, the sectors that are not 
+provided will be acquired via `partition_by_sector()`, which itself relies on `download_data()` if 
+the .csv file from the 'NREL Data Catalog' is not present. Both `local_sects` and `local_paths` 
+default to `None`, indicating that there is no local demand data available and all demand data must 
+be acquired from the 'NREL Data Catalog'. `save` defaults to `None`, indicating that the aggregated 
+demand should not be saved. `combine_efs_demand()` returns `agg_dem`, which is a DataFrame of the 
+aggregate demand data for a specific electrification scenario, technology advancement, and year.
+
+Since `combine_efs_demand()` relies on `partition_by_sector()` (and by extension, `download_data()`), 
+there is a chance that an error might occur if the automated extraction process cannot be used. 
+If the automated approach is not able to extract the .csv file, `combine_efs_demand()` will exit with 
+an error and the user will need to manually use their extraction method of choice (as was discussed in 
+the prior subsections). If manual extraction is required, the user can simply run `combine_efs_demand()` 
+again so long as the .csv file was extracted to the current working directory. If the .csv file was 
+saved elsewhere, then the user will need to run `partition_by_sector()` to create the appropriate 
+sectoral demand .csv files, which can then be passed into `combine_efs_demand()` via `local_sects` and 
+`local_paths`.
+
+#### IV. Mapping the State Demand to the Appropriate Load Zones
+
+For use in the grid model developed by Breakthrough Energy Sciences, the state-level demand provided by 
+the EFS must be mapped to the appropriate load zones. Breakthrough Energy Sciences defines distinct load 
+zones for each state. For smaller states that are completely contained within a single interconnection, 
+the load zone might very well be equal to the whole state. However large states (e.g., California and New 
+York), states that are in multiple interconnections (e.g., Montana and New Mexico), and states with a 
+combination of these two characteristics (e.g., Texas) may have multiple load zones. State-level demand 
+is mapped to the various load zones according to the percentage of a state's population that resides in 
+a particular load zone. This mapping can be accomplished as follows:
+
+```python
+from prereise.gather.demanddata.nrel_efs.map_states import map_to_loadzone
+
+agg_dem_lz = map_to_loadzone(agg_dem, save)
+```
+
+where `agg_dem` is a DataFrame of the aggregated hourly demand data for each state in the contiguous 
+U.S. and `save` is a string representing the desired file path and file name to which the aggregated 
+demand will be saved as a .csv file. `save` defaults to `None`, indicating that the aggregated demand 
+should not be saved. `map_to_loadzone()` returns `agg_dem_lz`, which is a DataFrame of the aggregate 
+demand data mapped to each load zone.
+
+#### V. Example of Downloading and Preparing EFS Demand Data
+
+To demonstrate the work flow of these modules, this subsection presents an example of obtaining the 
+EFS demand data and subsequently preparing it for use in Breakthrough Energy Sciences' grid model. 
+In this example, EFS demand data under the 'Reference' electrification scenario and the 'Slow' 
+technology advancement scenario are acquired for the year 2030. After mapping the state-level 
+demand to the different load zones, the aggregate demand is saved as a .csv file to the current 
+working directory. This example is implemented as follows:
+
+```python
+from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
+from prereise.gather.demanddata.nrel_efs.map_states import map_to_loadzone
+
+agg_dem = combine_efs_demand(es="Reference", ta="Slow", year=2030)
+agg_dem_lz = map_to_loadzone(agg_dem=agg_dem, save="EFS_Demand_Reference_Slow_2030.csv")
+```
+
+As was mentioned in the prior subsections, `combine_efs_demand` first attempts to use automated 
+extraction techniques. If those techniques are not capable of extracting the .csv file of EFS 
+demand data, the user will be required to manually use their extraction method of choice. If 
+manual extraction is required, the user can simply run `combine_efs_demand()` again so long as the 
+.csv file was extracted to the current working directory. If the .csv file was saved elsewhere, 
+then the user will need to run `partition_by_sector()` to create the appropriate sectoral demand 
+.csv files, which can then be passed into `combine_efs_demand()` via `local_sects` and `local_paths`.
+
 [RAP]: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
 [RAP_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb
 [NetCDF]: https://www.unidata.ucar.edu/software/thredds/current/tds/reference/NetcdfSubsetServiceReference.html
@@ -420,7 +608,7 @@ usage.
 [hydro_cf]: https://www.eia.gov/electricity/annual/html/epa_04_08_b.html
 [hydro_v1_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/hydro_v1_demo.ipynb
 [demand_doc]: https://www.eia.gov/realtime_grid/docs/userguide-knownissues.pdf
-[demand_notebook]:https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/assemble_ba_from_excel_demo.ipynb
+[demand_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/assemble_ba_from_excel_demo.ipynb
 [demand_anomaly]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/demanddata/eia/demo/ba_anomaly_detection_demo.ipynb
 [EIA 923]: https://www.eia.gov/electricity/data/eia923/
 [CAISO_outlook]: http://www.caiso.com/TodaysOutlook/Pages/default.aspx
@@ -442,3 +630,7 @@ usage.
 [Southwest Power Pool]: https://marketplace.spp.org/pages/generation-mix-historical
 [hydro_v3_eastern_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/eastern_hydro_v3_demo/eastern_hydro_v3_demo.ipynb
 [pumped storage hydro model]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/eastern_hydro_v3_demo/hps_plants_eastern.xlsx
+[nrel_efs]: https://www.nrel.gov/analysis/electrification-futures.html
+[nrel_base_dem]: https://data.nrel.gov/submissions/126
+[nrel_flex_dem]: https://data.nrel.gov/submissions/127
+[7zip]: https://www.7-zip.org/

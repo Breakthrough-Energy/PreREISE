@@ -94,6 +94,28 @@ The dataset is used to generate demand profiles for the Eastern interconnection.
 When using this dataset, provide a copy of the final product to MISO.
 
 
+#### National Renewable Energy Laboratory (NREL)
+##### Source
+* Name: Electrification Futures Study Load Profiles
+* Authors: Trieu Mai, Paige Jadun, Jeffrey Logan, Colin McMillan, Matteo Muratori, Daniel Steinberg, Laura Vimmerstedt, Ryan Jones, Ben Haley, Brent Nelson, Caitlin Murphy, Yinong Sun
+* Description: Projected state-level demand profiles for different electrification scenarios, levels of technology advancement, and years.
+* Source: https://data.nrel.gov/submissions/126
+* Exact source location: There are nine different .zip files containing demand data for the nine combinations of three electrification scenarios and three technology advancements. They can be accessed via: "https://data.nrel.gov/submissions/126/EFSLoadProfile_" + es + "_" + ta + ".zip", where es is in {"Reference", "Medium", "High"} and ta is in {"Slow", "Moderate", "Rapid"}
+
+##### Destination
+* Modifications to source file(s):
+  * Sectoral demand is aggregated so that there is only one value for each time and location.
+  * State-level demand is mapped to the load zones defined by Breakthrough Energy Sciences.
+  * Of the six years' worth of data provided in each dataset, only one user-specified year is kept.
+* Location: These datasets are not included in this package. Rather, users are able to access and modify the datasets using modules included in this package.
+
+##### General Purpose
+These datasets are used as the basis for demand profiles of the contiguous U.S. These resulting demand profiles are different from other demand profiles discussed in this package in that these demand profiles account for projected widespread electrification.
+
+##### Note
+These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer][nrel_disclaimer] first.
+
+
 ---
 ### Hydro
 #### Energy Information Administration (EIA)
@@ -258,3 +280,6 @@ The dataset is used to generate wind profiles.
 
 
 ---
+
+
+[nrel_disclaimer]: https://www.nrel.gov/disclaimer.html
