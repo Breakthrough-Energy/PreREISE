@@ -115,7 +115,7 @@ def download_data(es={"All"}, ta={"All"}, fpath=""):
                 elif platform.system() in {"Darwin", "Linux"}:
                     try:
                         # Try unzipping using the Terminal
-                        subprocess.check_call("unzip -o " + zip_path + " -d " + fpath)
+                        subprocess.check_call(["unzip", "-o", zip_path, "-d", fpath])
                         os.remove(zip_path)
                         print("File successfully extracted!")
                     except subprocess.CalledProcessError:
