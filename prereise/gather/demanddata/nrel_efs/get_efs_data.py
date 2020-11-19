@@ -230,7 +230,7 @@ def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
             pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
             inplace=True,
         )
-        sect_dem[i].index.name = "UTC Time"
+        sect_dem[i].index.name = "Local Time"
 
         # Save the sectoral DataFrames to .csv files, if desired
         if save == True:

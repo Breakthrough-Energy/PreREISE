@@ -51,17 +51,6 @@ def combine_efs_demand(es, ta, year, local_sects=None, local_paths=None, save=No
         if not all(isinstance(x, str) for x in local_paths):
             raise TypeError("Individual file paths must be input as a str.")
 
-    # Check that local_sects and local_files are of the same type and length
-    if None in [local_sects, local_paths]:
-        if type(local_sects) != type(local_paths):
-            raise TypeError("local_sects and local_paths must be of the same type.")
-        else:
-            local_sects = {}
-            local_paths = {}
-    else:
-        if len(local_sects) != len(local_paths):
-            raise ValueError("local_sects and local_paths must have the same length.")
-
     # Reformat components of local_sects
     local_sects = {x.capitalize() for x in local_sects}
     if "All" in local_sects:
@@ -79,6 +68,17 @@ def combine_efs_demand(es, ta, year, local_sects=None, local_paths=None, save=No
         }
         raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
 
+    # Check that local_sects and local_files are of the same type and length
+    if None in [local_sects, local_paths]:
+        if type(local_sects) != type(local_paths):
+            raise TypeError("local_sects and local_paths must be of the same type.")
+        else:
+            local_sects = {}
+            local_paths = {}
+    else:
+        if len(local_sects) != len(local_paths):
+            raise ValueError("local_sects and local_paths must have the same length.")
+
     # Obtain the sectoral demand data
     agg_dem = 0
     for i in local_paths:
@@ -87,9 +87,9 @@ def combine_efs_demand(es, ta, year, local_sects=None, local_paths=None, save=No
 
         # Access the column headers and set the index
         temp_cols = list(temp_dem.columns.values)
-        if "UTC Time" in temp_cols:
-            temp_dem.set_index("UTC Time", inplace=True)
-            temp_cols.remove("UTC Time")
+        if "Local Time" in temp_cols:
+            temp_dem.set_index("Local Time", inplace=True)
+            temp_cols.remove("Local Time")
         else:
             raise ValueError("This data does not include the necessary time stamps.")
 
