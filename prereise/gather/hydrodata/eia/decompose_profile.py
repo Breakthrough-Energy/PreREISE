@@ -49,7 +49,7 @@ def get_profile_by_state(profile, state):
     return hydro_profile
 
 
-def get_profile_by_plant_dataframe(plant_df, total_profile):
+def get_profile_by_plant(plant_df, total_profile):
     """Decompose total hydro profile into plant level profile based on hydro
     generator capacities in the dataframe.
 

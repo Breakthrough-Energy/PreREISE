@@ -7,8 +7,8 @@ from powersimdata.network.usa_tamu.constants.zones import abv2loadzone
 
 def trim_eia_form_923(filename):
     """Remove columns in EIA form 923 that are unnecessary to calculate the
-    monthly generation per resource as performed by :py:func:
-    `get_monthly_net_generation`.
+    monthly generation per resource as performed by
+    :py:func:`get_monthly_net_generation`.
 
     :param str filename: name of the reference file.
     :return: (*pandas.DataFrame*) -- EIA form 923 with only relevant columns.

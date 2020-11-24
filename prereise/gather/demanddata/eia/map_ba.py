@@ -3,14 +3,12 @@ import requests
 from tqdm import tqdm
 
 
-def transform_ba_to_region(demand, mapping):
-    """Transform column of demand data frame to regions defined by dictionary
-    mapping.
+def aggregate_ba_demand(demand, mapping):
+    """Aggregate demand in BAs to regions as defined in the mapping dictionary
 
-    :param pandas.DataFrame demand: data frame for the demand.
+    :param pandas.DataFrame demand: demand profiles in BAs.
     :param dict mapping: dictionary mapping of BA columns to regions.
-    :return: (*pandas.DataFrame*) -- data frame with demand columns according
-        to region.
+    :return: (*pandas.DataFrame*) -- aggregated demand profiles
     """
     agg_demand = pd.DataFrame(index=demand.index)
     for key in mapping:
@@ -32,11 +30,11 @@ def transform_ba_to_region(demand, mapping):
     return agg_demand
 
 
-def map_to_loadzone(agg_demand, bus_map):
-    """Transform columns of demand data frame from BA regions to load zones.
+def get_demand_in_loadzone(agg_demand, bus_map):
+    """Get demand in loadzones from aggregated demand of BA regions.
 
-    :param pandas.DataFrame agg_demand: data frame for the aggregated
-        region demand.
+    :param pandas.DataFrame agg_demand: demand profiles as returned by
+        :py:func:`aggregate_ba_demand`
     :param pandas.DataFrame bus_map: data frame used to map BA regions to
         load zones using real power demand weighting.
     :return: (*pandas.DataFrame*) -- data frame with demand columns according
