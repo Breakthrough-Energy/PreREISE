@@ -52,29 +52,30 @@ def combine_efs_demand(es, ta, year, local_sects=None, local_paths=None, save=No
             raise TypeError("Individual file paths must be input as a str.")
 
     # Reformat components of local_sects
-    local_sects = {x.capitalize() for x in local_sects}
-    if "All" in local_sects:
-        local_sects = {"Transportation", "Residential", "Commercial", "Industrial"}
+    if local_sects is not None:
+        local_sects = {x.capitalize() for x in local_sects}
+        if "All" in local_sects:
+            local_sects = {"Transportation", "Residential", "Commercial", "Industrial"}
 
-    # Check that the components of local_sects are valid
-    if not local_sects.issubset(
-        {"Transportation", "Residential", "Commercial", "Industrial"}
-    ):
-        invalid_sect = local_sects - {
-            "Transportation",
-            "Residential",
-            "Commercial",
-            "Industrial",
-        }
-        raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
+        # Check that the components of local_sects are valid
+        if not local_sects.issubset(
+            {"Transportation", "Residential", "Commercial", "Industrial"}
+        ):
+            invalid_sect = local_sects - {
+                "Transportation",
+                "Residential",
+                "Commercial",
+                "Industrial",
+            }
+            raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
 
     # Check that local_sects and local_files are of the same type and length
     if None in [local_sects, local_paths]:
         if type(local_sects) != type(local_paths):
             raise TypeError("local_sects and local_paths must be of the same type.")
         else:
-            local_sects = {}
-            local_paths = {}
+            local_sects = set()
+            local_paths = set()
     else:
         if len(local_sects) != len(local_paths):
             raise ValueError("local_sects and local_paths must have the same length.")
