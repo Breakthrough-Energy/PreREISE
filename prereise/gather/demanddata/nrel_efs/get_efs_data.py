@@ -9,16 +9,16 @@ import requests
 from powersimdata.network.usa_tamu.constants.zones import abv2state
 
 
-def download_data(es={"All"}, ta={"All"}, fpath=""):
+def download_data(es=None, ta=None, fpath=""):
     """Downloads the NREL EFS data for the specified electrification scenarios and
     technology advancements.
 
     :param set/list es: The electrification scenarios that will be downloaded. Can
         choose any of: *'Reference'*, *'Medium'*, *'High'*, or *'All'*. Defaults to
-        *'All'*.
+        None.
     :param set/list ta: The technology advancements that will be downloaded. Can
         choose any of: *'Slow'*, *'Moderate'*, *'Rapid'*, or *'All'*. Defaults to
-        *'All'*.
+        None.
     :param str fpath: The file path to which the NREL EFS data will be downloaded.
     :raises TypeError: if es and ta are not input as a set or list, if fpath is not
         input as a str, or if the components of es and ta are not input as str.
@@ -29,6 +29,12 @@ def download_data(es={"All"}, ta={"All"}, fpath=""):
         machines) or if compression outside of Python's zipfile module is attempted on
         non-Windows machines.
     """
+
+    # Account for the immutable default parameters
+    if es is None:
+        es = {"All"}
+    if ta is None:
+        ta = {"All"}
 
     # Check that the inputs are of an appropriate type
     if not isinstance(es, (set, list)):
@@ -65,39 +71,64 @@ def download_data(es={"All"}, ta={"All"}, fpath=""):
         fpath = os.getcwd()
 
     # Download each of the specified load profiles
+    z = {}
+    for i in es:
+        z[i] = {}
+        for j in ta:
+            # Assign path and file names
+            zip_name = "EFSLoadProfile_" + i + "_" + j + ".zip"
+            url = "https://data.nrel.gov/system/files/126/" + zip_name
+            zip_path = os.path.join(fpath, zip_name)
+
+            # Save a local copy of the .zip file for extraction
+            r = requests.get(url, stream=True)
+            if r.status_code != requests.codes.ok:
+                r.raise_for_status()
+            open(zip_name, "wb").write(r.content)
+            print(zip_name + " successfully downloaded!")
+
+            # Store the data in memory to try extracting with Python's zipfile module
+            z[i][j] = zipfile.ZipFile(io.BytesIO(r.content))
+
+    # Try to extract the .csv file from the .zip file
+    zf_works = True
     for i in es:
         for j in ta:
+            # Assign path and file names
+            zip_name = "EFSLoadProfile_" + i + "_" + j + ".zip"
+            csv_name = "EFSLoadProfile_" + i + "_" + j + ".csv"
+            zip_path = os.path.join(fpath, zip_name)
+
             try:
-                # Assign path and file names
-                zip_name = "EFSLoadProfile_" + i + "_" + j + ".zip"
-                url = "https://data.nrel.gov/system/files/126/" + zip_name
-                zip_path = os.path.join(fpath, zip_name)
-
-                # Try Python's zipfile module first
-                r = requests.get(url, stream=True)
-                if r.status_code != requests.codes.ok:
-                    r.raise_for_status()
-                z = zipfile.ZipFile(io.BytesIO(r.content))
-                z.extractall(fpath)
-                print("File successfully extracted!")
+                if zf_works:
+                    # Try the zipfile module first
+                    z[i][j].extractall(fpath)
+                    print(csv_name + " successfully extracted!")
+                else:
+                    # Bypass the zipfile module if it does not work on the first file
+                    raise NotImplementedError
             except NotImplementedError:
-                print("This compression is not supported by the zipfile module.")
-                print("Trying other extraction methods supported by your OS.")
+                if zf_works:
+                    print(
+                        zip_name
+                        + " is compressed using a method that is not supported by the"
+                        + " zipfile module."
+                    )
+                    print("Trying other extraction methods supported by your OS.")
+                    zf_works = False
 
-                # Save a local copy of the .zip file for extraction
-                open(zip_name, "wb").write(r.content)
+                # Try other extraction methods depending on operating system
                 if platform.system() == "Windows":
                     try:
                         # Windows Command Line does not support this type of compression
-                        # Try using 7zip, if it is installed
+                        # Try using 7zip, if it is installed in the default location
                         sz_path = "C:/Program Files/7-Zip/7z.exe"
                         if not os.path.isfile(sz_path):
                             print(
-                                "7zip is not in this directory or is not "
-                                + "installed. Extract the data manually "
-                                + "(refer to documentation)."
+                                "7zip is not in this directory or is not installed. "
+                                + "Extract all data manually (refer to documentation)."
                             )
-                            continue
+                            return
                         subprocess.check_call(
                             'cmd /c powershell -c & "'
                             + sz_path
@@ -108,24 +139,26 @@ def download_data(es={"All"}, ta={"All"}, fpath=""):
                             + '" -y'
                         )
                         os.remove(zip_path)
-                        print("File successfully extracted!")
+                        print(csv_name + " successfully extracted!")
                     except subprocess.CalledProcessError:
-                        print("This file could not be extracted using 7zip.")
-                        print("Extract the data manually (refer to documentation).")
+                        print(csv_name + " could not be extracted using 7zip.")
+                        print("Extract all data manually (refer to documentation).")
+                        return
                 elif platform.system() in {"Darwin", "Linux"}:
                     try:
                         # Try unzipping using the Terminal
                         subprocess.check_call(["unzip", "-o", zip_path, "-d", fpath])
                         os.remove(zip_path)
-                        print("File successfully extracted!")
+                        print(csv_name + " successfully extracted!")
                     except subprocess.CalledProcessError:
-                        print("This file could not be extracted using the Terminal.")
-                        print("Extract the data manually (refer to documentation).")
+                        print(csv_name + " could not be extracted using the Terminal.")
+                        print("Extract all data manually (refer to documentation).")
+                        return
                 else:
                     raise OSError("This operating system is not supported.")
 
 
-def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
+def partition_by_sector(es, ta, year, sect=None, fpath="", save=True):
     """Creates .csv files for each of the specified sectors given a specified
     electrification scenario and technology advancement.
 
@@ -137,18 +170,22 @@ def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
         2020, 2024, 2030, 2040, or 2050.
     :param set/list sect: The sectors for which .csv files are to be created. Can
         choose any of: *'Transportation'*, *'Residential'*, *'Commercial'*,
-        *'Industrial'*, or *'All'*. Defaults to *'All'*.
+        *'Industrial'*, or *'All'*. Defaults to None.
     :param str fpath: The file path where the demand data might be saved and to where
         the sectoral data will be saved.
     :param bool save: Determines whether or not the .csv file is saved. Defaults to
         True. If the file is saved, it is saved to the same location as fpath.
-    :return: (*dict*) -- A dict of pandas.DataFrame objects that contain the specified
-        sectoral demand.
+    :return: (*dict*) -- A dict of pandas.DataFrame objects that contain demand data
+        for each state and time step in the specified sectors.
     :raises TypeError: if es and ta are not input as str, if year is not input as an
         int, if sect is not input as a set or list, if fpath is not input as a str, or
         if the components of sect are not input as str.
     :raises ValueError: if es, ta, year, or the components of sect are not valid.
     """
+
+    # Account for the immutable default parameters
+    if sect is None:
+        sect = {"All"}
 
     # Check that the inputs are of an appropriate type
     if not isinstance(es, str):
@@ -213,33 +250,39 @@ def partition_by_sector(es, ta, year, sect={"All"}, fpath="", save=True):
     # Sum by sector and state
     df = df.groupby(["LocalHourID", "State", "Sector"], as_index=False).sum()
 
-    # Access the specified sectors
-    sect_ref = {}
-    sect_dem = {}
-    for i in sect:
-        sect_ref[i] = df.loc[df["Sector"] == i]
+    # Split the demand DataFrame by sector
+    sect_dem = {
+        i: df[df["Sector"] == i]
+        .drop(columns=["Sector"])
+        .groupby(["LocalHourID", "State"])
+        .sum()
+        .unstack()
+        for i in sect
+    }
+    sect_dem = {
+        i: sect_dem[i].set_axis(sorted(set(abv2state) - {"AK", "HI"}), axis="columns")
+        for i in sect
+    }
 
-        # Create new DataFrame, where indices and columns are from hours and states
-        sect_dem[i] = pd.DataFrame()
-        for j in sorted(list(set(abv2state) - {"AK", "HI"})):
-            sect_dem[i][j] = sect_ref[i].loc[sect_ref[i]["State"] == j, "LoadMW"].values
+    # Add extra day's worth of demand to account for leap year
+    sect_dem = {i: account_for_leap_year(sect_dem[i]) for i in sect}
 
-        # Add extra day for leap year and include time stamps
-        sect_dem[i] = account_for_leap_year(sect_dem[i])
-        sect_dem[i].set_index(
+    # Include the appropriate time stamps for the local time (with year=2016)
+    sect_dem = {
+        i: sect_dem[i].set_axis(
             pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
-            inplace=True,
+            axis="index",
         )
-        sect_dem[i].index.name = "Local Time"
+        for i in sect
+    }
+    sect_dem = {i: sect_dem[i].rename_axis("Local Time", axis="index") for i in sect}
 
-        # Save the sectoral DataFrames to .csv files, if desired
-        if save == True:
+    # Save the sectoral DataFrames to .csv files, if desired
+    if save:
+        for i in sect:
             new_csv_name = i + "_Demand_" + es + "_" + ta + "_" + str(year) + ".csv"
             new_csv_path = os.path.join(fpath, new_csv_name)
             sect_dem[i].to_csv(new_csv_path)
-
-    # Delete the original .csv file
-    os.remove(csv_path)
 
     # Return the dictionary containing the formatted sectoral demand data
     return sect_dem
@@ -266,7 +309,7 @@ def account_for_leap_year(df):
     # Check the elements of the input DataFrame
     if df.index.size != 8760:
         raise ValueError("The input DataFrame does not have 8760 hours.")
-    if list(df.columns.values) != sorted(list(set(abv2state) - {"AK", "HI"})):
+    if list(df.columns.values) != sorted(set(abv2state) - {"AK", "HI"}):
         raise ValueError("The input DataFrame does not include all 48 states.")
 
     # Get the demand for each state and each hour on January 2nd

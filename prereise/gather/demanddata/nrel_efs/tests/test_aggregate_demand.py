@@ -11,7 +11,7 @@ from prereise.gather.demanddata.nrel_efs.aggregate_demand import (
 
 def test_combine_efs_demand():
     # Create a dummy data set
-    cont_states = sorted(list(set(abv2state) - {"AK", "HI"}))
+    cont_states = sorted(set(abv2state) - {"AK", "HI"})
     dummy_data = pd.DataFrame(
         1,
         index=pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),

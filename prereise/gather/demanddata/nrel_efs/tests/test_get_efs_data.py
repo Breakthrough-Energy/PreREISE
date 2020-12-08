@@ -48,7 +48,7 @@ def test_download_data():
 
 def test_partition_by_sector():
     # Create a dummy data set
-    cont_states = sorted(list(set(abv2state) - {"AK", "HI"}))
+    cont_states = sorted(set(abv2state) - {"AK", "HI"})
     dummy_data = {
         "Electrification": [1] * 4 * 48 * 8760,
         "TechnologyAdvancement": [1] * 4 * 48 * 8760,
@@ -77,10 +77,13 @@ def test_partition_by_sector():
     # Compare the two DataFrames
     assert_frame_equal(exp_res_dem, test_sect_dem["Residential"])
 
+    # Delete the test .csv file
+    os.remove("EFSLoadProfile_High_Rapid.csv")
+
 
 def test_account_for_leap_year():
     # Create dummy aggregate demand DataFrame
-    cont_states = sorted(list(set(abv2state) - {"AK", "HI"}))
+    cont_states = sorted(set(abv2state) - {"AK", "HI"})
     dem = pd.DataFrame(
         1,
         index=list(range(8760)),

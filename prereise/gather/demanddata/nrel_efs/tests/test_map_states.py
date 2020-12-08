@@ -10,7 +10,7 @@ from prereise.gather.demanddata.nrel_efs.map_states import (
 
 def test_map_to_loadzone():
     # Create dummy aggregate demand DataFrame
-    cont_states = sorted(list(set(abv2state) - {"AK", "HI"}))
+    cont_states = sorted(set(abv2state) - {"AK", "HI"})
     agg_dem = pd.DataFrame(
         1,
         index=pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
