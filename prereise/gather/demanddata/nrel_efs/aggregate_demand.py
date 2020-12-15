@@ -33,8 +33,8 @@ def combine_efs_demand(es, ta, year, local_sects=None, local_paths=None, save=No
         not input as str, or if local_sects and local_paths are not of the same type.
     :raises ValueError: if the components of local_sects are not valid, if local_sects
         and local_paths do not have the same number of components, or if the
-        locally-stored data does not have the proper time stamp labels, the correct
-        number of time steps, or the correct number of states.
+        locally-stored data does not have the proper time stamps or the correct number
+        of states.
     """
 
     # Check that the inputs are of an appropriate type
@@ -87,17 +87,17 @@ def combine_efs_demand(es, ta, year, local_sects=None, local_paths=None, save=No
         temp_dem = pd.read_csv(i)
 
         # Access the column headers and set the index
-        temp_cols = list(temp_dem.columns.values)
-        if "Local Time" in temp_cols:
+        if "Local Time" in temp_dem.columns:
             temp_dem.set_index("Local Time", inplace=True)
-            temp_cols.remove("Local Time")
         else:
-            raise ValueError("This data does not include the necessary time stamps.")
+            raise ValueError("This data does not provide the time stamps correctly.")
 
         # Check the DataFrame dimensions and headers
-        if len(temp_dem) != 8784:
-            raise ValueError("This data does not have the proper number of time steps.")
-        if set(temp_cols) != set(abv2state) - {"AK", "HI"}:
+        if not temp_dem.index.equals(
+            pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+        ):
+            raise ValueError("This data does not have the proper time stamps.")
+        if set(temp_dem.columns) != set(abv2state) - {"AK", "HI"}:
             raise ValueError("This data does not include all 48 states.")
 
         # Add the sectoral demand to the aggregate demand

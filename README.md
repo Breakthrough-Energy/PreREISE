@@ -552,15 +552,15 @@ is mapped to the various load zones according to the percentage of a state's pop
 a particular load zone. This mapping can be accomplished as follows:
 
 ```python
-from prereise.gather.demanddata.nrel_efs.map_states import map_to_loadzone
+from prereise.gather.demanddata.nrel_efs.map_states import decompose_demand_profile_by_state_to_loadzone
 
-agg_dem_lz = map_to_loadzone(agg_dem, save)
+agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(agg_dem, save)
 ```
 
 where `agg_dem` is a DataFrame of the aggregated hourly demand data for each state in the contiguous 
 U.S. and `save` is a string representing the desired file path and file name to which the aggregated 
 demand will be saved as a .csv file. `save` defaults to `None`, indicating that the aggregated demand 
-should not be saved. `map_to_loadzone()` returns `agg_dem_lz`, which is a DataFrame of the aggregate 
+should not be saved. `decompose_demand_profile_by_state_to_loadzone()` returns `agg_dem_lz`, which is a DataFrame of the aggregate 
 demand data mapped to each load zone.
 
 #### V. Example of Downloading and Preparing EFS Demand Data
@@ -574,10 +574,10 @@ working directory. This example is implemented as follows:
 
 ```python
 from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
-from prereise.gather.demanddata.nrel_efs.map_states import map_to_loadzone
+from prereise.gather.demanddata.nrel_efs.map_states import decompose_demand_profile_by_state_to_loadzone
 
 agg_dem = combine_efs_demand(es="Reference", ta="Slow", year=2030)
-agg_dem_lz = map_to_loadzone(agg_dem=agg_dem, save="EFS_Demand_Reference_Slow_2030.csv")
+agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(agg_dem=agg_dem, save="EFS_Demand_Reference_Slow_2030.csv")
 ```
 
 As was mentioned in the prior subsections, `combine_efs_demand` first attempts to use automated 

@@ -1,4 +1,4 @@
-import re
+from collections import defaultdict
 
 import pandas as pd
 from powersimdata.input.grid import Grid
@@ -9,10 +9,9 @@ from powersimdata.network.usa_tamu.constants.zones import (
 )
 
 
-def map_to_loadzone(agg_dem, save=None):
-    """
-    Transforms the aggregated sectoral demand data so that it is separated by load zone
-    rather than by state.
+def decompose_demand_profile_by_state_to_loadzone(agg_dem, save=None):
+    """Transforms the aggregated sectoral demand data so that it is separated by load
+    zone rather than by state.
 
     :param pandas.DataFrame agg_dem: DataFrame of the aggregated sectoral demand data,
         where the rows are time steps (in local time) and the columns are the states.
@@ -22,47 +21,39 @@ def map_to_loadzone(agg_dem, save=None):
     :return: (*pandas.DataFrame*) -- Aggregate sectoral demand, split by load zone ID.
     :raises TypeError: if agg_dem is not a pandas.DataFrame or if save is not input as
         a str.
-    :raises ValueError: if agg_dem does not have the proper index, the correct number of
-        time steps, or the correct number of states.
+    :raises ValueError: if agg_dem does not have the proper time stamps or the correct
+        number of states.
     """
 
     # Check that a DataFrame is input
     if not isinstance(agg_dem, pd.DataFrame):
         raise TypeError("agg_dem must be input as a pandas.DataFrame.")
 
-    # Check the aggregate demand DataFrame dimensions and headers
-    if agg_dem.index.name != "Local Time":
-        raise ValueError("This data does not have the proper index.")
-    if len(agg_dem) != 8784:
-        raise ValueError("This data does not have the proper number of time steps.")
-    if set(agg_dem.columns.values) != set(abv2state) - {"AK", "HI"}:
+    # Check the aggregate demand DataFrame time stamps and column headers
+    if not agg_dem.index.equals(
+        pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+    ):
+        raise ValueError("This data does not have the proper time stamps.")
+    if set(agg_dem.columns) != set(abv2state) - {"AK", "HI"}:
         raise ValueError("This data does not include all 48 states.")
 
     # Grab the grid information
     grid = Grid(["USA"])
 
-    # Map the states to the load zone IDs
-    abv2id = {
-        k: {v for v in id2abv.keys() if id2abv[v] == k} for k in set(id2abv.values())
-    }
-
     # Find Pd for each load zone and determine the fraction of Pd per load zone by state
-    pd_by_lz_df = grid.bus[["Pd", "zone_id"]]
-    pd_by_lz_df = pd_by_lz_df.groupby("zone_id").sum()
-    pd_by_lz = {}
-    pd_frac = {}
-    for x in abv2id:
-        pd_by_lz[x] = {y: pd_by_lz_df.loc[y]["Pd"] for y in abv2id[x]}
-        pd_tot = sum({pd_by_lz[x][y] for y in pd_by_lz[x]})
-        pd_frac[x] = {y: pd_by_lz[x][y] / pd_tot for y in pd_by_lz[x]}
+    pd_by_lz = grid.bus.groupby("zone_id")["Pd"].sum()
+    pd_state_total = defaultdict(float)
+    for i, s in id2abv.items():
+        pd_state_total[s] += pd_by_lz[i]
+    pd_frac = {i: pd_by_lz[i] / pd_state_total[id2abv[i]] for i in id2abv}
 
     # Split states into load zones
-    agg_dem_lz = pd.DataFrame(index=agg_dem.index, columns=list(str(x) for x in id2abv))
-    for x in id2abv:
-        agg_dem_lz[str(x)] = agg_dem[id2abv[x]] * pd_frac[id2abv[x]][x]
+    agg_dem_lz = pd.DataFrame(index=agg_dem.index, columns=list(id2abv))
+    for i in agg_dem_lz.columns:
+        agg_dem_lz[i] = agg_dem[id2abv[i]] * pd_frac[i]
 
     # Convert from local hours to UTC time
-    agg_dem_lz = map_to_utc(agg_dem_lz)
+    agg_dem_lz = shift_local_time_by_loadzone_to_utc(agg_dem_lz)
 
     # Save the aggregated demand data, if desired
     if save is not None:
@@ -75,16 +66,15 @@ def map_to_loadzone(agg_dem, save=None):
     return agg_dem_lz
 
 
-def map_to_utc(agg_dem):
-    """
-    Maps the local times to the corresponding UTC times.
+def shift_local_time_by_loadzone_to_utc(agg_dem):
+    """Maps the local times to the corresponding UTC times.
 
     :param pandas.DataFrame agg_dem: DataFrame of the aggregated demand data, where the
         rows are time steps (in local time) and the columns are load zone IDs.
     :return: (*pandas.DataFrame*) -- Aggregate demand, shifted to account for UTC time.
     :raises TypeError: if agg_dem is not a pandas.DataFrame.
-    :raises ValueError: if agg_dem does not have the proper index, the correct number of
-        time steps, or the correct number of states.
+    :raises ValueError: if agg_dem does not have the proper time stamps or the correct
+        number of states.
     """
 
     # Check that a DataFrame is input
@@ -92,17 +82,17 @@ def map_to_utc(agg_dem):
         raise TypeError("agg_dem must be input as a pandas.DataFrame.")
 
     # Check the aggregate demand DataFrame dimensions and headers
-    if agg_dem.index.name != "Local Time":
-        raise ValueError("This data does not have the proper index.")
-    if len(agg_dem) != 8784:
-        raise ValueError("This data does not have the proper number of time steps.")
-    if set(agg_dem.columns.values) != set(str(x) for x in id2abv):
+    if not agg_dem.index.equals(
+        pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+    ):
+        raise ValueError("This data does not have the proper time stamps.")
+    if set(agg_dem.columns) != set(id2abv):
         raise ValueError("This data does not include all load zones.")
 
     # Shift values according to UTC time correction
     agg_dem_tz = agg_dem.copy()
-    for i in set(agg_dem_tz.columns):
-        tz_val = int(re.search(r"\d+", id2timezone[int(i)]).group())
+    for i in agg_dem_tz.columns:
+        tz_val = int(id2timezone[i][-1])
         agg_dem_tz[i] = agg_dem_tz[i].shift(tz_val)
 
         # Populate with data from December 30 (same day of week) that is the same time
