@@ -110,7 +110,7 @@ When using this dataset, provide a copy of the final product to MISO.
 * Location: These datasets are not included in this package. Rather, users are able to access and modify the datasets using modules included in this package.
 
 ##### General Purpose
-These datasets are used as the basis for demand profiles of the contiguous U.S. These resulting demand profiles are different from other demand profiles discussed in this package in that these demand profiles account for projected widespread electrification.
+These datasets are used to generate demand profiles that account for projected widespread electrification in the contiguous U.S.
 
 ##### Note
 These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer][nrel_disclaimer] first.

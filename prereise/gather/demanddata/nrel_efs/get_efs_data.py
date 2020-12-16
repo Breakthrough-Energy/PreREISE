@@ -158,7 +158,7 @@ def download_data(es=None, ta=None, fpath=""):
                     raise OSError("This operating system is not supported.")
 
 
-def partition_by_sector(es, ta, year, sect=None, fpath="", save=True):
+def partition_by_sector(es, ta, year, sect=None, fpath="", save=False):
     """Creates .csv files for each of the specified sectors given a specified
     electrification scenario and technology advancement.
 
@@ -174,7 +174,7 @@ def partition_by_sector(es, ta, year, sect=None, fpath="", save=True):
     :param str fpath: The file path where the demand data might be saved and to where
         the sectoral data will be saved.
     :param bool save: Determines whether or not the .csv file is saved. Defaults to
-        True. If the file is saved, it is saved to the same location as fpath.
+        False. If the file is saved, it is saved to the same location as fpath.
     :return: (*dict*) -- A dict of pandas.DataFrame objects that contain demand data
         for each state and time step in the specified sectors.
     :raises TypeError: if es and ta are not input as str, if year is not input as an

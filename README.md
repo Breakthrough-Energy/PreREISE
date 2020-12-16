@@ -216,7 +216,7 @@ data, similarly with the western case, the final hydro profile v2 for Texas is
 constructed by decomposing the total hydro generation profile proportional to
 the generator capacities. Check out the **[texas_hydro_v2_demo.ipynb][hydro_v2_texas_notebook]** notebook for demo.
 
-#### ii. Hydro v3
+#### iii. Hydro v3
 This methodology is designed to generate hourly plant level hydro profile
 for Eastern, i.e. eastern hydro v3, which has following features: 
 
@@ -491,9 +491,9 @@ of the sectors to include, `fpath` is the file path where the demand data might 
 where the sectoral demand will be saved (if desired), and `save` is a boolean that indicates 
 whether the sectoral demand should be saved. `sect` defaults to including all of the sectors (i.e., 
 all sectoral demand is retained). `fpath` defaults to the current directory. `save` defaults to 
-`True` (i.e., the sectoral demand is each saved as its own .csv file). `partition_by_sector()` 
-returns `sect_dem`, which is a dictionary of DataFrames, where each DataFrame contains the demand 
-for one sector.
+`False` (i.e., each sectoral demand DataFrame is not saved). `partition_by_sector()` returns 
+`sect_dem`, which is a dictionary of DataFrames, where each DataFrame contains the demand for one 
+sector.
 
 `partition_by_sector()` checks the file path provided by `fpath` to determine if the demand data 
 is already downloaded and extracted. If the demand data is not present as a .csv file, then 
@@ -514,31 +514,36 @@ each location and each hour. Aggregating sectoral demand can be accomplished as 
 ```python
 from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
 
-agg_dem = combine_efs_demand(es, ta, year, local_sects, local_paths, save)
+agg_dem = combine_efs_demand(efs_dem, non_efs_dem, save)
 ```
 
-where `es` is a string describing a single electrification scenario, `ta` is a string describing a 
-single technology advancement, `year` is an integer describing the included year, `local_sects` is 
-a set containing the sector names for which .csv files of demand data are already stored locally, 
-`local_paths` is a set containing file paths and file names corresponding to the provided sectors, 
-and `save` is a string representing the desired file path and file name to which the aggregated 
-demand will be saved as a .csv file. For `local_sects` and `local_paths`, the sectors that are not 
-provided will be acquired via `partition_by_sector()`, which itself relies on `download_data()` if 
-the .csv file from the 'NREL Data Catalog' is not present. Both `local_sects` and `local_paths` 
-default to `None`, indicating that there is no local demand data available and all demand data must 
-be acquired from the 'NREL Data Catalog'. `save` defaults to `None`, indicating that the aggregated 
-demand should not be saved. `combine_efs_demand()` returns `agg_dem`, which is a DataFrame of the 
-aggregate demand data for a specific electrification scenario, technology advancement, and year.
+where `efs_dem` is a dictionary of different sectoral demand DataFrames pertaining to the EFS (this
+input is intended to be the output of `partition_by_sector()`), `non_efs_dem` is a list of different
+sectoral demand DataFrames that are independent of the EFS (this input is intended to be the output of
+`access_non_efs_demand()`, which is addressed below), and `save` is a string representing the desired 
+file path and file name to which the aggregated demand will be saved as a .csv file. Both `efs_dem` and 
+`non_efs_dem` default to `None`, allowing the user to determine how much sectoral demand of each type 
+(EFS and non-EFS) they would like to include; note that failing to specify any sectoral demand will 
+raise an error. `save` defaults to `None`, indicating that the aggregate demand should not be saved. 
+`combine_efs_demand()` returns `agg_dem`, which is a DataFrame of the aggregate demand data.
 
-Since `combine_efs_demand()` relies on `partition_by_sector()` (and by extension, `download_data()`), 
-there is a chance that an error might occur if the automated extraction process cannot be used. 
-If the automated approach is not able to extract the .csv file, `combine_efs_demand()` will exit with 
-an error and the user will need to manually use their extraction method of choice (as was discussed in 
-the prior subsections). If manual extraction is required, the user can simply run `combine_efs_demand()` 
-again so long as the .csv file was extracted to the current working directory. If the .csv file was 
-saved elsewhere, then the user will need to run `partition_by_sector()` to create the appropriate 
-sectoral demand .csv files, which can then be passed into `combine_efs_demand()` via `local_sects` and 
-`local_paths`.
+The `access_non_efs_demand()` function allows sectoral demand that is not associated with the EFS to be 
+used. `access_non_efs_demand()` loads locally-stored sectoral demand data, checks that it is formatted 
+appropriately, and returns a list of sectoral demand DataFrames that can be fed into 
+`combine_efs_demand()`. Preparing non-EFS sectoral demand is accomplished as follows:
+
+```python
+from prereise.gather.demanddata.nrel_efs.aggregate_demand import access_non_efs_demand
+
+sect_dem = access_non_efs_demand(dem_paths)
+```
+
+where `dem_paths` is a list of file paths that point to the .csv files of locally-stored sectoral demand 
+data. `access_non_efs_demand()` is intended to be used on sectoral demand data that is not related to 
+the EFS; all sectoral demand data that is related to the EFS should be handled using 
+`partition_by_sector()`. Note that it will be incumbent upon the user to account for all sectors when 
+building the aggregate demand profiles (i.e., users will need to ensure that specific sectors are not 
+excluded or double-counted).
 
 #### IV. Mapping the State Demand to the Appropriate Load Zones
 
@@ -558,10 +563,11 @@ agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(agg_dem, save)
 ```
 
 where `agg_dem` is a DataFrame of the aggregated hourly demand data for each state in the contiguous 
-U.S. and `save` is a string representing the desired file path and file name to which the aggregated 
-demand will be saved as a .csv file. `save` defaults to `None`, indicating that the aggregated demand 
-should not be saved. `decompose_demand_profile_by_state_to_loadzone()` returns `agg_dem_lz`, which is a DataFrame of the aggregate 
-demand data mapped to each load zone.
+U.S. (intended to be the output of `combine_efs_demand()`) and `save` is a string representing the 
+desired file path and file name to which the aggregated demand will be saved as a .csv file. `save` 
+defaults to `None`, indicating that the aggregated demand should not be saved. 
+`decompose_demand_profile_by_state_to_loadzone()` returns `agg_dem_lz`, which is a DataFrame of the 
+aggregate demand data mapped to each load zone.
 
 #### V. Example of Downloading and Preparing EFS Demand Data
 
@@ -574,19 +580,13 @@ working directory. This example is implemented as follows:
 
 ```python
 from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
+from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_by_sector
 from prereise.gather.demanddata.nrel_efs.map_states import decompose_demand_profile_by_state_to_loadzone
 
-agg_dem = combine_efs_demand(es="Reference", ta="Slow", year=2030)
+sect_dem = partition_by_sector(es="Reference", ta="Slow", year=2030, fpath="")
+agg_dem = combine_efs_demand(efs_dem=sect_dem)
 agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(agg_dem=agg_dem, save="EFS_Demand_Reference_Slow_2030.csv")
 ```
-
-As was mentioned in the prior subsections, `combine_efs_demand` first attempts to use automated 
-extraction techniques. If those techniques are not capable of extracting the .csv file of EFS 
-demand data, the user will be required to manually use their extraction method of choice. If 
-manual extraction is required, the user can simply run `combine_efs_demand()` again so long as the 
-.csv file was extracted to the current working directory. If the .csv file was saved elsewhere, 
-then the user will need to run `partition_by_sector()` to create the appropriate sectoral demand 
-.csv files, which can then be passed into `combine_efs_demand()` via `local_sects` and `local_paths`.
 
 [RAP]: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
 [RAP_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/winddata/rap/demo/rap_demo.ipynb

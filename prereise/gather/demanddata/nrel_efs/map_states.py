@@ -15,6 +15,7 @@ def decompose_demand_profile_by_state_to_loadzone(agg_dem, save=None):
 
     :param pandas.DataFrame agg_dem: DataFrame of the aggregated sectoral demand data,
         where the rows are time steps (in local time) and the columns are the states.
+        This input is intended to be the output of :py:func:`combine_efs_demand`.
     :param str save: Saves a .csv if a str representing a valid file path and file
         name is provided. Defaults to None, indicating that a .csv file should not be
         saved.
@@ -67,7 +68,7 @@ def decompose_demand_profile_by_state_to_loadzone(agg_dem, save=None):
 
 
 def shift_local_time_by_loadzone_to_utc(agg_dem):
-    """Maps the local times to the corresponding UTC times.
+    """Maps the local time for each load zone to the corresponding UTC time.
 
     :param pandas.DataFrame agg_dem: DataFrame of the aggregated demand data, where the
         rows are time steps (in local time) and the columns are load zone IDs.
