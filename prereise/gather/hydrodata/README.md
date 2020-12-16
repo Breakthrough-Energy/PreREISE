@@ -9,6 +9,7 @@
 | usa_hydro_v3 | texaswestern_hydro_v2 + eastern_hydro_v3 | 8784*3043 | existing profiles concatenation
 | eastern_hydro_v3 | net demand shape + historical BA/total profiles | 8784*2306 | [EIA 923] and BA websites
 | eastern_hydro_v4 | scale eastern_hydro_v3 for rebased grid | 8784*2306 | existing profile scaling
+| usa_hydro_v4 | texaswestern_hydro_v2 + eastern_hydro_v4 | 8784*3043 | existing profiles concatenation
 
 <!--Profiles no longer in use:
 western_hydro_v1
