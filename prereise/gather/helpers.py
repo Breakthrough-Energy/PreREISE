@@ -6,8 +6,9 @@ from powersimdata.network.usa_tamu.constants.zones import abv2loadzone
 
 
 def trim_eia_form_923(filename):
-    """Remove columns in EIA form 923 that are unnecessary to calculate the monthly
-    generation per resource as performed by :py:func:`get_monthly_net_generation`.
+    """Remove columns in EIA form 923 that are unnecessary to calculate the
+    monthly generation per resource as performed by
+    :py:func:`get_monthly_net_generation`.
 
     :param str filename: name of the reference file.
     :return: (*pandas.DataFrame*) -- EIA form 923 with only relevant columns.
@@ -22,16 +23,20 @@ def trim_eia_form_923(filename):
     return eia_form_923
 
 
-def get_monthly_net_generation(state, eia_form_923, resource):
-    """Return monthly total net generation for a given resource and state from EIA
-    form 923.
+def get_monthly_net_generation(state, eia_form_923, resource, hps=True):
+    """Return monthly total net generation for a given resource and state from
+    EIA form 923.
 
     :param str state: state abbreviation.
-    :param pandas.DataFrame eia_form_923: EIA form 923. The reduced form as returned by
-        :py:func:`trim_eia_form_923` can be used.
+    :param pandas.DataFrame eia_form_923: EIA form 923. The reduced form as
+        returned by :py:func:`trim_eia_form_923` can be used.
     :param str resource: type of generator.
-    :return: (*list*) -- monthly net generation of the query fuel type in state.
-    :raises TypeError: if eia_form_923 is not a data frame or resource is not a str.
+    :param bool hps: determine whether pumped hydro storage is included in
+        the result if resource is *'hydro'*.
+    :return: (*list*) -- monthly net generation of the query fuel type
+        in state.
+    :raises TypeError: if eia_form_923 is not a data frame
+        or resource is not a str.
     :raises ValueError: if state or resource is invalid.
     """
     if not isinstance(state, str):
@@ -60,11 +65,15 @@ def get_monthly_net_generation(state, eia_form_923, resource):
         "nuclear": {"NUC"},
         "wind": {"WND"},
     }
+
     if resource not in all_resource.keys():
         raise ValueError(
             "Invalid resource. Possible resources are %s"
             % " | ".join(all_resource.keys())
         )
+
+    if resource == "hydro" and not hps:
+        all_resource["hydro"].remove("HPS")
 
     # Filter by state and fuel type
     net_generation_by_plant = eia_form_923[
@@ -78,12 +87,13 @@ def get_monthly_net_generation(state, eia_form_923, resource):
     )
     net_generation = net_generation.replace(".", 0)
 
-    # Get monthly total net generation by summing up across plants with all positive
-    # values. Note that negative ones are included in actual demand.
+    # Get monthly total net generation by summing up across plants
+    # with all positive values. Note that negative ones are included in
+    # actual demand.
     eia_net_generation = list(net_generation.apply(lambda x: x[x > 0].sum()).values)
 
-    # If there is no such generator in the state, the function will return a list of
-    # 0 instead of NaN.
+    # If there is no such generator in the state, the function will return
+    # a list of 0 instead of NaN.
     eia_net_generation = list(np.nan_to_num(eia_net_generation))
 
     return eia_net_generation

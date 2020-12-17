@@ -216,6 +216,54 @@ data, similarly with the western case, the final hydro profile v2 for Texas is
 constructed by decomposing the total hydro generation profile proportional to
 the generator capacities. Check out the **[texas_hydro_v2_demo.ipynb][hydro_v2_texas_notebook]** notebook for demo.
 
+#### ii. Hydro v3
+This methodology is designed to generate hourly plant level hydro profile
+for Eastern, i.e. eastern hydro v3, which has following features: 
+
+- Pumped storage hydro (HPS) and conventional hydro (HYC) are handled
+separately.
+- Historical hourly hydro profiles of four ISOs (ISONE, NYISO, PJM and SPP)
+, are used directly as regional total hydro profiles to start with.
+- For the rest of areas in Eastern Interconnect, which are not covered by the
+four ISOs, the hydro profile is generated in the same way as western hydro
+profile v2.
+
+Note that usa hydro v3 is the concatenation of eastern hydro v3, western
+hydro v2 and texas hydro v2
+
+##### a. Pumped Storage Hydro
+HPS profile for each plant in [hps_plants_eastern.xlsx][pumped storage hydro
+model], **‘all_plantIDs’** sheet, is generated based on the deterministic
+model presented in **‘profile’** sheet. The HPS profile model is designed based
+on local time. The plant level HPS profiles are generated considering the
+local time and daylight-saving schedule of the locations of the
+corresponding buses. However, during the sanity check afterwards, it turns
+out that this model overestimates the HPS output, the final profile is
+further scaled by 0.65 to be in agreement with values reported in [EIA 923][EIA 923].
+##### b. Conventional Hydro
+The buses of the HYC plants were associated to five regions (ISONE, NYISO,
+PJM, SPP and the area uncovered by the aforementioned regions) using the
+same methodology employed for eastern demand v5. Check Demand Data section
+below for details. For HYC plants locating inside the territories of the
+four ISOs, we decompose the total historical profile of each ISO into plant
+-level profiles proportional to the generator capacities. The time series
+profile data of each ISO is obtained via their official websites: [ISONE
+][ISO New England], [NYISO][NY ISO], [PJM][PJM], [SPP][Southwest Power Pool].
+
+For the rest of HYC plants lying outside the four ISO regions, we apply the
+same methodology that is used to generate hydro profile of California in
+Western hydro v2 (see details in the above subsection). The net demand
+profile is obtained from Eastern base case scenario (Scenario 397). The
+monthly net generations for a state is split proportional to the
+total capacities of the generators if the corresponding state is covered
+partially by the four ISOs mentioned above.   
+
+The final Eastern hydro profile v3 is built by stitching the three parts
+together: pumped storage hydro profiles, conventional hydro profiles within
+the four ISO regions and conventional hydro profiles in the rest areas
+. Check out **[eastern_hydro_v3_demo.ipynb][hydro_v3_eastern_notebook
+]** notebook for demo.
+
 ### D. Demand Data
 
 *Eastern V6*
@@ -388,3 +436,9 @@ usage.
 [hydro_profiles]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/docs/hydro_profiles.md
 [solar_profiles]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/docs/solar_profiles.md
 [wind_profiles]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/docs/wind_profiles.md
+[ISO New England]: https://www.iso-ne.com/isoexpress/
+[NY ISO]: http://mis.nyiso.com/public/P-63list.htm
+[PJM]: http://dataminer2.pjm.com/feed/gen_by_fuel
+[Southwest Power Pool]: https://marketplace.spp.org/pages/generation-mix-historical
+[hydro_v3_eastern_notebook]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/eastern_hydro_v3_demo/eastern_hydro_v3_demo.ipynb
+[pumped storage hydro model]: https://github.com/Breakthrough-Energy/PreREISE/blob/develop/prereise/gather/hydrodata/eia/demo/eastern_hydro_v3_demo/hps_plants_eastern.xlsx

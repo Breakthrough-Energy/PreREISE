@@ -3,12 +3,12 @@ import requests
 from tqdm import tqdm
 
 
-def transform_ba_to_region(demand, mapping):
-    """Transform column of demand data frame to regions defined by dictionary mapping.
+def aggregate_ba_demand(demand, mapping):
+    """Aggregate demand in BAs to regions as defined in the mapping dictionary
 
-    :param pandas.DataFrame demand: data frame for the demand.
+    :param pandas.DataFrame demand: demand profiles in BAs.
     :param dict mapping: dictionary mapping of BA columns to regions.
-    :return: (*pandas.DataFrame*) -- data frame with demand columns according to region.
+    :return: (*pandas.DataFrame*) -- aggregated demand profiles
     """
     agg_demand = pd.DataFrame(index=demand.index)
     for key in mapping:
@@ -30,14 +30,15 @@ def transform_ba_to_region(demand, mapping):
     return agg_demand
 
 
-def map_to_loadzone(agg_demand, bus_map):
-    """Transform columns of demand data frame from BA regions to load zones.
+def get_demand_in_loadzone(agg_demand, bus_map):
+    """Get demand in loadzones from aggregated demand of BA regions.
 
-    :param pandas.DataFrame agg_demand: data frame for the aggregated region demand.
-    :param pandas.DataFrame bus_map: data frame used to map BA regions to load zones
-        using real power demand weighting.
-    :return: (*pandas.DataFrame*) -- data frame with demand columns according to load
-        zone.
+    :param pandas.DataFrame agg_demand: demand profiles as returned by
+        :py:func:`aggregate_ba_demand`
+    :param pandas.DataFrame bus_map: data frame used to map BA regions to
+        load zones using real power demand weighting.
+    :return: (*pandas.DataFrame*) -- data frame with demand columns according
+        to load zone.
     """
     ba_agg = bus_map[["BA", "Pd"]].groupby("BA").sum().rename(columns={"Pd": "PdTotal"})
 
@@ -62,22 +63,24 @@ def map_to_loadzone(agg_demand, bus_map):
     return zone_demand
 
 
-def map_grid_buses_to_county(grid):
-    """Find the county in the U.S. territory that each load bus in the query grid
+def map_buses_to_county(bus_county_map):
+    """Find the county in the U.S. territory that each bus in the query grid
     belongs to.
 
-    :param powersimdata.input.grid.Grid grid: a Grid object.
-    :return: (*tuple*) -- first element is a data frame of counties that load buses
+    :param pandas.DataFrame bus_county_map: data frame contains a list of
+        entries with lat and long.
+    :return: (*tuple*) -- first element is a data frame of counties that buses
         locate. Second element is a list of bus indices that no county matches.
     """
-    bus_ba_map = grid.bus[grid.bus["Pd"] > 0][["Pd", "lat", "lon"]].copy()
-    bus_ba_map.loc[:, "County"] = None
-    bus_ba_map.loc[:, "BA"] = None
+
     # api-endpoint
     url = "https://geo.fcc.gov/api/census/block/find"
     # defining a params dict for the parameters to be sent to the API
+
+    bus_county_map.loc[:, "County"] = None
+    bus_county_map.loc[:, "BA"] = None
     bus_no_county_match = []
-    for index, row in tqdm(bus_ba_map.iterrows(), total=len(bus_ba_map)):
+    for index, row in tqdm(bus_county_map.iterrows(), total=len(bus_county_map)):
         params = {
             "latitude": row["lat"],
             "longitude": row["lon"],
@@ -87,8 +90,8 @@ def map_grid_buses_to_county(grid):
         # sending get request and saving the response as response object
         r = requests.get(url=url, params=params).json()
         try:
-            county_name = r["County"]["name"] + "__ " + r["State"]["code"]
-            bus_ba_map.loc[index, "County"] = county_name
+            county_name = r["County"]["name"] + "__" + r["State"]["code"]
+            bus_county_map.loc[index, "County"] = county_name
         except TypeError:
             bus_no_county_match.append(index)
-    return bus_ba_map, bus_no_county_match
+    return bus_county_map, bus_no_county_match
