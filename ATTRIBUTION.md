@@ -113,7 +113,7 @@ When using this dataset, provide a copy of the final product to MISO.
 These datasets are used to generate demand profiles that account for projected widespread electrification in the contiguous U.S.
 
 ##### Note
-These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer][nrel_disclaimer] first.
+These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer](https://www.nrel.gov/disclaimer.html) first.
 
 
 ---
@@ -276,10 +276,39 @@ The dataset is used to generate solar profiles.
 * Location: ***prereise/gather/winddata/data/3_2_Wind_Y2016.csv***
 
 ##### General Purpose
-The dataset is used to generate wind profiles.
+The dataset is used to generate wind profiles from wind speed profiles.
 
+### The Wind Power
+##### Source
+* Name: Power curves database
+* Author: The Wind Power
+* Description: power curves for 802 different turbines
+* Source: https://www.thewindpower.net
+* Exact source location: https://www.thewindpower.net/store_manufacturer_turbine_en.php?id_type=7
+
+##### Destination
+* Modifications to source file(s): 82 power curves are selected and gathered in a `csv` file.
+* Location: ***prereise/gather/winddata/data/PowerCurves.csv***
+
+##### General Purpose
+The dataset is used to generate wind profiles from wind speed profiles.
+
+### NREL
+##### Source
+* Name: Wind Integration National Data set (WIND) toolkit
+* Author: NREL
+* Description: report dedicated to the validation of power output for the NREL WIND toolkit
+* Source: https://www.nrel.gov/docs/fy14osti/61714.pdf
+* Exact source location: Table 2 of report.
+
+##### Destination
+* Modifications to source file(s): the 4 normalized power curves were added to the list of power curves used to produce the wind profiles
+* Location: ***prereise/gather/winddata/data/PowerCurves.csv***
+
+##### General Purpose
+The dataset is used to generate wind profiles from wind speed profiles.
+
+##### Note
+Recommended citation: J. King, A. Clifton and B.-M. Hodge. 2014. Validation of Power Output for the WIND Toolkit, Golden, CO: National Renewable Energy Laboratory. NREL/TP-6A20-74110. https://www.nrel.gov/docs/fy14osti/61714.pdf
 
 ---
-
-
-[nrel_disclaimer]: https://www.nrel.gov/disclaimer.html
