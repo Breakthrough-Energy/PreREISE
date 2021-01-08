@@ -9,8 +9,8 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
 
     :param dict efs_dem: A dict of pandas.DataFrame objects that contain sectoral demand
         data for each state and time step. This input is intended to be the output of
-        :py:func:`partition_by_sector`, which is associated with NREL's EFS. Defaults to
-        None.
+        :py:func:`partition_demand_by_sector`, which is associated with NREL's EFS.
+        Defaults to None.
     :param list non_efs_dem: A list of pandas.DataFrame objects that contain sectoral
         demand data for each state and time step. This input is intended to be the
         output of :py:func:`access_non_efs_demand`, which is not associated with NREL's

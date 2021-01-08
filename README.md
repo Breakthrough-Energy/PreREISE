@@ -445,9 +445,9 @@ contains the sectoral demand for each state and year. This data can be downloade
 extracted using the following:
 
 ```python
-from prereise.gather.demanddata.nrel_efs.get_efs_data import download_data
+from prereise.gather.demanddata.nrel_efs.get_efs_data import download_demand_data
 
-download_data(es, ta, fpath)
+download_demand_data(es, ta, fpath)
 ```
 
 where `es` is the set of electrification scenarios to be downloaded, `ta` is the set 
@@ -480,9 +480,9 @@ sectoral demand data). EFS demand data for a single electrification scenario and
 advancement pair can be split by sector as follows:
 
 ```python
-from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_by_sector
+from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_demand_by_sector
 
-sect_dem = partition_by_sector(es, ta, year, sect, fpath, save)
+sect_dem = partition_demand_by_sector(es, ta, year, sect, fpath, save)
 ```
 
 where `es` is a string describing a single electrification scenario, `ta` is a string describing a 
@@ -491,17 +491,17 @@ of the sectors to include, `fpath` is the file path where the demand data might 
 where the sectoral demand will be saved (if desired), and `save` is a boolean that indicates 
 whether the sectoral demand should be saved. `sect` defaults to including all of the sectors (i.e., 
 all sectoral demand is retained). `fpath` defaults to the current directory. `save` defaults to 
-`False` (i.e., each sectoral demand DataFrame is not saved). `partition_by_sector()` returns 
+`False` (i.e., each sectoral demand DataFrame is not saved). `partition_demand_by_sector()` returns 
 `sect_dem`, which is a dictionary of DataFrames, where each DataFrame contains the demand for one 
 sector.
 
-`partition_by_sector()` checks the file path provided by `fpath` to determine if the demand data 
+`partition_demand_by_sector()` checks the file path provided by `fpath` to determine if the demand data 
 is already downloaded and extracted. If the demand data is not present as a .csv file, then 
-`partition_by_sector()` uses `download_data()` to obtain the .csv file for the specified 
+`partition_demand_by_sector()` uses `download_demand_data()` to obtain the .csv file for the specified 
 electrification scenario and technology advancement. If the automated approach is not able to 
-extract the .csv file, `partition_by_sector()` will exit with an error and the user will need to 
+extract the .csv file, `partition_demand_by_sector()` will exit with an error and the user will need to 
 manually use their extraction method of choice (as was discussed in the prior subsection). If 
-manual extraction is required, the user can simply run `partition_by_sector()` again, making sure 
+manual extraction is required, the user can simply run `partition_demand_by_sector()` again, making sure 
 that `fpath` points to the appropriate location where the .csv file is saved.
 
 #### III. Aggregating the Sectoral Demand Data
@@ -518,7 +518,7 @@ agg_dem = combine_efs_demand(efs_dem, non_efs_dem, save)
 ```
 
 where `efs_dem` is a dictionary of different sectoral demand DataFrames pertaining to the EFS (this
-input is intended to be the output of `partition_by_sector()`), `non_efs_dem` is a list of different
+input is intended to be the output of `partition_demand_by_sector()`), `non_efs_dem` is a list of different
 sectoral demand DataFrames that are independent of the EFS (this input is intended to be the output of
 `access_non_efs_demand()`, which is addressed below), and `save` is a string representing the desired 
 file path and file name to which the aggregated demand will be saved as a .csv file. Both `efs_dem` and 
@@ -541,7 +541,7 @@ sect_dem = access_non_efs_demand(dem_paths)
 where `dem_paths` is a list of file paths that point to the .csv files of locally-stored sectoral demand 
 data. `access_non_efs_demand()` is intended to be used on sectoral demand data that is not related to 
 the EFS; all sectoral demand data that is related to the EFS should be handled using 
-`partition_by_sector()`. Note that it will be incumbent upon the user to account for all sectors when 
+`partition_demand_by_sector()`. Note that it will be incumbent upon the user to account for all sectors when 
 building the aggregate demand profiles (i.e., users will need to ensure that specific sectors are not 
 excluded or double-counted).
 
@@ -550,7 +550,7 @@ excluded or double-counted).
 For use in the grid model developed by Breakthrough Energy Sciences, the state-level demand provided by 
 the EFS must be mapped to the appropriate load zones. Breakthrough Energy Sciences defines distinct load 
 zones for each state. For smaller states that are completely contained within a single interconnection, 
-the load zone might very well be equal to the whole state. However large states (e.g., California and New 
+the load zone might very well be equal to the whole state. However, large states (e.g., California and New 
 York), states that are in multiple interconnections (e.g., Montana and New Mexico), and states with a 
 combination of these two characteristics (e.g., Texas) may have multiple load zones. State-level demand 
 is mapped to the various load zones according to the percentage of a state's population that resides in 
@@ -580,10 +580,10 @@ working directory. This example is implemented as follows:
 
 ```python
 from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
-from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_by_sector
+from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_demand_by_sector
 from prereise.gather.demanddata.nrel_efs.map_states import decompose_demand_profile_by_state_to_loadzone
 
-sect_dem = partition_by_sector(es="Reference", ta="Slow", year=2030, fpath="")
+sect_dem = partition_demand_by_sector(es="Reference", ta="Slow", year=2030, fpath="")
 agg_dem = combine_efs_demand(efs_dem=sect_dem)
 agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(agg_dem=agg_dem, save="EFS_Demand_Reference_Slow_2030.csv")
 ```
