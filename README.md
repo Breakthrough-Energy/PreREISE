@@ -400,7 +400,7 @@ test_clean_data.test_slope_interpolate()
 The **[ba_anomaly_detection_demo.ipynb][demand_anomaly]** notebook illustrates
 usage.
 
-### E. NREL Electrification Futures Study Demand Data
+### E. NREL Electrification Futures Study Demand and Flexibility Data
 
 The National Renewable Energy Laboratory (NREL) has developed the Electrification 
 Futures Study (EFS) to project and study future sectoral demand changes as a result 
@@ -433,10 +433,11 @@ renewable generation, presenting the opportunity to defer generation and transmi
 capacity upgrades. To help electrification impacts be considered properly, this package 
 has the ability to access NREL's EFS demand data sets. Currently, users can access the 
 base demand profiles, allowing the impacts of demand growth due to vast electrification 
-to be explored. Modeling the impacts of demand-side flexibility will be included in a 
-future release.
+to be explored. Users can also access the EFS flexible demand profiles, though 
+integration of demand-side flexibility modeling to the rest of Breakthrough Energy 
+Sciences' production cost model will be included in a future release.
 
-#### I. Downloading and Extracting EFS Demand Data
+#### I. Downloading and Extracting EFS Demand and Flexibility Data
 
 The EFS demand data sets are stored on the 'NREL Data Catalog' in .zip files. The 'NREL 
 Data Catalog' contains nine .zip files, one for each combination of electrification 
@@ -456,6 +457,23 @@ NREL EFS data will be downloaded. `es` and `ta` default to downloading each of t
 electrification scenarios and technology advancements, respectively. `fpath` defaults to 
 downloading the EFS data to the current directory.
 
+The EFS flexibility data sets are also stored on the 'NREL Data Catalog' in .zip files. 
+The flexibility data is stored differently from the base demand data, with flexibility data 
+stored in three separate .zip files, one for each electrification scenario. The .csv file 
+compressed within the .zip file contains the sectoral flexibility for each state, year, 
+technology advancement, and flexibility scenario. This data can be downloaded and extracted 
+using the following:
+
+```python
+from prereise.gather.demanddata.nrel_efs.get_efs_data import download_flexibility_data
+
+download_flexibility_data(es, fpath)
+```
+
+where `es` is the set of electrification scenarios to be downloaded and `fpath` is the file 
+path to which the NREL EFS data will be downloaded. `es` defaults to downloading each of the 
+electrification scenarios. `fpath` defaults to downloading the EFS data to the current directory.
+
 Although downloading the .zip files is a simple task, extracting the .csv files using 
 Python is more challenging. The .zip files stored on the 'NREL Data Catalog' are compressed 
 using a compression method (Deflate64, or compression type 9) that is not currently supported 
@@ -470,7 +488,7 @@ file, then users can extract the file manually by going to the .zip file's locat
 their extraction tool of choice. For instance, even though Windows' Command Prompt extraction 
 tools do not work, the native extraction tool built into Windows' File Explorer does work.
 
-#### II. Splitting the EFS Demand Data by Sector and Year
+#### II. Splitting the EFS Demand and Flexibility Data by Sector and Year
 
 The EFS demand data for a given electrification scenario and technology advancement is provided 
 for each sector and each year. Although the sectoral demand is eventually aggregated for a given 
@@ -489,20 +507,44 @@ where `es` is a string describing a single electrification scenario, `ta` is a s
 single technology advancement, `year` is an integer describing the included year, `sect` is a set 
 of the sectors to include, `fpath` is the file path where the demand data might be located and to 
 where the sectoral demand will be saved (if desired), and `save` is a boolean that indicates 
-whether the sectoral demand should be saved. `sect` defaults to including all of the sectors (i.e., 
+whether the sectoral demand should be saved. `sect` defaults to including all the sectors (i.e., 
 all sectoral demand is retained). `fpath` defaults to the current directory. `save` defaults to 
 `False` (i.e., each sectoral demand DataFrame is not saved). `partition_demand_by_sector()` returns 
 `sect_dem`, which is a dictionary of DataFrames, where each DataFrame contains the demand for one 
 sector.
 
-`partition_demand_by_sector()` checks the file path provided by `fpath` to determine if the demand data 
-is already downloaded and extracted. If the demand data is not present as a .csv file, then 
-`partition_demand_by_sector()` uses `download_demand_data()` to obtain the .csv file for the specified 
-electrification scenario and technology advancement. If the automated approach is not able to 
-extract the .csv file, `partition_demand_by_sector()` will exit with an error and the user will need to 
-manually use their extraction method of choice (as was discussed in the prior subsection). If 
-manual extraction is required, the user can simply run `partition_demand_by_sector()` again, making sure 
-that `fpath` points to the appropriate location where the .csv file is saved.
+The EFS flexibility data for a given electrification scenario is provided for each sector, year, 
+technology advancement, and flexibility scenario. It is useful to split the flexibility data by 
+sector for a specific year, technology advancement, and flexibility scenario. It is useful to split 
+flexibility data by sector because different sectors may have different operational constraints (e.g., 
+duration between demand curtailment and recovery, directionality of load shift). EFS flexibility data 
+can be split by sector as follows:
+
+```python
+from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_flexibility_by_sector
+
+sect_dem = partition_flexibility_by_sector(es, ta, flex, year, sect, fpath, save)
+```
+
+where `es` is a string describing a single electrification scenario, `ta` is a string describing a 
+single technology advancement, flex is a string describing a single flexibility scenario, `year` is 
+an integer describing the included year, `sect` is a set of the sectors to include, `fpath` is the 
+file path where the flexibility data might be located and to where the flexibility demand will be saved 
+(if desired), and `save` is a boolean that indicates whether the sectoral flexibility data should be 
+saved. `sect` defaults to including all the sectors (i.e., all sectoral flexibility is retained). 
+`fpath` defaults to the current directory. `save` defaults to `False` (i.e., each sectoral flexibility 
+DataFrame is not saved). `partition_flexibility_by_sector()` returns `sect_deflex`, which is a 
+dictionary of DataFrames, where each DataFrame contains the flexibility for one sector.
+
+`partition_demand_by_sector()` and `partition_flexibility_by_sector()` check the file path provided by 
+`fpath` to determine if the data is already downloaded and extracted. If the data is not present as a 
+.csv file, then `partition_demand_by_sector()` and `partition_flexibility_by_sector()` use 
+`download_demand_data()` and `download_flexibility_data()`, respectively, to obtain the specified .csv 
+file. If the automated approach is not able to extract the .csv file, `partition_demand_by_sector()` and 
+`partition_flexibility_by_sector()` will exit with an error, and the user will need to manually use their 
+extraction method of choice (as was discussed in the prior subsection). If manual extraction is required, 
+the user can simply run `partition_demand_by_sector()` and `partition_flexibility_by_sector()` again, 
+making sure that `fpath` points to the appropriate location where the .csv file is saved.
 
 #### III. Aggregating the Sectoral Demand Data
 
