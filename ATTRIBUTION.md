@@ -134,7 +134,7 @@ These datasets are generously provided by NREL, which is operated for the U.S. D
 These datasets are used to generate flexibility profiles that are realized through the projected widespread electrification in the contiguous U.S.
 
 ##### Note
-These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer][nrel_disclaimer] first.
+These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer](https://www.nrel.gov/disclaimer.html) first.
 
 
 
@@ -285,7 +285,7 @@ The dataset is used to generate solar profiles.
 
 ---
 ### Wind
-#### Energy Information Administration (EIA)
+#### Energy Information Administration (EIA) 
 ##### Source
 * Name: Form EIA-860
 * Author: EIA
@@ -316,7 +316,7 @@ The dataset is used to generate wind profiles from wind speed profiles.
 The dataset is used to generate wind profiles from wind speed profiles.
 
 ### NREL
-##### Source
+##### Source 
 * Name: Wind Integration National Data set (WIND) toolkit
 * Author: NREL
 * Description: report dedicated to the validation of power output for the NREL WIND toolkit
