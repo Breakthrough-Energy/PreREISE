@@ -100,7 +100,7 @@ When using this dataset, provide a copy of the final product to MISO.
 * Authors: Trieu Mai, Paige Jadun, Jeffrey Logan, Colin McMillan, Matteo Muratori, Daniel Steinberg, Laura Vimmerstedt, Ryan Jones, Ben Haley, Brent Nelson, Caitlin Murphy, Yinong Sun
 * Description: Projected state-level demand profiles for different electrification scenarios, levels of technology advancement, and years.
 * Source: https://data.nrel.gov/submissions/126
-* Exact source location: There are nine different .zip files containing demand data for the nine combinations of three electrification scenarios and three technology advancements. They can be accessed via: "https://data.nrel.gov/system/files/126/EFSLoadProfile_" + es + "_" + ta + ".zip", where es is in {"Reference", "Medium", "High"} and ta is in {"Slow", "Moderate", "Rapid"}
+* Exact source location: There are nine different .zip files containing demand data for the nine combinations of three electrification scenarios and three technology advancements. They can be accessed via: "https://data.nrel.gov/system/files/126/EFSLoadProfile_" + es + "_" + ta + ".zip", where es is in {"Reference", "Medium", "High"} and ta is in {"Slow", "Moderate", "Rapid"}.
 
 ##### Destination
 * Modifications to source file(s):
@@ -114,6 +114,28 @@ These datasets are used to generate demand profiles that account for projected w
 
 ##### Note
 These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer](https://www.nrel.gov/disclaimer.html) first.
+
+##### Source
+* Name: Electrification Futures Study Flexible Load Profiles
+* Authors: Paige Jadun, Trieu Mai, Caitlin Murphy, Yinong Sun, Matteo Muratori, Brent Nelson, Ryan Jones, Jeffrey Logan
+* Description: Projected state-level flexible demand profiles for different electrification scenarios, levels of technology advancement, flexibility scenarios, and years.
+* Source: https://data.nrel.gov/submissions/127
+* Exact source location: There are three different .zip files containing flexibility data for each of the three electrification scenarios. They can be accessed via: "https://data.nrel.gov/system/files/127/EFS Flexible Load Profiles - " + es + " Electrification.zip", where es is in {"Reference", "Medium", "High"}.
+
+##### Destination
+* Modifications to source file(s):
+  * State-level demand is mapped to the load zones defined by Breakthrough Energy Sciences.
+  * Of the six years' worth of data provided in each dataset, only one user-specified year is kept.
+  * Of the three different technology advancements, data for only one user-specified technology advancement is kept.
+  * Of the two different flexibility scenarios, data for only one user-specified flexibility scenario is kept.
+* Location: These datasets are not included in this package. Rather, users are able to access and modify the datasets using modules included in this package.
+
+##### General Purpose
+These datasets are used to generate flexibility profiles that are realized through the projected widespread electrification in the contiguous U.S.
+
+##### Note
+These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer][nrel_disclaimer] first.
+
 
 
 ---
