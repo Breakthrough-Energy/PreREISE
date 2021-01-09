@@ -509,9 +509,9 @@ of the sectors to include, `fpath` is the file path where the demand data might 
 where the sectoral demand will be saved (if desired), and `save` is a boolean that indicates 
 whether the sectoral demand should be saved. `sect` defaults to including all the sectors (i.e., 
 all sectoral demand is retained). `fpath` defaults to the current directory. `save` defaults to 
-`False` (i.e., each sectoral demand DataFrame is not saved). `partition_demand_by_sector()` returns 
-`sect_dem`, which is a dictionary of DataFrames, where each DataFrame contains the demand for one 
-sector.
+`False` (i.e., each sectoral demand DataFrame is not saved). `partition_demand_by_sector` returns 
+`sect_dem`, which is a dictionary of DataFrames, where each DataFrame contains the demand data for 
+one sector.
 
 The EFS flexibility data for a given electrification scenario is provided for each sector, year, 
 technology advancement, and flexibility scenario. It is useful to split the flexibility data by 
@@ -533,17 +533,17 @@ file path where the flexibility data might be located and to where the flexibili
 (if desired), and `save` is a boolean that indicates whether the sectoral flexibility data should be 
 saved. `sect` defaults to including all the sectors (i.e., all sectoral flexibility is retained). 
 `fpath` defaults to the current directory. `save` defaults to `False` (i.e., each sectoral flexibility 
-DataFrame is not saved). `partition_flexibility_by_sector()` returns `sect_deflex`, which is a 
-dictionary of DataFrames, where each DataFrame contains the flexibility for one sector.
+DataFrame is not saved). `partition_flexibility_by_sector` returns `sect_flex`, which is a 
+dictionary of DataFrames, where each DataFrame contains the flexibility data for one sector.
 
-`partition_demand_by_sector()` and `partition_flexibility_by_sector()` check the file path provided by 
+`partition_demand_by_sector` and `partition_flexibility_by_sector` check the file path provided by 
 `fpath` to determine if the data is already downloaded and extracted. If the data is not present as a 
-.csv file, then `partition_demand_by_sector()` and `partition_flexibility_by_sector()` use 
-`download_demand_data()` and `download_flexibility_data()`, respectively, to obtain the specified .csv 
-file. If the automated approach is not able to extract the .csv file, `partition_demand_by_sector()` and 
-`partition_flexibility_by_sector()` will exit with an error, and the user will need to manually use their 
+.csv file, then `partition_demand_by_sector` and `partition_flexibility_by_sector` use 
+`download_demand_data` and `download_flexibility_data`, respectively, to obtain the specified .csv 
+file. If the automated approach is not able to extract the .csv file, `partition_demand_by_sector` and 
+`partition_flexibility_by_sector` will exit with an error, and the user will need to manually use their 
 extraction method of choice (as was discussed in the prior subsection). If manual extraction is required, 
-the user can simply run `partition_demand_by_sector()` and `partition_flexibility_by_sector()` again, 
+the user can simply run `partition_demand_by_sector` and `partition_flexibility_by_sector` again, 
 making sure that `fpath` points to the appropriate location where the .csv file is saved.
 
 #### III. Aggregating the Sectoral Demand Data
@@ -560,19 +560,19 @@ agg_dem = combine_efs_demand(efs_dem, non_efs_dem, save)
 ```
 
 where `efs_dem` is a dictionary of different sectoral demand DataFrames pertaining to the EFS (this
-input is intended to be the output of `partition_demand_by_sector()`), `non_efs_dem` is a list of different
+input is intended to be the output of `partition_demand_by_sector`), `non_efs_dem` is a list of different
 sectoral demand DataFrames that are independent of the EFS (this input is intended to be the output of
-`access_non_efs_demand()`, which is addressed below), and `save` is a string representing the desired 
+`access_non_efs_demand`, which is addressed below), and `save` is a string representing the desired 
 file path and file name to which the aggregated demand will be saved as a .csv file. Both `efs_dem` and 
 `non_efs_dem` default to `None`, allowing the user to determine how much sectoral demand of each type 
 (EFS and non-EFS) they would like to include; note that failing to specify any sectoral demand will 
 raise an error. `save` defaults to `None`, indicating that the aggregate demand should not be saved. 
-`combine_efs_demand()` returns `agg_dem`, which is a DataFrame of the aggregate demand data.
+`combine_efs_demand` returns `agg_dem`, which is a DataFrame of the aggregate demand data.
 
-The `access_non_efs_demand()` function allows sectoral demand that is not associated with the EFS to be 
-used. `access_non_efs_demand()` loads locally-stored sectoral demand data, checks that it is formatted 
+The `access_non_efs_demand` function allows sectoral demand that is not associated with the EFS to be 
+used. `access_non_efs_demand` loads locally-stored sectoral demand data, checks that it is formatted 
 appropriately, and returns a list of sectoral demand DataFrames that can be fed into 
-`combine_efs_demand()`. Preparing non-EFS sectoral demand is accomplished as follows:
+`combine_efs_demand`. Preparing non-EFS sectoral demand is accomplished as follows:
 
 ```python
 from prereise.gather.demanddata.nrel_efs.aggregate_demand import access_non_efs_demand
@@ -581,9 +581,9 @@ sect_dem = access_non_efs_demand(dem_paths)
 ```
 
 where `dem_paths` is a list of file paths that point to the .csv files of locally-stored sectoral demand 
-data. `access_non_efs_demand()` is intended to be used on sectoral demand data that is not related to 
+data. `access_non_efs_demand` is intended to be used on sectoral demand data that is not related to 
 the EFS; all sectoral demand data that is related to the EFS should be handled using 
-`partition_demand_by_sector()`. Note that it will be incumbent upon the user to account for all sectors when 
+`partition_demand_by_sector`. Note that it will be incumbent upon the user to account for all sectors when 
 building the aggregate demand profiles (i.e., users will need to ensure that specific sectors are not 
 excluded or double-counted).
 
@@ -601,24 +601,24 @@ a particular load zone. This mapping can be accomplished as follows:
 ```python
 from prereise.gather.demanddata.nrel_efs.map_states import decompose_demand_profile_by_state_to_loadzone
 
-agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(agg_dem, save)
+df_lz = decompose_demand_profile_by_state_to_loadzone(df, save)
 ```
 
-where `agg_dem` is a DataFrame of the aggregated hourly demand data for each state in the contiguous 
-U.S. (intended to be the output of `combine_efs_demand()`) and `save` is a string representing the 
-desired file path and file name to which the aggregated demand will be saved as a .csv file. `save` 
-defaults to `None`, indicating that the aggregated demand should not be saved. 
-`decompose_demand_profile_by_state_to_loadzone()` returns `agg_dem_lz`, which is a DataFrame of the 
-aggregate demand data mapped to each load zone.
+where `df` is a DataFrame of the hourly demand data for each state in the contiguous U.S. (intended 
+to be the output of `combine_efs_demand` or the components that are output from 
+`partition_flexibility_by_sector`) and `save` is a string representing the desired file path and file 
+name to which the demand will be saved as a .csv file. `save` defaults to `None`, indicating that the 
+demand should not be saved. `decompose_demand_profile_by_state_to_loadzone` returns `df_lz`, which 
+is a DataFrame of the demand data mapped to each load zone.
 
 #### V. Example of Downloading and Preparing EFS Demand Data
 
 To demonstrate the work flow of these modules, this subsection presents an example of obtaining the 
 EFS demand data and subsequently preparing it for use in Breakthrough Energy Sciences' grid model. 
 In this example, EFS demand data under the 'Reference' electrification scenario and the 'Slow' 
-technology advancement scenario are acquired for the year 2030. After mapping the state-level 
-demand to the different load zones, the aggregate demand is saved as a .csv file to the current 
-working directory. This example is implemented as follows:
+technology advancement are acquired for the year 2030. After mapping the state-level demand to the 
+different load zones, the aggregate demand is saved as a .csv file to the current working directory. 
+This example is implemented as follows:
 
 ```python
 from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
@@ -627,7 +627,24 @@ from prereise.gather.demanddata.nrel_efs.map_states import decompose_demand_prof
 
 sect_dem = partition_demand_by_sector(es="Reference", ta="Slow", year=2030, fpath="")
 agg_dem = combine_efs_demand(efs_dem=sect_dem)
-agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(agg_dem=agg_dem, save="EFS_Demand_Reference_Slow_2030.csv")
+agg_dem_lz = decompose_demand_profile_by_state_to_loadzone(df=agg_dem, save="EFS_Demand_Reference_Slow_2030.csv")
+```
+
+#### VI. Example of Downloading and Preparing EFS Flexibility Data
+
+This subsection presents an example of obtaining the EFS flexibility data and subsequently preparing 
+it for use in Breakthrough Energy Sciences' grid model. In this example, EFS flexibility data under 
+the 'Reference' electrification scenario, 'Slow' technology advancement, and 'Base' flexibility scenario 
+are acquired for the year 2030. The state-level sectoral flexibility is mapped to the different load 
+zones, however the different flexibility data are not saved as .csv files as was done in the prior example. 
+This example is implemented as follows:
+
+```python
+from prereise.gather.demanddata.nrel_efs.get_efs_data import partition_flexibility_by_sector
+from prereise.gather.demanddata.nrel_efs.map_states import decompose_demand_profile_by_state_to_loadzone
+
+sect_flex = partition_flexibility_by_sector(es="Reference", ta="Slow", flex="Base", year=2030, fpath="")
+sect_flex_lz = {k: decompose_demand_profile_by_state_to_loadzone(df=v) for k, v in sect_flex.items()}
 ```
 
 [RAP]: https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/rapid-refresh-rap
