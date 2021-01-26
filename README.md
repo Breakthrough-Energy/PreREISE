@@ -448,14 +448,15 @@ extracted using the following:
 ```python
 from prereise.gather.demanddata.nrel_efs.get_efs_data import download_demand_data
 
-download_demand_data(es, ta, fpath)
+download_demand_data(es, ta, fpath, sz_path)
 ```
 
 where `es` is the set of electrification scenarios to be downloaded, `ta` is the set 
-of technology advancements to be downloaded, and `fpath` is the file path to which the 
-NREL EFS data will be downloaded. `es` and `ta` default to downloading each of the 
-electrification scenarios and technology advancements, respectively. `fpath` defaults to 
-downloading the EFS data to the current directory.
+of technology advancements to be downloaded, `fpath` is the file path to which the NREL 
+EFS data will be downloaded, and `sz_path` is the file path to which [7-Zip][7zip] is located 
+for Windows users. `es` and `ta` default to downloading each of the electrification scenarios 
+and technology advancements, respectively. `fpath` defaults to downloading the EFS data to 
+the current directory. `sz_path` defaults to the default installation location for 7-Zip.
 
 The EFS flexibility data sets are also stored on the 'NREL Data Catalog' in .zip files. 
 The flexibility data is stored differently from the base demand data, with flexibility data 
@@ -467,12 +468,14 @@ using the following:
 ```python
 from prereise.gather.demanddata.nrel_efs.get_efs_data import download_flexibility_data
 
-download_flexibility_data(es, fpath)
+download_flexibility_data(es, fpath, sz_path)
 ```
 
-where `es` is the set of electrification scenarios to be downloaded and `fpath` is the file 
-path to which the NREL EFS data will be downloaded. `es` defaults to downloading each of the 
-electrification scenarios. `fpath` defaults to downloading the EFS data to the current directory.
+where `es` is the set of electrification scenarios to be downloaded, `fpath` is the file path 
+to which the NREL EFS data will be downloaded, and `sz_path` is the file path to which 7-Zip is 
+located for Windows users. `es` defaults to downloading each of the electrification scenarios. 
+`fpath` defaults to downloading the EFS data to the current directory. `sz_path` defaults to the 
+default installation location for 7-Zip.
 
 Although downloading the .zip files is a simple task, extracting the .csv files using 
 Python is more challenging. The .zip files stored on the 'NREL Data Catalog' are compressed 
@@ -482,8 +485,8 @@ in an automated fashion, it is necessary to use either the Command Prompt or the
 depending on the user's operating system. For machines running macOS or Linux, the Terminal's 
 extraction tools are capable of accessing the .csv file. However, Windows machines are unable 
 to extract the .csv files using the Command Prompt's extraction tools due to the compression 
-method. For Windows users with [7-Zip][7zip], the .csv file can be extracted, so long as 7-Zip 
-is installed in the default location. If none of these methods succeed in extracting the .csv 
+method. For Windows users with 7-Zip, the .csv file can be extracted, so long as 7-Zip is 
+installed in the default location. If none of these methods succeed in extracting the .csv 
 file, then users can extract the file manually by going to the .zip file's location and using 
 their extraction tool of choice. For instance, even though Windows' Command Prompt extraction 
 tools do not work, the native extraction tool built into Windows' File Explorer does work.

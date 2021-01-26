@@ -9,7 +9,9 @@ import requests
 from powersimdata.network.usa_tamu.constants.zones import abv2state
 
 
-def download_demand_data(es=None, ta=None, fpath=""):
+def download_demand_data(
+    es=None, ta=None, fpath="", sz_path="C:/Program Files/7-Zip/7z.exe"
+):
     """Downloads the NREL EFS base demand data for the specified electrification
     scenarios and technology advancements.
 
@@ -20,14 +22,9 @@ def download_demand_data(es=None, ta=None, fpath=""):
         choose any of: *'Slow'*, *'Moderate'*, *'Rapid'*, or *'All'*. Defaults to
         None.
     :param str fpath: The file path to which the NREL EFS data will be downloaded.
-    :raises TypeError: if es and ta are not input as a set or list, if fpath is not
-        input as a str, or if the components of es and ta are not input as str.
-    :raises ValueError: if the components of es and ta are not valid.
-    :raises NotImplementedError: if the method for uncompressing a file that has been
-        compressed a certain way is not implemented.
-    :raises OSError: if the specified 7zip directory cannot be found (on Windows
-        machines) or if compression outside of Python's zipfile module is attempted on
-        non-Windows machines.
+    :param str sz_path: The file path on Windows machines that points to the 7-Zip tool.
+        Defaults to *'C:/Program Files/7-Zip/7z.exe'*.
+    :raises TypeError: if sz_path is not input as a str.
     """
 
     # Account for the immutable default parameters
@@ -36,39 +33,12 @@ def download_demand_data(es=None, ta=None, fpath=""):
     if ta is None:
         ta = {"All"}
 
-    # Check that the inputs are of an appropriate type
-    if not isinstance(es, (set, list)):
-        raise TypeError("Electrification scenarios must be input as a set or list.")
-    if not isinstance(ta, (set, list)):
-        raise TypeError("Technology advancements must be input as a set or list.")
-    if not isinstance(fpath, str):
-        raise TypeError("The file path must be input as a str.")
-
-    # Check that the components of es and ta are str
-    if not all(isinstance(x, str) for x in es):
-        raise TypeError("Individual electrification scenarios must be input as a str.")
-    if not all(isinstance(x, str) for x in ta):
-        raise TypeError("Individual technology advancements must be input as a str.")
-
-    # Reformat components of es and ta
-    es = {x.capitalize() for x in es}
-    if "All" in es:
-        es = {"Reference", "Medium", "High"}
-    ta = {x.capitalize() for x in ta}
-    if "All" in ta:
-        ta = {"Slow", "Moderate", "Rapid"}
-
-    # Check that the components of es and ta are valid
-    if not es.issubset({"Reference", "Medium", "High"}):
-        invalid_es = es - {"Reference", "Medium", "High"}
-        raise ValueError(f'Invalid electrification scenarios: {", ".join(invalid_es)}')
-    if not ta.issubset({"Slow", "Moderate", "Rapid"}):
-        invalid_ta = ta - {"Slow", "Moderate", "Rapid"}
-        raise ValueError(f'Invalid electrification scenarios: {", ".join(invalid_ta)}')
-
-    # Access the actual path if not already provided
-    if len(fpath) == 0:
-        fpath = os.getcwd()
+    # Check the inputs
+    es = _check_electrification_scenarios_for_download(es)
+    ta = _check_technology_advancements_for_download(ta)
+    fpath = _check_path(fpath)
+    if not isinstance(sz_path, str):
+        raise TypeError("The 7-Zip path must be input as a str.")
 
     # Download each of the specified load profiles
     z = {}
@@ -76,89 +46,29 @@ def download_demand_data(es=None, ta=None, fpath=""):
         z[i] = {}
         for j in ta:
             # Assign path and file names
-            zip_name = "EFSLoadProfile_" + i + "_" + j + ".zip"
-            url = "https://data.nrel.gov/system/files/126/" + zip_name
-            zip_path = os.path.join(fpath, zip_name)
-
-            # Save a local copy of the .zip file for extraction
-            r = requests.get(url, stream=True)
-            if r.status_code != requests.codes.ok:
-                r.raise_for_status()
-            open(zip_name, "wb").write(r.content)
-            print(zip_name + " successfully downloaded!")
+            zip_name = f"EFSLoadProfile_{i}_{j}.zip"
+            url = f"https://data.nrel.gov/system/files/126/{zip_name}"
 
             # Store the data in memory to try extracting with Python's zipfile module
-            z[i][j] = zipfile.ZipFile(io.BytesIO(r.content))
+            z[i][j] = _download_data(zip_name, url, fpath)
 
     # Try to extract the .csv file from the .zip file
     zf_works = True
     for i in es:
         for j in ta:
             # Assign path and file names
-            zip_name = "EFSLoadProfile_" + i + "_" + j + ".zip"
-            csv_name = "EFSLoadProfile_" + i + "_" + j + ".csv"
-            zip_path = os.path.join(fpath, zip_name)
+            zip_name = f"EFSLoadProfile_{i}_{j}.zip"
+            csv_name = f"EFSLoadProfile_{i}_{j}.csv"
 
-            try:
-                if zf_works:
-                    # Try the zipfile module first
-                    z[i][j].extractall(fpath)
-                    print(csv_name + " successfully extracted!")
-                else:
-                    # Bypass the zipfile module if it does not work on the first file
-                    raise NotImplementedError
-            except NotImplementedError:
-                if zf_works:
-                    print(
-                        zip_name
-                        + " is compressed using a method that is not supported by the"
-                        + " zipfile module."
-                    )
-                    print("Trying other extraction methods supported by your OS.")
-                    zf_works = False
-
-                # Try other extraction methods depending on operating system
-                if platform.system() == "Windows":
-                    try:
-                        # Windows Command Line does not support this type of compression
-                        # Try using 7zip, if it is installed in the default location
-                        sz_path = "C:/Program Files/7-Zip/7z.exe"
-                        if not os.path.isfile(sz_path):
-                            print(
-                                "7zip is not in this directory or is not installed. "
-                                + "Extract all data manually (refer to documentation)."
-                            )
-                            return
-                        subprocess.check_call(
-                            'cmd /c powershell -c & "'
-                            + sz_path
-                            + '" x "'
-                            + zip_path
-                            + '" -o"'
-                            + fpath
-                            + '" -y'
-                        )
-                        os.remove(zip_path)
-                        print(csv_name + " successfully extracted!")
-                    except subprocess.CalledProcessError:
-                        print(csv_name + " could not be extracted using 7zip.")
-                        print("Extract all data manually (refer to documentation).")
-                        return
-                elif platform.system() in {"Darwin", "Linux"}:
-                    try:
-                        # Try unzipping using the Terminal
-                        subprocess.check_call(["unzip", "-o", zip_path, "-d", fpath])
-                        os.remove(zip_path)
-                        print(csv_name + " successfully extracted!")
-                    except subprocess.CalledProcessError:
-                        print(csv_name + " could not be extracted using the Terminal.")
-                        print("Extract all data manually (refer to documentation).")
-                        return
-                else:
-                    raise OSError("This operating system is not supported.")
+            # Try to extract the .csv file from the .zip file
+            zf_works = _extract_data(
+                z[i][j], zf_works, zip_name, csv_name, fpath, sz_path
+            )
 
 
-def download_flexibility_data(es=None, fpath=""):
+def download_flexibility_data(
+    es=None, fpath="", sz_path="C:/Program Files/7-Zip/7z.exe"
+):
     """Downloads the NREL EFS flexibility data for the specified electrification
     scenarios.
 
@@ -166,25 +76,57 @@ def download_flexibility_data(es=None, fpath=""):
         choose any of: *'Reference'*, *'Medium'*, *'High'*, or *'All'*. Defaults to
         None.
     :param str fpath: The file path to which the NREL EFS data will be downloaded.
-    :raises TypeError: if es is not input as a set or list, if fpath is not input as a
-        str, or if the components of es are not input as str.
-    :raises ValueError: if the components of es are not valid.
-    :raises NotImplementedError: if the method for uncompressing a file that has been
-        compressed a certain way is not implemented.
-    :raises OSError: if the specified 7zip directory cannot be found (on Windows
-        machines) or if compression outside of Python's zipfile module is attempted on
-        non-Windows machines.
+    :param str sz_path: The file path on Windows machines that points to the 7-Zip tool.
+        Defaults to *'C:/Program Files/7-Zip/7z.exe'*.
+    :raises TypeError: if sz_path is not input as a str.
     """
 
     # Account for the immutable default parameter
     if es is None:
         es = {"All"}
 
-    # Check that the inputs are of an appropriate type
+    # Check the inputs
+    es = _check_electrification_scenarios_for_download(es)
+    fpath = _check_path(fpath)
+    if not isinstance(sz_path, str):
+        raise TypeError("The 7-Zip path must be input as a str.")
+
+    # Download each of the specified load profiles
+    z = {}
+    for i in es:
+        # Assign path and file names
+        zip_name = f"EFS Flexible Load Profiles - {i} Electrification.zip"
+        url = f"https://data.nrel.gov/system/files/127/{zip_name}"
+
+        # Store the data in memory to try extracting with Python's zipfile module
+        z[i] = _download_data(zip_name, url, fpath)
+
+    # Try to extract the .csv file from the .zip file
+    zf_works = True
+    for i in es:
+        # Assign path and file names
+        zip_name = f"EFS Flexible Load Profiles - {i} Electrification.zip"
+        csv_name = f"EFSFlexLoadProfiles_{i}.csv"
+
+        # Try to extract the .csv file from the .zip file
+        zf_works = _extract_data(z[i], zf_works, zip_name, csv_name, fpath, sz_path)
+
+
+def _check_electrification_scenarios_for_download(es):
+    """Checks the electrification scenarios input to :py:func:`download_demand_data`
+    and :py:func:`download_flexibility_data`.
+
+    :param set/list es: The input electrification scenarios that will be checked. Can
+        be any of: *'Reference'*, *'Medium'*, *'High'*, or *'All'*.
+    :return: (*set*) -- The formatted set of electrification scenarios.
+    :raises TypeError: if es is not input as a set or list, or if the components of es
+        are not input as str.
+    :raises ValueError: if the components of es are not valid.
+    """
+
+    # Check that the input is of an appropriate type
     if not isinstance(es, (set, list)):
         raise TypeError("Electrification scenarios must be input as a set or list.")
-    if not isinstance(fpath, str):
-        raise TypeError("The file path must be input as a str.")
 
     # Check that the components of es are str
     if not all(isinstance(x, str) for x in es):
@@ -200,93 +142,166 @@ def download_flexibility_data(es=None, fpath=""):
         invalid_es = es - {"Reference", "Medium", "High"}
         raise ValueError(f'Invalid electrification scenarios: {", ".join(invalid_es)}')
 
+    # Return the reformatted es
+    return es
+
+
+def _check_technology_advancements_for_download(ta):
+    """Checks the technology advancements input to :py:func:`download_demand_data` and
+    :py:func:`download_flexibility_data`.
+
+    :param set/list ta: The input technology advancements that will be checked. Can be
+        any of: *'Slow'*, *'Moderate'*, *'Rapid'*, or *'All'*.
+    :return: (*set*) -- The formatted set of technology advancements.
+    :raises TypeError: if ta is not input as a set or list, or if the components of ta
+        are not input as str.
+    :raises ValueError: if the components of ta are not valid.
+    """
+
+    # Check that the input is of an appropriate type
+    if not isinstance(ta, (set, list)):
+        raise TypeError("Technology advancements must be input as a set or list.")
+
+    # Check that the components of ta are str
+    if not all(isinstance(x, str) for x in ta):
+        raise TypeError("Individual technology advancements must be input as a str.")
+
+    # Reformat components of ta
+    ta = {x.capitalize() for x in ta}
+    if "All" in ta:
+        ta = {"Slow", "Moderate", "Rapid"}
+
+    # Check that the components of ta are valid
+    if not ta.issubset({"Slow", "Moderate", "Rapid"}):
+        invalid_ta = ta - {"Slow", "Moderate", "Rapid"}
+        raise ValueError(f'Invalid electrification scenarios: {", ".join(invalid_ta)}')
+
+    # Return the reformatted ta
+    return ta
+
+
+def _check_path(fpath):
+    """Checks the file path input to :py:func:`download_demand_data`,
+    :py:func:`download_flexibility_data`, :py:func:`partition_demand_by_sector`, and
+    :py:func:`partition_flexibility_by_sector`.
+
+    :param str fpath: The input file path.
+    :return: (*str*) -- The necessary file path in case it needed to be accessed.
+    :raises TypeError: if fpath is not input as a str.
+    """
+
+    # Check that the input is of an appropriate type
+    if not isinstance(fpath, str):
+        raise TypeError("The file path must be input as a str.")
+
     # Access the actual path if not already provided
     if len(fpath) == 0:
         fpath = os.getcwd()
 
-    # Download each of the specified load profiles
-    z = {}
-    for i in es:
-        # Assign path and file names
-        zip_name = "EFS Flexible Load Profiles - " + i + " Electrification.zip"
-        url = "https://data.nrel.gov/system/files/127/" + zip_name
-        zip_path = os.path.join(fpath, zip_name)
+    # Return fpath in case it had to be accessed
+    return fpath
 
-        # Save a local copy of the .zip file for extraction
-        r = requests.get(url, stream=True)
-        if r.status_code != requests.codes.ok:
-            r.raise_for_status()
-        open(zip_name, "wb").write(r.content)
-        print(zip_name + " successfully downloaded!")
 
-        # Store the data in memory to try extracting with Python's zipfile module
-        z[i] = zipfile.ZipFile(io.BytesIO(r.content))
+def _download_data(zip_name, url, fpath):
+    """Downloads the specified NREL EFS data for :py:func:`download_demand_data` and
+    :py:func:`download_flexibility_data`.
 
-    # Try to extract the .csv file from the .zip file
-    zf_works = True
-    for i in es:
-        # Assign path and file names
-        zip_name = "EFS Flexible Load Profiles - " + i + " Electrification.zip"
-        csv_name = "EFSFlexLoadProfiles_" + i + ".csv"
-        zip_path = os.path.join(fpath, zip_name)
+    :param str zip_name: The name of the specified .zip file.
+    :param str url: The specified URL to access the desired .zip file.
+    :param str fpath: The input file path.
+    :return: (*zipfile.ZipFile*) -- The .zip file stored in memory for attempted
+        extraction using Python's zipfile module.
+    """
 
-        try:
-            if zf_works:
-                # Try the zipfile module first
-                z[i].extractall(fpath)
-                print(csv_name + " successfully extracted!")
-            else:
-                # Bypass the zipfile module if it does not work on the first file
-                raise NotImplementedError
-        except NotImplementedError:
-            if zf_works:
-                print(
-                    zip_name
-                    + " is compressed using a method that is not supported by the"
-                    + " zipfile module."
-                )
-                print("Trying other extraction methods supported by your OS.")
-                zf_works = False
+    # Save a local copy of the .zip file for extraction
+    r = requests.get(url, stream=True)
+    if r.status_code != requests.codes.ok:
+        r.raise_for_status()
+    with open(zip_name, "wb") as f:
+        f.write(r.content)
+    print(f"{zip_name} successfully downloaded!")
 
-            # Try other extraction methods depending on operating system
-            if platform.system() == "Windows":
-                try:
-                    # Windows Command Line does not support this type of compression
-                    # Try using 7zip, if it is installed in the default location
-                    sz_path = "C:/Program Files/7-Zip/7z.exe"
-                    if not os.path.isfile(sz_path):
-                        print(
-                            "7zip is not in this directory or is not installed. "
-                            + "Extract all data manually (refer to documentation)."
-                        )
-                        return
-                    subprocess.check_call(
-                        'cmd /c powershell -c & "'
-                        + sz_path
-                        + '" x "'
-                        + zip_path
-                        + '" -o"'
-                        + fpath
-                        + '" -y'
+    # Return the data to try extracting with Python's zipfile module
+    return zipfile.ZipFile(io.BytesIO(r.content))
+
+
+def _extract_data(z, zf_works, zip_name, csv_name, fpath, sz_path):
+    """Extracts the .csv file containing NREL EFS data from the downloaded .zip file.
+    First attempts extraction using Python's zipfile module, then attempts other
+    OS-dependent methods, as needed.
+
+    :param zipfile.ZipFile z: The .zip file stored in memory for attempted extraction
+        using Python's zipfile module.
+    :param bool zf_works: An indicator flag that states whether or not Python's zipfile
+        module works for extraction. True if Python's zipfile module works, else False.
+    :param str zip_name: The name of the specified .zip file.
+    :param str csv_name: The name of the .csv file contained within the .zip file.
+    :param str fpath: The input file path.
+    :param str sz_path: The file path on Windows machines that points to the 7-Zip tool.
+    :return: (*bool*) -- The indicator flag that states whether or not Python's zipfile
+        module works for extraction. This is returned to prevent checking Python's
+        zipfile module if it does not work the first time (in the event multiple .zip
+        files require extraction).
+    :raises NotImplementedError: if Python's zipfile module cannot extract the .csv
+        file.
+    :raises OSError: if an OS other than Windows, macOS, or Linux is identified.
+    """
+
+    # Assign the path name of the .zip file
+    zip_path = os.path.join(fpath, zip_name)
+
+    try:
+        if zf_works:
+            # Try the zipfile module first
+            z.extractall(fpath)
+            print(f"{csv_name} successfully extracted!")
+        else:
+            # Bypass the zipfile module if it does not work on the first file
+            raise NotImplementedError
+    except NotImplementedError:
+        if zf_works:
+            print(
+                f"{zip_name} is compressed using a method that is not supported by the "
+                + "zipfile module."
+            )
+            print("Trying other extraction methods supported by your OS.")
+            zf_works = False
+
+        # Try other extraction methods depending on operating system
+        if platform.system() == "Windows":
+            try:
+                # Windows Command Line does not support this type of compression
+                # Try using 7-Zip, if it is installed in the specified location
+                if not os.path.isfile(sz_path):
+                    print(
+                        "7-Zip is not in this directory or is not installed. "
+                        + "Extract all data manually (refer to documentation)."
                     )
-                    os.remove(zip_path)
-                    print(csv_name + " successfully extracted!")
-                except subprocess.CalledProcessError:
-                    print(csv_name + " could not be extracted using 7zip.")
-                    print("Extract all data manually (refer to documentation).")
                     return
-            elif platform.system() in {"Darwin", "Linux"}:
-                try:
-                    # Try unzipping using the Terminal
-                    subprocess.check_call(["unzip", "-o", zip_path, "-d", fpath])
-                    os.remove(zip_path)
-                    print(csv_name + " successfully extracted!")
-                except subprocess.CalledProcessError:
-                    print(csv_name + " could not be extracted using the Terminal.")
-                    print("Extract all data manually (refer to documentation).")
-                    return
-            else:
-                raise OSError("This operating system is not supported.")
+                subprocess.check_call(
+                    f'cmd /c powershell -c & "{sz_path}" x "{zip_path}" -o"{fpath}" -y'
+                )
+                os.remove(zip_path)
+                print(f"{csv_name} successfully extracted!")
+            except subprocess.CalledProcessError:
+                print(f"{csv_name} could not be extracted using 7-Zip.")
+                print("Extract all data manually (refer to documentation).")
+                return
+        elif platform.system() in {"Darwin", "Linux"}:
+            try:
+                # Try unzipping using the Terminal
+                subprocess.check_call(["unzip", "-o", zip_path, "-d", fpath])
+                os.remove(zip_path)
+                print(f"{csv_name} successfully extracted!")
+            except subprocess.CalledProcessError:
+                print(f"{csv_name} could not be extracted using the Terminal.")
+                print("Extract all data manually (refer to documentation).")
+                return
+        else:
+            raise OSError("This operating system is not supported.")
+
+    # Return the flag that indicates whether or not Python's zipfile module works
+    return zf_works
 
 
 def partition_demand_by_sector(es, ta, year, sect=None, fpath="", save=False):
@@ -308,61 +323,24 @@ def partition_demand_by_sector(es, ta, year, sect=None, fpath="", save=False):
         False. If the file is saved, it is saved to the same location as fpath.
     :return: (*dict*) -- A dict of pandas.DataFrame objects that contain demand data
         for each state and time step in the specified sectors.
-    :raises TypeError: if es and ta are not input as str, if year is not input as an
-        int, if sect is not input as a set or list, if fpath is not input as a str, or
-        if the components of sect are not input as str.
-    :raises ValueError: if es, ta, year, or the components of sect are not valid.
+    :raises TypeError: if save is not input as a bool.
     """
 
     # Account for the immutable default parameters
     if sect is None:
         sect = {"All"}
 
-    # Check that the inputs are of an appropriate type
-    if not isinstance(es, str):
-        raise TypeError("Electrification scenario must be input as a str.")
-    if not isinstance(ta, str):
-        raise TypeError("Technology advancement must be input as a str.")
-    if not isinstance(year, int):
-        raise TypeError("The year must be input as an int.")
-    if not isinstance(sect, (set, list)):
-        raise TypeError("Sector inputs must be input as a set or list.")
-    if not isinstance(fpath, str):
-        raise TypeError("The file path must be input as a str.")
-
-    # Check that the components of sect are str
-    if not all(isinstance(x, str) for x in sect):
-        raise TypeError("Each individual sector must be input as a str.")
-
-    # Reformat components of es, ta, and sect
-    es = es.capitalize()
-    ta = ta.capitalize()
-    sect = {x.capitalize() for x in sect}
-    if "All" in sect:
-        sect = {"Transportation", "Residential", "Commercial", "Industrial"}
-
-    # Check that the components of es, ta, year, and sect are valid
-    if es not in {"Reference", "Medium", "High"}:
-        raise ValueError(f"{es} is not a valid electrification scenario.")
-    if ta not in {"Slow", "Moderate", "Rapid"}:
-        raise ValueError(f"{ta} is not a valid technology advancement.")
-    if year not in {2018, 2020, 2024, 2030, 2040, 2050}:
-        raise ValueError(f"{year} is not a valid year.")
-    if not sect.issubset({"Transportation", "Residential", "Commercial", "Industrial"}):
-        invalid_sect = sect - {
-            "Transportation",
-            "Residential",
-            "Commercial",
-            "Industrial",
-        }
-        raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
-
-    # Access the actual path if not already provided
-    if len(fpath) == 0:
-        fpath = os.getcwd()
+    # Check the inputs
+    es = _check_electrification_scenarios_for_partition(es)
+    ta = _check_technology_advancements_for_partition(ta)
+    _check_year(year)
+    sect = _check_sectors(sect)
+    fpath = _check_path(fpath)
+    if not isinstance(save, bool):
+        raise TypeError("save must be input as a bool.")
 
     # Specify the file name and path
-    csv_name = "EFSLoadProfile_" + es + "_" + ta + ".csv"
+    csv_name = f"EFSLoadProfile_{es}_{ta}.csv"
     csv_path = os.path.join(fpath, csv_name)
 
     # Download the specified NREL EFS dataset if it is not already downloaded
@@ -385,20 +363,22 @@ def partition_demand_by_sector(es, ta, year, sect=None, fpath="", save=False):
     sect_dem = {
         i: df[df["Sector"] == i]
         .drop(columns=["Sector"])
-        .groupby(["LocalHourID", "State"])
+        .groupby(["LocalHourID", "State"], sort=True)
         .sum()
         .unstack()
         for i in sect
     }
     sect_dem = {
-        i: sect_dem[i].set_axis(sorted(set(abv2state) - {"AK", "HI"}), axis="columns")
+        i: sect_dem[i].set_axis(
+            sect_dem[i].columns.get_level_values("State"), axis="columns"
+        )
         for i in sect
     }
 
     # Add extra day's worth of demand to account for leap year
     sect_dem = {i: account_for_leap_year(sect_dem[i]) for i in sect}
 
-    # Include the appropriate time stamps for the local time (with year=2016)
+    # Include the appropriate timestamps for the local time (with year=2016)
     sect_dem = {
         i: sect_dem[i].set_axis(
             pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
@@ -411,7 +391,7 @@ def partition_demand_by_sector(es, ta, year, sect=None, fpath="", save=False):
     # Save the sectoral DataFrames to .csv files, if desired
     if save:
         for i in sect:
-            new_csv_name = i + "_Demand_" + es + "_" + ta + "_" + str(year) + ".csv"
+            new_csv_name = f"{i}_Demand_{es}_{ta}_{year}.csv"
             new_csv_path = os.path.join(fpath, new_csv_name)
             sect_dem[i].to_csv(new_csv_path)
 
@@ -442,66 +422,25 @@ def partition_flexibility_by_sector(
         False. If the file is saved, it is saved to the same location as fpath.
     :return: (*dict*) -- A dict of pandas.DataFrame objects that contain flexibility
         data for each state and time step in the specified sectors.
-    :raises TypeError: if es, ta, and flex are not input as str; if year is not input as
-        an int; if sect is not input as a set or list; if fpath is not input as a str;
-        or if the components of sect are not input as str.
-    :raises ValueError: if es, ta, flex, year, or the components of sect are not valid.
+    :raises TypeError: if save is not input as a bool.
     """
 
     # Account for the immutable default parameters
     if sect is None:
         sect = {"All"}
 
-    # Check that the inputs are of an appropriate type
-    if not isinstance(es, str):
-        raise TypeError("Electrification scenario must be input as a str.")
-    if not isinstance(ta, str):
-        raise TypeError("Technology advancement must be input as a str.")
-    if not isinstance(flex, str):
-        raise TypeError("Flexibility scenario must be input as a str.")
-    if not isinstance(year, int):
-        raise TypeError("The year must be input as an int.")
-    if not isinstance(sect, (set, list)):
-        raise TypeError("Sector inputs must be input as a set or list.")
-    if not isinstance(fpath, str):
-        raise TypeError("The file path must be input as a str.")
-
-    # Check that the components of sect are str
-    if not all(isinstance(x, str) for x in sect):
-        raise TypeError("Each individual sector must be input as a str.")
-
-    # Reformat components of es, ta, and sect
-    es = es.capitalize()
-    ta = ta.capitalize()
-    flex = flex.capitalize()
-    sect = {x.capitalize() for x in sect}
-    if "All" in sect:
-        sect = {"Transportation", "Residential", "Commercial", "Industrial"}
-
-    # Check that the components of es, ta, year, and sect are valid
-    if es not in {"Reference", "Medium", "High"}:
-        raise ValueError(f"{es} is not a valid electrification scenario.")
-    if ta not in {"Slow", "Moderate", "Rapid"}:
-        raise ValueError(f"{ta} is not a valid technology advancement.")
-    if flex not in {"Base", "Enhanced"}:
-        raise ValueError(f"{flex} is not a valid flexibility scenario.")
-    if year not in {2018, 2020, 2024, 2030, 2040, 2050}:
-        raise ValueError(f"{year} is not a valid year.")
-    if not sect.issubset({"Transportation", "Residential", "Commercial", "Industrial"}):
-        invalid_sect = sect - {
-            "Transportation",
-            "Residential",
-            "Commercial",
-            "Industrial",
-        }
-        raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
-
-    # Access the actual path if not already provided
-    if len(fpath) == 0:
-        fpath = os.getcwd()
+    # Check the inputs
+    es = _check_electrification_scenarios_for_partition(es)
+    ta = _check_technology_advancements_for_partition(ta)
+    flex = _check_flexibility_scenario(flex)
+    _check_year(year)
+    sect = _check_sectors(sect)
+    fpath = _check_path(fpath)
+    if not isinstance(save, bool):
+        raise TypeError("save must be input as a bool.")
 
     # Specify the file name and path
-    csv_name = "EFSFlexLoadProfiles_" + es + ".csv"
+    csv_name = f"EFSFlexLoadProfiles_{es}.csv"
     csv_path = os.path.join(fpath, csv_name)
 
     # Download the specified NREL EFS dataset if it is not already downloaded
@@ -530,20 +469,22 @@ def partition_flexibility_by_sector(
     sect_flex = {
         i: df[df["Sector"] == i]
         .drop(columns=["Sector"])
-        .groupby(["LocalHourID", "State"])
+        .groupby(["LocalHourID", "State"], sort=True)
         .sum()
         .unstack()
         for i in sect
     }
     sect_flex = {
-        i: sect_flex[i].set_axis(sorted(set(abv2state) - {"AK", "HI"}), axis="columns")
+        i: sect_flex[i].set_axis(
+            sect_flex[i].columns.get_level_values("State"), axis="columns"
+        )
         for i in sect
     }
 
     # Add extra day's worth of flexibility to account for leap year
     sect_flex = {i: account_for_leap_year(sect_flex[i]) for i in sect}
 
-    # Include the appropriate time stamps for the local time (with year=2016)
+    # Include the appropriate timestamps for the local time (with year=2016)
     sect_flex = {
         i: sect_flex[i].set_axis(
             pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
@@ -556,23 +497,150 @@ def partition_flexibility_by_sector(
     # Save the sectoral DataFrames to .csv files, if desired
     if save:
         for i in sect:
-            new_csv_name = (
-                i
-                + "_"
-                + flex
-                + "_Flexibility_"
-                + es
-                + "_"
-                + ta
-                + "_"
-                + str(year)
-                + ".csv"
-            )
+            new_csv_name = f"{i}_{flex}_Flexibility_{es}_{ta}_{year}.csv"
             new_csv_path = os.path.join(fpath, new_csv_name)
             sect_flex[i].to_csv(new_csv_path)
 
     # Return the dictionary containing the formatted sectoral flexibility data
     return sect_flex
+
+
+def _check_electrification_scenarios_for_partition(es):
+    """Checks the electrification scenario input to
+    :py:func:`partition_demand_by_sector` and
+    :py:func:`partition_flexibility_by_sector`.
+
+    :param str es: The input electrification scenario that will be checked. Can be any
+        of: *'Reference'*, *'Medium'*, or *'High'*.
+    :return: (*str*) -- The formatted electrification scenario.
+    :raises TypeError: if es is not input as a str.
+    :raises ValueError: if es is not valid.
+    """
+
+    # Check that the input is of an appropriate type
+    if not isinstance(es, str):
+        raise TypeError("Electrification scenario must be input as a str.")
+
+    # Reformat es
+    es = es.capitalize()
+
+    # Check that es is valid
+    if es not in {"Reference", "Medium", "High"}:
+        raise ValueError(f"{es} is not a valid electrification scenario.")
+
+    # Return the reformatted es
+    return es
+
+
+def _check_technology_advancements_for_partition(ta):
+    """Checks the technology advancment input to :py:func:`partition_demand_by_sector`
+    and :py:func:`partition_flexibility_by_sector`.
+
+    :param str ta: The input technology advancement that will be checked. Can be any of:
+        *'Slow'*, *'Moderate'*, or *'Rapid'*.
+    :return: (*str*) -- The formatted technology advancement.
+    :raises TypeError: if ta is not input as a str.
+    :raises ValueError: if ta is not valid.
+    """
+
+    # Check that the input is of an appropriate type
+    if not isinstance(ta, str):
+        raise TypeError("Technology advancement must be input as a str.")
+
+    # Reformat ta
+    ta = ta.capitalize()
+
+    # Check that ta is valid
+    if ta not in {"Slow", "Moderate", "Rapid"}:
+        raise ValueError(f"{ta} is not a valid technology advancement.")
+
+    # Return the reformatted ta
+    return ta
+
+
+def _check_flexibility_scenario(flex):
+    """Checks the flexibility scenario input to
+    :py:func:`partition_flexibility_by_sector`.
+
+    :param str flex: The input flexibility scenario that will be checked. Can be any of:
+        *'Base'* or *'Enhanced'*.
+    :return: (*set*) -- The formatted set of flexibility scenarios.
+    :raises TypeError: if flex is not input as a set or list, or if the components of
+        flex are not input as str.
+    :raises ValueError: if the components of flex are not valid.
+    """
+
+    # Check that the input is of an appropriate type
+    if not isinstance(flex, str):
+        raise TypeError("Flexibility scenario must be input as a str.")
+
+    # Reformat flex
+    flex = flex.capitalize()
+
+    # Check that flex is valid
+    if flex not in {"Base", "Enhanced"}:
+        raise ValueError(f"{flex} is not a valid flexibility scenario.")
+
+    # Return the reformatted flex
+    return flex
+
+
+def _check_year(year):
+    """Checks the year input to :py:func:`partition_demand_by_sector` and
+    :py:func:`partition_flexibility_by_sector`.
+
+    :param int year: The selected year's worth of demand data. Can be any of: 2018,
+        2020, 2024, 2030, 2040, or 2050.
+    :raises TypeError: if year is not input as an int.
+    :raises ValueError: if year is not valid.
+    """
+
+    # Check that the input is of an appropriate type
+    if not isinstance(year, int):
+        raise TypeError("The year must be input as an int.")
+
+    # Check that year is valid
+    if year not in {2018, 2020, 2024, 2030, 2040, 2050}:
+        raise ValueError(f"{year} is not a valid year.")
+
+
+def _check_sectors(sect):
+    """Checks the sectors input to :py:func:`partition_demand_by_sector` and
+    :py:func:`partition_flexibility_by_sector`.
+
+    :param set/list sect: The input sectors. Can be any of: *'Transportation'*,
+        *'Residential'*, *'Commercial'*, *'Industrial'*, or *'All'*.
+    :return: (*set*) -- The formatted set of sectors.
+    :raises TypeError: if sect is not input as a set or list, or if the components of
+        sect are not input as str.
+    :raises ValueError: if the components of sect are not valid.
+    """
+
+    # Check that the input is of an appropriate type
+    if not isinstance(sect, (set, list)):
+        raise TypeError("Sector inputs must be input as a set or list.")
+
+    # Check that the components of sect are str
+    if not all(isinstance(x, str) for x in sect):
+        raise TypeError("Each individual sector must be input as a str.")
+
+    # Reformat components of sect
+    sect = {x.capitalize() for x in sect}
+    if "All" in sect:
+        sect = {"Transportation", "Residential", "Commercial", "Industrial"}
+
+    # Check that the components of sect are valid
+    if not sect.issubset({"Transportation", "Residential", "Commercial", "Industrial"}):
+        invalid_sect = sect - {
+            "Transportation",
+            "Residential",
+            "Commercial",
+            "Industrial",
+        }
+        raise ValueError(f'Invalid sectors: {", ".join(invalid_sect)}')
+
+    # Return the reformatted sect
+    return sect
 
 
 def account_for_leap_year(df):

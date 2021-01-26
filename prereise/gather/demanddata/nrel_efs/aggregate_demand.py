@@ -4,7 +4,7 @@ from powersimdata.network.usa_tamu.constants.zones import abv2state
 
 def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
     """Aggregate the sectoral demand data so that a single demand point is observed for
-    each state and time stamp. This function can either access local copies of the
+    each state and timestamp. This function can either access local copies of the
     sectoral demand data or can access the demand data from online.
 
     :param dict efs_dem: A dict of pandas.DataFrame objects that contain sectoral demand
@@ -24,7 +24,7 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
         a list, if the components of efs_dem and non_efs_dem are not pandas.DataFrames,
         or if save is not input as a str.
     :raises ValueError: if both efs_dem and non_efs_dem are entered as None or if the
-        components of efs_dem and non_efs_dem do not have the proper time stamps or the
+        components of efs_dem and non_efs_dem do not have the proper timestamps or the
         correct number of states.
     """
 
@@ -67,7 +67,7 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
             if not efs_dem[i].index.equals(
                 pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
             ):
-                raise ValueError("This data does not have the proper time stamps.")
+                raise ValueError("This data does not have the proper timestamps.")
             if set(efs_dem[i].columns) != set(abv2state) - {"AK", "HI"}:
                 raise ValueError("This data does not include all 48 states.")
 
@@ -81,7 +81,7 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
             if not x.index.equals(
                 pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
             ):
-                raise ValueError("This data does not have the proper time stamps.")
+                raise ValueError("This data does not have the proper timestamps.")
             if set(x.columns) != set(abv2state) - {"AK", "HI"}:
                 raise ValueError("This data does not include all 48 states.")
 
@@ -113,7 +113,7 @@ def access_non_efs_demand(dem_paths):
     :raises TypeError: if dem_paths are not input as a set or list or if the components
         of dem_paths are not input as str.
     :raises ValueError: if the data located in each path in dem_path does not have the
-        proper time stamps or the correct number of states.
+        proper timestamps or the correct number of states.
     """
 
     # Check that dem_paths is of an appropriate type
@@ -134,13 +134,13 @@ def access_non_efs_demand(dem_paths):
         if "Local Time" in temp_dem.columns:
             temp_dem.set_index("Local Time", inplace=True)
         else:
-            raise ValueError("This data does not provide the time stamps correctly.")
+            raise ValueError("This data does not provide the timestamps correctly.")
 
         # Check the DataFrame dimensions and headers
         if not temp_dem.index.equals(
             pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
         ):
-            raise ValueError("This data does not have the proper time stamps.")
+            raise ValueError("This data does not have the proper timestamps.")
         if set(temp_dem.columns) != set(abv2state) - {"AK", "HI"}:
             raise ValueError("This data does not include all 48 states.")
 

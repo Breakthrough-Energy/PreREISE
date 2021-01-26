@@ -22,7 +22,7 @@ def decompose_demand_profile_by_state_to_loadzone(df, save=None):
         saved.
     :return: (*pandas.DataFrame*) -- Sectoral demand, split by load zone ID.
     :raises TypeError: if df is not a pandas.DataFrame or if save is not input as a str.
-    :raises ValueError: if df does not have the proper time stamps or the correct number
+    :raises ValueError: if df does not have the proper timestamps or the correct number
         of states.
     """
 
@@ -30,11 +30,11 @@ def decompose_demand_profile_by_state_to_loadzone(df, save=None):
     if not isinstance(df, pd.DataFrame):
         raise TypeError("df must be input as a pandas.DataFrame.")
 
-    # Check the demand DataFrame time stamps and column headers
+    # Check the demand DataFrame timestamps and column headers
     if not df.index.equals(
         pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
     ):
-        raise ValueError("This data does not have the proper time stamps.")
+        raise ValueError("This data does not have the proper timestamps.")
     if set(df.columns) != set(abv2state) - {"AK", "HI"}:
         raise ValueError("This data does not include all 48 states.")
 
@@ -74,7 +74,7 @@ def shift_local_time_by_loadzone_to_utc(df):
         steps (in local time) and the columns are load zone IDs.
     :return: (*pandas.DataFrame*) -- Demand, shifted to account for UTC time.
     :raises TypeError: if df is not a pandas.DataFrame.
-    :raises ValueError: if df does not have the proper time stamps or the correct number
+    :raises ValueError: if df does not have the proper timestamps or the correct number
         of states.
     """
 
@@ -86,7 +86,7 @@ def shift_local_time_by_loadzone_to_utc(df):
     if not df.index.equals(
         pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
     ):
-        raise ValueError("This data does not have the proper time stamps.")
+        raise ValueError("This data does not have the proper timestamps.")
     if set(df.columns) != set(id2abv):
         raise ValueError("This data does not include all load zones.")
 

@@ -116,7 +116,7 @@ def test_partition_demand_by_sector():
     exp_res_dem.index.name = "Local Time"
 
     # Compare the two DataFrames
-    assert_frame_equal(exp_res_dem, test_sect_dem["Residential"])
+    assert_frame_equal(exp_res_dem, test_sect_dem["Residential"], check_names=False)
 
     # Delete the test .csv file
     os.remove("EFSLoadProfile_High_Rapid.csv")
@@ -154,7 +154,7 @@ def test_partition_flexibility_by_sector():
     exp_res_flex.index.name = "Local Time"
 
     # Compare the two DataFrames
-    assert_frame_equal(exp_res_flex, test_sect_flex["Residential"])
+    assert_frame_equal(exp_res_flex, test_sect_flex["Residential"], check_names=False)
 
     # Delete the test .csv file
     os.remove("EFSFlexLoadProfiles_High.csv")
