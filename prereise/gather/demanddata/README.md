@@ -1,20 +1,20 @@
 ## Demand Profiles
 
-| Demand Profiles  | Methodology   | Dimension     | Notes
-| ------------- |:-------------:|:-------------:|:------------:|
-| western_demand_v4 | BA County mapping + population proportion | 8784*16 | [EIA 930] and [EIA 860]
-| texas_demand_ercot | historical load data | 8784*8 | ERCOT
-| texaswestern_demand_v4 | western_demand_v4 + texas_demand_ercot | 8784*24 | existing profiles concatenation
-| eastern_demand_v5 | Bus BA mapping + PD proportion | 8784*52 | [EIA 930]
-| eastern_demand_v6 | Bus BA/BA subarea mapping + PD proportion | 8784*52 | [EIA 930] and MISO/SPP contacts
-| usa_demand_v6 | texaswestern_demand_v4 + eastern_demand_v6 | 8784*76 | existing profiles concatenation
+| Name            | Grid Model | Methodology  | Dimension    | Notes
+|:----------------|:-----------|:-------------|:-------------|:------------|
+| demand_vJan2021 | usa_tamu   | <li>Texas: historical load data</li><li>Western: BA to county mapping + population weighting (v4)</li><li>Eastern: bus BA to BA subarea mapping + `Pd` weighting (v6)</li> | 8784*76 | <li>Texas: ERCOT</li><li>Western: [EIA 930] + [EIA 860]</li><li>Eastern: [EIA 930] + MISO/SPP contacts</li> |
 
-<!--Profiles no longer in use:
- western_demand_v3
- western_demand_ca2020
- western_demand_ca2030
- -->
+---
+**Definition**
+* BA: Balancing Authority
+* ERCOT: Electricity Reliability Council of Texas
+* EIA: U.S. Energy Information Administration
+* MISO: Midcontinent Independent System Operator
+* SPP: Southwest Power Pool
+* `Pd`: Real Power demand (MW). The value is given for each bus in the ***bus.csv***
+file of a grid model, see e.g., ***powersimdata/network/usa_tamu/data/bus.csv***
+
+---
 
 [EIA 860]: https://www.eia.gov/electricity/data/eia860/
 [EIA 930]: https://www.eia.gov/opendata/
-
