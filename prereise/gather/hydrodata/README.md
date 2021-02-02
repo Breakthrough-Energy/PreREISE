@@ -1,21 +1,19 @@
 ## Hydro Profiles
 
-| Hydro Profiles  | Methodology   | Dimension     | Notes
-| ------------- |:-------------:|:-------------:|:------------:|
-| western_hydro_v2 | dams/net demand shape + historical total profile | 8784*715 | [US Army Corps][USACE_dataquery] and [EIA 923]
-| texas_hydro_v2 | historical total profile decomposition | 8784*22 | [ERCOT][ERCOT_generation]
-| texaswestern_hydro_v2 | western_hydro_v2 + texas_hydro_v2 | 8784*737 | existing profiles concatenation
-| eastern_hydro_v1 | monthly capacity factors in the U.S. | 8784*2306 | [EIA Table 4.08.B][hydro_cf]
-| usa_hydro_v3 | texaswestern_hydro_v2 + eastern_hydro_v3 | 8784*3043 | existing profiles concatenation
-| eastern_hydro_v3 | net demand shape + historical BA/total profiles | 8784*2306 | [EIA 923] and ISO websites: [ISONE][ISO New England], [NYISO][NY ISO], [PJM][PJM], [SPP][Southwest Power Pool] 
-| eastern_hydro_v4 | scale eastern_hydro_v3 for rebased grid | 8784*2306 | existing profile scaling
-| usa_hydro_v4 | texaswestern_hydro_v2 + eastern_hydro_v4 | 8784*3043 | existing profiles concatenation
+| Name            | Grid Model | Methodology  | Dimension    | Notes
+|:----------------|:-----------|:-------------|:-------------|:------------|
+| hydro_vJan2021  | usa_tamu   | <li>Texas: historical total profile decomposition</li><li>Western: net demand shape + historical total profile (v2)</li><li>Eastern: net demand shape + historical total profile decomposition in BA/ISO (v3)</li> | 8784*3043 | <li>Texas: ERCOT</li><li>Western: [EIA 923] + [US Army Corps][USACE_dataquery]</li><li>Eastern: [EIA 923] + ISONE/NYISO/PJM/SPP websites</li> |
 
-<!--Profiles no longer in use:
-western_hydro_v1
-texas_hydro_v1
-texaswestern_hydro_v1
--->
+---
+**Definition**
+* BA: Balancing Authority
+* ISO:Independent System Operator
+* ISONE: ISO New England
+* NYISO: New York ISO
+* PJM: Pennsylvania-New Jersey-Maryland Interconnection
+* SPP: Southwest Power Pool
+
+---
 
 [ERCOT_generation]: http://www.ercot.com/gridinfo/generation/
 [hydro_cf]: https://www.eia.gov/electricity/annual/html/epa_04_08_b.html
@@ -25,4 +23,3 @@ texaswestern_hydro_v1
 [NY ISO]: http://mis.nyiso.com/public/P-63list.htm
 [PJM]: http://dataminer2.pjm.com/feed/gen_by_fuel
 [Southwest Power Pool]: https://marketplace.spp.org/pages/generation-mix-historical
-
