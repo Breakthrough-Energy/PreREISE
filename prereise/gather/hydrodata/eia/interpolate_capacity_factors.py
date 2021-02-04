@@ -6,25 +6,23 @@ import pandas as pd
 
 
 def get_profile(
-    plant, start=pd.Timestamp(2016, 1, 1), end=pd.Timestamp(2016, 12, 31, 23)
+    plant_id, start=pd.Timestamp(2016, 1, 1), end=pd.Timestamp(2016, 12, 31, 23)
 ):
     """Creates hydro profile from monthly capacity factors reported by EIA
     `here <https://www.eia.gov/electricity/annual/html/epa_04_08_b.html>`_.
 
-    :param pandas.DataFrame plant: data frame with *'Pmax'* as column and
-        *'plant_id'* as indices.
+    :param list plant_id: id of the hydro plants.
     :param pandas.Timestamp/numpy.datetime64/datetime.datetime start: start date.
     :param pandas.Timestamp/numpy.datetime64/datetime.datetime end: end date.
     :return: (*pandas.DataFrame*) -- data frame with UTC timestamp as indices and plant
-        id as column names. Values are the energy in MWh.
-    :raises TypeError: if plant is not a data frame and/or dates are str.
-    :raises ValueError: if dates are invalid and/or data frame does not have a *'Pmax'*
-        column.
+        id as column names. Values are the capacity factor. Note that a unique capacity
+        factor is given for each month and for the entire US. Therefore, each plant
+        will have the same profile.
+    :raises TypeError: if plant_id is not a list and/or dates are str.
+    :raises ValueError: if dates are invalid.
     """
-    if not isinstance(plant, pd.DataFrame):
-        raise TypeError("plant must be a pandas.DataFrame object")
-    if "Pmax" not in plant.columns:
-        raise ValueError("Pmax must be in the plant data frame")
+    if not isinstance(plant_id, list):
+        raise TypeError("plant_id must be a list")
 
     for d in [start, end]:
         if not isinstance(d, (pd.Timestamp, np.datetime64, datetime.datetime)):
@@ -57,10 +55,4 @@ def get_profile(
     scaler.interpolate(method="time", inplace=True)
     scaler = scaler[start:end]
 
-    data = scaler.copy()
-    for i in plant.index:
-        data[i] = data.cf * plant.loc[i].Pmax
-
-    data.drop("cf", inplace=True, axis=1)
-
-    return data
+    return pd.DataFrame({i: scaler.cf for i in plant_id}, index=scaler.index)
