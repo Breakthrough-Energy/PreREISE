@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import pandas as pd
 
 
@@ -11,8 +9,16 @@ def to_reise(data):
         :func:`prereise.gather.solardata.nsrdb.sam.retrieve_data` or
         :func:`prereise.gather.solardata.ga_wind.ga_wind.retrieve_data`
     :return: (*pandas.DataFrame*) -- data frame formatted for REISE.
+    :raises TypeError: if *'data'* is not a data frame.
+    :raises ValueError: if *'Pout'*, *'plant_id'*, *'ts'* and *'ts_id'* are not among
+        the columns.
     """
-
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("data must be a pandas.DataFrame")
+    if not {"Pout", "plant_id", "ts", "ts_id"}.issubset(data.columns):
+        raise ValueError(
+            "data frame must have Pout, plant_id, ts and ts_id among columns"
+        )
     ts = data["ts"].unique()
     plant_id = data[data.ts_id == 1].plant_id.values
 
@@ -32,23 +38,19 @@ def to_reise(data):
     return profile
 
 
-def get_plant_info_unique_location(plant):
-    """Identify unique location and return relevant information of plants at
-    location.
+def get_plant_id_unique_location(plant):
+    """Identify unique location among plants.
 
     :param pandas.DataFrame plant: plant data frame.
-    :return: (*dict*) -- keys are coordinates of location. Values is a list of
-        2-tuple giving the plant id at location along with its capacity.
+    :return: (*dict*) -- keys are coordinates. Values is a list of *'plant_id'*.
+    :raises TypeError: if *'plant'* is not a data frame.
+    :raises ValueError: if *'plant_id'* is not the index and/or *'lat'* and *'lon'* are
+        not among the columns.
     """
-    n_target = len(plant)
-
-    # Identify unique location
-    coord = OrderedDict()
-    for i in range(n_target):
-        key = (str(plant.lon.values[i]), str(plant.lat.values[i]))
-        if key not in coord.keys():
-            coord[key] = [(plant.index[i], plant.Pmax.values[i])]
-        else:
-            coord[key].append((plant.index[i], plant.Pmax.values[i]))
-
-    return coord
+    if not isinstance(plant, pd.DataFrame):
+        raise TypeError("plant must be a pandas.DataFrame")
+    if not (plant.index.name == "plant_id" and {"lat", "lon"}.issubset(plant.columns)):
+        raise ValueError(
+            "data frame must have plant_id as index and lat and lon among columns"
+        )
+    return plant.groupby(["lon", "lat"]).groups
