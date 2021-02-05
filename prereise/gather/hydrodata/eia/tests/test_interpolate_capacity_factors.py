@@ -1,9 +1,7 @@
 import pandas as pd
 import pytest
 
-from prereise.gather.hydrodata.eia.interpolate_capacity_factors import (
-    get_profile,
-)
+from prereise.gather.hydrodata.eia.interpolate_capacity_factors import get_profile
 
 
 def test_get_profile_argument_type():

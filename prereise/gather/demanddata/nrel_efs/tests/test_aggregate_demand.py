@@ -4,9 +4,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from powersimdata.network.usa_tamu.constants.zones import abv2state
 
-from prereise.gather.demanddata.nrel_efs.aggregate_demand import (
-    combine_efs_demand,
-)
+from prereise.gather.demanddata.nrel_efs.aggregate_demand import combine_efs_demand
 
 
 def test_combine_efs_demand():

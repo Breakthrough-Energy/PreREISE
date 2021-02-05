@@ -2,9 +2,7 @@ import pandas as pd
 import pytest
 
 from prereise.gather.helpers import get_monthly_net_generation
-from prereise.gather.tests.mock_generation import (
-    create_mock_generation_data_frame,
-)
+from prereise.gather.tests.mock_generation import create_mock_generation_data_frame
 
 
 def test_get_monthly_net_generation_argument_type():
