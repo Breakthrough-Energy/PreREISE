@@ -2,11 +2,7 @@ from collections import defaultdict
 
 import pandas as pd
 from powersimdata.input.grid import Grid
-from powersimdata.network.usa_tamu.constants.zones import (
-    abv2state,
-    id2abv,
-    id2timezone,
-)
+from powersimdata.network.usa_tamu.constants.zones import abv2state, id2abv, id2timezone
 
 
 def decompose_demand_profile_by_state_to_loadzone(df, save=None):

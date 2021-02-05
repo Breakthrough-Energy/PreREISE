@@ -1,9 +1,6 @@
 import pandas as pd
 from powersimdata.input.grid import Grid
-from powersimdata.network.usa_tamu.constants.zones import (
-    abv2interconnect,
-    abv2loadzone,
-)
+from powersimdata.network.usa_tamu.constants.zones import abv2interconnect, abv2loadzone
 
 
 def get_profile_by_state(profile, state):
