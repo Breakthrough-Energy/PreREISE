@@ -2,6 +2,8 @@ import datetime
 
 import requests
 
+from prereise.gather.request_util import TransientError, retry
+
 
 class NoaaApi:
     """API client for downloading rap-130 data from NOAA.
@@ -86,9 +88,14 @@ class NoaaApi:
         :return: (*Generator[requests.Response]*) -- yield the next http response
         """
 
+        @retry(retry_count=3, allowed_exceptions=(TransientError))
         def download(time_slice, fallback=False):
             url = self.build_url(time_slice, fallback)
-            return requests.get(url, params=self.params)
+            resp = requests.get(url, params=self.params)
+            if resp.status_code == 500:
+                msg = f"Server error for url={resp.url}, retry_count={download.retry_count}"
+                raise TransientError(msg)
+            return resp
 
         for time_slice in self.iter_hours(start, end):
             response = download(time_slice)
