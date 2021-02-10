@@ -14,3 +14,6 @@ scipy==1.4.1
 tqdm==4.29.1
 xlrd==1.2.0
 nrel-pysam~=2.1.4
+networkx==2.5
+haversine==2.3.0
+geopy==2.1.0
