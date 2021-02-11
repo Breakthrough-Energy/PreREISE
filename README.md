@@ -4,6 +4,8 @@
 # PreREISE
 This package gathers and builds demand, hydro, solar, and wind profiles. The
 profiles are needed to run scenarios on the U.S. electrical grid.
+PreREISE is part of a set of packages representing Breakthrough Energy's power system model.
+More information regarding the installation of the model as well as the contribution guide can be found [here](https://breakthrough-energy.github.io/docs/).
 
 
 ## 1. Setup/Install
