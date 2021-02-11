@@ -78,6 +78,16 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
     step = datetime.timedelta(hours=1)
 
+    def calc_angular_dist(lon_grid, lat_grid):
+        n_grid = len(lon_grid)
+        for j in range(n_target):
+            uv_target = ll2uv(lon_target[j], lat_target[j])
+            angle = [
+                angular_distance(uv_target, ll2uv(lon_grid[k], lat_grid[k]))
+                for k in range(n_grid)
+            ]
+            target2grid[id_target[j]] = np.argmin(angle)
+
     first = True
     request_iter = enumerate(noaa.get_hourly_data(start, end))
     for i, response in tqdm(request_iter, total=url_count):
@@ -93,17 +103,10 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
             u_wsp = tmp.variables[NoaaApi.var_u][0, 1, :, :].flatten()
             v_wsp = tmp.variables[NoaaApi.var_v][0, 1, :, :].flatten()
 
-            n_grid = len(lon_grid)
             if first:
                 # The angular distance is calculated once. The target to grid
                 # correspondence is stored in a dictionary.
-                for j in range(n_target):
-                    uv_target = ll2uv(lon_target[j], lat_target[j])
-                    angle = [
-                        angular_distance(uv_target, ll2uv(lon_grid[k], lat_grid[k]))
-                        for k in range(n_grid)
-                    ]
-                    target2grid[id_target[j]] = np.argmin(angle)
+                calc_angular_dist(lon_grid, lat_grid)
                 first = False
 
             data_tmp["U"] = [u_wsp[target2grid[id_target[j]]] for j in range(n_target)]
