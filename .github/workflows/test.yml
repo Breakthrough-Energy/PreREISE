@@ -22,7 +22,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: Breakthrough-Energy/PowerSimData
-          token: ${{ secrets.CI_TOKEN_CLONE_REPO }}
           path: PowerSimData
 
       - name: Set up Python ${{ matrix.python-version }}
