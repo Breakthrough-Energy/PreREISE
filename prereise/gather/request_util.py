@@ -50,14 +50,22 @@ def rate_limit(_func=None, interval=None):
     return decorator if _func is None else decorator(_func)
 
 
-def retry(_func=None, retry_count=5, interval=None, allowed_exceptions=(HTTPError)):
+def retry(
+    _func=None,
+    retry_count=5,
+    interval=None,
+    raises=False,
+    allowed_exceptions=(HTTPError),
+):
     """Creates a decorator to handle retry logic.
 
     :param int retry_count: the max number of retries
     :param int/float interval: minimum spacing between retries
+    :param bool raises: whether to re-raise the error after retry_count is reached
     :param tuple allowed_exceptions: exceptions for which the function will be retried, all others will be surfaced to the caller
 
-    :return: (*Any*) -- the return value of the decorated function
+    :return: (*Any*) -- the return value of the decorated function, or None if
+        raises is False and all attempts failed
     """
 
     def decorator(func):
@@ -71,8 +79,10 @@ def retry(_func=None, retry_count=5, interval=None, allowed_exceptions=(HTTPErro
                 try:
                     return limiter.invoke(lambda: func(*args, **kwargs))
                 except allowed_exceptions as e:
-                    pass
-            print("Max retries reached!!")
+                    if func.retry_count == retry_count:
+                        print("Max retries reached!!")
+                        if raises:
+                            raise e
 
         return wrapper
 

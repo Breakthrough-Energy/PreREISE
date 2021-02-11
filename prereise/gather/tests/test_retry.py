@@ -8,14 +8,23 @@ class CustomException(Exception):
 
 
 def test_max_times_reached():
-    @retry(retry_count=8, allowed_exceptions=CustomException)
+    @retry(retry_count=3, allowed_exceptions=CustomException)
     def no_fail(x=[]):
         x.append(len(x))
         raise CustomException()
 
     counts = []
     no_fail(counts)
-    assert len(counts) == 8
+    assert len(counts) == 3
+
+
+def test_raises_after_max_attempts():
+    @retry(retry_count=3, raises=True, allowed_exceptions=CustomException)
+    def func():
+        raise CustomException()
+
+    with pytest.raises(CustomException):
+        func()
 
 
 def test_return_value():
