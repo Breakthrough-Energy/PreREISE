@@ -102,7 +102,7 @@ class NoaaApi:
         for time_slice in self.iter_hours(start, end):
             response = download(time_slice)
             if response.status_code == 404:
-                print(f"Got 404 response, trying fallback url.")
+                print("Got 404 response, trying fallback url.")
                 response = download(time_slice, fallback=True)
                 if response.status_code == 404:
                     print(

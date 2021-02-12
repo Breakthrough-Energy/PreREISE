@@ -5,7 +5,7 @@ from io import BytesIO
 import pandas as pd
 import requests
 
-from prereise.gather.request_util import RateLimit, TransientError, retry
+from prereise.gather.request_util import TransientError, retry
 
 
 @dataclass

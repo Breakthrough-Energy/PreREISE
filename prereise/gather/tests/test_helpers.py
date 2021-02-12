@@ -1,4 +1,3 @@
-import pandas as pd
 import pytest
 
 from prereise.gather.helpers import get_monthly_net_generation
