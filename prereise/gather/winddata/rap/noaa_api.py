@@ -88,11 +88,13 @@ class NoaaApi:
         :return: (*Generator[requests.Response]*) -- yield the next http response
         """
 
-        @retry(retry_count=3, allowed_exceptions=(TransientError))
+        retry_limit = 3
+
+        @retry(max_attempts=retry_limit, allowed_exceptions=(TransientError))
         def download(time_slice, fallback=False):
             url = self.build_url(time_slice, fallback)
             resp = requests.get(url, params=self.params)
-            if resp.status_code == 500:
+            if resp.status_code == 500 and download.retry_count < retry_limit:
                 msg = f"Server error for url={resp.url}, retry_count={download.retry_count}"
                 raise TransientError(msg)
             return resp

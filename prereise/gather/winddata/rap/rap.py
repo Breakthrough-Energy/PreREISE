@@ -78,6 +78,24 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
     step = datetime.timedelta(hours=1)
 
+    def calc_angular_dist(lon_grid, lat_grid):
+        n_grid = len(lon_grid)
+        for j in range(n_target):
+            uv_target = ll2uv(lon_target[j], lat_target[j])
+            angle = [
+                angular_distance(uv_target, ll2uv(lon_grid[k], lat_grid[k]))
+                for k in range(n_grid)
+            ]
+            target2grid[id_target[j]] = np.argmin(angle)
+
+    def handle_missing(response, data_tmp):
+        missing.append(response.url)
+
+        # missing data are set to NaN.
+        data_tmp["U"] = [np.nan] * n_target
+        data_tmp["V"] = [np.nan] * n_target
+        data_tmp["Pout"] = [np.nan] * n_target
+
     first = True
     request_iter = enumerate(noaa.get_hourly_data(start, end))
     for i, response in tqdm(request_iter, total=url_count):
@@ -87,41 +105,37 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
         )
 
         if response.status_code == 200:
-            tmp = Dataset("tmp.nc", "r", memory=response.content)
-            lon_grid = tmp.variables["lon"][:].flatten()
-            lat_grid = tmp.variables["lat"][:].flatten()
-            u_wsp = tmp.variables[NoaaApi.var_u][0, 1, :, :].flatten()
-            v_wsp = tmp.variables[NoaaApi.var_v][0, 1, :, :].flatten()
+            try:
+                tmp = Dataset("tmp.nc", "r", memory=response.content)
+                lon_grid = tmp.variables["lon"][:].flatten()
+                lat_grid = tmp.variables["lat"][:].flatten()
+                u_wsp = tmp.variables[NoaaApi.var_u][0, 1, :, :].flatten()
+                v_wsp = tmp.variables[NoaaApi.var_v][0, 1, :, :].flatten()
 
-            n_grid = len(lon_grid)
-            if first:
-                # The angular distance is calculated once. The target to grid
-                # correspondence is stored in a dictionary.
-                for j in range(n_target):
-                    uv_target = ll2uv(lon_target[j], lat_target[j])
-                    angle = [
-                        angular_distance(uv_target, ll2uv(lon_grid[k], lat_grid[k]))
-                        for k in range(n_grid)
-                    ]
-                    target2grid[id_target[j]] = np.argmin(angle)
-                first = False
+                if first:
+                    # The angular distance is calculated once. The target to grid
+                    # correspondence is stored in a dictionary.
+                    calc_angular_dist(lon_grid, lat_grid)
+                    first = False
 
-            data_tmp["U"] = [u_wsp[target2grid[id_target[j]]] for j in range(n_target)]
-            data_tmp["V"] = [v_wsp[target2grid[id_target[j]]] for j in range(n_target)]
-            wspd_target = np.sqrt(pow(data_tmp["U"], 2) + pow(data_tmp["V"], 2))
-            power = [
-                capacity_target[j]
-                * get_power(tpc, spc, wspd_target[j], state_target[j])
-                for j in range(n_target)
-            ]
-            data_tmp["Pout"] = power
+                data_tmp["U"] = [
+                    u_wsp[target2grid[id_target[j]]] for j in range(n_target)
+                ]
+                data_tmp["V"] = [
+                    v_wsp[target2grid[id_target[j]]] for j in range(n_target)
+                ]
+                wspd_target = np.sqrt(pow(data_tmp["U"], 2) + pow(data_tmp["V"], 2))
+                power = [
+                    capacity_target[j]
+                    * get_power(tpc, spc, wspd_target[j], state_target[j])
+                    for j in range(n_target)
+                ]
+                data_tmp["Pout"] = power
+            except Exception as e:
+                print(f"Failed to parse response from url={response.url}")
+                handle_missing(response, data_tmp)
         else:
-            missing.append(response.url)
-
-            # missing data are set to NaN.
-            data_tmp["U"] = [np.nan] * n_target
-            data_tmp["V"] = [np.nan] * n_target
-            data_tmp["Pout"] = [np.nan] * n_target
+            handle_missing(response, data_tmp)
 
         data.iloc[i * n_target : (i + 1) * n_target, :] = data_tmp.values
         dt += step
