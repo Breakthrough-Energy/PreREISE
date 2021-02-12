@@ -8,7 +8,7 @@ class CustomException(Exception):
 
 
 def test_max_times_reached():
-    @retry(retry_count=3, allowed_exceptions=CustomException)
+    @retry(max_attempts=3, allowed_exceptions=CustomException)
     def no_fail(x=[]):
         x.append(len(x))
         raise CustomException()
@@ -19,7 +19,7 @@ def test_max_times_reached():
 
 
 def test_raises_after_max_attempts():
-    @retry(retry_count=3, raises=True, allowed_exceptions=CustomException)
+    @retry(max_attempts=3, raises=True, allowed_exceptions=CustomException)
     def func():
         raise CustomException()
 

@@ -90,7 +90,7 @@ class NoaaApi:
 
         retry_limit = 3
 
-        @retry(retry_count=retry_limit, allowed_exceptions=(TransientError))
+        @retry(max_attempts=retry_limit, allowed_exceptions=(TransientError))
         def download(time_slice, fallback=False):
             url = self.build_url(time_slice, fallback)
             resp = requests.get(url, params=self.params)

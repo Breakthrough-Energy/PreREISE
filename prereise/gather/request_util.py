@@ -52,16 +52,16 @@ def rate_limit(_func=None, interval=None):
 
 def retry(
     _func=None,
-    retry_count=5,
+    max_attempts=5,
     interval=None,
     raises=False,
     allowed_exceptions=(HTTPError),
 ):
     """Creates a decorator to handle retry logic.
 
-    :param int retry_count: the max number of retries
+    :param int max_attempts: the max number of retries
     :param int/float interval: minimum spacing between retries
-    :param bool raises: whether to re-raise the error after retry_count is reached
+    :param bool raises: whether to re-raise the error after max_attempts is reached
     :param tuple allowed_exceptions: exceptions for which the function will be retried, all others will be surfaced to the caller
 
     :return: (*Any*) -- the return value of the decorated function, or None if
@@ -74,12 +74,12 @@ def retry(
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            for i in range(retry_count):
+            for i in range(max_attempts):
                 func.retry_count = i + 1
                 try:
                     return limiter.invoke(lambda: func(*args, **kwargs))
                 except allowed_exceptions as e:
-                    if func.retry_count == retry_count:
+                    if func.retry_count == max_attempts:
                         print("Max retries reached!!")
                         if raises:
                             raise e
