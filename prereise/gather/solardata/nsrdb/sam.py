@@ -77,8 +77,6 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
             dates=dates,
         ).to_dict()
 
-        ssc = pssc.PySSC()
-
         for i in coord[key]:
             data_site = pd.DataFrame(
                 {

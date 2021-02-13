@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import dateutil
 import h5pyd
 import numpy as np

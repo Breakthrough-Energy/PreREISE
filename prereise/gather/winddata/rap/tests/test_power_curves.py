@@ -188,7 +188,7 @@ class TestGetForm860(unittest.TestCase):
     def test_bad_dir(self):
         bad_dir = path.abspath(path.join(path.dirname(__file__), "..", "foo"))
         with self.assertRaises(ValueError):
-            form_860 = get_form_860(bad_dir)
+            get_form_860(bad_dir)
 
     def test_default_year(self):
         form_860 = get_form_860(data_dir)
@@ -200,11 +200,11 @@ class TestGetForm860(unittest.TestCase):
 
     def test_bad_year(self):
         with self.assertRaises(ValueError):
-            form_860 = get_form_860(data_dir, year=3000)
+            get_form_860(data_dir, year=3000)
 
     def test_year_str(self):
         with self.assertRaises(TypeError):
-            form_860 = get_form_860(data_dir, year="2016")
+            get_form_860(data_dir, year="2016")
 
 
 class TestGetTurbinePowerCurves(unittest.TestCase):

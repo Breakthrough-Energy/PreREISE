@@ -131,7 +131,7 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
                     for j in range(n_target)
                 ]
                 data_tmp["Pout"] = power
-            except Exception as e:
+            except Exception:
                 print(f"Failed to parse response from url={response.url}")
                 handle_missing(response, data_tmp)
         else:

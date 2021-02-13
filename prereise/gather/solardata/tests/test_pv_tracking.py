@@ -20,7 +20,7 @@ def test_state_exists():
 
 def test_state_without_no_solar_return_none():
     state = ["MT"]
-    assert get_pv_tracking_ratio_state(pv_info, state) == None
+    assert get_pv_tracking_ratio_state(pv_info, state) is None
 
 
 def test_state_with_solar_return_3ple():

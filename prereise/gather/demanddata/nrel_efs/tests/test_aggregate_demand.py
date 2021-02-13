@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from powersimdata.network.usa_tamu.constants.zones import abv2state

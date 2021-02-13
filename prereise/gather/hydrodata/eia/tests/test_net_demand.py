@@ -1,4 +1,3 @@
-import pandas as pd
 import pytest
 from powersimdata.tests.mock_scenario import MockScenario
 

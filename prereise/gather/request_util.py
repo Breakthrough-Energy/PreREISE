@@ -1,6 +1,5 @@
 import functools
 import time
-from datetime import timedelta
 from urllib.error import HTTPError
 
 
