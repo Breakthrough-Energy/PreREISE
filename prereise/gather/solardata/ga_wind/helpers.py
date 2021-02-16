@@ -1,5 +1,5 @@
 import numpy as np
-from pyproj import Proj
+from pyproj import Transformer
 
 
 def ll2ij(lon_origin, lat_origin, lon, lat):
@@ -17,10 +17,10 @@ def ll2ij(lon_origin, lat_origin, lon, lat):
                     +x_0=0 +y_0=0 +ellps=sphere
                     +units=m +no_defs"""
 
-    proj2grid = Proj(proj_string)
+    transformer = Transformer.from_pipeline(proj_string)
 
-    origin_xy = proj2grid(lon_origin, lat_origin)
-    target_xy = proj2grid(lon, lat)
+    origin_xy = transformer.transform(lon_origin, lat_origin)
+    target_xy = transformer.transform(lon, lat)
 
     delta = np.subtract(target_xy, origin_xy)
 
