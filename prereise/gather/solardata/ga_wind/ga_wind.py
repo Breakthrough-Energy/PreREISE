@@ -2,9 +2,10 @@ import dateutil
 import h5pyd
 import numpy as np
 import pandas as pd
+from pyproj import Transformer
 from tqdm import tqdm
 
-from prereise.gather.solardata.ga_wind.helpers import ll2ij
+from prereise.gather.solardata.ga_wind.helpers import ll2ij, proj_string
 from prereise.gather.solardata.helpers import get_plant_info_unique_location
 
 
@@ -42,9 +43,8 @@ def retrieve_data(
 
     # Get coordinates of nearest location
     lat_origin, lon_origin = f["coordinates"][0][0]
-    ij = {}
-    for key in coord.keys():
-        ij[key] = ll2ij(lon_origin, lat_origin, float(key[0]), float(key[1]))
+    transformer = Transformer.from_pipeline(proj_string)
+    ij = {key: ll2ij(transformer, lon_origin, lat_origin, *key) for key in coord.keys()}
 
     # Extract time series
     dt = f["datetime"]
