@@ -69,16 +69,16 @@ def retry(
 
     def decorator(func):
         limiter = RateLimit(interval)
-        func.retry_count = 0
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            wrapper.retry_count = 0
             for i in range(max_attempts):
-                func.retry_count = i + 1
+                wrapper.retry_count = i + 1
                 try:
                     return limiter.invoke(lambda: func(*args, **kwargs))
                 except allowed_exceptions as e:
-                    if func.retry_count == max_attempts:
+                    if wrapper.retry_count == max_attempts:
                         print("Max retries reached!!")
                         if raises:
                             raise e
