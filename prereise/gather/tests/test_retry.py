@@ -50,3 +50,16 @@ def test_unhandled_exception():
 
     with pytest.raises(Exception):
         fail()
+
+
+def test_counter_attribute():
+    limit = 3
+
+    @retry(max_attempts=limit, allowed_exceptions=CustomException)
+    def best_attempt():
+        x = best_attempt.retry_count
+        if best_attempt.retry_count < limit:
+            raise CustomException
+        return x
+
+    assert limit == best_attempt()
