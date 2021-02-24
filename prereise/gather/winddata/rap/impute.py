@@ -81,9 +81,8 @@ def simple(data, wind_farm, inplace=True, curve="state"):
         data_impute.at[j, "U"] = min_u + (max_u - min_u) * np.random.random()
         data_impute.at[j, "V"] = min_v + (max_v - min_v) * np.random.random()
         wspd = np.sqrt(data.loc[j].U ** 2 + data.loc[j].V ** 2)
-        capacity = wind_farm.loc[k].Pmax
         normalized_power = get_power(tpc, spc, wspd, "IEC class 2")
-        data_impute.at[j, "Pout"] = normalized_power * capacity
+        data_impute.at[j, "Pout"] = normalized_power
 
     if not inplace:
         return data_impute
@@ -133,9 +132,8 @@ def gaussian(data, wind_farm, inplace=True, curve="state"):
         data_impute.at[hour, "V"] = sample[0][1]
 
         wspd = np.sqrt(data.loc[hour].U ** 2 + data.loc[hour].V ** 2)
-        capacity = wind_farm.loc[plant_id].Pmax
         normalized_power = get_power(tpc, spc, wspd, "IEC class 2")
-        data_impute.at[hour, "Pout"] = normalized_power * capacity
+        data_impute.at[hour, "Pout"] = normalized_power
 
     if not inplace:
         return data_impute
