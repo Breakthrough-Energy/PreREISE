@@ -137,3 +137,6 @@ dmypy.json
 
 # Windows
 Thumbs.db
+
+# Data
+prereise/gather/winddata/data/StatePowerCurves.csv

@@ -9,7 +9,7 @@ from powersimdata.network.usa_tamu.constants.zones import (
 )
 from tqdm import tqdm
 
-from prereise.gather.solardata.helpers import get_plant_info_unique_location
+from prereise.gather.solardata.helpers import get_plant_id_unique_location
 from prereise.gather.solardata.nsrdb.nrel_api import NrelApi
 from prereise.gather.solardata.pv_tracking import (
     get_pv_tracking_data,
@@ -21,15 +21,13 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
     """Retrieves irradiance data from NSRDB and calculate the power output using
     the System Adviser Model (SAM).
 
-    :param pandas.DataFrame solar_plant: data frame with *'lat'*, *'lon'* and
-        *'Pmax' as columns and *'plant_id'* as index.
-    :param str email: email used for API key
-        `sign up <https://developer.nrel.gov/signup/>`_.
+    :param pandas.DataFrame solar_plant: plant data frame.
+    :param str email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
     :param str year: year.
     :param int/float rate_limit: minimum seconds to wait between requests to NREL
     :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
-        *'ts'* and *'ts_id'* as columns. The power output is in MWh.
+        *'ts'* and *'ts_id'* as columns. Values are power output for a 1MW generator.
     """
 
     # SAM only takes 365 days.
@@ -44,7 +42,7 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
         dates = pd.date_range(start="%s-01-01-00" % year, freq="H", periods=365 * 24)
 
     # Identify unique location
-    coord = get_plant_info_unique_location(solar_plant)
+    coord = get_plant_id_unique_location(solar_plant)
 
     data = pd.DataFrame({"Pout": [], "plant_id": [], "ts": [], "ts_id": []})
 
@@ -86,13 +84,12 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
                 }
             )
             data_site["ts_id"] = range(1, len(data_site) + 1)
-            data_site["plant_id"] = i[0]
+            data_site["plant_id"] = i
 
             power = 0
             for j, axis in enumerate([0, 2, 4]):
                 pv_dict = {
-                    # capacity in KW (DC)
-                    "system_capacity": i[1] * 1000.0 * ilr,
+                    "system_capacity": ilr,
                     "dc_ac_ratio": ilr,
                     "tilt": 30,
                     "azimuth": 180,
@@ -108,8 +105,8 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
                 pv.SolarResource.assign({"solar_resource_data": solar_data})
                 pv.execute()
 
-                ratio = frac[solar_plant.loc[i[0]].zone_id][j]
-                power += ratio * np.array(pv.Outputs.gen) / 1000
+                ratio = frac[solar_plant.loc[i].zone_id][j]
+                power += ratio * np.array(pv.Outputs.gen)
 
             if is_leap_year is True:
                 data_site["Pout"] = np.insert(
