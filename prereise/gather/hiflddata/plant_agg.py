@@ -123,13 +123,13 @@ def write_plant(plant_dict):
     :param dict plant_dict:  a dict of power plants as returned by :func:`Plant_agg`
     """
 
-    plant = open('output/plant.csv','w',newline='')
-    csv_writer = csv.writer(plant)
-    csv_writer.writerow(["plant_id","bus_id","Pg","status","Pmax","Pmin","ramp_30","type"])
-    for key in plant_dict:
-        list1 = plant_dict[key]
-        csv_writer.writerow([key[0]+'-'+key[1],list1[0], 1, "OP", min(list1[1],list1[2]),list1[3],list1[3],key[1]])
-    plant.close()
+    with open('output/plant.csv','w',newline='') as plant:
+        csv_writer = csv.writer(plant)
+        csv_writer.writerow(["plant_id","bus_id","Pg","status","Pmax","Pmin","ramp_30","type"])
+        for key in plant_dict:
+            list1 = plant_dict[key]
+            csv_writer.writerow([key[0]+'-'+key[1],list1[0], 1, "OP", min(list1[1],list1[2]),list1[3],list1[3],key[1]])
+
 
 def write_gen(plant_dict, type_dict):
     """Write the data to gencost.csv as output
@@ -138,12 +138,11 @@ def write_gen(plant_dict, type_dict):
     :param dict type_dict:  a dict of generator types
     """
 
-    gencost = open('output/gencost.csv','w',newline='')
-    csv_writer = csv.writer(gencost)
-    csv_writer.writerow(["plant_id","type","n","c2","c1","c0"])
-    for key in plant_dict:
-        csv_writer.writerow([key[0]+'-'+key[1],key[1],1,1,type_dict[key[1]],0])
-    gencost.close()
+    with open('output/gencost.csv','w',newline='') as gencost:
+        csv_writer = csv.writer(gencost)
+        csv_writer.writerow(["plant_id","type","n","c2","c1","c0"])
+        for key in plant_dict:
+            csv_writer.writerow([key[0]+'-'+key[1],key[1],1,1,type_dict[key[1]],0])
 
 def Plant(E_csv, U_csv, G2019_csv):
     """Entry point to start the gencost and power plant data processing

@@ -297,12 +297,11 @@ def Write_sub(clean_data, zone_dic):
     :param dict zone_dic: zone dict as returned by :func:`get_Zone`
     """
 
-    sub = open('output/sub.csv','w',newline='')
-    csv_writer = csv.writer(sub)
-    csv_writer.writerow(["sub_id","sub_name","lat","lon","zone_id","type"])
-    for index, row in clean_data.iterrows():
-        csv_writer.writerow([row['ID'],row['NAME'],row['LATITUDE'],row['LONGITUDE'],zone_dic[row['STATE']],row['TYPE']])
-    sub.close()
+    with open('output/sub.csv','w',newline='') as sub:
+        csv_writer = csv.writer(sub)
+        csv_writer.writerow(["sub_id","sub_name","lat","lon","zone_id","type"])
+        for index, row in clean_data.iterrows():
+            csv_writer.writerow([row['ID'],row['NAME'],row['LATITUDE'],row['LONGITUDE'],zone_dic[row['STATE']],row['TYPE']])
 
 
 def Write_Bus(clean_data, zone_dic, KV_dict):
@@ -313,17 +312,17 @@ def Write_Bus(clean_data, zone_dic, KV_dict):
     :param dict KV_dict: substation KV dict
     """
 
-    bus = open('output/bus.csv', 'w', newline='')
-    csv_writer = csv.writer(bus)
-    csv_writer.writerow(["Bus_id", "PD", "Zone_id", "base_KV"])
-    missingSub = []
-    for index, row in clean_data.iterrows():
-        sub = (row['LATITUDE'], row['LONGITUDE'])
-        if (sub in KV_dict):
-            csv_writer.writerow([row['ID'], 0, zone_dic[row['STATE']], KV_dict[sub]])
-        else:
-            missingSub.append(sub)
-    bus.close()
+    with open('output/bus.csv', 'w', newline='') as bus:
+        csv_writer = csv.writer(bus)
+        csv_writer.writerow(["Bus_id", "PD", "Zone_id", "base_KV"])
+        missingSub = []
+        for index, row in clean_data.iterrows():
+            sub = (row['LATITUDE'], row['LONGITUDE'])
+            if (sub in KV_dict):
+                csv_writer.writerow([row['ID'], 0, zone_dic[row['STATE']], KV_dict[sub]])
+            else:
+                missingSub.append(sub)
+
     print("INFO: ", len(missingSub), " substations excluded from the network. Some examples:")
     print(missingSub[:20])
 
@@ -334,12 +333,11 @@ def Write_bus2sub(clean_data):
     :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
     """
 
-    bus2sub = open('output/bus2sub.csv','w',newline='')
-    csv_writer = csv.writer(bus2sub)
-    csv_writer.writerow(["Bus_id","sub_id"])
-    for index, row in clean_data.iterrows():
-        csv_writer.writerow([row['ID'],row['ID']])
-    bus2sub.close()
+    with open('output/bus2sub.csv','w',newline='') as bus2sub:
+        csv_writer = csv.writer(bus2sub)
+        csv_writer.writerow(["Bus_id","sub_id"])
+        for index, row in clean_data.iterrows():
+            csv_writer.writerow([row['ID'],row['ID']])
 
 
 def Write_branch(lines):
@@ -348,11 +346,11 @@ def Write_branch(lines):
     :param list lines:  a list of lines as returned by :func:`Neighbors`
     """
 
-    branch = open('output/branch.csv', 'w', newline='')
-    csv_writer = csv.writer(branch)
-    csv_writer.writerow(['branch_id', 'line_type', 'from_bus_id', 'from_bus_name', 'to_bus_id', 'to_bus_name', 'length_in_mile', 'reactance', 'rateA'])
-    csv_writer.writerows(lines)
-    branch.close()
+    with open('output/branch.csv', 'w', newline='') as branch:
+        csv_writer = csv.writer(branch)
+        csv_writer.writerow(['branch_id', 'line_type', 'from_bus_id', 'from_bus_name', 'to_bus_id', 'to_bus_name', 'length_in_mile', 'reactance', 'rateA'])
+        csv_writer.writerows(lines)
+
 
 # Reactance Calculate 1
 kv_xperunit_calculate_1 = (
