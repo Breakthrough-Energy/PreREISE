@@ -1,31 +1,11 @@
 import pandas as pd
 import csv
 from geopy.distance import geodesic
+from prereise.gather.hiflddata.data_trans import get_Zone, Clean
 
 Max_Value = 3000
 Min_Value = 0
 coord_precision = '.9f'
-
-def get_Zone(Z_csv):
-    zone = pd.read_csv(Z_csv)
-
-    # Create dictionary to store the mapping of states and codes
-    zone_dic={}
-    for i in range(len(zone)):
-        zone_dic[zone['STATE'][i]]=zone['ID'][i]
-    return zone_dic
-
-
-# Clean data; throw substations which are outside the United States and not available.
-def Clean(E_csv,zone_dic):
-    csv_data = pd.read_csv(E_csv)
-    Num_sub = len(csv_data)
-    row_indexs = []
-    for i in range(Num_sub):
-        if((csv_data['STATE'][i] not in zone_dic) or (csv_data['STATUS'][i] != 'IN SERVICE') or (csv_data['LINES'][i] == 0)):
-            row_indexs.append(i)
-    clean_data = csv_data.drop(labels = row_indexs)
-    return clean_data
 
 def Clean_p(P_csv):
     csv_data = pd.read_csv(P_csv)
@@ -37,8 +17,15 @@ def Clean_p(P_csv):
     clean_data = csv_data.drop(labels = row_indexs)
     return clean_data
 
-# Get the lattitude and longitude of sunstations, and the substations in the area of each zip code
+
 def LocOfsub(clean_data):
+    """Get the latitude and longitude of substations, and the substations in the area of each zip code
+
+    :param dict clean_data:  a dict of substations as returned by :func:`data_trans.Clean`
+    :return: (*dict*) -- LocOfsub_dict, dict mapping the geo coordinate (x,y) to substations.
+    :return: (*dict*) -- ZipOfsub_dict, dict mapping the zip code to a group of substations.
+    """
+
     LocOfsub_dict = {}
     ZipOfsub_dict = {}
     for index, row in clean_data.iterrows():
@@ -55,16 +42,27 @@ def LocOfsub(clean_data):
             ZipOfsub_dict[zi] = list1
     return LocOfsub_dict, ZipOfsub_dict
 
-# Calculate the Pmin for each plant
+
 def Cal_P(G_csv):
+    """Calculate the Pmin for each plant
+
+    :param dict G_csv: path of the EIA generator profile csv file
+    :return: (*list*) -- a list of Pmin for the plants.
+    """
+
     Pmin = {}
     csv_data = pd.read_csv(G_csv)
     for index, row in csv_data.iterrows():
         Pmin[str(row["Plant Name"]).upper()] = row["Minimum Load (MW)"]
     return Pmin
 
-#Get the lattitude and longitude of plants 
+
 def Loc_of_plant():
+    """Get the latitude and longitude of plants
+
+    :return: (*list*) -- a list of power plants' geo coordinates.
+    """
+
     loc_of_plant = {}
     csv_data = pd.read_csv("data/Power_Plants.csv")
     for index, row in csv_data.iterrows():
@@ -72,7 +70,13 @@ def Loc_of_plant():
         loc_of_plant[row['NAME']] = loc
     return loc_of_plant
 
+
 def Plant_agg(clean_data,ZipOfsub_dict,loc_of_plant,LocOfsub_dict,Pmin):
+    """Aggregate the plant by zip code and build the plant dict with geo-based aggregation
+
+    :return: (*dict*) -- a dict for power plant after aggregation
+    """
+
     plant_dict = {}
   
     for index, row in clean_data.iterrows():
@@ -114,6 +118,11 @@ def Plant_agg(clean_data,ZipOfsub_dict,loc_of_plant,LocOfsub_dict,Pmin):
     return plant_dict
 
 def write_plant(plant_dict):
+    """Write the data to plant.csv as output
+
+    :param dict plant_dict:  a dict of power plants as returned by :func:`Plant_agg`
+    """
+
     plant = open('output/plant.csv','w',newline='')
     csv_writer = csv.writer(plant)
     csv_writer.writerow(["plant_id","bus_id","Pg","status","Pmax","Pmin","ramp_30","type"])
@@ -123,6 +132,12 @@ def write_plant(plant_dict):
     plant.close()
 
 def write_gen(plant_dict, type_dict):
+    """Write the data to gencost.csv as output
+
+    :param dict plant_dict:  a dict of power plants as returned by :func:`Plant_agg`
+    :param dict type_dict:  a dict of generator types
+    """
+
     gencost = open('output/gencost.csv','w',newline='')
     csv_writer = csv.writer(gencost)
     csv_writer.writerow(["plant_id","type","n","c2","c1","c0"])
@@ -131,6 +146,13 @@ def write_gen(plant_dict, type_dict):
     gencost.close()
 
 def Plant(E_csv, U_csv, G2019_csv):
+    """Entry point to start the gencost and power plant data processing
+
+    :param str E_csv: path of the HIFLD substation csv file
+    :param str U_csv: path of the general unit csv file
+    :param str G2019_csv: path of the EIA generator profile csv file
+    """
+
     zone_dic = get_Zone("data/zone.csv")
 
     clean_sub = Clean(E_csv,zone_dic)
