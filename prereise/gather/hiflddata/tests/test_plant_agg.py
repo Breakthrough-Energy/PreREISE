@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import Mock
+from unittest.mock import Mock, mock_open
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from prereise.gather.hiflddata.plant_agg import Clean_p, LocOfsub, Cal_P, Loc_of_plant
+from prereise.gather.hiflddata.plant_agg import Clean_p, LocOfsub, Cal_P, Loc_of_plant, Plant_agg, write_plant
 
 def test_clean_p():
     csv_data_path = "General_Units.csv"
@@ -59,3 +59,48 @@ def test_loc_of_plant():
     loc_of_plant = Loc_of_plant()
     expected_loc_of_plant = {'AMALGAMATED': ('45.768423360', '-91.864744370'), 'CASTLE': ('45.538501810', '-90.311812310')}
     assert loc_of_plant == expected_loc_of_plant
+
+
+def test_plant_agg_when_clean_data_is_empty():
+    clean_data = pd.DataFrame(data={})
+    actual_result = Plant_agg(clean_data, None, None, None, None)
+    assert actual_result == {}
+
+
+def test_plant_agg_normal_case():
+    clean_data = pd.DataFrame(data={
+        'ZIP': ['35476', '36512'],
+        'PLANT': ['BANKHEAD DAM', 'BARRY'],
+        'TYPE': ['CONVENTIONAL HYDROELECTRIC', 'NATURAL GAS STEAM TURBINE'],
+        'WINTER_CAP': [53, 55.5],
+        'SUMMER_CAP': [53, 55.5],
+    })
+    pmin = {'BANKHEAD DAM': 0.4, 'BARRY': 55.0}
+    loc_of_plant = {'BANKHEAD DAM': ('45.768423360', '-91.864744370'), 'BARRY': ('45.538501810', '-90.311812310')}
+    locOfsub_dict = {'1-Feb': ('45.768423360', '-91.864744370'), '1-Mar': ('45.538501810', '-90.311812310')}
+    zipOfsub_dict = {'35476': ['1-Feb'], '36512': ['1-Mar']}
+    actual_plant_dict = Plant_agg(clean_data, zipOfsub_dict, loc_of_plant, locOfsub_dict, pmin)
+    expected_plant_dict = {
+        ('BANKHEAD DAM', 'CONVENTIONAL HYDROELECTRIC'): ['1-Feb', 53.0, 53.0, 0.4],
+        ('BARRY', 'NATURAL GAS STEAM TURBINE'): ['1-Mar', 55.5, 55.5, 55.0]
+    }
+    assert actual_plant_dict == expected_plant_dict
+
+def test_plant_agg_when_plant_and_type_in_plant_dict():
+    clean_data = pd.DataFrame(data={
+        'ZIP': ['35476', '35476'],
+        'PLANT': ['BANKHEAD DAM', 'BANKHEAD DAM'],
+        'TYPE': ['CONVENTIONAL HYDROELECTRIC', 'CONVENTIONAL HYDROELECTRIC'],
+        'WINTER_CAP': [53, 53],
+        'SUMMER_CAP': [53, 53],
+    })
+    pmin = {'BANKHEAD DAM': 0.4, 'BANKHEAD DAM': 0.4}
+    loc_of_plant = {'BANKHEAD DAM': ('45.768423360', '-91.864744370'), 'BARRY': ('45.538501810', '-90.311812310')}
+    locOfsub_dict = {'1-Feb': ('45.768423360', '-91.864744370'), '1-Mar': ('45.538501810', '-90.311812310')}
+    zipOfsub_dict = {'35476': ['1-Feb'], '36512': ['1-Mar']}
+    actual_plant_dict = Plant_agg(clean_data, zipOfsub_dict, loc_of_plant, locOfsub_dict, pmin)
+    expected_plant_dict = {
+        ('BANKHEAD DAM', 'CONVENTIONAL HYDROELECTRIC'): ['1-Feb', 106, 106, 0.4],
+    }
+    assert actual_plant_dict == expected_plant_dict
+
