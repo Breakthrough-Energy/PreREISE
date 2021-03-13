@@ -94,14 +94,12 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin):
             if row["PLANT"] in Pmin and row["PLANT"] in loc_of_plant:
                 if row["ZIP"] in ZipOfsub_dict:
                     min_d = 100000.0
-                    min_s = ""
                     for value in ZipOfsub_dict[row["ZIP"]]:
                         # calculate the distance between the plant and substations
                         if (
                             geodesic(loc_of_plant[row["PLANT"]], LocOfsub_dict[value]).m
                             < min_d
                         ):
-                            min_s = value
                             min_d = geodesic(
                                 loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
                             ).m
@@ -112,7 +110,6 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin):
                     zi = int(row["ZIP"])
                     for i in range(-5, 6):
                         min_d = 100000.0
-                        min_s = ""
                         if str(zi + i) in Pmin and str(zi + i) in loc_of_plant:
                             for value in ZipOfsub_dict[str(zi + i)]:
                                 if (
@@ -121,7 +118,6 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin):
                                     ).m
                                     < min_d
                                 ):
-                                    min_s = value
                                     min_d = geodesic(
                                         loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
                                     ).m
