@@ -2,15 +2,15 @@
 # coding: utf-8
 
 
-import pandas as pd
-import networkx as nx
 import csv
 import json
 import os.path
 import zipfile
-from haversine import haversine, Unit
 from collections import defaultdict
 
+import networkx as nx
+import pandas as pd
+from haversine import Unit, haversine
 
 Max_Value = 3000
 Min_Value = 0
