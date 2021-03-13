@@ -3,46 +3,59 @@ from unittest.mock import Mock
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from haversine import haversine, Unit
-from prereise.gather.hiflddata.data_trans import get_Zone, Clean, \
-    lineFromCSV, meter2Mile, computeGeoDist, GraphOfNet, GetMaxIsland, InitKV, get_neigbors
+from prereise.gather.hiflddata.data_trans import (
+    get_Zone,
+    Clean,
+    lineFromCSV,
+    meter2Mile,
+    computeGeoDist,
+    GraphOfNet,
+    GetMaxIsland,
+    InitKV,
+    get_neigbors,
+)
+
 
 def test_get_zone():
     zone_file_path = "zone.csv"
-    pd.read_csv = Mock(return_value = pd.DataFrame(data={'STATE': ['AL', 'AR'], 'ID': [1, 2]}))
+    pd.read_csv = Mock(
+        return_value=pd.DataFrame(data={"STATE": ["AL", "AR"], "ID": [1, 2]})
+    )
     zone_dict = get_Zone(zone_file_path)
-    expected_result = {'AL': 1, 'AR': 2}
+    expected_result = {"AL": 1, "AR": 2}
     assert zone_dict == expected_result
+
 
 def test_clean():
     csv_data_path = "Electric_Substations.csv"
     csv_data = {
-        'STATE': ['AL', 'AR'],
-        'STATUS': ['IN SERVICE', 'OUTAGE'],
-        'LINES': [5, 3]
+        "STATE": ["AL", "AR"],
+        "STATUS": ["IN SERVICE", "OUTAGE"],
+        "LINES": [5, 3],
     }
-    zone_dict = {'AL': 1, 'AR': 2}
-    pd.read_csv = Mock(return_value = pd.DataFrame(data=csv_data))
+    zone_dict = {"AL": 1, "AR": 2}
+    pd.read_csv = Mock(return_value=pd.DataFrame(data=csv_data))
     clean_data = Clean(csv_data_path, zone_dict)
-    expected_csv_data = {
-        'STATE': ['AL'],
-        'STATUS': ['IN SERVICE'],
-        'LINES': [5]
-    }
-    expected_result = pd.DataFrame(data = expected_csv_data)
+    expected_csv_data = {"STATE": ["AL"], "STATUS": ["IN SERVICE"], "LINES": [5]}
+    expected_result = pd.DataFrame(data=expected_csv_data)
     assert_frame_equal(expected_result, clean_data)
 
 
 def test_lineFromCSV():
     t_file_path = "Electric_Power_Transmission_Lines.csv"
-    pd.read_csv = Mock(return_value = pd.DataFrame(data={
-        'TYPE': ['AC; OVERHEAD', 'AC; OVERHEAD'],
-        'ID': [1, 2],
-        'VOLTAGE': [69, 230],
-    }))
+    pd.read_csv = Mock(
+        return_value=pd.DataFrame(
+            data={
+                "TYPE": ["AC; OVERHEAD", "AC; OVERHEAD"],
+                "ID": [1, 2],
+                "VOLTAGE": [69, 230],
+            }
+        )
+    )
     raw_lines = lineFromCSV(t_file_path)
     expected_result = {
-        'TYPE': {'1': 'AC; OVERHEAD', '2': 'AC; OVERHEAD'},
-        'VOLTAGE': {'1': 69, '2': 230}
+        "TYPE": {"1": "AC; OVERHEAD", "2": "AC; OVERHEAD"},
+        "VOLTAGE": {"1": 69, "2": 230},
     }
     assert raw_lines == expected_result
 
@@ -79,26 +92,26 @@ def test_GetMaxIsland():
 
 def test_InitKV():
     csv_data = {
-        'MIN_VOLT': [69, 69],
-        'MAX_VOLT': [161, 115],
-        'LATITUDE': [45.76842336, 45.53850181],
-        'LONGITUDE': [-91.86474437, -90.31181231]
+        "MIN_VOLT": [69, 69],
+        "MAX_VOLT": [161, 115],
+        "LATITUDE": [45.76842336, 45.53850181],
+        "LONGITUDE": [-91.86474437, -90.31181231],
     }
     clean_data = pd.DataFrame(data=csv_data)
     KV_dict, to_cal = InitKV(clean_data)
     expected_KV_dict = {
         (45.76842336, -91.86474437): 115.0,
-        (45.53850181, -90.31181231): 92.0
+        (45.53850181, -90.31181231): 92.0,
     }
     expected_to_cal = []
     assert KV_dict == expected_KV_dict
     assert to_cal == expected_to_cal
 
     csv_data = {
-        'MIN_VOLT': [4000, 69],
-        'MAX_VOLT': [5000, 3],
-        'LATITUDE': [45.76842336, 45.53850181],
-        'LONGITUDE': [-91.86474437, -90.31181231]
+        "MIN_VOLT": [4000, 69],
+        "MAX_VOLT": [5000, 3],
+        "LATITUDE": [45.76842336, 45.53850181],
+        "LONGITUDE": [-91.86474437, -90.31181231],
     }
     clean_data = pd.DataFrame(data=csv_data)
     KV_dict, to_cal = InitKV(clean_data)
