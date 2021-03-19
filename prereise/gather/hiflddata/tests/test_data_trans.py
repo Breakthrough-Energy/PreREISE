@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import Mock
+from unittest.mock import patch
 
 import pandas as pd
 from haversine import Unit, haversine
@@ -18,17 +18,17 @@ from prereise.gather.hiflddata.data_trans import (
 )
 
 
-def test_get_zone():
+@patch("prereise.gather.hiflddata.data_trans.pd.read_csv")
+def test_get_zone(read_csv):
     zone_file_path = "zone.csv"
-    pd.read_csv = Mock(
-        return_value=pd.DataFrame(data={"STATE": ["AL", "AR"], "ID": [1, 2]})
-    )
+    read_csv.return_value = pd.DataFrame(data={"STATE": ["AL", "AR"], "ID": [1, 2]})
     zone_dict = get_Zone(zone_file_path)
     expected_result = {"AL": 1, "AR": 2}
     assert zone_dict == expected_result
 
 
-def test_clean():
+@patch("prereise.gather.hiflddata.data_trans.pd.read_csv")
+def test_clean(read_csv):
     csv_data_path = "Electric_Substations.csv"
     csv_data = {
         "STATE": ["AL", "AR"],
@@ -36,24 +36,24 @@ def test_clean():
         "LINES": [5, 3],
     }
     zone_dict = {"AL": 1, "AR": 2}
-    pd.read_csv = Mock(return_value=pd.DataFrame(data=csv_data))
+    read_csv.return_value = pd.DataFrame(data=csv_data)
     clean_data = Clean(csv_data_path, zone_dict)
     expected_csv_data = {"STATE": ["AL"], "STATUS": ["IN SERVICE"], "LINES": [5]}
     expected_result = pd.DataFrame(data=expected_csv_data)
     assert_frame_equal(expected_result, clean_data)
 
 
-def test_lineFromCSV():
+@patch("prereise.gather.hiflddata.data_trans.pd.read_csv")
+def test_lineFromCSV(read_csv):
     t_file_path = "Electric_Power_Transmission_Lines.csv"
-    pd.read_csv = Mock(
-        return_value=pd.DataFrame(
-            data={
-                "TYPE": ["AC; OVERHEAD", "AC; OVERHEAD"],
-                "ID": [1, 2],
-                "VOLTAGE": [69, 230],
-            }
-        )
+    read_csv.return_value = pd.DataFrame(
+        data={
+            "TYPE": ["AC; OVERHEAD", "AC; OVERHEAD"],
+            "ID": [1, 2],
+            "VOLTAGE": [69, 230],
+        }
     )
+
     raw_lines = lineFromCSV(t_file_path)
     expected_result = {
         "TYPE": {"1": "AC; OVERHEAD", "2": "AC; OVERHEAD"},

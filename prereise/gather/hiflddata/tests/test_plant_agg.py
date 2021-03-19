@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import Mock
+from unittest.mock import patch
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
@@ -13,10 +13,11 @@ from prereise.gather.hiflddata.plant_agg import (
 )
 
 
-def test_clean_p():
+@patch("prereise.gather.hiflddata.plant_agg.pd.read_csv")
+def test_clean_p(read_csv):
     csv_data_path = "General_Units.csv"
     csv_data = {"STATE": ["AL", "AR"], "STATUS": ["OP", "Other"]}
-    pd.read_csv = Mock(return_value=pd.DataFrame(data=csv_data))
+    read_csv.return_value = pd.DataFrame(data=csv_data)
     clean_data = Clean_p(csv_data_path)
     expected_csv_data = {
         "STATE": ["AL"],
@@ -46,22 +47,24 @@ def test_locOfsub():
     assert zipOfsub_dict == expected_zipOfsub_dict
 
 
-def test_cal_p():
+@patch("prereise.gather.hiflddata.plant_agg.pd.read_csv")
+def test_cal_p(read_csv):
     csv_data_path = "Generator_Y2019.csv"
     csv_data = {"Plant Name": ["Sand Point", "Barry"], "Minimum Load (MW)": [0.4, 55]}
-    pd.read_csv = Mock(return_value=pd.DataFrame(data=csv_data))
+    read_csv.return_value = pd.DataFrame(data=csv_data)
     pmin = Cal_P(csv_data_path)
     expected_pmin = {"SAND POINT": 0.4, "BARRY": 55.0}
     assert pmin == expected_pmin
 
 
-def test_loc_of_plant():
+@patch("prereise.gather.hiflddata.plant_agg.pd.read_csv")
+def test_loc_of_plant(read_csv):
     csv_data = {
         "NAME": ["AMALGAMATED", "CASTLE"],
         "LATITUDE": [45.76842336, 45.53850181],
         "LONGITUDE": [-91.86474437, -90.31181231],
     }
-    pd.read_csv = Mock(return_value=pd.DataFrame(data=csv_data))
+    read_csv.return_value = pd.DataFrame(data=csv_data)
     loc_of_plant = Loc_of_plant()
     expected_loc_of_plant = {
         "AMALGAMATED": ("45.768423360", "-91.864744370"),
