@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import PySAM.Pvwattsv7 as PVWatts
-import PySAM.PySSC as pssc
+import PySAM.PySSC as pssc  # noqa: N813
 from powersimdata.network.usa_tamu.constants.zones import (
     abv2interconnect,
     id2abv,
