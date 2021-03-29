@@ -5,8 +5,6 @@ from geopy.distance import geodesic
 
 from prereise.gather.hiflddata.data_trans import Clean, get_Zone
 
-Max_Value = 3000
-Min_Value = 0
 coord_precision = ".9f"
 
 
@@ -178,7 +176,7 @@ def write_gen(plant_dict, type_dict):
             )
 
 
-def Plant(E_csv, U_csv, G2019_csv):
+def Plant(E_csv, U_csv, G2019_csv, Z_csv):
     """Entry point to start the gencost and power plant data processing
 
     :param str E_csv: path of the HIFLD substation csv file
@@ -186,7 +184,7 @@ def Plant(E_csv, U_csv, G2019_csv):
     :param str G2019_csv: path of the EIA generator profile csv file
     """
 
-    zone_dic = get_Zone("data/zone.csv")
+    zone_dic = get_Zone(Z_csv)
 
     clean_sub = Clean(E_csv, zone_dic)
     LocOfsub_dict, ZipOfsub_dict = LocOfsub(clean_sub)
@@ -208,4 +206,5 @@ if __name__ == "__main__":
         "data/Electric_Substations.csv",
         "data/General_Units.csv",
         "data/Generator_Y2019.csv",
+        "data/zone.csv",
     )

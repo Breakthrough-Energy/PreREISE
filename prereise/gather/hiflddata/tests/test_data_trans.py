@@ -6,6 +6,7 @@ from haversine import Unit, haversine
 from pandas.testing import assert_frame_equal
 
 from prereise.gather.hiflddata.data_trans import (
+    Cal_KV,
     Clean,
     GetMaxIsland,
     GraphOfNet,
@@ -141,3 +142,36 @@ def test_get_neigbors():
     neis = get_neigbors(G, 1, depth=2)
     expected_neis = {1: [2, 3], 2: [4]}
     assert neis == expected_neis
+
+
+def test_Cal_KV():
+    nodes = [1, 2, 3, 4, 5, 6]
+    N_dict = {
+        1: [2, 3],
+        2: [1, 4],
+        3: [1],
+        4: [2],
+        5: [6],
+        6: [5],
+    }
+    G = GraphOfNet(nodes, N_dict)
+    KV_dict = {
+        1: 115.0,
+        2: 92.0,
+        7: 80.0,
+    }
+    to_cal = [1]
+
+    Cal_KV(N_dict, G, KV_dict, to_cal)
+    expected_kv_dict = {1: 92.0, 2: 92.0, 7: 80.0}
+    assert KV_dict == expected_kv_dict
+
+    KV_dict = {
+        1: 115.0,
+        7: 90.0,
+    }
+    to_cal = [1]
+
+    Cal_KV(N_dict, G, KV_dict, to_cal)
+    expected_kv_dict = {1: -999999, 7: 90.0}
+    assert KV_dict == expected_kv_dict
