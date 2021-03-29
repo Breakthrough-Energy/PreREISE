@@ -195,17 +195,7 @@ def GetMaxIsland(G):
     :return: (*list*) -- list of nodes inside the largest island.
     """
 
-    Max_nodeSet = []
-    Max_size = 0
-    num = 0
-    for c in nx.connected_components(G):
-        num = num + 1
-        nodeSet = G.subgraph(c).nodes()
-        size = len(nodeSet)
-        if size > Max_size:
-            Max_nodeSet = nodeSet
-            Max_size = size
-    return Max_nodeSet
+    return list(max(nx.connected_components(G), key=len))
 
 
 def InitKV(clean_data, Max_Value=1100, Min_Value=0):
