@@ -13,14 +13,14 @@ import pandas as pd
 from haversine import Unit, haversine
 
 
-def get_Zone(Z_csv):
+def get_zone(z_csv):
     """Generate a dictionary of zone using the zone.csv
 
-    :param str Z_csv: path of the zone.csv file
+    :param str z_csv: path of the zone.csv file
     :return: (*dict*) -- a dict mapping the STATE to its ID.
     """
 
-    zone = pd.read_csv(Z_csv)
+    zone = pd.read_csv(z_csv)
 
     # Create dictionary to store the mapping of states and codes
     zone_dic = {}
@@ -29,35 +29,35 @@ def get_Zone(Z_csv):
     return zone_dic
 
 
-def Clean(E_csv, zone_dic):
+def clean(e_csv, zone_dic):
     """Clean data; remove substations which are outside the United States or not available.
 
-    :param str E_csv: path of the HIFLD substation csv file
-    :param dict zone_dic: zone dict as returned by :func:`get_Zone`
+    :param str e_csv: path of the HIFLD substation csv file
+    :param dict zone_dic: zone dict as returned by :func:`get_zone`
     :return: (*pandas.DataFrame*) -- a pandas Dataframe storing the substations after dropping the invalid ones.
     """
 
-    csv_data = pd.read_csv(E_csv)
+    csv_data = pd.read_csv(e_csv)
     clean_data = csv_data.query(
         "STATE in @zone_dic and STATUS == 'IN SERVICE' and LINES != 0"
     )
     return clean_data
 
 
-def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
+def neighbors(sub_by_coord_dict, sub_name_dict):
     """Create dict to store the neighbors of each substation based on transmission topology geojson from HIFLD
 
-    :param dict sub_by_coord_dict: dict mapping the (x, y) to a substation
-    :param dict sub_name_dict: dict mapping the substation name to a substation
+    :param dict sub_by_coord_dict: dict mapping the (x, y) to a substation (sub id and sub name)
+    :param dict sub_name_dict: dict mapping the substation name to a list of (x, y)
     :return: (*list*) -- lines, a list of lines after the unambiguous substation name cleanup.
     :return: (*list*) -- nodes, a list of substations after the unambiguous substation name cleanup.
-    :return: (*dict*) -- N_dict, a dict mapping the substation to its neighbor list.
+    :return: (*dict*) -- n_dict, a dict mapping the substation to its neighbor list.
     """
 
-    N_dict = {}
+    n_dict = {}
     nodes = []
     lines = []
-    missinglines = []
+    missing_lines = []
     if not os.path.isfile("data/unzip/Electric_Power_Transmission_Lines.geojson"):
         with zipfile.ZipFile(
             "data/Electric_Power_Transmission_Lines.geojson.zip", "r"
@@ -77,7 +77,7 @@ def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
         ):
             # quite a few of NOT AVAILABLE scenarios in transmission rawdata
             print("INFO: sub1 or sub2 NOT AVAILABLE for transmission line: ", line)
-            missinglines.append(line)
+            missing_lines.append(line)
             continue
 
         if (
@@ -88,9 +88,12 @@ def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
             print(
                 "INFO: sub1 or sub2 name not identified for transmission line: ", line
             )
-            missinglines.append(line)
+            missing_lines.append(line)
             continue
 
+        # line["geometry"]["coordinates"][0] gets a list of point on the transmission line
+        # line["geometry"]["coordinates"][0][0] gets the start point(latitude, longitude) of the line
+        # line["geometry"]["coordinates"][0][-1] gets the end point(latitude, longitude) of the line
         start_coord = (
             line["geometry"]["coordinates"][0][0][1],
             line["geometry"]["coordinates"][0][0][0],
@@ -103,52 +106,54 @@ def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
             line["properties"]["SUB_1"]
         ) + sub_name_dict.get(line["properties"]["SUB_2"])
 
-        sub1 = min(candidate_coordinates, key=lambda p: computeGeoDist(p, start_coord))
-        sub2 = min(candidate_coordinates, key=lambda p: computeGeoDist(p, end_coord))
+        sub1 = min(
+            candidate_coordinates, key=lambda p: compute_geo_dist(p, start_coord)
+        )
+        sub2 = min(candidate_coordinates, key=lambda p: compute_geo_dist(p, end_coord))
 
-        dist = computeGeoDist(start_coord, end_coord)
+        dist = compute_geo_dist(start_coord, end_coord)
 
         lines.append(
             [
-                line_id,
-                line_type,
-                sub_by_coord_dict.get(sub1)[0],
-                sub_by_coord_dict.get(sub1)[1],
-                sub_by_coord_dict.get(sub2)[0],
-                sub_by_coord_dict.get(sub2)[1],
-                dist,
+                line_id,  # line id
+                line_type,  # line type
+                sub_by_coord_dict.get(sub1)[0],  # from substation id
+                sub_by_coord_dict.get(sub1)[1],  # from substation name
+                sub_by_coord_dict.get(sub2)[0],  # to substation id
+                sub_by_coord_dict.get(sub2)[1],  # to substation name
+                dist,  # distance between start point and end point of the line.
             ]
         )
 
         if sub1 == sub2:
             continue
-        if sub1 in N_dict:
-            N_dict[sub1].append(sub2)
+        if sub1 in n_dict:
+            n_dict[sub1].append(sub2)
         else:
             nodes.append(sub1)
-            N_dict[sub1] = [sub2]
-        if sub2 in N_dict:
-            N_dict[sub2].append(sub1)
+            n_dict[sub1] = [sub2]
+        if sub2 in n_dict:
+            n_dict[sub2].append(sub1)
         else:
             nodes.append(sub2)
-            N_dict[sub2] = [sub1]
-    return lines, nodes, N_dict
+            n_dict[sub2] = [sub1]
+    return lines, nodes, n_dict
 
 
-def lineFromCSV(T_csv):
+def line_from_csv(t_csv):
     """Create dict to store all the raw transmission line csv data
 
-    :param str T_csv: path of the HIFLD transmission csv file
+    :param str t_csv: path of the HIFLD transmission csv file
     :return: (*dict*) -- a dict mapping the transmission ID to its raw parameters.
     """
 
-    raw_data = pd.read_csv(T_csv)
+    raw_data = pd.read_csv(t_csv)
     raw_data["ID"] = raw_data["ID"].astype("str")
     raw_lines = raw_data.set_index("ID").to_dict()
     return raw_lines
 
 
-def meter2Mile(dist):
+def meter_to_mile(dist):
     """Calculate the mile given the distance in meter
 
     :param float dist: length of the distance between two substations
@@ -158,7 +163,7 @@ def meter2Mile(dist):
     return dist / 1609.34
 
 
-def computeGeoDist(sub1, sub2):
+def compute_geo_dist(sub1, sub2):
     """Compute the haversine geo distance of two substations
 
     :param tuple sub1: (latitude, longitude) of substation1
@@ -169,74 +174,74 @@ def computeGeoDist(sub1, sub2):
     return haversine(sub1, sub2, Unit.MILES)
 
 
-def GraphOfNet(nodes, N_dict):
+def graph_of_net(nodes, n_dict):
     """Create the graph for the HIFLD transmission network
 
     :param list nodes: list of substation as the vertex inside the Graph
-    :param dict N_dict: dict of substation's neighbors as the edge inside the Graph
+    :param dict n_dict: dict of substation's neighbors as the edge inside the Graph
     :return: (*networkx.Graph*) -- Graph generated by networkx.
     """
 
-    G = nx.Graph()
+    graph = nx.Graph()
     for node in nodes:
-        G.add_node(node)
+        graph.add_node(node)
 
-    for key in N_dict:
-        for value in N_dict[key]:
-            G.add_edge(key, value)
+    for key in n_dict:
+        for value in n_dict[key]:
+            graph.add_edge(key, value)
 
-    return G
+    return graph
 
 
-def GetMaxIsland(G):
+def get_max_island(graph):
     """Report the largest connected island to understand the topo nature of the graph
 
     :param networkx.Graph G: Graph generated by :func:`GraphOfNet`
     :return: (*list*) -- list of nodes inside the largest island.
     """
 
-    return list(max(nx.connected_components(G), key=len))
+    return list(max(nx.connected_components(graph), key=len))
 
 
-def InitKV(clean_data, Max_Value=1100, Min_Value=0):
+def init_kv(clean_data, max_value=1100, min_value=0):
     """Calculate the base_KV for each node based on MIN_VOLT and MAX_VOLT;
     Save the invalid substations as to be calculated later
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
-    :return: (*dict*) -- KV_dict, a dict of substation's baseKV value.
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
+    :return: (*dict*) -- kv_dict, a dict of substation's base_kv value.
     :return: (*list*) -- to_cal, a list of substations to be calculated using neighbour search.
     """
 
-    KV_dict = {}
+    kv_dict = {}
     to_cal = []
     for index, row in clean_data.iterrows():
-        Min_Vol = row["MIN_VOLT"]
-        Max_Vol = row["MAX_VOLT"]
-        if Min_Value < Min_Vol < Max_Value:
-            if Min_Value < Max_Vol < Max_Value:
-                base_KV = (Max_Vol + Min_Vol) / 2
+        min_vol = row["MIN_VOLT"]
+        max_vol = row["MAX_VOLT"]
+        if min_value < min_vol < max_value:
+            if min_value < max_vol < max_value:
+                base_kv = (max_vol + min_vol) / 2
             else:
-                base_KV = Min_Vol
+                base_kv = min_vol
         else:
-            if Min_Value < Max_Vol < Max_Value:
-                base_KV = Max_Vol
+            if min_value < max_vol < max_value:
+                base_kv = max_vol
             else:
                 to_cal.append((row["LATITUDE"], row["LONGITUDE"]))
                 continue
-        KV_dict[(row["LATITUDE"], row["LONGITUDE"])] = base_KV
-    return KV_dict, to_cal
+        kv_dict[(row["LATITUDE"], row["LONGITUDE"])] = base_kv
+    return kv_dict, to_cal
 
 
-def get_neigbors(g, node, depth=1):
+def get_neighbors(graph, node, depth=1):
     """Give a node, find its neighbors in given number depth
 
-    :param networkx.Graph g: Graph generated by :func:`GraphOfNet`
+    :param networkx.Graph graph: Graph generated by :func:`GraphOfNet`
     :param tuple node: substation coordinate tuple
     :param int depth: number of hops that we are searching the neighbor substations
     :return: (*dict*) --  a dict mapping from depth to closest substations on that depth.
     """
     output = {}
-    layers = dict(nx.bfs_successors(g, source=node, depth_limit=depth))
+    layers = dict(nx.bfs_successors(graph, source=node, depth_limit=depth))
     nodes = [node]
     for i in range(1, depth + 1):
         output[i] = []
@@ -246,34 +251,34 @@ def get_neigbors(g, node, depth=1):
     return output
 
 
-def Cal_KV(N_dict, G, KV_dict, to_cal):
+def cal_kv(n_dict, graph, kv_dict, to_cal):
     """Estimate missing substation's KV data using the neighbors average calculation
 
-    :param dict N_dict: dict of substation's neighbors as returned by :func:`Neighbors`
+    :param dict n_dict: dict of substation's neighbors as returned by :func:`Neighbors`
     :param networkx.Graph g: Graph generated by :func:`GraphOfNet`
-    :param dict KV_dict: dict of existing baseKV for each substation
+    :param dict kv_dict: dict of existing baseKV for each substation
     :param list to_cal: list of the substations to be calculate using average KV
     """
 
     for sub in to_cal:
-        if sub not in N_dict:
+        if sub not in n_dict:
             continue
-        neigh = get_neigbors(G, sub, depth=5)
-        temp_KV = 0
+        neigh = get_neighbors(graph, sub, depth=5)
+        temp_kv = 0
         num = 0
         for i in range(1, 6):
             for nei in neigh[i]:
-                if nei in KV_dict:
-                    temp_KV = temp_KV + KV_dict[nei]
+                if nei in kv_dict:
+                    temp_kv = temp_kv + kv_dict[nei]
                     num = num + 1
             if num > 0:
-                KV_dict[sub] = temp_KV / num
-                continue
+                kv_dict[sub] = temp_kv / num
+                break
             else:
-                KV_dict[sub] = -999999
+                kv_dict[sub] = -999999
 
 
-def Set_Sub(E_csv):
+def set_sub(e_csv):
     """Generate the subs
 
     :param str E_csv: path of the HIFLD substation csv file
@@ -283,7 +288,7 @@ def Set_Sub(E_csv):
 
     sub_by_coord_dict = {}
     sub_name_dict = {"sub": []}
-    raw_subs = pd.read_csv(E_csv)
+    raw_subs = pd.read_csv(e_csv)
     for index, row in raw_subs.iterrows():
         location = (row["LATITUDE"], row["LONGITUDE"])
         if location in sub_by_coord_dict:
@@ -297,11 +302,11 @@ def Set_Sub(E_csv):
     return sub_by_coord_dict, sub_name_dict
 
 
-def Write_sub(clean_data, zone_dic):
+def write_sub(clean_data, zone_dic):
     """Write the data to sub.csv as output
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
-    :param dict zone_dic: zone dict as returned by :func:`get_Zone`
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
+    :param dict zone_dic: zone dict as returned by :func:`get_zone`
     """
 
     with open("output/sub.csv", "w", newline="") as sub:
@@ -320,39 +325,39 @@ def Write_sub(clean_data, zone_dic):
             )
 
 
-def Write_Bus(clean_data, zone_dic, KV_dict):
+def write_bus(clean_data, zone_dic, kv_dict):
     """Write the data to bus.csv as output
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
-    :param dict zone_dic: zone dict as returned by :func:`get_Zone`
-    :param dict KV_dict: substation KV dict
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
+    :param dict zone_dic: zone dict as returned by :func:`get_zone`
+    :param dict kv_dict: substation KV dict
     """
 
     with open("output/bus.csv", "w", newline="") as bus:
         csv_writer = csv.writer(bus)
         csv_writer.writerow(["Bus_id", "PD", "Zone_id", "base_KV"])
-        missingSub = []
+        missing_sub = []
         for index, row in clean_data.iterrows():
             sub = (row["LATITUDE"], row["LONGITUDE"])
-            if sub in KV_dict:
+            if sub in kv_dict:
                 csv_writer.writerow(
-                    [row["ID"], 0, zone_dic[row["STATE"]], KV_dict[sub]]
+                    [row["ID"], 0, zone_dic[row["STATE"]], kv_dict[sub]]
                 )
             else:
-                missingSub.append(sub)
+                missing_sub.append(sub)
 
     print(
         "INFO: ",
-        len(missingSub),
+        len(missing_sub),
         " substations excluded from the network. Some examples:",
     )
-    print(missingSub[:20])
+    print(missing_sub[:20])
 
 
-def Write_bus2sub(clean_data):
+def write_bus2sub(clean_data):
     """Write the data to bus2sub.csv as output
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
     """
 
     with open("output/bus2sub.csv", "w", newline="") as bus2sub:
@@ -362,10 +367,10 @@ def Write_bus2sub(clean_data):
             csv_writer.writerow([row["ID"], row["ID"]])
 
 
-def Write_branch(lines):
+def write_branch(lines):
     """Write the data to branch.csv as output
 
-    :param list lines:  a list of lines as returned by :func:`Neighbors`
+    :param list lines:  a list of lines as returned by :func:`neighbors`
     """
 
     with open("output/branch.csv", "w", newline="") as branch:
@@ -466,12 +471,12 @@ kv_from_to_xperunit_calculate_4 = {
 }
 
 
-def computeReactanceAndType(line_type, KV_from, KV_to, dist, vol):
+def compute_reactance_and_type(line_type, kv_from, kv_to, dist, vol):
     """Compute the reactance based on the type of each transmission line
 
     :param str line_type: type of the transmission line between two substations
-    :param int KV_from: KV of the substation1 at one end
-    :param int KV_to: KV of the substation2 at the other end
+    :param int kv_from: KV of the substation1 at one end
+    :param int kv_to: KV of the substation2 at the other end
     :param float dist: distance between the two substations
     :param int vol: transmission line voltage
     :return: (*float*) --  reactance value.
@@ -481,7 +486,7 @@ def computeReactanceAndType(line_type, KV_from, KV_to, dist, vol):
         return 0.0, "DC"
 
     # line type is AC
-    if KV_from == KV_to:
+    if kv_from == kv_to:
         if dist < 0.01:  # Phase Shifter
             # calculate 1
             for kv, x in kv_xperunit_calculate_1:
@@ -494,16 +499,16 @@ def computeReactanceAndType(line_type, KV_from, KV_to, dist, vol):
                     return x * dist, "Line"
     else:  # Transformer
         # calculate 4
-        x = kv_from_to_xperunit_calculate_4.get((KV_from, KV_to), 0.00436)
+        x = kv_from_to_xperunit_calculate_4.get((kv_from, kv_to), 0.00436)
         return x * dist, "Transformer"
 
 
-def computeRateA(line_type, KV_from, KV_to, dist, vol):
+def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
     """Compute the rateA based on the type of each transmission line
 
     :param str line_type: type of the transmission line between two substations
-    :param int KV_from: KV of the substation1 at one end
-    :param int KV_to: KV of the substation2 at the other end
+    :param int kv_from: KV of the substation1 at one end
+    :param int kv_to: KV of the substation2 at the other end
     :param float dist: distance between the two substations
     :param int vol: transmission line voltage
     :return: (*float*) --  rateA value.
@@ -516,7 +521,7 @@ def computeRateA(line_type, KV_from, KV_to, dist, vol):
                 return pow(sil * 43.261 * dist, -0.6678)
 
     # line type is AC
-    if KV_from == KV_to:
+    if kv_from == kv_to:
         if dist < 0.01:  # Phase shifter
             return 0.0
         else:  # AC Transmission Line
@@ -535,23 +540,23 @@ def computeRateA(line_type, KV_from, KV_to, dist, vol):
         return 700.0
 
 
-def get_bus_id_to_KV(clean_data, KV_dict):
+def get_bus_id_to_kv(clean_data, kv_dict):
     """Generating the dict mapping bus id to its KV
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
-    :param dict KV_dict: substation KV dict
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
+    :param dict kv_dict: substation KV dict
     :return: (*dict*) -- a dict mapping the STATE to its ID after cleanup.
     """
 
-    bus_id_to_KV = defaultdict(lambda: -999999.0)
+    bus_id_to_kv = defaultdict(lambda: -999999)
     for index, row in clean_data.iterrows():
         sub = (row["LATITUDE"], row["LONGITUDE"])
-        if sub in KV_dict:
-            bus_id_to_KV[row["ID"]] = KV_dict[sub]
-    return bus_id_to_KV
+        if sub in kv_dict:
+            bus_id_to_kv[row["ID"]] = kv_dict[sub]
+    return bus_id_to_kv
 
 
-def calculate_reactance_and_rateA(bus_id_to_kv, lines, raw_lines):
+def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     """Preprocessing before calculating the reactance and rateA for each line
 
     :param dict bus_id_to_kv: dict mapping bus id to its KV
@@ -567,47 +572,49 @@ def calculate_reactance_and_rateA(bus_id_to_kv, lines, raw_lines):
             line[4],
             line[-1],
         )
-        KV_from, KV_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
+        kv_from, kv_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
         vol = raw_lines["VOLTAGE"][line_id]
-        reactance, type = computeReactanceAndType(line_type, KV_from, KV_to, dist, vol)
-        rateA = computeRateA(line_type, KV_from, KV_to, dist, vol)
+        reactance, type = compute_reactance_and_type(
+            line_type, kv_from, kv_to, dist, vol
+        )
+        rate_a = compute_rate_a(line_type, kv_from, kv_to, dist, vol)
         line[1] = type
         line.append(reactance)
-        line.append(rateA)
+        line.append(rate_a)
 
 
-def DataTransform(E_csv, T_csv, Z_csv):
+def data_transform(e_csv, t_csv, z_csv):
     """Entry point to start the HIFLD parsing
 
-    :param str E_csv: path of the HIFLD substation csv file
-    :param str T_csv: path of the HIFLD transmission csv file
-    :param str Z_csv: path of the zone csv file
+    :param str e_csv: path of the HIFLD substation csv file
+    :param str t_csv: path of the HIFLD transmission csv file
+    :param str z_csv: path of the zone csv file
     """
 
-    zone_dic = get_Zone(Z_csv)
+    zone_dic = get_zone(z_csv)
 
-    clean_data = Clean(E_csv, zone_dic)
+    clean_data = clean(e_csv, zone_dic)
 
-    sub_by_coord_dict, sub_name_dict = Set_Sub(E_csv)
-    raw_lines = lineFromCSV(T_csv)
+    sub_by_coord_dict, sub_name_dict = set_sub(e_csv)
+    raw_lines = line_from_csv(t_csv)
 
-    lines, nodes, N_dict = Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines)
-    G = GraphOfNet(nodes, N_dict)
-    print("Island Detection: number of nodes in graph = ", len(G.nodes))
-    print("Island Detection: max island size = ", len(GetMaxIsland(G)))
-    KV_dict, to_cal = InitKV(clean_data)
-    Cal_KV(N_dict, G, KV_dict, to_cal)
-    bus_id_to_kv = get_bus_id_to_KV(clean_data, KV_dict)
-    calculate_reactance_and_rateA(bus_id_to_kv, lines, raw_lines)
+    lines, nodes, n_dict = neighbors(sub_by_coord_dict, sub_name_dict)
+    graph = graph_of_net(nodes, n_dict)
+    print("Island Detection: number of nodes in graph = ", len(graph.nodes))
+    print("Island Detection: max island size = ", len(get_max_island(graph)))
+    kv_dict, to_cal = init_kv(clean_data)
+    cal_kv(n_dict, graph, kv_dict, to_cal)
+    bus_id_to_kv = get_bus_id_to_kv(clean_data, kv_dict)
+    calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
 
-    Write_sub(clean_data, zone_dic)
-    Write_Bus(clean_data, zone_dic, KV_dict)
-    Write_bus2sub(clean_data)
-    Write_branch(lines)
+    write_sub(clean_data, zone_dic)
+    write_bus(clean_data, zone_dic, kv_dict)
+    write_bus2sub(clean_data)
+    write_branch(lines)
 
 
 if __name__ == "__main__":
-    DataTransform(
+    data_transform(
         "data/Electric_Substations.csv",
         "data/Electric_Power_Transmission_Lines.csv",
         "data/zone.csv",

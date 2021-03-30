@@ -1,86 +1,88 @@
 import csv
 
 import pandas as pd
-from geopy.distance import geodesic
+from haversine import Unit, haversine
 
-from prereise.gather.hiflddata.data_trans import Clean, get_Zone
-
-coord_precision = ".9f"
+from prereise.gather.hiflddata.data_trans import clean, get_zone
 
 
-def Clean_p(P_csv):
-    csv_data = pd.read_csv(P_csv)
-    Num_sub = len(csv_data)
-    row_indexs = []
-    for i in range(Num_sub):
+def clean_p(p_csv):
+    csv_data = pd.read_csv(p_csv)
+    num_sub = len(csv_data)
+    row_indexes = []
+    for i in range(num_sub):
         if csv_data["STATUS"][i] != "OP":
-            row_indexs.append(i)
-    clean_data = csv_data.drop(labels=row_indexs)
+            row_indexes.append(i)
+    clean_data = csv_data.drop(labels=row_indexes)
     return clean_data
 
 
-def LocOfsub(clean_data):
+def loc_of_sub(clean_data):
     """Get the latitude and longitude of substations, and the substations in the area of each zip code
 
-    :param dict clean_data:  a dict of substations as returned by :func:`data_trans.Clean`
-    :return: (*dict*) -- LocOfsub_dict, dict mapping the geo coordinate (x,y) to substations.
-    :return: (*dict*) -- ZipOfsub_dict, dict mapping the zip code to a group of substations.
+    :param dict clean_data:  a dict of substations as returned by :func:`data_trans.clean`
+    :return: (*dict*) -- loc_of_sub_dict, dict mapping the geo coordinate (x,y) to substations.
+    :return: (*dict*) -- zip_of_sub_dict, dict mapping the zip code to a group of substations.
     """
 
-    LocOfsub_dict = {}
-    ZipOfsub_dict = {}
+    loc_of_sub_dict = {}
+    zip_of_sub_dict = {}
     for index, row in clean_data.iterrows():
         loc = (
-            format(row["LATITUDE"], coord_precision),
-            format(row["LONGITUDE"], coord_precision),
+            round(row["LATITUDE"], 9),
+            round(row["LONGITUDE"], 9),
         )
         sub = row["ID"]
         zi = row["ZIP"]
-        LocOfsub_dict[sub] = loc
-        if zi in ZipOfsub_dict:
-            list1 = ZipOfsub_dict[zi]
+        loc_of_sub_dict[sub] = loc
+        if zi in zip_of_sub_dict:
+            list1 = zip_of_sub_dict[zi]
             list1.append(sub)
-            ZipOfsub_dict[zi] = list1
+            zip_of_sub_dict[zi] = list1
         else:
             list1 = [sub]
-            ZipOfsub_dict[zi] = list1
-    return LocOfsub_dict, ZipOfsub_dict
+            zip_of_sub_dict[zi] = list1
+    return loc_of_sub_dict, zip_of_sub_dict
 
 
-def Cal_P(G_csv):
-    """Calculate the Pmin for each plant
+def cal_p(g_csv):
+    """Calculate the p_min for each plant
 
-    :param dict G_csv: path of the EIA generator profile csv file
-    :return: (*list*) -- a list of Pmin for the plants.
+    :param dict g_csv: path of the EIA generator profile csv file
+    :return: (*dict*) -- a dict of plant name to minimum load.
     """
 
-    Pmin = {}
-    csv_data = pd.read_csv(G_csv)
+    p_min = {}
+    csv_data = pd.read_csv(g_csv)
     for index, row in csv_data.iterrows():
-        Pmin[str(row["Plant Name"]).upper()] = row["Minimum Load (MW)"]
-    return Pmin
+        p_min[str(row["Plant Name"]).upper()] = row["Minimum Load (MW)"]
+    return p_min
 
 
-def Loc_of_plant():
+def location_of_plant():
     """Get the latitude and longitude of plants
 
-    :return: (*list*) -- a list of power plants' geo coordinates.
+    :return: (*dict*) -- a dict of power plant name to power plants' geo coordinates.
     """
 
     loc_of_plant = {}
     csv_data = pd.read_csv("data/Power_Plants.csv")
     for index, row in csv_data.iterrows():
         loc = (
-            format(row["LATITUDE"], coord_precision),
-            format(row["LONGITUDE"], coord_precision),
+            round(row["LATITUDE"], 9),
+            round(row["LONGITUDE"], 9),
         )
         loc_of_plant[row["NAME"]] = loc
     return loc_of_plant
 
 
-def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin):
+def plant_agg(clean_data, zip_of_sub_dict, loc_of_plant, loc_of_sub_dict, p_min):
     """Aggregate the plant by zip code and build the plant dict with geo-based aggregation
 
+    :param dict clean_data:  a dict of substations as returned by :func:`data_trans.clean`
+    :param dict zip_of_sub_dict:  a dict mapping the zip code to a group of substations.
+    :param dict loc_of_plant:  a dict of power plant name to power plants' geo coordinates.
+    :param dict p_min:  a dict of plant name to minimum load.
     :return: (*dict*) -- a dict for power plant after aggregation
     """
 
@@ -89,41 +91,41 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin):
     for index, row in clean_data.iterrows():
         tu = (row["PLANT"], row["TYPE"])
         if tu not in plant_dict:
-            if row["PLANT"] in Pmin and row["PLANT"] in loc_of_plant:
-                if row["ZIP"] in ZipOfsub_dict:
+            if row["PLANT"] in p_min and row["PLANT"] in loc_of_plant:
+                if row["ZIP"] in zip_of_sub_dict:
                     min_d = 100000.0
-                    for value in ZipOfsub_dict[row["ZIP"]]:
+                    for value in zip_of_sub_dict[row["ZIP"]]:
                         # calculate the distance between the plant and substations
-                        if (
-                            geodesic(loc_of_plant[row["PLANT"]], LocOfsub_dict[value]).m
-                            < min_d
-                        ):
-                            min_d = geodesic(
-                                loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
-                            ).m
+                        min_d = min(
+                            haversine(
+                                loc_of_plant[row["PLANT"]],
+                                loc_of_sub_dict[value],
+                                Unit.METERS,
+                            ),
+                            min_d,
+                        )
                     bus_id = value
-                    pmin = Pmin[row["PLANT"]]
+                    pmin = p_min[row["PLANT"]]
                 # if this zip does not contain subs, we try to find subs in neighbor zip.
                 else:
                     zi = int(row["ZIP"])
                     for i in range(-5, 6):
                         min_d = 100000.0
-                        if str(zi + i) in Pmin and str(zi + i) in loc_of_plant:
-                            for value in ZipOfsub_dict[str(zi + i)]:
-                                if (
-                                    geodesic(
-                                        loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
-                                    ).m
-                                    < min_d
-                                ):
-                                    min_d = geodesic(
-                                        loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
-                                    ).m
+                        if str(zi + i) in p_min and str(zi + i) in loc_of_plant:
+                            for value in zip_of_sub_dict[str(zi + i)]:
+                                min_d = min(
+                                    haversine(
+                                        loc_of_plant[row["PLANT"]],
+                                        loc_of_sub_dict[value],
+                                        Unit.METERS,
+                                    ),
+                                    min_d,
+                                )
                     bus_id = value
                     pmin = 0
-            pmaxwin = row["WINTER_CAP"]
-            pmaxsum = row["SUMMER_CAP"]
-            list1 = [bus_id, pmaxwin, pmaxsum, pmin]
+            p_max_win = row["WINTER_CAP"]
+            p_max_sum = row["SUMMER_CAP"]
+            list1 = [bus_id, p_max_win, p_max_sum, pmin]
             plant_dict[tu] = list1
         else:
             list1 = plant_dict[tu]
@@ -136,7 +138,7 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin):
 def write_plant(plant_dict):
     """Write the data to plant.csv as output
 
-    :param dict plant_dict:  a dict of power plants as returned by :func:`Plant_agg`
+    :param dict plant_dict:  a dict of power plants as returned by :func:`plant_agg`
     """
 
     with open("output/plant.csv", "w", newline="") as plant:
@@ -163,7 +165,7 @@ def write_plant(plant_dict):
 def write_gen(plant_dict, type_dict):
     """Write the data to gencost.csv as output
 
-    :param dict plant_dict:  a dict of power plants as returned by :func:`Plant_agg`
+    :param dict plant_dict:  a dict of power plants as returned by :func:`plant_agg`
     :param dict type_dict:  a dict of generator types
     """
 
@@ -176,33 +178,35 @@ def write_gen(plant_dict, type_dict):
             )
 
 
-def Plant(E_csv, U_csv, G2019_csv, Z_csv):
+def plant(e_csv, u_csv, g_2019_csv, z_csv):
     """Entry point to start the gencost and power plant data processing
 
-    :param str E_csv: path of the HIFLD substation csv file
-    :param str U_csv: path of the general unit csv file
-    :param str G2019_csv: path of the EIA generator profile csv file
+    :param str e_csv: path of the HIFLD substation csv file
+    :param str u_csv: path of the general unit csv file
+    :param str g_2019_csv: path of the EIA generator profile csv file
     """
 
-    zone_dic = get_Zone(Z_csv)
+    zone_dic = get_zone(z_csv)
 
-    clean_sub = Clean(E_csv, zone_dic)
-    LocOfsub_dict, ZipOfsub_dict = LocOfsub(clean_sub)
-    loc_of_plant = Loc_of_plant()
-    clean_data = Clean_p(U_csv)
-    Pmin = Cal_P(G2019_csv)
+    clean_sub = clean(e_csv, zone_dic)
+    loc_of_sub_dict, zip_of_sub_dict = loc_of_sub(clean_sub)
+    loc_of_plant = location_of_plant()
+    clean_data = clean_p(u_csv)
+    p_min = cal_p(g_2019_csv)
 
     type_dict = {}
     type_data = pd.read_csv("data/type.csv")
     for index, row in type_data.iterrows():
         type_dict[row["TYPE"]] = row["Type_code"]
-    plant_dict = Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin)
+    plant_dict = plant_agg(
+        clean_data, zip_of_sub_dict, loc_of_plant, loc_of_sub_dict, p_min
+    )
     write_plant(plant_dict)
     write_gen(plant_dict, type_dict)
 
 
 if __name__ == "__main__":
-    Plant(
+    plant(
         "data/Electric_Substations.csv",
         "data/General_Units.csv",
         "data/Generator_Y2019.csv",
