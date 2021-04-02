@@ -63,7 +63,7 @@ def test_line_from_csv(read_csv):
     assert raw_lines == expected_result
 
 
-def test_meter_to_Mile():
+def test_meter_to_mile():
     actual_result = meter_to_mile(12335.89)
     expected_result = 12335.89 / 1609.34
     assert expected_result == actual_result
@@ -88,9 +88,9 @@ def test_get_max_island():
         6: [5],
     }
     graph = graph_of_net(nodes, n_dict)
-    max_nodeSet = get_max_island(graph)
+    max_node_set = get_max_island(graph)
     expected_result = [1, 2, 3, 4]
-    assert list(max_nodeSet) == expected_result
+    assert list(max_node_set) == expected_result
 
 
 def test_init_kv():
@@ -134,12 +134,12 @@ def test_get_neighbors():
         5: [6],
         6: [5],
     }
-    G = graph_of_net(nodes, n_dict)
-    neis = get_neighbors(G, 1, depth=1)
+    grapth = graph_of_net(nodes, n_dict)
+    neis = get_neighbors(grapth, 1, depth=1)
     expected_neis = {1: [2, 3]}
     assert neis == expected_neis
 
-    neis = get_neighbors(G, 1, depth=2)
+    neis = get_neighbors(grapth, 1, depth=2)
     expected_neis = {1: [2, 3], 2: [4]}
     assert neis == expected_neis
 

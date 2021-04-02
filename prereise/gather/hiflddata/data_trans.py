@@ -416,7 +416,7 @@ kv_xperunit_calculate_2 = (
 )
 
 # RateA Calculate 3
-kv_rate_A_calucate_3 = (
+kv_rate_a_calucate_3 = (
     (69, 86),
     (100, 181),
     (115, 239),
@@ -516,7 +516,7 @@ def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
 
     if line_type.startswith("DC"):
         # calculate 3 -> else
-        for kv, sil in kv_rate_A_calucate_3:
+        for kv, sil in kv_rate_a_calucate_3:
             if vol <= kv:
                 return pow(sil * 43.261 * dist, -0.6678)
 
@@ -527,12 +527,12 @@ def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
         else:  # AC Transmission Line
             # calculate 3
             if dist < 50:
-                for kv, rateA in kv_rate_A_calucate_3:
+                for kv, rate_a in kv_rate_a_calucate_3:
                     if vol <= kv:
-                        return rateA
+                        return rate_a
             else:
                 # (SIL*43.261*length)-0.6678
-                for kv, sil in kv_rate_A_calucate_3:
+                for kv, sil in kv_rate_a_calucate_3:
                     if vol <= kv:
                         return pow(sil * 43.261 * dist, -0.6678)
     else:  # Transformer
