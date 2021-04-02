@@ -134,12 +134,12 @@ def test_get_neighbors():
         5: [6],
         6: [5],
     }
-    grapth = graph_of_net(nodes, n_dict)
-    neis = get_neighbors(grapth, 1, depth=1)
+    graph = graph_of_net(nodes, n_dict)
+    neis = get_neighbors(graph, 1, depth=1)
     expected_neis = {1: [2, 3]}
     assert neis == expected_neis
 
-    neis = get_neighbors(grapth, 1, depth=2)
+    neis = get_neighbors(graph, 1, depth=2)
     expected_neis = {1: [2, 3], 2: [4]}
     assert neis == expected_neis
 
