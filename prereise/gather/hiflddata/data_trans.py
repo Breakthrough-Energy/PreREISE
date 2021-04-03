@@ -137,7 +137,19 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
         else:
             nodes.append(sub2)
             n_dict[sub2] = [sub1]
-    return lines, nodes, n_dict
+    df_lines = pd.DataFrame(
+        lines,
+        columns=[
+            "branch_id",
+            "line_type",
+            "from_bus_id",
+            "from_bus_name",
+            "to_bus_id",
+            "to_bus_name",
+            "length_in_mile",
+        ],
+    )
+    return df_lines, nodes, n_dict
 
 
 def line_from_csv(t_csv):
@@ -362,7 +374,7 @@ def write_bus2sub(clean_data):
 
     with open("output/bus2sub.csv", "w", newline="") as bus2sub:
         csv_writer = csv.writer(bus2sub)
-        csv_writer.writerow(["Bus_id", "sub_id"])
+        csv_writer.writerow(["bus_id", "sub_id"])
         for index, row in clean_data.iterrows():
             csv_writer.writerow([row["ID"], row["ID"]])
 
@@ -373,22 +385,7 @@ def write_branch(lines):
     :param list lines:  a list of lines as returned by :func:`neighbors`
     """
 
-    with open("output/branch.csv", "w", newline="") as branch:
-        csv_writer = csv.writer(branch)
-        csv_writer.writerow(
-            [
-                "branch_id",
-                "line_type",
-                "from_bus_id",
-                "from_bus_name",
-                "to_bus_id",
-                "to_bus_name",
-                "length_in_mile",
-                "reactance",
-                "rateA",
-            ]
-        )
-        csv_writer.writerows(lines)
+    lines.to_csv("output/branch.csv", index=False)
 
 
 # Reactance Calculate 1
@@ -564,13 +561,14 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     :param list raw_lines: dict of raw transmission line data as returned by :func:`lineFromCSV`
     """
 
-    for line in lines:
+    line_types, rateas, reactances = [], [], []
+    for i, row in lines.iterrows():
         line_id, line_type, from_bus_id, to_bus_id, dist = (
-            line[0],
-            line[1],
-            line[2],
-            line[4],
-            line[-1],
+            row["branch_id"],
+            row["line_type"],
+            row["from_bus_id"],
+            row["to_bus_id"],
+            row["length_in_mile"],
         )
         kv_from, kv_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
         vol = raw_lines["VOLTAGE"][line_id]
@@ -578,9 +576,12 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
             line_type, kv_from, kv_to, dist, vol
         )
         rate_a = compute_rate_a(line_type, kv_from, kv_to, dist, vol)
-        line[1] = type
-        line.append(reactance)
-        line.append(rate_a)
+        line_types.append(type)
+        rateas.append(rate_a)
+        reactances.append(reactance)
+    lines["line_type"] = line_types
+    lines["reactance"] = reactances
+    lines["rateA"] = rateas
 
 
 def data_transform(e_csv, t_csv, z_csv):
