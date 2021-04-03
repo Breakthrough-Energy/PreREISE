@@ -372,11 +372,10 @@ def write_bus2sub(clean_data):
     :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
     """
 
-    with open("output/bus2sub.csv", "w", newline="") as bus2sub:
-        csv_writer = csv.writer(bus2sub)
-        csv_writer.writerow(["bus_id", "sub_id"])
-        for index, row in clean_data.iterrows():
-            csv_writer.writerow([row["ID"], row["ID"]])
+    output = pd.DataFrame()
+    output["bus_id"] = clean_data["ID"]
+    output["sub_id"] = clean_data["ID"]
+    output.to_csv("output/bus2sub.csv", index=False)
 
 
 def write_branch(lines):
