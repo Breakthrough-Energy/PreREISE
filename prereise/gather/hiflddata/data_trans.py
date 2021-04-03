@@ -2,7 +2,6 @@
 # coding: utf-8
 
 
-import csv
 import json
 import os.path
 import zipfile
@@ -321,20 +320,14 @@ def write_sub(clean_data, zone_dic):
     :param dict zone_dic: zone dict as returned by :func:`get_zone`
     """
 
-    with open("output/sub.csv", "w", newline="") as sub:
-        csv_writer = csv.writer(sub)
-        csv_writer.writerow(["sub_id", "sub_name", "lat", "lon", "zone_id", "type"])
-        for index, row in clean_data.iterrows():
-            csv_writer.writerow(
-                [
-                    row["ID"],
-                    row["NAME"],
-                    row["LATITUDE"],
-                    row["LONGITUDE"],
-                    zone_dic[row["STATE"]],
-                    row["TYPE"],
-                ]
-            )
+    output = pd.DataFrame()
+    output["sub_id"] = clean_data["ID"]
+    output["sub_name"] = clean_data["NAME"]
+    output["lat"] = clean_data["LATITUDE"]
+    output["lon"] = clean_data["LONGITUDE"]
+    output["zone_id"] = clean_data.apply(lambda x: zone_dic[x["STATE"]], axis=1)
+    output["type"] = clean_data["TYPE"]
+    output.to_csv("output/sub.csv", index=False)
 
 
 def write_bus(clean_data, zone_dic, kv_dict):
