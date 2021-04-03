@@ -345,18 +345,24 @@ def write_bus(clean_data, zone_dic, kv_dict):
     :param dict kv_dict: substation KV dict
     """
 
-    with open("output/bus.csv", "w", newline="") as bus:
-        csv_writer = csv.writer(bus)
-        csv_writer.writerow(["Bus_id", "PD", "Zone_id", "base_KV"])
-        missing_sub = []
-        for index, row in clean_data.iterrows():
-            sub = (row["LATITUDE"], row["LONGITUDE"])
-            if sub in kv_dict:
-                csv_writer.writerow(
-                    [row["ID"], 0, zone_dic[row["STATE"]], kv_dict[sub]]
-                )
-            else:
-                missing_sub.append(sub)
+    missing_sub = []
+    bus_ids, pds, zone_ids, base_kvs = [], [], [], []
+    for index, row in clean_data.iterrows():
+        sub = (row["LATITUDE"], row["LONGITUDE"])
+        if sub in kv_dict:
+            bus_ids.append(row["ID"])
+            pds.append(0)
+            zone_ids.append(zone_dic[row["STATE"]])
+            base_kvs.append(kv_dict[sub])
+        else:
+            missing_sub.append(sub)
+
+    output = pd.DataFrame()
+    output["bus_id"] = bus_ids
+    output["pd"] = pds
+    output["zone_id"] = zone_ids
+    output["base_kv"] = base_kvs
+    output.to_csv("output/bus.csv", index=False)
 
     print(
         "INFO: ",
