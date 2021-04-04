@@ -2,6 +2,8 @@
 # coding: utf-8
 
 
+from collections import defaultdict
+
 import pandas as pd
 from haversine import Unit, haversine
 
@@ -9,14 +11,7 @@ from prereise.gather.hiflddata.data_trans import clean, get_zone
 
 
 def clean_p(p_csv):
-    csv_data = pd.read_csv(p_csv)
-    num_sub = len(csv_data)
-    row_indexes = []
-    for i in range(num_sub):
-        if csv_data["STATUS"][i] != "OP":
-            row_indexes.append(i)
-    clean_data = csv_data.drop(labels=row_indexes)
-    return clean_data
+    return pd.read_csv(p_csv).query("STATUS == 'OP'")
 
 
 def loc_of_sub(clean_data):
@@ -28,7 +23,7 @@ def loc_of_sub(clean_data):
     """
 
     loc_of_sub_dict = {}
-    zip_of_sub_dict = {}
+    zip_of_sub_dict = defaultdict(lambda: [])
     for index, row in clean_data.iterrows():
         loc = (
             round(row["LATITUDE"], 9),
@@ -37,13 +32,7 @@ def loc_of_sub(clean_data):
         sub = row["ID"]
         zi = row["ZIP"]
         loc_of_sub_dict[sub] = loc
-        if zi in zip_of_sub_dict:
-            list1 = zip_of_sub_dict[zi]
-            list1.append(sub)
-            zip_of_sub_dict[zi] = list1
-        else:
-            list1 = [sub]
-            zip_of_sub_dict[zi] = list1
+        zip_of_sub_dict[zi].append(sub)
     return loc_of_sub_dict, zip_of_sub_dict
 
 
