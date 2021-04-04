@@ -1,4 +1,6 @@
-import csv
+#!/usr/bin/env python
+# coding: utf-8
+
 
 import pandas as pd
 from haversine import Unit, haversine
@@ -125,13 +127,12 @@ def plant_agg(clean_data, zip_of_sub_dict, loc_of_plant, loc_of_sub_dict, p_min)
                     pmin = 0
             p_max_win = row["WINTER_CAP"]
             p_max_sum = row["SUMMER_CAP"]
-            list1 = [bus_id, p_max_win, p_max_sum, pmin]
-            plant_dict[tu] = list1
+            plant_dict[tu] = [bus_id, p_max_win, p_max_sum, pmin]
         else:
-            list1 = plant_dict[tu]
-            list1[1] = list1[1] + row["WINTER_CAP"]
-            list1[2] = list1[2] + row["SUMMER_CAP"]
-            plant_dict[tu] = list1
+            plant_dict_value = plant_dict[tu]
+            plant_dict_value[1] = plant_dict_value[1] + row["WINTER_CAP"]
+            plant_dict_value[2] = plant_dict_value[2] + row["SUMMER_CAP"]
+            plant_dict[tu] = plant_dict_value
     return plant_dict
 
 
@@ -141,25 +142,36 @@ def write_plant(plant_dict):
     :param dict plant_dict:  a dict of power plants as returned by :func:`plant_agg`
     """
 
-    with open("output/plant.csv", "w", newline="") as plant:
-        csv_writer = csv.writer(plant)
-        csv_writer.writerow(
-            ["plant_id", "bus_id", "Pg", "status", "Pmax", "Pmin", "ramp_30", "type"]
+    data = []
+    for key, value in plant_dict.items():
+        plant, type = key
+        bus_id, p_max_win, p_max_sum, pmin = value
+        data.append(
+            [
+                plant + "-" + type,
+                bus_id,
+                1,
+                "OP",
+                min(p_max_win, p_max_sum),
+                pmin,
+                pmin,
+                type,
+            ]
         )
-        for key in plant_dict:
-            list1 = plant_dict[key]
-            csv_writer.writerow(
-                [
-                    key[0] + "-" + key[1],
-                    list1[0],
-                    1,
-                    "OP",
-                    min(list1[1], list1[2]),
-                    list1[3],
-                    list1[3],
-                    key[1],
-                ]
-            )
+    output = pd.DataFrame(
+        data,
+        columns=[
+            "plant_id",
+            "bus_id",
+            "Pg",
+            "status",
+            "Pmax",
+            "Pmin",
+            "ramp_30",
+            "type",
+        ],
+    )
+    output.to_csv("output/plant.csv", index=False)
 
 
 def write_gen(plant_dict, type_dict):
@@ -169,13 +181,11 @@ def write_gen(plant_dict, type_dict):
     :param dict type_dict:  a dict of generator types
     """
 
-    with open("output/gencost.csv", "w", newline="") as gencost:
-        csv_writer = csv.writer(gencost)
-        csv_writer.writerow(["plant_id", "type", "n", "c2", "c1", "c0"])
-        for key in plant_dict:
-            csv_writer.writerow(
-                [key[0] + "-" + key[1], key[1], 1, 1, type_dict[key[1]], 0]
-            )
+    data = []
+    for plant, type in plant_dict.keys():
+        data.append([plant + "-" + type, type, 1, 1, type_dict[type], 0])
+    output = pd.DataFrame(data, columns=["plant_id", "type", "n", "c2", "c1", "c0"])
+    output.to_csv("output/gencost.csv", index=False)
 
 
 def plant(e_csv, u_csv, g_2019_csv, z_csv):
