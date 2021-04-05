@@ -23,8 +23,8 @@ def loc_of_sub(clean_data):
     """
 
     loc_of_sub_dict = {}
-    zip_of_sub_dict = defaultdict(lambda: [])
-    for index, row in clean_data.iterrows():
+    zip_of_sub_dict = defaultdict(list)
+    for _, row in clean_data.iterrows():
         loc = (
             round(row["LATITUDE"], 9),
             round(row["LONGITUDE"], 9),
@@ -43,11 +43,10 @@ def cal_p(g_csv):
     :return: (*dict*) -- a dict of plant name to minimum load.
     """
 
-    p_min = {}
-    csv_data = pd.read_csv(g_csv)
-    for index, row in csv_data.iterrows():
-        p_min[str(row["Plant Name"]).upper()] = row["Minimum Load (MW)"]
-    return p_min
+    return {
+        str(row["Plant Name"]).upper(): row["Minimum Load (MW)"]
+        for _, row in pd.read_csv(g_csv).iterrows()
+    }
 
 
 def location_of_plant():
@@ -56,15 +55,11 @@ def location_of_plant():
     :return: (*dict*) -- a dict of power plant name to power plants' geo coordinates.
     """
 
-    loc_of_plant = {}
     csv_data = pd.read_csv("data/Power_Plants.csv")
-    for index, row in csv_data.iterrows():
-        loc = (
-            round(row["LATITUDE"], 9),
-            round(row["LONGITUDE"], 9),
-        )
-        loc_of_plant[row["NAME"]] = loc
-    return loc_of_plant
+    return {
+        row["NAME"]: (round(row["LATITUDE"], 9), round(row["LONGITUDE"], 9))
+        for _, row in csv_data.iterrows()
+    }
 
 
 def plant_agg(clean_data, zip_of_sub_dict, loc_of_plant, loc_of_sub_dict, p_min):
@@ -131,22 +126,19 @@ def write_plant(plant_dict):
     :param dict plant_dict:  a dict of power plants as returned by :func:`plant_agg`
     """
 
-    data = []
-    for key, value in plant_dict.items():
-        plant, type = key
-        bus_id, p_max_win, p_max_sum, pmin = value
-        data.append(
-            [
-                plant + "-" + type,
-                bus_id,
-                1,
-                "OP",
-                min(p_max_win, p_max_sum),
-                pmin,
-                pmin,
-                type,
-            ]
-        )
+    data = [
+        [
+            plant + "-" + type,
+            bus_id,
+            1,
+            "OP",
+            min(p_max_win, p_max_sum),
+            pmin,
+            pmin,
+            type,
+        ]
+        for (plant, type), (bus_id, p_max_win, p_max_sum, pmin) in plant_dict.items()
+    ]
     output = pd.DataFrame(
         data,
         columns=[
@@ -170,9 +162,10 @@ def write_gen(plant_dict, type_dict):
     :param dict type_dict:  a dict of generator types
     """
 
-    data = []
-    for plant, type in plant_dict.keys():
-        data.append([plant + "-" + type, type, 1, 1, type_dict[type], 0])
+    data = [
+        [plant + "-" + type, type, 1, 1, type_dict[type], 0]
+        for plant, type in plant_dict.keys()
+    ]
     output = pd.DataFrame(data, columns=["plant_id", "type", "n", "c2", "c1", "c0"])
     output.to_csv("output/gencost.csv", index=False)
 
@@ -193,10 +186,10 @@ def plant(e_csv, u_csv, g_2019_csv, z_csv):
     clean_data = clean_p(u_csv)
     p_min = cal_p(g_2019_csv)
 
-    type_dict = {}
-    type_data = pd.read_csv("data/type.csv")
-    for index, row in type_data.iterrows():
-        type_dict[row["TYPE"]] = row["Type_code"]
+    type_dict = {
+        row["TYPE"]: row["Type_code"]
+        for _, row in pd.read_csv("data/type.csv").iterrows()
+    }
     plant_dict = plant_agg(
         clean_data, zip_of_sub_dict, loc_of_plant, loc_of_sub_dict, p_min
     )

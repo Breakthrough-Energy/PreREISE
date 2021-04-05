@@ -20,12 +20,8 @@ def get_zone(z_csv):
     """
 
     zone = pd.read_csv(z_csv)
-
     # Create dictionary to store the mapping of states and codes
-    zone_dic = {}
-    for i in range(len(zone)):
-        zone_dic[zone["STATE"][i]] = zone["ID"][i]
-    return zone_dic
+    return {row["STATE"]: row["ID"] for _, row in zone.iterrows()}
 
 
 def clean(e_csv, zone_dic):
@@ -36,11 +32,9 @@ def clean(e_csv, zone_dic):
     :return: (*pandas.DataFrame*) -- a pandas Dataframe storing the substations after dropping the invalid ones.
     """
 
-    csv_data = pd.read_csv(e_csv)
-    clean_data = csv_data.query(
+    return pd.read_csv(e_csv).query(
         "STATE in @zone_dic and STATUS == 'IN SERVICE' and LINES != 0"
     )
-    return clean_data
 
 
 def neighbors(sub_by_coord_dict, sub_name_dict):
@@ -53,7 +47,7 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
     :return: (*dict*) -- n_dict, a dict mapping the substation to its neighbor list.
     """
 
-    n_dict = {}
+    n_dict = defaultdict(list)
     nodes = []
     lines = []
     missing_lines = []
@@ -126,16 +120,13 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
 
         if sub1 == sub2:
             continue
-        if sub1 in n_dict:
-            n_dict[sub1].append(sub2)
-        else:
+        n_dict[sub1].append(sub2)
+        n_dict[sub2].append(sub1)
+        if sub1 not in n_dict:
             nodes.append(sub1)
-            n_dict[sub1] = [sub2]
-        if sub2 in n_dict:
-            n_dict[sub2].append(sub1)
-        else:
+        if sub2 not in n_dict:
             nodes.append(sub2)
-            n_dict[sub2] = [sub1]
+
     df_lines = pd.DataFrame(
         lines,
         columns=[
@@ -194,13 +185,12 @@ def graph_of_net(nodes, n_dict):
     """
 
     graph = nx.Graph()
-    for node in nodes:
-        graph.add_node(node)
-
-    for key in n_dict:
-        for value in n_dict[key]:
-            graph.add_edge(key, value)
-
+    any(graph.add_node(node) for node in nodes)
+    any(
+        graph.add_edge(node, neighbor)
+        for node, neighbors in n_dict.items()
+        for neighbor in neighbors
+    )
     return graph
 
 
@@ -225,7 +215,7 @@ def init_kv(clean_data, max_value=1100, min_value=0):
 
     kv_dict = {}
     to_cal = []
-    for index, row in clean_data.iterrows():
+    for _, row in clean_data.iterrows():
         min_vol = row["MIN_VOLT"]
         max_vol = row["MAX_VOLT"]
         if min_value < min_vol < max_value:
@@ -298,17 +288,15 @@ def set_sub(e_csv):
     """
 
     sub_by_coord_dict = {}
-    sub_name_dict = {"sub": []}
+    sub_name_dict = defaultdict(list)
     raw_subs = pd.read_csv(e_csv)
-    for index, row in raw_subs.iterrows():
+    for _, row in raw_subs.iterrows():
         location = (row["LATITUDE"], row["LONGITUDE"])
         if location in sub_by_coord_dict:
             raise Exception(
                 f"WARNING: substations coordinates conflict check: {location}"
             )
         sub_by_coord_dict[location] = (row["ID"], row["NAME"])
-        if row["NAME"] not in sub_name_dict:
-            sub_name_dict[row["NAME"]] = []
         sub_name_dict[row["NAME"]].append((row["LATITUDE"], row["LONGITUDE"]))
     return sub_by_coord_dict, sub_name_dict
 
@@ -338,23 +326,15 @@ def write_bus(clean_data, zone_dic, kv_dict):
     :param dict kv_dict: substation KV dict
     """
 
-    missing_sub = []
-    bus_ids, pds, zone_ids, base_kvs = [], [], [], []
-    for index, row in clean_data.iterrows():
+    missing_sub, data = [], []
+    for _, row in clean_data.iterrows():
         sub = (row["LATITUDE"], row["LONGITUDE"])
         if sub in kv_dict:
-            bus_ids.append(row["ID"])
-            pds.append(0)
-            zone_ids.append(zone_dic[row["STATE"]])
-            base_kvs.append(kv_dict[sub])
+            data.append((row["ID"], 0, zone_dic[row["STATE"]], kv_dict[sub]))
         else:
             missing_sub.append(sub)
 
-    output = pd.DataFrame()
-    output["bus_id"] = bus_ids
-    output["pd"] = pds
-    output["zone_id"] = zone_ids
-    output["base_kv"] = base_kvs
+    output = pd.DataFrame(data, columns=["bus_id", "pd", "zone_id", "base_kv"])
     output.to_csv("output/bus.csv", index=False)
 
     print(
@@ -544,7 +524,7 @@ def get_bus_id_to_kv(clean_data, kv_dict):
     """
 
     bus_id_to_kv = defaultdict(lambda: -999999)
-    for index, row in clean_data.iterrows():
+    for _, row in clean_data.iterrows():
         sub = (row["LATITUDE"], row["LONGITUDE"])
         if sub in kv_dict:
             bus_id_to_kv[row["ID"]] = kv_dict[sub]
@@ -560,7 +540,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     """
 
     line_types, rateas, reactances = [], [], []
-    for i, row in lines.iterrows():
+    for _, row in lines.iterrows():
         line_id, line_type, from_bus_id, to_bus_id, dist = (
             row["branch_id"],
             row["line_type"],
