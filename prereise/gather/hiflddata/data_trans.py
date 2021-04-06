@@ -39,12 +39,10 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
     :param dict sub_by_coord_dict: dict mapping the (x, y) to a substation (sub id and sub name)
     :param dict sub_name_dict: dict mapping the substation name to a list of (x, y)
     :return: (*list*) -- lines, a list of lines after the unambiguous substation name cleanup.
-    :return: (*list*) -- nodes, a list of substations after the unambiguous substation name cleanup.
     :return: (*dict*) -- n_dict, a dict mapping the substation to its neighbor list.
     """
 
     n_dict = defaultdict(list)
-    nodes = set()
     lines = []
     missing_lines = []
     if not os.path.isfile("data/unzip/Electric_Power_Transmission_Lines.geojson"):
@@ -117,8 +115,6 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
             continue
         n_dict[sub1].append(sub2)
         n_dict[sub2].append(sub1)
-        nodes.add(sub1)
-        nodes.add(sub2)
 
     df_lines = pd.DataFrame(
         lines,
@@ -132,7 +128,7 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
             "length_in_mile",
         ],
     )
-    return df_lines, list(nodes), n_dict
+    return df_lines, n_dict
 
 
 def line_from_csv(t_csv):
@@ -567,7 +563,8 @@ def data_transform(e_csv, t_csv, z_csv):
     sub_by_coord_dict, sub_name_dict = set_sub(e_csv)
     raw_lines = line_from_csv(t_csv)
 
-    lines, nodes, n_dict = neighbors(sub_by_coord_dict, sub_name_dict)
+    lines, n_dict = neighbors(sub_by_coord_dict, sub_name_dict)
+    nodes = list(n_dict.keys())
     graph = graph_of_net(nodes, n_dict)
     print("Island Detection: number of nodes in graph = ", len(graph.nodes))
     print("Island Detection: max island size = ", len(get_max_island(graph)))
