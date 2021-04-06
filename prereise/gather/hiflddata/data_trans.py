@@ -44,7 +44,7 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
     """
 
     n_dict = defaultdict(list)
-    nodes = []
+    nodes = set()
     lines = []
     missing_lines = []
     if not os.path.isfile("data/unzip/Electric_Power_Transmission_Lines.geojson"):
@@ -117,10 +117,8 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
             continue
         n_dict[sub1].append(sub2)
         n_dict[sub2].append(sub1)
-        if sub1 not in n_dict:
-            nodes.append(sub1)
-        if sub2 not in n_dict:
-            nodes.append(sub2)
+        nodes.add(sub1)
+        nodes.add(sub2)
 
     df_lines = pd.DataFrame(
         lines,
@@ -134,7 +132,7 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
             "length_in_mile",
         ],
     )
-    return df_lines, nodes, n_dict
+    return df_lines, list(nodes), n_dict
 
 
 def line_from_csv(t_csv):
