@@ -264,16 +264,12 @@ def cal_kv(n_dict, graph, kv_dict, to_cal):
     for sub in to_cal:
         if sub not in n_dict:
             continue
-        neigh = get_neighbors(graph, sub, depth=5)
-        temp_kv = 0
-        num = 0
-        for i in range(1, 6):
-            for nei in neigh[i]:
-                if nei in kv_dict:
-                    temp_kv = temp_kv + kv_dict[nei]
-                    num = num + 1
-            if num > 0:
-                kv_dict[sub] = temp_kv / num
+        neighbors = get_neighbors(graph, sub, depth=5)
+        for depth in range(1, 6):
+            count = sum(1 for neighbor in neighbors[depth] if neighbor in kv_dict)
+            if count > 0:
+                sum_kv = sum(kv_dict[nei] for nei in neighbors[depth] if nei in kv_dict)
+                kv_dict[sub] = sum_kv / count
                 break
             else:
                 kv_dict[sub] = -999999
@@ -391,7 +387,7 @@ kv_xperunit_calculate_2 = (
 )
 
 # RateA Calculate 3
-kv_rate_a_calucate_3 = (
+kv_rate_a_calculate_3 = (
     (69, 86),
     (100, 181),
     (115, 239),
@@ -405,7 +401,7 @@ kv_rate_a_calucate_3 = (
 )
 
 # RateA Calculate 3
-kv_sil_calucate_3 = (
+kv_sil_calculate_3 = (
     (69, 13),
     (100, 30),
     (115, 35),
@@ -455,6 +451,7 @@ def compute_reactance_and_type(line_type, kv_from, kv_to, dist, vol):
     :param float dist: distance between the two substations
     :param int vol: transmission line voltage
     :return: (*float*) --  reactance value.
+    :return: (*str*) --  line type.
     """
 
     if line_type.startswith("DC"):
@@ -491,7 +488,7 @@ def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
 
     if line_type.startswith("DC"):
         # calculate 3 -> else
-        for kv, sil in kv_rate_a_calucate_3:
+        for kv, sil in kv_rate_a_calculate_3:
             if vol <= kv:
                 return pow(sil * 43.261 * dist, -0.6678)
 
@@ -502,12 +499,12 @@ def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
         else:  # AC Transmission Line
             # calculate 3
             if dist < 50:
-                for kv, rate_a in kv_rate_a_calucate_3:
+                for kv, rate_a in kv_rate_a_calculate_3:
                     if vol <= kv:
                         return rate_a
             else:
                 # (SIL*43.261*length)-0.6678
-                for kv, sil in kv_rate_a_calucate_3:
+                for kv, sil in kv_sil_calculate_3:
                     if vol <= kv:
                         return pow(sil * 43.261 * dist, -0.6678)
     else:  # Transformer
