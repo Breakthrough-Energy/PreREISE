@@ -14,7 +14,6 @@ https://hifld-geoplatform.opendata.arcgis.com/datasets/power-plants
 
 
 ### What it does
-Move the code from private GitHub proj to PreREISE. 
 To give more context, this new HIFLD module has two python scripts to output the transmission topology and power generation data.
 
 - data_trans.py is the one to parse the substation, transmission csv and json raw data downloaded from HIFLD. 

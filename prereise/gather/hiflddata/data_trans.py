@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-
 import json
 import os.path
 import zipfile
@@ -21,7 +17,7 @@ def get_zone(z_csv):
 
     zone = pd.read_csv(z_csv)
     # Create dictionary to store the mapping of states and codes
-    return {row["STATE"]: row["ID"] for _, row in zone.iterrows()}
+    return dict(zip(zone.STATE, zone.ID))
 
 
 def clean(e_csv, zone_dic):
