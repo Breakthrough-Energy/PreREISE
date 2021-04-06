@@ -57,7 +57,6 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
     ) as fp:
         data = json.load(fp)
     for i, line in enumerate(data["features"]):
-        line = data["features"][i]
         line_id = line["properties"]["ID"]
         line_type = line["properties"]["TYPE"]  # e.g. "AC; OVERHEAD"
         if (
