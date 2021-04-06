@@ -78,7 +78,6 @@ def test_compute_geo_dist():
 
 
 def test_get_max_island():
-    nodes = [1, 2, 3, 4, 5, 6]
     n_dict = {
         1: [2, 3],
         2: [1, 4],
@@ -87,7 +86,7 @@ def test_get_max_island():
         5: [6],
         6: [5],
     }
-    graph = graph_of_net(nodes, n_dict)
+    graph = graph_of_net(n_dict)
     max_node_set = get_max_island(graph)
     expected_result = [1, 2, 3, 4]
     assert list(max_node_set) == expected_result
@@ -125,7 +124,6 @@ def test_init_kv():
 
 
 def test_get_neighbors():
-    nodes = [1, 2, 3, 4, 5, 6]
     n_dict = {
         1: [2, 3],
         2: [1, 4],
@@ -134,7 +132,7 @@ def test_get_neighbors():
         5: [6],
         6: [5],
     }
-    graph = graph_of_net(nodes, n_dict)
+    graph = graph_of_net(n_dict)
     neis = get_neighbors(graph, 1, depth=1)
     expected_neis = {1: [2, 3]}
     assert neis == expected_neis
@@ -145,7 +143,6 @@ def test_get_neighbors():
 
 
 def test_cal_kv():
-    nodes = [1, 2, 3, 4, 5, 6]
     n_dict = {
         1: [2, 3],
         2: [1, 4],
@@ -154,7 +151,7 @@ def test_cal_kv():
         5: [6],
         6: [5],
     }
-    graph = graph_of_net(nodes, n_dict)
+    graph = graph_of_net(n_dict)
     kv_dict = {
         1: 115.0,
         2: 92.0,
