@@ -170,5 +170,5 @@ def test_cal_kv():
     to_cal = [1]
 
     cal_kv(n_dict, graph, kv_dict, to_cal)
-    expected_kv_dict = {1: -999999, 7: 90.0}
+    expected_kv_dict = {1: 115, 7: 90.0}
     assert kv_dict == expected_kv_dict

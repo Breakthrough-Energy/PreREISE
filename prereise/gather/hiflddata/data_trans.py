@@ -259,22 +259,19 @@ def cal_kv(n_dict, graph, kv_dict, to_cal):
                 sum_kv = sum(kv_dict[nei] for nei in neighbors[depth] if nei in kv_dict)
                 kv_dict[sub] = sum_kv / count
                 break
-            else:
-                kv_dict[sub] = -999999
 
 
-def set_sub(e_csv):
+def set_sub(clean_data):
     """Generate the subs
 
-    :param str E_csv: path of the HIFLD substation csv file
+    :param panda.DataFrame clean_data: clean substations
     :return: (*dict*) --  sub_by_coord_dict, a dict mapping from (x, y) to substation detail.
     :return: (*dict*) --  sub_name_dict, a dict mapping from substation name to its coordinate (x, y).
     """
 
     sub_by_coord_dict = {}
     sub_name_dict = defaultdict(list)
-    raw_subs = pd.read_csv(e_csv)
-    for _, row in raw_subs.iterrows():
+    for _, row in clean_data.iterrows():
         location = (row["LATITUDE"], row["LONGITUDE"])
         if location in sub_by_coord_dict:
             raise Exception(
@@ -475,10 +472,8 @@ def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
     """
 
     if line_type.startswith("DC"):
-        # calculate 3 -> else
-        for kv, sil in kv_rate_a_calculate_3:
-            if vol <= kv:
-                return pow(sil * 43.261 * dist, -0.6678)
+        # initial setup for DC
+        return 200
 
     # line type is AC
     if kv_from == kv_to:
@@ -508,7 +503,7 @@ def get_bus_id_to_kv(clean_data, kv_dict):
     :return: (*dict*) -- a dict mapping the STATE to its ID after cleanup.
     """
 
-    bus_id_to_kv = defaultdict(lambda: -999999)
+    bus_id_to_kv = {}
     for _, row in clean_data.iterrows():
         sub = (row["LATITUDE"], row["LONGITUDE"])
         if sub in kv_dict:
@@ -525,6 +520,8 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     """
 
     line_types, rateas, reactances = [], [], []
+    lines = lines[lines["from_bus_id"].isin(bus_id_to_kv.keys())]
+    lines = lines[lines["to_bus_id"].isin(bus_id_to_kv.keys())]
     for _, row in lines.iterrows():
         line_id, line_type, from_bus_id, to_bus_id, dist = (
             row["branch_id"],
@@ -545,6 +542,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     lines["line_type"] = line_types
     lines["reactance"] = reactances
     lines["rateA"] = rateas
+    return lines
 
 
 def data_transform(e_csv, t_csv, z_csv):
@@ -559,7 +557,7 @@ def data_transform(e_csv, t_csv, z_csv):
 
     clean_data = clean(e_csv, zone_dic)
 
-    sub_by_coord_dict, sub_name_dict = set_sub(e_csv)
+    sub_by_coord_dict, sub_name_dict = set_sub(clean_data)
     raw_lines = line_from_csv(t_csv)
 
     lines, n_dict = neighbors(sub_by_coord_dict, sub_name_dict)
@@ -569,7 +567,7 @@ def data_transform(e_csv, t_csv, z_csv):
     kv_dict, to_cal = init_kv(clean_data)
     cal_kv(n_dict, graph, kv_dict, to_cal)
     bus_id_to_kv = get_bus_id_to_kv(clean_data, kv_dict)
-    calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
+    lines = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
 
     write_sub(clean_data, zone_dic)
     write_bus(clean_data, zone_dic, kv_dict)
