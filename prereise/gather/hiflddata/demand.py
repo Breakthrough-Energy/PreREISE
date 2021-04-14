@@ -4,71 +4,40 @@
 
 
 import pandas as pd
+import numpy as np
 
-
-def mkdir(path):
-
-    import os
-    path=path.strip()
-    path=path.rstrip("\\")
-    isExists=os.path.exists(path)
-    if not isExists:
-        os.makedirs(path) 
-        return True
-    else:
-        return False
- 
-
-
-
-def get_Zone():
-    West = []
-    East = []
-    Texas = []
-    zone = pd.read_csv('zone.csv')
-    for i in range(len(zone)):
-        if(zone['interconnect'][i] == 'Eastern'):
-            East.append(str(zone['zone_id'][i]))
-        elif(zone['interconnect'][i] == 'Western'):
-            West.append(str(zone['zone_id'][i]))
-        else:
-            Texas.append(str(zone['zone_id'][i]))
-    return West, East, Texas
-
-
-
-
-def devide_Demand(West, East, Texas, east = False, west = False, texas = False):
-    demand = pd.read_csv('demand.csv')
-    if (east):
-        df = demand.drop(West,axis=1)
-        df = df.drop(Texas,axis=1)
-        df.to_csv("output/eastern/demand.csv",index=False)
-    if (west):
-        df = demand.drop(East,axis=1)
-        df = df.drop(Texas,axis=1)
-        df.to_csv('output/western/demand.csv',index=False)
-    if (texas):
-        df = demand.drop(West,axis=1)
-        df = df.drop(East,axis=1)
-        df.to_csv('output/texas/demand.csv',index=False)
-
-
-
+def agg_dic():
+    z = pd.read_csv('data/zone.csv')
+    z_d ={}
+    z_d1 = {}
+    z1 = pd.read_csv('data/zone_old.csv')
+    for i in range(len(z)):
+        tu = (z["STATE"][i], z["REGION"][i])
+        z_d[tu] = z["ID"][i]
+    for i in range(len(z1)):
+        tu = (z1["abbr"][i], z1["interconnect"][i])
+        z_d1[str(z1["zone_id"][i])] = z_d[tu]
+    
+    return z_d1
 
 
 if __name__ == '__main__':
-    mkpath="output\\western\\"
+    z_d1 = agg_dic()
+    df = pd.read_csv('data/demand.csv')
+    df1 = pd.DataFrame(df['UTC Time'])
+    for i in range(1,54):
+        df1[i] = np.zeros(8784,dtype=int)
+    for index in df.columns:
+        if(index == 'UTC Time'):
+            continue
+        else:
+            key = z_d1[index]
+            df1[key] = df1[key] + df[index]
 
-    mkdir(mkpath)
-    mkpath="output\\eastern\\"
+    df1[41] = 0.15 * df1[42]
+    df1[42] = 0.85 * df1[42]
+    df1.to_csv('output/demand.csv')
 
-    mkdir(mkpath)
-    mkpath="output\\texas\\"
-
-    mkdir(mkpath)
-    West, East, Texas = get_Zone()
-    devide_Demand(West, East, Texas, east = True, west = True, texas = True)
 
 
 
