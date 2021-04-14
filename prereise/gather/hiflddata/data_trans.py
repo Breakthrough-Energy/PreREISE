@@ -89,20 +89,17 @@ def Clean(E_csv, zone_dic):
     return clean_data
 
 
-def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
+def neighbors(sub_by_coord_dict, sub_name_dict):
     """Create dict to store the neighbors of each substation based on transmission topology geojson from HIFLD
-
-    :param dict sub_by_coord_dict: dict mapping the (x, y) to a substation
-    :param dict sub_name_dict: dict mapping the substation name to a substation
+    :param dict sub_by_coord_dict: dict mapping the (x, y) to a substation (sub id and sub name)
+    :param dict sub_name_dict: dict mapping the substation name to a list of (x, y)
     :return: (*list*) -- lines, a list of lines after the unambiguous substation name cleanup.
-    :return: (*list*) -- nodes, a list of substations after the unambiguous substation name cleanup.
-    :return: (*dict*) -- N_dict, a dict mapping the substation to its neighbor list.
+    :return: (*dict*) -- n_dict, a dict mapping the substation to its neighbor list.
     """
 
-    N_dict = {}
-    nodes = []
+    n_dict = defaultdict(list)
     lines = []
-    missinglines = []
+    missing_lines = []
     if not os.path.isfile("data/unzip/Electric_Power_Transmission_Lines.geojson"):
         with zipfile.ZipFile(
             "data/Electric_Power_Transmission_Lines.geojson.zip", "r"
@@ -113,7 +110,6 @@ def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
     ) as fp:
         data = json.load(fp)
     for i, line in enumerate(data["features"]):
-        line = data["features"][i]
         line_id = line["properties"]["ID"]
         line_type = line["properties"]["TYPE"]  # e.g. "AC; OVERHEAD"
         if (
@@ -122,7 +118,7 @@ def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
         ):
             # quite a few of NOT AVAILABLE scenarios in transmission rawdata
             print("INFO: sub1 or sub2 NOT AVAILABLE for transmission line: ", line)
-            missinglines.append(line)
+            missing_lines.append(line)
             continue
 
         if (
@@ -133,9 +129,12 @@ def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
             print(
                 "INFO: sub1 or sub2 name not identified for transmission line: ", line
             )
-            missinglines.append(line)
+            missing_lines.append(line)
             continue
 
+        # line["geometry"]["coordinates"][0] gets a list of point on the transmission line
+        # line["geometry"]["coordinates"][0][0] gets the start point(latitude, longitude) of the line
+        # line["geometry"]["coordinates"][0][-1] gets the end point(latitude, longitude) of the line
         start_coord = (
             line["geometry"]["coordinates"][0][0][1],
             line["geometry"]["coordinates"][0][0][0],
@@ -148,36 +147,43 @@ def Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines):
             line["properties"]["SUB_1"]
         ) + sub_name_dict.get(line["properties"]["SUB_2"])
 
-        sub1 = min(candidate_coordinates, key=lambda p: computeGeoDist(p, start_coord))
-        sub2 = min(candidate_coordinates, key=lambda p: computeGeoDist(p, end_coord))
+        sub1 = min(
+            candidate_coordinates, key=lambda p: compute_geo_dist(p, start_coord)
+        )
+        sub2 = min(candidate_coordinates, key=lambda p: compute_geo_dist(p, end_coord))
 
-        dist = computeGeoDist(start_coord, end_coord)
+        dist = compute_geo_dist(start_coord, end_coord)
 
         lines.append(
             [
-                line_id,
-                line_type,
-                sub_by_coord_dict.get(sub1)[0],
-                sub_by_coord_dict.get(sub1)[1],
-                sub_by_coord_dict.get(sub2)[0],
-                sub_by_coord_dict.get(sub2)[1],
-                dist,
+                line_id,  # line id
+                line_type,  # line type
+                sub_by_coord_dict.get(sub1)[0],  # from substation id
+                sub_by_coord_dict.get(sub1)[1],  # from substation name
+                sub_by_coord_dict.get(sub2)[0],  # to substation id
+                sub_by_coord_dict.get(sub2)[1],  # to substation name
+                dist,  # distance between start point and end point of the line.
             ]
         )
 
         if sub1 == sub2:
             continue
-        if sub1 in N_dict:
-            N_dict[sub1].append(sub2)
-        else:
-            nodes.append(sub1)
-            N_dict[sub1] = [sub2]
-        if sub2 in N_dict:
-            N_dict[sub2].append(sub1)
-        else:
-            nodes.append(sub2)
-            N_dict[sub2] = [sub1]
-    return lines, nodes, N_dict
+        n_dict[sub1].append(sub2)
+        n_dict[sub2].append(sub1)
+
+    df_lines = pd.DataFrame(
+        lines,
+        columns=[
+            "branch_id",
+            "line_type",
+            "from_bus_id",
+            "from_bus_name",
+            "to_bus_id",
+            "to_bus_name",
+            "length_in_mile",
+        ],
+    )
+    return df_lines, n_dict
 
 
 def lineFromCSV(T_csv):
@@ -203,9 +209,8 @@ def meter2Mile(dist):
     return dist / 1609.34
 
 
-def computeGeoDist(sub1, sub2):
+def compute_geo_dist(sub1, sub2):
     """Compute the haversine geo distance of two substations
-
     :param tuple sub1: (latitude, longitude) of substation1
     :param tuple sub2: (latitude, longitude) of substation2
     :return: (*float*) -- distance between two geo coordinates.
@@ -214,23 +219,21 @@ def computeGeoDist(sub1, sub2):
     return haversine(sub1, sub2, Unit.MILES)
 
 
-def GraphOfNet(nodes, N_dict):
-    """Create the graph for the HIFLD transmission network
 
-    :param list nodes: list of substation as the vertex inside the Graph
-    :param dict N_dict: dict of substation's neighbors as the edge inside the Graph
+def graph_of_net(n_dict):
+    """Create the graph for the HIFLD transmission network
+    :param dict n_dict: dict of substation's neighbors as the edge inside the Graph
     :return: (*networkx.Graph*) -- Graph generated by networkx.
     """
-
-    G = nx.Graph()
-    for node in nodes:
-        G.add_node(node)
-
-    for key in N_dict:
-        for value in N_dict[key]:
-            G.add_edge(key, value)
-
-    return G
+    nodes = list(n_dict.keys())
+    graph = nx.Graph()
+    any(graph.add_node(node) for node in nodes)
+    any(
+        graph.add_edge(node, neighbor)
+        for node, neighbors in n_dict.items()
+        for neighbor in neighbors
+    )
+    return graph
 
 
 def GetMaxIsland(G):
@@ -318,7 +321,7 @@ def Cal_KV(N_dict, G, KV_dict, to_cal):
                 KV_dict[sub] = -999999
 
 
-def Set_Sub(E_csv):
+def set_sub(clean_data):
     """Generate the subs
 
     :param str E_csv: path of the HIFLD substation csv file
@@ -328,8 +331,7 @@ def Set_Sub(E_csv):
 
     sub_by_coord_dict = {}
     sub_name_dict = {"sub": []}
-    raw_subs = pd.read_csv(E_csv)
-    for index, row in raw_subs.iterrows():
+    for index, row in clean_data.iterrows():
         location = (row["LATITUDE"], row["LONGITUDE"])
         if location in sub_by_coord_dict:
             raise Exception(
@@ -587,22 +589,22 @@ kv_from_to_xperunit_calculate_4 = {
 }
 
 
-def computeReactanceAndType(line_type, KV_from, KV_to, dist, vol):
+def compute_reactance_and_type(line_type, kv_from, kv_to, dist, vol):
     """Compute the reactance based on the type of each transmission line
-
     :param str line_type: type of the transmission line between two substations
-    :param int KV_from: KV of the substation1 at one end
-    :param int KV_to: KV of the substation2 at the other end
+    :param int kv_from: KV of the substation1 at one end
+    :param int kv_to: KV of the substation2 at the other end
     :param float dist: distance between the two substations
     :param int vol: transmission line voltage
     :return: (*float*) --  reactance value.
+    :return: (*str*) --  line type.
     """
 
     if line_type.startswith("DC"):
         return 0.0, "DC"
 
     # line type is AC
-    if KV_from == KV_to:
+    if kv_from == kv_to:
         if dist < 0.01:  # Phase Shifter
             # calculate 1
             for kv, x in kv_xperunit_calculate_1:
@@ -615,11 +617,11 @@ def computeReactanceAndType(line_type, KV_from, KV_to, dist, vol):
                     return x * dist, "Line"
     else:  # Transformer
         # calculate 4
-        x = kv_from_to_xperunit_calculate_4.get((KV_from, KV_to), 0.00436)
+        x = kv_from_to_xperunit_calculate_4.get((kv_from, kv_to), 0.00436)
         return x * dist, "Transformer"
 
 
-def computeRateA(line_type, KV_from, KV_to, dist, vol):
+def compute_rate_a(line_type, KV_from, KV_to, dist, vol):
     """Compute the rateA based on the type of each transmission line
 
     :param str line_type: type of the transmission line between two substations
@@ -631,10 +633,8 @@ def computeRateA(line_type, KV_from, KV_to, dist, vol):
     """
 
     if line_type.startswith("DC"):
-        # calculate 3 -> else
-        for kv, sil in kv_rate_A_calucate_3:
-            if vol <= kv:
-                return pow(sil * 43.261 * dist, -0.6678)
+        # initial setup for DC
+        return 200
 
     # line type is AC
     if KV_from == KV_to:
@@ -664,7 +664,7 @@ def get_bus_id_to_KV(clean_data, KV_dict):
     :return: (*dict*) -- a dict mapping the STATE to its ID after cleanup.
     """
 
-    bus_id_to_KV = defaultdict(lambda: -999999.0)
+    bus_id_to_KV = {}
     for index, row in clean_data.iterrows():
         sub = (row["LATITUDE"], row["LONGITUDE"])
         if sub in KV_dict:
@@ -672,7 +672,7 @@ def get_bus_id_to_KV(clean_data, KV_dict):
     return bus_id_to_KV
 
 
-def calculate_reactance_and_rateA(bus_id_to_kv, lines, raw_lines):
+def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     """Preprocessing before calculating the reactance and rateA for each line
 
     :param dict bus_id_to_kv: dict mapping bus id to its KV
@@ -680,21 +680,30 @@ def calculate_reactance_and_rateA(bus_id_to_kv, lines, raw_lines):
     :param list raw_lines: dict of raw transmission line data as returned by :func:`lineFromCSV`
     """
 
-    for line in lines:
+    line_types, rateas, reactances = [], [], []
+    lines = lines[lines["from_bus_id"].isin(bus_id_to_kv.keys())]
+    lines = lines[lines["to_bus_id"].isin(bus_id_to_kv.keys())]
+    for _, row in lines.iterrows():
         line_id, line_type, from_bus_id, to_bus_id, dist = (
-            line[0],
-            line[1],
-            line[2],
-            line[4],
-            line[-1],
+            row["branch_id"],
+            row["line_type"],
+            row["from_bus_id"],
+            row["to_bus_id"],
+            row["length_in_mile"],
         )
-        KV_from, KV_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
+        kv_from, kv_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
         vol = raw_lines["VOLTAGE"][line_id]
-        reactance, type = computeReactanceAndType(line_type, KV_from, KV_to, dist, vol)
-        rateA = computeRateA(line_type, KV_from, KV_to, dist, vol)
-        line[1] = type
-        line.append(reactance)
-        line.append(rateA)
+        reactance, type = compute_reactance_and_type(
+            line_type, kv_from, kv_to, dist, vol
+        )
+        rate_a = compute_rate_a(line_type, kv_from, kv_to, dist, vol)
+        line_types.append(type)
+        rateas.append(rate_a)
+        reactances.append(reactance)
+    lines["line_type"] = line_types
+    lines["reactance"] = reactances
+    lines["rateA"] = rateas
+    return lines
 
 
 def DataTransform(E_csv, T_csv, Z_csv):
@@ -709,19 +718,19 @@ def DataTransform(E_csv, T_csv, Z_csv):
 
     clean_data = Clean(E_csv, zone_dic)
 
-    sub_by_coord_dict, sub_name_dict = Set_Sub(E_csv)
+    sub_by_coord_dict, sub_name_dict = set_sub(clean_data)
     raw_lines = lineFromCSV(T_csv)
 
-    lines, nodes, N_dict = Neighbors(sub_by_coord_dict, sub_name_dict, raw_lines)
-    G = GraphOfNet(nodes, N_dict)
-    print("Island Detection: number of nodes in graph = ", len(G.nodes))
-    print("Island Detection: max island size = ", len(GetMaxIsland(G)))
+    lines, n_dict = neighbors(sub_by_coord_dict, sub_name_dict)
+    graph = graph_of_net(n_dict)
+    print("Island Detection: number of nodes in graph = ", len(graph.nodes))
+    print("Island Detection: max island size = ", len(GetMaxIsland(graph)))
     KV_dict, to_cal = InitKV(clean_data)
-    Cal_KV(N_dict, G, KV_dict, to_cal)
+    Cal_KV(n_dict, graph, KV_dict, to_cal)
     compute_load_dist(clean_data, KV_dict)
     clean_data.to_csv('tes.csv')
     bus_id_to_kv = get_bus_id_to_KV(clean_data, KV_dict)
-    calculate_reactance_and_rateA(bus_id_to_kv, lines, raw_lines)
+    lines = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
     LocOfpla_dict, ZipOfpla_dict = ZipOfloc()
     region = Getregion()
     
