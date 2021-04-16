@@ -16,7 +16,7 @@ def get_Zone(Z_csv):
     # Create dictionary to store the mapping of states and codes
     zone_dic = {}
     for i in range(len(zone)):
-        zone_dic[zone["STATE"][i]] = zone["ID"][i]
+        zone_dic[zone["state"][i]] = zone["zone_id"][i]
     return zone_dic
 
 
@@ -278,6 +278,11 @@ def write_plant(plant_dict):
                 ]
             )
 
+    final_bus = set(pd.read_csv("output/bus.csv")["bus_id"])
+    final_plant = pd.read_csv("output/plant.csv")
+    final_plant = final_plant[final_plant["bus_id"].isin(final_bus)]
+    final_plant.to_csv("output/plant.csv", index=False)
+
 
 def write_gen(plant_dict, type_dict, curve):
     """Write the data to gencost.csv as output
@@ -312,7 +317,7 @@ def write_gen(plant_dict, type_dict, curve):
 
     with open("output/gencost.csv", "w", newline="") as gencost:
         csv_writer = csv.writer(gencost)
-        csv_writer.writerow(["plant_id", "type", "n", "c2", "c1", "c0"])
+        csv_writer.writerow(["plant_id", "type", "n", "c2", "c1", "c0", "interconnect"])
         for key in plant_dict:
             c1 = plant_dict[key][4] / plant_dict[key][5]
             pid = key[0] + "-" + key[1] + "-" + key[2]
@@ -325,6 +330,7 @@ def write_gen(plant_dict, type_dict, curve):
                         curve[pid][0],
                         curve[pid][1],
                         curve[pid][2],
+                        plant_dict[key][6]
                     ]
                 )
             else:
@@ -337,6 +343,7 @@ def write_gen(plant_dict, type_dict, curve):
                         "",
                         c1,
                         "",
+                        plant_dict[key][6]
                     ]
                 )
 

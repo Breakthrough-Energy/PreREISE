@@ -1,4 +1,4 @@
-bus_id,Pd,zone_id,base_kv,interconnect
+bus_id,Pd,zone_id,baseKV,interconnect
 107655,0,51,115.0,Eastern
 107656,0,51,92.0,Eastern
 107657,0,51,115.0,Eastern

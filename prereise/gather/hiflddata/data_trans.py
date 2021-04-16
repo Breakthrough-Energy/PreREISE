@@ -22,9 +22,9 @@ def get_zone(z_csv):
     zone_dic = {}
     zone_dic1 = {}
     for i in range(len(zone)):
-        tu = (zone["STATE"][i], zone["interconnect"][i])
-        zone_dic[zone["STATE"][i]] = zone["ID"][i]
-        zone_dic1[tu] = zone["ID"][i]
+        tu = (zone["state"][i], zone["interconnect"][i])
+        zone_dic[zone["state"][i]] = zone["zone_id"][i]
+        zone_dic1[tu] = zone["zone_id"][i]
     return zone_dic, zone_dic1
 
 
@@ -418,7 +418,7 @@ def write_bus(clean_data, sub_code, re_code, kv_dict):
 
     with open("output/bus.csv", "w", newline="") as bus:
         csv_writer = csv.writer(bus)
-        csv_writer.writerow(["bus_id", "Pd", "zone_id", "base_kv", "interconnect"])
+        csv_writer.writerow(["bus_id", "Pd", "zone_id", "baseKV", "interconnect"])
         missingSub = []
         for index, row in clean_data.iterrows():
             sub = (row["LATITUDE"], row["LONGITUDE"])
@@ -451,7 +451,7 @@ def write_bus2sub(clean_data, re_code):
 
     with open("output/bus2sub.csv", "w", newline="") as bus2sub:
         csv_writer = csv.writer(bus2sub)
-        csv_writer.writerow(["Bus_id", "sub_id", "interconnect"])
+        csv_writer.writerow(["bus_id", "sub_id", "interconnect"])
         for index, row in clean_data.iterrows():
             csv_writer.writerow([row["ID"], row["ID"], re_code[row["ID"]]])
 
@@ -700,6 +700,7 @@ def data_transform(e_csv, t_csv, z_csv):
     write_bus(clean_data, sub_code, re_code, kv_dict)
     write_bus2sub(clean_data, re_code)
 
+    lines["interconnect"] = lines.apply(lambda row: re_code.get(row["from_bus_id"]), axis=1)
     write_branch(lines)
 
 
