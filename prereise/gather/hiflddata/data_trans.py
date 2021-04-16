@@ -27,19 +27,21 @@ def get_zone(z_csv):
         zone_dic1[tu] = zone["ID"][i]
     return zone_dic, zone_dic1
 
-West = ['WA','OR','CA','NV','AK','ID','UT','AZ','WY','CO','NM']
-Uncertain = ['MT','SD','TX']
+
+West = ["WA", "OR", "CA", "NV", "AK", "ID", "UT", "AZ", "WY", "CO", "NM"]
+Uncertain = ["MT", "SD", "TX"]
+
 
 def ZipOfloc():
     LocOfpla_dict = {}
     ZipOfpla_dict = {}
     csv_data = pd.read_csv("data/Power_Plants.csv")
     for index, row in csv_data.iterrows():
-        loc = (row['LATITUDE'], row['LONGITUDE'])
-        pla = row['NAME']
-        zi = row['ZIP']
+        loc = (row["LATITUDE"], row["LONGITUDE"])
+        pla = row["NAME"]
+        zi = row["ZIP"]
         LocOfpla_dict[pla] = loc
-        if(zi in ZipOfpla_dict):
+        if zi in ZipOfpla_dict:
             list1 = ZipOfpla_dict[zi]
             list1.append(pla)
             ZipOfpla_dict[zi] = list1
@@ -48,22 +50,24 @@ def ZipOfloc():
             ZipOfpla_dict[zi] = list1
     return LocOfpla_dict, ZipOfpla_dict
 
+
 def Getregion():
     region = {}
     csv_data = pd.read_csv("data/needs.csv")
     df = np.array(csv_data)
     needs = df.tolist()
     for pla in needs:
-        name = (str(pla[0]).upper())
-        if (name not in region):
-            if(pla[8][0:3] == 'ERC'):
-                re = 'Texas'
-            elif(pla[8][0:3] == 'WEC'):
-                re = 'Western'
+        name = str(pla[0]).upper()
+        if name not in region:
+            if pla[8][0:3] == "ERC":
+                re = "Texas"
+            elif pla[8][0:3] == "WEC":
+                re = "Western"
             else:
-                re = 'Eastern'
+                re = "Eastern"
             region[name] = re
     return region
+
 
 def clean(e_csv, zone_dic):
     """Clean data; remove substations which are outside the United States or not available.
@@ -331,61 +335,73 @@ def write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, reg
     :param dict zone_dic: zone dict as returned by :func:`get_Zone`
     """
 
-    sub = open('output/sub.csv', 'w', newline='')
+    sub = open("output/sub.csv", "w", newline="")
     csv_writer = csv.writer(sub)
-    csv_writer.writerow(["sub_id", "sub_name", "lat", "lon", "zone_id", "type", "interconnect"])
+    csv_writer.writerow(
+        ["sub_id", "sub_name", "lat", "lon", "zone_id", "type", "interconnect"]
+    )
     sub_code = {}
     re_code = {}
     for index, row in clean_data.iterrows():
-        if (row['STATE'] in West):
-            re = 'Western'
-        elif (row['STATE'] in Uncertain):
-            lo = (row['LATITUDE'], row['LONGITUDE'])
-            if (row['ZIP'] in ZipOfpla_dict):
+        if row["STATE"] in West:
+            re = "Western"
+        elif row["STATE"] in Uncertain:
+            lo = (row["LATITUDE"], row["LONGITUDE"])
+            if row["ZIP"] in ZipOfpla_dict:
                 min_d = 100000.0
                 min_s = ""
-                for value in ZipOfpla_dict[row['ZIP']]:
+                for value in ZipOfpla_dict[row["ZIP"]]:
                     # calculate the distance between the plant and substations
-                    if (haversine(lo, LocOfpla_dict[value]) < min_d):
+                    if haversine(lo, LocOfpla_dict[value]) < min_d:
                         min_s = value
                         min_d = haversine(lo, LocOfpla_dict[value])
-                if (min_s in region):
+                if min_s in region:
                     re = region[min_s]
                 else:
-                    re = ''
+                    re = ""
             else:
-                zi = int(row['ZIP'])
+                zi = int(row["ZIP"])
                 for i in range(-5, 6):
                     min_d = 100000.0
                     min_s = ""
-                    if (str(zi + i) in ZipOfpla_dict):
+                    if str(zi + i) in ZipOfpla_dict:
                         for value in ZipOfpla_dict[str(zi + i)]:
-                            if (haversine(lo, LocOfpla_dict[value]) < min_d):
+                            if haversine(lo, LocOfpla_dict[value]) < min_d:
                                 min_s = value
                                 min_d = haversine(lo, LocOfpla_dict[value])
-                if (min_s in region):
+                if min_s in region:
                     re = region[min_s]
                 else:
-                    re = ''
+                    re = ""
         else:
-            re = 'Eastern'
-        if row['STATE'] == 'MT' or row['STATE'] == 'TX':
-            if re == '' and row['STATE'] == 'MT':
-                code = zone_dic1[('MT', 'Eastern')]
-                re = 'Eastern'
-            elif re == '' and row['STATE'] == 'TX':
-                code = zone_dic1[('TX', 'Texas')]
-                re = 'Texas'
+            re = "Eastern"
+        if row["STATE"] == "MT" or row["STATE"] == "TX":
+            if re == "" and row["STATE"] == "MT":
+                code = zone_dic1[("MT", "Eastern")]
+                re = "Eastern"
+            elif re == "" and row["STATE"] == "TX":
+                code = zone_dic1[("TX", "Texas")]
+                re = "Texas"
             else:
-                code = zone_dic1[(row['STATE'], re)]
-        elif row['STATE'] == 'SD':
-            code = zone_dic1[('SD', 'Eastern')]
-            re = 'Eastern'
+                code = zone_dic1[(row["STATE"], re)]
+        elif row["STATE"] == "SD":
+            code = zone_dic1[("SD", "Eastern")]
+            re = "Eastern"
         else:
-            code = zone_dic1[(row['STATE'], re)]
-        sub_code[row['ID']] = code
-        re_code[row['ID']] = re
-        csv_writer.writerow([row['ID'], row['NAME'], row['LATITUDE'], row['LONGITUDE'], code, row['TYPE'], re])
+            code = zone_dic1[(row["STATE"], re)]
+        sub_code[row["ID"]] = code
+        re_code[row["ID"]] = re
+        csv_writer.writerow(
+            [
+                row["ID"],
+                row["NAME"],
+                row["LATITUDE"],
+                row["LONGITUDE"],
+                code,
+                row["TYPE"],
+                re,
+            ]
+        )
 
     sub.close()
 
@@ -408,7 +424,13 @@ def write_bus(clean_data, sub_code, re_code, kv_dict):
             sub = (row["LATITUDE"], row["LONGITUDE"])
             if sub in kv_dict:
                 csv_writer.writerow(
-                    [row["ID"], 0, sub_code[row["ID"]], kv_dict[sub], re_code[row["ID"]]]
+                    [
+                        row["ID"],
+                        0,
+                        sub_code[row["ID"]],
+                        kv_dict[sub],
+                        re_code[row["ID"]],
+                    ]
                 )
             else:
                 missingSub.append(sub)
@@ -672,7 +694,9 @@ def data_transform(e_csv, t_csv, z_csv):
     LocOfpla_dict, ZipOfpla_dict = ZipOfloc()
     region = Getregion()
 
-    re_code, sub_code = write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, region)
+    re_code, sub_code = write_sub(
+        clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, region
+    )
     write_bus(clean_data, sub_code, re_code, kv_dict)
     write_bus2sub(clean_data, re_code)
 
