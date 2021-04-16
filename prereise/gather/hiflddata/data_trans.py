@@ -392,12 +392,16 @@ def Write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, reg
         if row['STATE'] == 'MT' or row['STATE'] == 'TX':
             if re == '' and row['STATE'] == 'MT':
                 code = zone_dic1[('MT','Eastern')]
+                re = 'Eastern'
             elif re == '' and row['STATE'] == 'TX':
                 code = zone_dic1[('TX','Texas')]
+                re = 'Texas'
             else:
                 code = zone_dic1[(row['STATE'],re)]
+                re = 'Eastern'
         elif row['STATE'] == 'SD':
             code = zone_dic1[('SD','Eastern')]
+            re = 'Eastern'
         else:
             code = zone_dic1[(row['STATE'], re)]
         sub_code[row['ID']] = code
@@ -683,6 +687,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     line_types, rateas, reactances = [], [], []
     lines = lines[lines["from_bus_id"].isin(bus_id_to_kv.keys())]
     lines = lines[lines["to_bus_id"].isin(bus_id_to_kv.keys())]
+    node_id_set = set()
     for _, row in lines.iterrows():
         line_id, line_type, from_bus_id, to_bus_id, dist = (
             row["branch_id"],
@@ -692,6 +697,8 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
             row["length_in_mile"],
         )
         kv_from, kv_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
+        node_id_set.add(from_bus_id)
+        node_id_set.add(to_bus_id)
         vol = raw_lines["VOLTAGE"][line_id]
         reactance, type = compute_reactance_and_type(
             line_type, kv_from, kv_to, dist, vol
@@ -703,7 +710,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     lines["line_type"] = line_types
     lines["reactance"] = reactances
     lines["rateA"] = rateas
-    return lines
+    return lines, node_id_set
 
 
 def DataTransform(E_csv, T_csv, Z_csv):
@@ -730,8 +737,9 @@ def DataTransform(E_csv, T_csv, Z_csv):
     compute_load_dist(clean_data, KV_dict)
     clean_data.to_csv('tes.csv')
     bus_id_to_kv = get_bus_id_to_KV(clean_data, KV_dict)
-    lines = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
-    lines.to_csv('lines.csv')
+    lines, node_id_set = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
+    clean_data = clean_data[clean_data["ID"].isin(node_id_set)]
+
     LocOfpla_dict, ZipOfpla_dict = ZipOfloc()
     region = Getregion()
     
