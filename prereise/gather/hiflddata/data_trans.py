@@ -1,9 +1,11 @@
+import csv
 import json
 import os.path
 import zipfile
 from collections import defaultdict
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 from haversine import Unit, haversine
 
@@ -17,8 +19,51 @@ def get_zone(z_csv):
 
     zone = pd.read_csv(z_csv)
     # Create dictionary to store the mapping of states and codes
-    return dict(zip(zone.STATE, zone.ID))
+    zone_dic = {}
+    zone_dic1 = {}
+    for i in range(len(zone)):
+        tu = (zone["STATE"][i], zone["interconnect"][i])
+        zone_dic[zone["STATE"][i]] = zone["ID"][i]
+        zone_dic1[tu] = zone["ID"][i]
+    return zone_dic, zone_dic1
 
+West = ['WA','OR','CA','NV','AK','ID','UT','AZ','WY','CO','NM']
+Uncertain = ['MT','SD','TX']
+
+def ZipOfloc():
+    LocOfpla_dict = {}
+    ZipOfpla_dict = {}
+    csv_data = pd.read_csv("data/Power_Plants.csv")
+    for index, row in csv_data.iterrows():
+        loc = (row['LATITUDE'], row['LONGITUDE'])
+        pla = row['NAME']
+        zi = row['ZIP']
+        LocOfpla_dict[pla] = loc
+        if(zi in ZipOfpla_dict):
+            list1 = ZipOfpla_dict[zi]
+            list1.append(pla)
+            ZipOfpla_dict[zi] = list1
+        else:
+            list1 = [pla]
+            ZipOfpla_dict[zi] = list1
+    return LocOfpla_dict, ZipOfpla_dict
+
+def Getregion():
+    region = {}
+    csv_data = pd.read_csv("data/needs.csv")
+    df = np.array(csv_data)
+    needs = df.tolist()
+    for pla in needs:
+        name = (str(pla[0]).upper())
+        if (name not in region):
+            if(pla[8][0:3] == 'ERC'):
+                re = 'Texas'
+            elif(pla[8][0:3] == 'WEC'):
+                re = 'Western'
+            else:
+                re = 'Eastern'
+            region[name] = re
+    return region
 
 def clean(e_csv, zone_dic):
     """Clean data; remove substations which are outside the United States or not available.
@@ -177,7 +222,6 @@ def graph_of_net(n_dict):
         for value in n_dict[key]:
             graph.add_edge(key, value)
     return graph
-    return graph
 
 
 def get_max_island(graph):
@@ -280,60 +324,114 @@ def set_sub(clean_data):
     return sub_by_coord_dict, sub_name_dict
 
 
-def write_sub(clean_data, zone_dic):
+def write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, region):
     """Write the data to sub.csv as output
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
-    :param dict zone_dic: zone dict as returned by :func:`get_zone`
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
+    :param dict zone_dic: zone dict as returned by :func:`get_Zone`
     """
 
-    output = pd.DataFrame()
-    output["sub_id"] = clean_data["ID"]
-    output["sub_name"] = clean_data["NAME"]
-    output["lat"] = clean_data["LATITUDE"]
-    output["lon"] = clean_data["LONGITUDE"]
-    output["zone_id"] = clean_data.apply(lambda x: zone_dic[x["STATE"]], axis=1)
-    output["type"] = clean_data["TYPE"]
-    output.to_csv("output/sub.csv", index=False)
+    sub = open('output/sub.csv', 'w', newline='')
+    csv_writer = csv.writer(sub)
+    csv_writer.writerow(["sub_id", "sub_name", "lat", "lon", "zone_id", "type", "interconnect"])
+    sub_code = {}
+    re_code = {}
+    for index, row in clean_data.iterrows():
+        if (row['STATE'] in West):
+            re = 'Western'
+        elif (row['STATE'] in Uncertain):
+            lo = (row['LATITUDE'], row['LONGITUDE'])
+            if (row['ZIP'] in ZipOfpla_dict):
+                min_d = 100000.0
+                min_s = ""
+                for value in ZipOfpla_dict[row['ZIP']]:
+                    # calculate the distance between the plant and substations
+                    if (haversine(lo, LocOfpla_dict[value]) < min_d):
+                        min_s = value
+                        min_d = haversine(lo, LocOfpla_dict[value])
+                if (min_s in region):
+                    re = region[min_s]
+                else:
+                    re = ''
+            else:
+                zi = int(row['ZIP'])
+                for i in range(-5, 6):
+                    min_d = 100000.0
+                    min_s = ""
+                    if (str(zi + i) in ZipOfpla_dict):
+                        for value in ZipOfpla_dict[str(zi + i)]:
+                            if (haversine(lo, LocOfpla_dict[value]) < min_d):
+                                min_s = value
+                                min_d = haversine(lo, LocOfpla_dict[value])
+                if (min_s in region):
+                    re = region[min_s]
+                else:
+                    re = ''
+        else:
+            re = 'Eastern'
+        if row['STATE'] == 'MT' or row['STATE'] == 'TX':
+            if re == '' and row['STATE'] == 'MT':
+                code = zone_dic1[('MT', 'Eastern')]
+                re = 'Eastern'
+            elif re == '' and row['STATE'] == 'TX':
+                code = zone_dic1[('TX', 'Texas')]
+                re = 'Texas'
+            else:
+                code = zone_dic1[(row['STATE'], re)]
+        elif row['STATE'] == 'SD':
+            code = zone_dic1[('SD', 'Eastern')]
+            re = 'Eastern'
+        else:
+            code = zone_dic1[(row['STATE'], re)]
+        sub_code[row['ID']] = code
+        re_code[row['ID']] = re
+        csv_writer.writerow([row['ID'], row['NAME'], row['LATITUDE'], row['LONGITUDE'], code, row['TYPE'], re])
+
+    sub.close()
+
+    return re_code, sub_code
 
 
-def write_bus(clean_data, zone_dic, kv_dict):
+def write_bus(clean_data, sub_code, re_code, kv_dict):
     """Write the data to bus.csv as output
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
-    :param dict zone_dic: zone dict as returned by :func:`get_zone`
-    :param dict kv_dict: substation KV dict
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
+    :param dict zone_dic: zone dict as returned by :func:`get_Zone`
+    :param dict KV_dict: substation KV dict
     """
 
-    missing_sub, data = [], []
-    for _, row in clean_data.iterrows():
-        sub = (row["LATITUDE"], row["LONGITUDE"])
-        if sub in kv_dict:
-            data.append((row["ID"], 0, zone_dic[row["STATE"]], kv_dict[sub]))
-        else:
-            missing_sub.append(sub)
-
-    output = pd.DataFrame(data, columns=["bus_id", "pd", "zone_id", "base_kv"])
-    output.to_csv("output/bus.csv", index=False)
+    with open("output/bus.csv", "w", newline="") as bus:
+        csv_writer = csv.writer(bus)
+        csv_writer.writerow(["bus_id", "Pd", "zone_id", "base_kv", "interconnect"])
+        missingSub = []
+        for index, row in clean_data.iterrows():
+            sub = (row["LATITUDE"], row["LONGITUDE"])
+            if sub in kv_dict:
+                csv_writer.writerow(
+                    [row["ID"], 0, sub_code[row["ID"]], kv_dict[sub], re_code[row["ID"]]]
+                )
+            else:
+                missingSub.append(sub)
 
     print(
         "INFO: ",
-        len(missing_sub),
+        len(missingSub),
         " substations excluded from the network. Some examples:",
     )
-    print(missing_sub[:20])
+    print(missingSub[:20])
 
 
-def write_bus2sub(clean_data):
+def write_bus2sub(clean_data, re_code):
     """Write the data to bus2sub.csv as output
 
-    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`clean`
+    :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
     """
 
-    output = pd.DataFrame()
-    output["bus_id"] = clean_data["ID"]
-    output["sub_id"] = clean_data["ID"]
-    output.to_csv("output/bus2sub.csv", index=False)
+    with open("output/bus2sub.csv", "w", newline="") as bus2sub:
+        csv_writer = csv.writer(bus2sub)
+        csv_writer.writerow(["Bus_id", "sub_id", "interconnect"])
+        for index, row in clean_data.iterrows():
+            csv_writer.writerow([row["ID"], row["ID"], re_code[row["ID"]]])
 
 
 def write_branch(lines):
@@ -551,7 +649,7 @@ def data_transform(e_csv, t_csv, z_csv):
     :param str z_csv: path of the zone csv file
     """
 
-    zone_dic = get_zone(z_csv)
+    zone_dic, zone_dic1 = get_zone(z_csv)
 
     clean_data = clean(e_csv, zone_dic)
 
@@ -567,9 +665,13 @@ def data_transform(e_csv, t_csv, z_csv):
     bus_id_to_kv = get_bus_id_to_kv(clean_data, kv_dict)
     lines = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
 
-    write_sub(clean_data, zone_dic)
-    write_bus(clean_data, zone_dic, kv_dict)
-    write_bus2sub(clean_data)
+    LocOfpla_dict, ZipOfpla_dict = ZipOfloc()
+    region = Getregion()
+
+    re_code, sub_code = write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, region)
+    write_bus(clean_data, sub_code, re_code, kv_dict)
+    write_bus2sub(clean_data, re_code)
+
     write_branch(lines)
 
 
