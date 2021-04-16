@@ -30,7 +30,7 @@ def get_Zone(Z_csv):
     zone_dic = {}
     zone_dic1 = {}
     for i in range(len(zone)):
-        tu = (zone["STATE"][i], zone["REGION"][i])
+        tu = (zone["STATE"][i], zone["interconnect"][i])
         zone_dic[zone["STATE"][i]] = zone["ID"][i]
         zone_dic1[tu] = zone["ID"][i]
     return zone_dic, zone_dic1
@@ -497,10 +497,10 @@ def Write_branch(lines):
                 'Pmax'    
             ])
     
-    for row in lines:
-        if row[1] == 'DC':
-            csv_writer2.writerow([row[0],row[2],row[4],1,-200,200])
-        elif row[1] == 'Phase Shifter':
+    for _, row in lines.iterrows():
+        if row['line_type'] == 'DC':
+            csv_writer2.writerow([row["branch_id"],row["from_bus_id"],row["to_bus_id"],1,-200,200])
+        elif row['line_type'] == 'Phase Shifter':
             csv_writer1.writerow(row)
         else:
             csv_writer.writerow(row)
@@ -731,6 +731,7 @@ def DataTransform(E_csv, T_csv, Z_csv):
     clean_data.to_csv('tes.csv')
     bus_id_to_kv = get_bus_id_to_KV(clean_data, KV_dict)
     lines = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
+    lines.to_csv('lines.csv')
     LocOfpla_dict, ZipOfpla_dict = ZipOfloc()
     region = Getregion()
     

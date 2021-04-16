@@ -1,0 +1,77 @@
+zone_id,zone_name,state,interconnect,time_zone,abbr
+1,Maine,Maine,Eastern,ETC/GMT+5,ME
+2,New Hampshire,New Hampshire,Eastern,ETC/GMT+5,NH
+3,Vermont,Vermont,Eastern,ETC/GMT+5,VT
+4,Massachusetts,Massachusetts,Eastern,ETC/GMT+5,MA
+5,Rhode Island,Rhode Island,Eastern,ETC/GMT+5,RI
+6,Connecticut,Connecticut,Eastern,ETC/GMT+5,CT
+7,New York City,New York,Eastern,ETC/GMT+5,NY
+8,Upstate New York,New York,Eastern,ETC/GMT+5,NY
+9,New Jersey,New Jersey,Eastern,ETC/GMT+5,NJ
+10,Pennsylvania Eastern,Pennsylvania,Eastern,ETC/GMT+5,PA
+11,Pennsylvania Western,Pennsylvania,Eastern,ETC/GMT+5,PA
+12,Delaware,Delaware,Eastern,ETC/GMT+5,DE
+13,Maryland,Maryland,Eastern,ETC/GMT+5,MD
+14,Virginia Mountains,Virginia,Eastern,ETC/GMT+5,VA
+15,Virginia Tidewater,Virginia,Eastern,ETC/GMT+5,VA
+16,North Carolina,North Carolina,Eastern,ETC/GMT+5,NC
+17,Western North Carolina,North Carolina,Eastern,ETC/GMT+5,NC
+18,South Carolina,South Carolina,Eastern,ETC/GMT+5,SC
+19,Georgia North,Georgia,Eastern,ETC/GMT+5,GA
+20,Georgia South,Georgia,Eastern,ETC/GMT+5,GA
+21,Florida Panhandle,Florida,Eastern,ETC/GMT+6,FL
+22,Florida North,Florida,Eastern,ETC/GMT+5,FL
+23,Florida South,Florida,Eastern,ETC/GMT+5,FL
+24,Alabama,Alabama,Eastern,ETC/GMT+6,AL
+25,Mississippi,Mississippi,Eastern,ETC/GMT+6,MS
+26,Tennessee,Tennessee,Eastern,ETC/GMT+6,TN
+27,Kentucky,Kentucky,Eastern,ETC/GMT+5,KY
+28,West Virginia,West Virginia,Eastern,ETC/GMT+5,WV
+29,Ohio River,Ohio,Eastern,ETC/GMT+5,OH
+30,Ohio Lake Erie,Ohio,Eastern,ETC/GMT+5,OH
+31,Michigan Northern,Michigan,Eastern,ETC/GMT+5,MI
+32,Michigan Southern,Michigan,Eastern,ETC/GMT+5,MI
+33,Indiana,Indiana,Eastern,ETC/GMT+5,IN
+34,Chicago North Illinois,Illinois,Eastern,ETC/GMT+6,IL
+35,Illinois Downstate,Illinois,Eastern,ETC/GMT+6,IL
+36,Wisconsin,Wisconsin,Eastern,ETC/GMT+6,WI
+37,Minnesota Northern,Minnesota,Eastern,ETC/GMT+6,MN
+38,Minnesota Southern,Minnesota,Eastern,ETC/GMT+6,MN
+39,Iowa,Iowa,Eastern,ETC/GMT+6,IA
+40,Missouri East,Missouri,Eastern,ETC/GMT+6,MO
+41,Missouri West,Missouri,Eastern,ETC/GMT+6,MO
+42,Arkansas,Arkansas,Eastern,ETC/GMT+6,AR
+43,Louisiana,Louisiana,Eastern,ETC/GMT+6,LA
+44,East Texas,Texas,Eastern,ETC/GMT+6,TX
+45,Texas Panhandle,Texas,Eastern,ETC/GMT+6,TX
+46,New Mexico Eastern,New Mexico,Eastern,ETC/GMT+7,NM
+47,Oklahoma,Oklahoma,Eastern,ETC/GMT+6,OK
+48,Kansas,Kansas,Eastern,ETC/GMT+6,KS
+49,Nebraska,Nebraska,Eastern,ETC/GMT+6,NE
+50,South Dakota,South Dakota,Eastern,ETC/GMT+6,SD
+51,North Dakota,North Dakota,Eastern,ETC/GMT+6,ND
+52,Montana Eastern,Montana,Eastern,ETC/GMT+7,MT
+201,Washington,Washington,Western,ETC/GMT+8,WA
+202,Oregon,Oregon,Western,ETC/GMT+8,OR
+203,Northern California,California,Western,ETC/GMT+8,CA
+204,Bay Area,California,Western,ETC/GMT+8,CA
+205,Central California,California,Western,ETC/GMT+8,CA
+206,Southwest California,California,Western,ETC/GMT+8,CA
+207,Southeast California,California,Western,ETC/GMT+8,CA
+208,Nevada,Nevada,Western,ETC/GMT+8,NV
+209,Arizona,Arizona,Western,ETC/GMT+7,AZ
+210,Utah,Utah,Western,ETC/GMT+7,UT
+211,New Mexico Western,New Mexico,Western,ETC/GMT+7,NM
+212,Colorado,Colorado,Western,ETC/GMT+7,CO
+213,Wyoming,Wyoming,Western,ETC/GMT+7,WY
+214,Idaho,Idaho,Western,ETC/GMT+7,ID
+215,Montana Western,Montana,Western,ETC/GMT+7,MT
+216,El Paso,Texas,Western,ETC/GMT+7,TX
+301,Far West,Texas,Texas,ETC/GMT+6,TX
+302,North,Texas,Texas,ETC/GMT+6,TX
+303,West,Texas,Texas,ETC/GMT+6,TX
+304,South,Texas,Texas,ETC/GMT+6,TX
+305,North Central,Texas,Texas,ETC/GMT+6,TX
+306,South Central,Texas,Texas,ETC/GMT+6,TX
+307,Coast,Texas,Texas,ETC/GMT+6,TX
+308,East,Texas,Texas,ETC/GMT+6,TX
