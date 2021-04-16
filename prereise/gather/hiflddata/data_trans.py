@@ -618,6 +618,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     line_types, rateas, reactances = [], [], []
     lines = lines[lines["from_bus_id"].isin(bus_id_to_kv.keys())]
     lines = lines[lines["to_bus_id"].isin(bus_id_to_kv.keys())]
+    node_id_set = set()
     for _, row in lines.iterrows():
         line_id, line_type, from_bus_id, to_bus_id, dist = (
             row["branch_id"],
@@ -627,6 +628,8 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
             row["length_in_mile"],
         )
         kv_from, kv_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
+        node_id_set.add(from_bus_id)
+        node_id_set.add(to_bus_id)
         vol = raw_lines["VOLTAGE"][line_id]
         reactance, type = compute_reactance_and_type(
             line_type, kv_from, kv_to, dist, vol
@@ -638,7 +641,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
     lines["line_type"] = line_types
     lines["reactance"] = reactances
     lines["rateA"] = rateas
-    return lines
+    return lines, node_id_set
 
 
 def data_transform(e_csv, t_csv, z_csv):
@@ -663,7 +666,8 @@ def data_transform(e_csv, t_csv, z_csv):
     kv_dict, to_cal = init_kv(clean_data)
     cal_kv(n_dict, graph, kv_dict, to_cal)
     bus_id_to_kv = get_bus_id_to_kv(clean_data, kv_dict)
-    lines = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
+    lines, node_id_set = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)
+    clean_data = clean_data[clean_data["ID"].isin(node_id_set)]
 
     LocOfpla_dict, ZipOfpla_dict = ZipOfloc()
     region = Getregion()
