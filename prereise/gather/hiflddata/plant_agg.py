@@ -1,5 +1,5 @@
 import csv
-
+import math
 import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
@@ -18,7 +18,7 @@ def get_Zone(Z_csv):
     # Create dictionary to store the mapping of states and codes
     zone_dic={}
     for i in range(len(zone)):
-        zone_dic[zone['STATE'][i]]=zone['ID'][i]
+        zone_dic[zone["state"][i]] = zone["zone_id"][i]
     return zone_dic
 
 
@@ -146,13 +146,48 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
     """
 
     plant_dict = {}
-    sto = ['HYDROELECTRIC PUMPED STORAGE', 'BATTERIES', 'NATURAL GAS WITH COMPRESSED AIR STORAGE', 'SOLAR THERMAL WITH ENERGY STORAGE','FLYWHEELS']
-
+    storage = open('output/storage.csv','w',newline="")
+    csv_writer = csv.writer(storage)
+    csv_writer.writerow(
+            [
+                'Storage_name',
+                'Type',
+                'SOC_max',
+                'SOC_min',
+                'Pchr_max',
+                'Pdis_max',
+                'Charge Efficiency',
+                'Discharge Efficiency',
+                'Loss Factor',
+                'Terminal Max',
+                'Terminal Min',
+                'SOC_intial'
+            ])
+    sto = ['BATTERIES', 'NATURAL GAS WITH COMPRESSED AIR STORAGE','FLYWHEELS']
+    sto_dict = {
+                'BATTERIES' :0.95,
+                'NATURAL GAS WITH COMPRESSED AIR STORAGE':0.50,
+                'FLYWHEELS':0.90
+                }
+                
     for index, row in clean_data.iterrows():
         tu = (row["PLANT"], row["PRIM_FUEL"], row['PRIM_MVR'])
         u = (row['PLANT'],row['PRIM_FUEL'])
         r = (row['PLANT'],row['NAME'])
         if(row['TYPE'] in sto):
+            SOC_max = 1
+            SOC_min = 0
+            Pchr_max = min(row["WINTER_CAP"],row["SUMMER_CAP"])
+            Pdis_max = min(row["WINTER_CAP"],row["SUMMER_CAP"])
+            ChargeEfficiency = math.sqrt(sto_dict[row['TYPE']])
+            DischargeEfficiency = math.sqrt(sto_dict[row['TYPE']])
+            LossFactor = 0.99
+            TerminalMax = 0.80
+            TerminalMin = 0.20
+            SOC_intial = 0.50
+            
+
+            csv_writer.writerow([r[0]+'-'+r[1], row['TYPE'],SOC_max, SOC_min, Pchr_max, Pdis_max, ChargeEfficiency, DischargeEfficiency, LossFactor, TerminalMax, TerminalMin, SOC_intial])
             continue
         if tu not in plant_dict:
             if u in Pmin and row["PLANT"] in loc_of_plant:
@@ -217,6 +252,7 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                 list1[4] = list1[4] + points[r]
                 list1[5] = list1[5] + 1
             plant_dict[tu] = list1
+    storage.close()
     return plant_dict
 
 
@@ -228,6 +264,7 @@ def write_plant(plant_dict):
 
     
     type_d = {'CONVENTIONAL HYDROELECTRIC' : 'hydro',
+              'HYDROELECTRIC PUMPED STORAGE':'hydro', 
               'NATURAL GAS STEAM TURBINE' : 'ng',
               'CONVENTIONAL STEAM COAL' : 'coal',
               'NATURAL GAS FIRED COMBINED CYCLE' : 'ng',
@@ -248,7 +285,8 @@ def write_plant(plant_dict):
               'OTHER WASTE BIOMASS' : 'other',
               'OTHER NATURAL GAS' : 'ng',
               'OFFSHORE WIND TURBINE' :'wind_offshore',
-              'SOLAR THERMAL WITHOUT ENERGY STORAGE':'solar'
+              'SOLAR THERMAL WITHOUT ENERGY STORAGE':'solar',
+              'SOLAR THERMAL WITH ENERGY STORAGE':'solar'
               }
 
     with open("output/plant.csv", "w", newline="") as plant:
@@ -272,6 +310,10 @@ def write_plant(plant_dict):
                     type_d[list1[7]]
                 ]
             )
+    final_bus = set(pd.read_csv("output/bus.csv")["bus_id"])
+    final_plant = pd.read_csv("output/plant.csv")
+    final_plant = final_plant[final_plant["bus_id"].isin(final_bus)]
+    final_plant.to_csv("output/plant.csv", index=False)
 
 
 def write_gen(plant_dict, type_dict, curve):
@@ -281,6 +323,7 @@ def write_gen(plant_dict, type_dict, curve):
     :param dict type_dict:  a dict of generator types
     """
     type_d = {'CONVENTIONAL HYDROELECTRIC' : 'hydro',
+              'HYDROELECTRIC PUMPED STORAGE':'hydro', 
               'NATURAL GAS STEAM TURBINE' : 'ng',
               'CONVENTIONAL STEAM COAL' : 'coal',
               'NATURAL GAS FIRED COMBINED CYCLE' : 'ng',
@@ -301,24 +344,41 @@ def write_gen(plant_dict, type_dict, curve):
               'OTHER WASTE BIOMASS' : 'other',
               'OTHER NATURAL GAS' : 'ng',
               'OFFSHORE WIND TURBINE' :'wind_offshore',
-              'SOLAR THERMAL WITHOUT ENERGY STORAGE':'solar'
+              'SOLAR THERMAL WITHOUT ENERGY STORAGE':'solar',
+              'SOLAR THERMAL WITH ENERGY STORAGE':'solar'
               }
 
 
     with open("output/gencost.csv", "w", newline="") as gencost:
         csv_writer = csv.writer(gencost)
-        csv_writer.writerow(["plant_id", "type", "n", "c2", "c1", "c0"])
+        csv_writer.writerow(["plant_id", "type", "n", "c2", "c1", "c0", "interconnect"])
         for key in plant_dict:
             c1 = plant_dict[key][4]/plant_dict[key][5]
             pid = key[0]+'-'+key[1]+'-'+key[2]
             if(pid in curve):
                 csv_writer.writerow(
-                    [key[0] + '-' + key[1] + '-'+key[2], type_d[plant_dict[key][7]], 1, curve[pid][0], curve[pid][1],curve[pid][2]]
-                    )
+                    [
+                        key[0] + "-" + key[1] + "-" + key[2],
+                        type_d[plant_dict[key][7]],
+                        1,
+                        curve[pid][0],
+                        curve[pid][1],
+                        curve[pid][2],
+                        plant_dict[key][6]
+                    ]
+                )
             else:
                 print(pid)
                 csv_writer.writerow(
-                    [key[0]+ '-'+ key[1] + '-'+key[2], type_d[plant_dict[key][7]], 1, '', c1, '']
+                    [
+                        key[0]+ '-'+ key[1] + '-'+key[2],
+                        type_d[plant_dict[key][7]],
+                        1,
+                        '',
+                        c1,
+                        '',
+                        plant_dict[key][6]
+                    ]
                     )
 
 
