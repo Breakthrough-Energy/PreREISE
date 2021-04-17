@@ -456,13 +456,69 @@ def write_bus2sub(clean_data, re_code):
             csv_writer.writerow([row["ID"], row["ID"], re_code[row["ID"]]])
 
 
-def write_branch(lines):
+def write_branch(lines, re_code):
     """Write the data to branch.csv as output
 
     :param list lines:  a list of lines as returned by :func:`neighbors`
     """
 
-    lines.to_csv("output/branch.csv", index=False)
+    with open('output/branch.csv', 'w', newline="") as branch, \
+         open('output/Phase Shifter.csv', 'w', newline="") as phase, \
+         open('output/dcline.csv', 'w', newline="") as dc:
+
+        csv_writer = csv.writer(branch)
+        csv_writer1 = csv.writer(phase)
+        csv_writer2 = csv.writer(dc)
+        csv_writer.writerow(
+            [
+                "branch_id",
+                "line_type",
+                "from_bus_id",
+                "from_bus_name",
+                "to_bus_id",
+                "to_bus_name",
+                "length_in_mile",
+                "reactance",
+                "rateA",
+                "interconnect"
+            ])
+        csv_writer1.writerow(
+            [
+                "branch_id",
+                "line_type",
+                "from_bus_id",
+                "from_bus_name",
+                "to_bus_id",
+                "to_bus_name",
+                "length_in_mile",
+                "reactance",
+                "rateA",
+                "interconnect"
+            ])
+        csv_writer2.writerow(
+            [
+                "dcline_id",
+                "from_bus_id",
+                "to_bus_id",
+                'status',
+                'Pmin',
+                'Pmax',
+                "from_interconnect",
+                "to_interconnect"
+            ])
+
+        for _, row in lines.iterrows():
+            if row['line_type'] == 'DC':
+                csv_writer2.writerow([row["branch_id"], row["from_bus_id"], row["to_bus_id"],
+                                      1, -200, 200, re_code.get(row["from_bus_id"]), re_code.get(row["to_bus_id"])])
+            elif row['line_type'] == 'Phase Shifter':
+                csv_writer1.writerow([row["branch_id"], row["line_type"], row["from_bus_id"], row["from_bus_name"],
+                                      row["to_bus_id"], row["to_bus_name"], row["length_in_mile"], row["reactance"],
+                                      row["rateA"], re_code.get(row["from_bus_id"])])
+            else:
+                csv_writer.writerow([row["branch_id"], row["line_type"], row["from_bus_id"], row["from_bus_name"],
+                                      row["to_bus_id"], row["to_bus_name"], row["length_in_mile"], row["reactance"],
+                                      row["rateA"], re_code.get(row["from_bus_id"])])
 
 
 # Reactance Calculate 1
@@ -700,8 +756,7 @@ def data_transform(e_csv, t_csv, z_csv):
     write_bus(clean_data, sub_code, re_code, kv_dict)
     write_bus2sub(clean_data, re_code)
 
-    lines["interconnect"] = lines.apply(lambda row: re_code.get(row["from_bus_id"]), axis=1)
-    write_branch(lines)
+    write_branch(lines, re_code)
 
 
 if __name__ == "__main__":
