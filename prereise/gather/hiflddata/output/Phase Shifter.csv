@@ -1,4 +1,4 @@
-branch_id,line_type,from_bus_id,from_bus_name,to_bus_id,to_bus_name,length_in_mile,reactance,rateA
+branch_id,line_type,from_bus_id,from_bus_name,to_bus_id,to_bus_name,length_in_mile,reactance,rateA,interconnect
 212151,Phase Shifter,200726,EPHRATA,209803,TAP209803,0.002623098125972312,0.00029011465273253773,0.0,Western
 212204,Phase Shifter,205331,TAP205331,205332,COYOTE POINT,0.006665928555670698,0.001528497417815291,0.0,Western
 212212,Phase Shifter,205691,TAP205691,205692,LAGOON,0.009134910091698832,0.0010103210561418908,0.0,Western

@@ -18,7 +18,7 @@ def get_Zone(Z_csv):
     # Create dictionary to store the mapping of states and codes
     zone_dic={}
     for i in range(len(zone)):
-        zone_dic[zone["state"][i]] = zone["zone_id"][i]
+        zone_dic[zone["zone_name"][i]] = zone["zone_id"][i]
     return zone_dic
 
 
@@ -292,12 +292,14 @@ def write_plant(plant_dict):
     with open("output/plant.csv", "w", newline="") as plant:
         csv_writer = csv.writer(plant)
         csv_writer.writerow(
-            ["plant_id", "bus_id", "Pg", "status", "Pmax", "Pmin", "ramp_30", "prim_fuel", "interconnect", "type"]
+            ["plant_id", "plant_name", "bus_id", "Pg", "status", "Pmax", "Pmin", "ramp_30", "prim_fuel", "interconnect", "type"]
         )
+        plant_id = 0
         for key in plant_dict:
             list1 = plant_dict[key]
             csv_writer.writerow(
                 [
+                    plant_id,
                     key[0] + "-" + key[1],
                     list1[0],
                     list1[3],
@@ -310,6 +312,7 @@ def write_plant(plant_dict):
                     type_d[list1[7]]
                 ]
             )
+            plant_id = plant_id + 1
     final_bus = set(pd.read_csv("output/bus.csv")["bus_id"])
     final_plant = pd.read_csv("output/plant.csv")
     final_plant = final_plant[final_plant["bus_id"].isin(final_bus)]
@@ -350,14 +353,16 @@ def write_gen(plant_dict, type_dict, curve):
 
 
     with open("output/gencost.csv", "w", newline="") as gencost:
+        plant_id = 0
         csv_writer = csv.writer(gencost)
-        csv_writer.writerow(["plant_id", "type", "n", "c2", "c1", "c0", "interconnect"])
+        csv_writer.writerow(["plant_id","plant_name", "type", "n", "c2", "c1", "c0", "interconnect"])
         for key in plant_dict:
             c1 = plant_dict[key][4]/plant_dict[key][5]
             pid = key[0]+'-'+key[1]+'-'+key[2]
             if(pid in curve):
                 csv_writer.writerow(
                     [
+                        plant_id,
                         key[0] + "-" + key[1] + "-" + key[2],
                         type_d[plant_dict[key][7]],
                         1,
@@ -367,10 +372,12 @@ def write_gen(plant_dict, type_dict, curve):
                         plant_dict[key][6]
                     ]
                 )
+                
             else:
                 print(pid)
                 csv_writer.writerow(
                     [
+                        plant_id,
                         key[0]+ '-'+ key[1] + '-'+key[2],
                         type_d[plant_dict[key][7]],
                         1,
@@ -380,6 +387,7 @@ def write_gen(plant_dict, type_dict, curve):
                         plant_dict[key][6]
                     ]
                     )
+            plant_id = plant_id + 1
 
 
 def Plant(E_csv, U_csv, G2019_csv, Z_csv):

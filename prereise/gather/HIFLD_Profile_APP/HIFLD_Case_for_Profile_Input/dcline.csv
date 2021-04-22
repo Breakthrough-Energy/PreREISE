@@ -1,0 +1,6 @@
+dcline_id,from_bus_id,to_bus_id,status,Pmin,Pmax,from_interconnect,to_interconnect
+308464,201321,309154,1,-200,200,Eastern,Western
+310053,306987,309801,1,-200,200,Eastern,Western
+108354,135642,133416,1,-200,200,Eastern,Western
+131914,133682,136723,1,-200,200,Eastern,Western
+150123,134143,143552,1,-200,200,Eastern,Western

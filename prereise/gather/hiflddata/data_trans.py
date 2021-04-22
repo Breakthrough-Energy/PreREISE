@@ -30,8 +30,8 @@ def get_Zone(Z_csv):
     zone_dic = {}
     zone_dic1 = {}
     for i in range(len(zone)):
-        tu = (zone["state"][i], zone["interconnect"][i])
-        zone_dic[zone["state"][i]] = zone["zone_id"][i]
+        tu = (zone["zone_name"][i], zone["interconnect"][i])
+        zone_dic[zone["zone_name"][i]] = zone["zone_id"][i]
         zone_dic1[tu] = zone["zone_id"][i]
     return zone_dic, zone_dic1
 
@@ -478,6 +478,7 @@ def Write_branch(lines):
                 "length_in_mile",
                 "reactance",
                 "rateA",
+                "interconnect"
             ])
     csv_writer1.writerow(
             [
@@ -490,6 +491,7 @@ def Write_branch(lines):
                 "length_in_mile",
                 "reactance",
                 "rateA",
+                "interconnect"
             ])
     csv_writer2.writerow(
             [
@@ -498,12 +500,14 @@ def Write_branch(lines):
                 "to_bus_id",
                 'status',
                 'Pmin',
-                'Pmax'    
+                'Pmax',
+                'from_interconnect',
+                'to_interconnect'
             ])
     
     for _, row in lines.iterrows():
         if row['line_type'] == 'DC':
-            csv_writer2.writerow([row["branch_id"],row["from_bus_id"],row["to_bus_id"],1,-200,200])
+            csv_writer2.writerow([row["branch_id"],row["from_bus_id"],row["to_bus_id"],1,-200,200,"Eastern","Western"])
         elif row['line_type'] == 'Phase Shifter':
             csv_writer1.writerow(row)
         else:
