@@ -470,7 +470,7 @@ def Write_branch(lines):
     csv_writer.writerow(
             [
                 "branch_id",
-                "line_type",
+                "branch_device_type",
                 "from_bus_id",
                 "from_bus_name",
                 "to_bus_id",
@@ -483,7 +483,7 @@ def Write_branch(lines):
     csv_writer1.writerow(
             [
                 "branch_id",
-                "line_type",
+                "branch_device_type",
                 "from_bus_id",
                 "from_bus_name",
                 "to_bus_id",
@@ -504,10 +504,15 @@ def Write_branch(lines):
                 'from_interconnect',
                 'to_interconnect'
             ])
-    
+    bus_pd = pd.read_csv('output/bus.csv')
+    bus_dict = {}
+    for bus in bus_pd.iloc():
+        bus_dict[bus['bus_id']] = bus['interconnect']
     for _, row in lines.iterrows():
         if row['line_type'] == 'DC':
-            csv_writer2.writerow([row["branch_id"],row["from_bus_id"],row["to_bus_id"],1,-200,200,"Eastern","Western"])
+            from_connect = bus_dict[row["from_bus_id"]]
+            to_connect = bus_dict[row["to_bus_id"]]
+            csv_writer2.writerow([row["branch_id"],row["from_bus_id"],row["to_bus_id"],1,-200,200,from_connect,to_connect])
         elif row['line_type'] == 'Phase Shifter':
             csv_writer1.writerow(row)
         else:

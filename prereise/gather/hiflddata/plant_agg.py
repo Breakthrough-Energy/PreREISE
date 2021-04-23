@@ -292,7 +292,7 @@ def write_plant(plant_dict):
     with open("output/plant.csv", "w", newline="") as plant:
         csv_writer = csv.writer(plant)
         csv_writer.writerow(
-            ["plant_id", "plant_name", "bus_id", "Pg", "status", "Pmax", "Pmin", "ramp_30", "prim_fuel", "interconnect", "type"]
+            ["plant_id", "plant_name", "bus_id", "Pg", "status", "Pmax", "Pmin", "ramp_30", "prim_fuel", "interconnect", "type", "GenFuelCost","GenIOB","GenIOC","GenIOD"]
         )
         plant_id = 0
         for key in plant_dict:
@@ -309,7 +309,11 @@ def write_plant(plant_dict):
                     list1[3],
                     key[1],
                     list1[6],
-                    type_d[list1[7]]
+                    type_d[list1[7]],
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
                 ]
             )
             plant_id = plant_id + 1

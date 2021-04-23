@@ -18,7 +18,8 @@ def mkdir(path):
 
 def wind_plant_cross_validation():
     hifldplants = pd.read_csv("HIFLD_Case_for_Profile_Input/plant.csv")
-    hifldplants = hifldplants[hifldplants['type'] == 'wind']
+    hifldplants = hifldplants[(hifldplants['type'] == 'wind') | (hifldplants['type'] == 'wind_offshore')]
+    #print(hifldplants['Pmax'])
     id_map_pmax = {}
     
     raw_wind = pd.read_csv('output/PreReise_HIFLD_Profiles_Raw/wind.csv')
@@ -39,8 +40,9 @@ def wind_plant_cross_validation():
     raw_plantname = [column for column in raw_wind]
     plant_not_exist_in_hifld = [i for i in raw_plantname if i not in wind_plants]
     raw_wind.drop(plant_not_exist_in_hifld,axis=1)
-
-    pmax_list = hifldplants['Pmax'].drop_duplicates().to_list().sort()
+    #print(hifldplants['Pmax'].drop_duplicates().to_list().sort())
+    pmax_list = sorted(hifldplants['Pmax'].drop_duplicates().to_list())
+    #print(pmax_list)
     for plant in hifldplants.iloc:
         if (plant['Pmax'] not in id_map_pmax) and (str(plant['plant_id']) in raw_plantname):
             id_map_pmax[plant['Pmax']] = str(plant['plant_id'])

@@ -41,4 +41,4 @@ Step4:Get demand data:
 2.Run command "python demand_trans.py". The output will be in folder "demand_output".
 
 3(optional. If need Eastern\Western\Texas data). 
-Run command "python src\tamu_data_devide.py". The output will be in folder 
+Run command "python demand_devide.py". The output will be in folder 
