@@ -33,26 +33,26 @@ def get_Zone():
         reader = csv.reader(f)
         result = list(reader)
         for line in result:
-            if line[10] == 'hydro':
-                if line[9] == 'Eastern':
+            if line[26] == 'hydro':
+                if line[27] == 'Eastern':
                     hydro_East.append(str(line[0]))
-                elif line[9] == 'Western':
+                elif line[27] == 'Western':
                     hydro_West.append(str(line[0]))
-                elif line[9] == 'Texas':
+                elif line[27] == 'Texas':
                     hydro_Texas.append(str(line[0]))
-            elif line[10] == 'solar':
-                if line[9] == 'Eastern':
+            elif line[26] == 'solar':
+                if line[27] == 'Eastern':
                     solar_East.append(str(line[0]))
-                elif line[9] == 'Western':
+                elif line[27] == 'Western':
                     solar_West.append(str(line[0]))
-                elif line[9] == 'Texas':
+                elif line[27] == 'Texas':
                     solar_Texas.append(str(line[0]))
-            elif line[10] == 'wind' or line[10] == 'wind_offshore':
-                if line[9] == 'Eastern':
+            elif line[26] == 'wind' or line[26] == 'wind_offshore':
+                if line[27] == 'Eastern':
                     wind_East.append(str(line[0]))
-                elif line[9] == 'Western':
+                elif line[27] == 'Western':
                     wind_West.append(str(line[0]))
-                elif line[9] == 'Texas':
+                elif line[27] == 'Texas':
                     wind_Texas.append(str(line[0]))
 
     return wind_West ,wind_East,wind_Texas ,solar_West ,solar_East ,solar_Texas,hydro_West ,hydro_East ,hydro_Texas 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     mkdir(mkpath)
     wind_West ,wind_East,wind_Texas ,solar_West ,solar_East ,solar_Texas,hydro_West ,hydro_East ,hydro_Texas = get_Zone()
     devide_Wind(wind_West, wind_East, wind_Texas, east = True, west = True, texas = True)
-    devide_Solar(solar_West, solar_East, solar_Texas, east = True, west = True, texas = True)
+    #devide_Solar(solar_West, solar_East, solar_Texas, east = False, west = False, texas = False)
     devide_Hydro(hydro_West, hydro_East, hydro_Texas, east = True, west = True, texas = True)
 
 

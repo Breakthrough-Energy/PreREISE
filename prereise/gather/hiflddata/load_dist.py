@@ -6,7 +6,6 @@ load_consumption_per_person = 2.01 / 1000
 
 def compute_load_dist(substation_data, KV_dict):
     """Compute the Pd for each bus based on zip code and population information
-
     :param pandas.DataFrame substation_data: substation dataframe as returned by :func:`Clean`
     """
     # TODO: first distribute load at zip code level for existing zip codes in HIFLD model
@@ -62,8 +61,6 @@ def compute_load_dist(substation_data, KV_dict):
     load_dict = dict(
         zip(us_county_population["COUNTYFIPS"], us_county_population["load"])
     )
-    print(load_dict)
-    print(total_count_dict)
 
     # if count is less than 10, distribute the load to the substation by load/count
 
@@ -82,10 +79,10 @@ def compute_substation_load(row, total_count_dict, low_kv_count_dict, load_dict)
     if row["base_KV"] < 0:
         return 0
     county_fips = row["COUNTYFIPS"]
-    if load_dict.get(str(county_fips)) is None:
+    if load_dict.get(county_fips) is None:
         return 0
 
     if total_count_dict.get(county_fips) < 10:
-        return load_dict.get(str(county_fips)) / total_count_dict.get(county_fips)
+        return load_dict.get(county_fips) / total_count_dict.get(county_fips)
     elif row["base_KV"] <= 115:
-        return load_dict.get(str(county_fips)) / low_kv_count_dict.get(county_fips)
+        return load_dict.get(county_fips) / low_kv_count_dict.get(county_fips)

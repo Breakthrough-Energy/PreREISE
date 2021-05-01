@@ -350,16 +350,51 @@ def Write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, reg
     :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
     :param dict zone_dic: zone dict as returned by :func:`get_Zone`
     """
+    tx_west = ['EL PASO','HUDSPETH']
+    tx_east = ['BOWIE','MORRIS','CASS','CAMP','UPSHUR','GREGG','MARION','HARRISON','PANOLA','SHELBY','SAN AUGUSTINE','SABINE','JASPER','NEWTON',
+               'ORANGE','JEFFERSON','LIBERTY','HARDIN','TYLER','POLK','TRINITY','WALKER','SAN JACINTO','DALLAM','SHERMAN','HANSFORD','OCHLTREE'
+               'LIPSCOMB','HARTLEY','MOORE','HUTCHINSON','HEMPHILL','RANDALL','DONLEY','PARMER','BAILEY','LAMB','HALE','COCHRAN','HOCKLEY','LUBBOCK',
+               'YOAKUM','TERRY','LYNN','GAINES']
 
+    sd_west = ['LAWRENCE', 'BUTTE', 'FALL RIVER']
+    nm_east = ['CURRY', 'LEA', 'QUAY', 'ROOSEVELT', 'UNION']
+    mt_east = ['CARTER','CUSTER','ROSEBUD','PRAIRIE','POWDER RIVER','DANIELS','MCCONE','DAWSON','RICHLAND','FALLON',
+               'GARFIELD','ROOSEVELT','PHILLIPS','SHERIDAN','VALLEY','WIBAUX']
     sub = open('output/sub.csv','w',newline='')
     csv_writer = csv.writer(sub)
-    csv_writer.writerow(["sub_id","sub_name","lat","lon","zone_id","type","interconnect"])
+    csv_writer.writerow(["sub_id","name","zip","lat","lon","interconnect","zone_id","type","state"])
     sub_code = {}
     re_code = {}
     for index, row in clean_data.iterrows():
         if(row['STATE'] in West):
             re = 'Western'
         elif(row['STATE'] in Uncertain):
+            if row['STATE'] == 'TX':
+                if row['COUNTY'] in tx_west:
+                    re = 'Western'
+                elif row['COUNTY'] in tx_east:
+                    re = 'Eastern'
+                else:
+                    re = 'Texas'
+
+            elif row['STATE'] == 'SD':
+                if row['COUNTY'] in sd_west:
+                    re = 'Western'
+                else:
+                    re = 'Eastern'
+            elif row['STATE'] == 'NM':
+                if row['COUNTY'] in nm_east:
+                    re = 'Eastern'
+                else:
+                    #code = zone_dic1[(row['STATE'],re)]
+                    re = 'Western'
+            elif row['STATE'] == 'MT':
+                if row['COUNTY'] in mt_east:
+                    re = 'Eastern'
+                else:
+                    #code = zone_dic1[(row['STATE'],re)]
+                    re = 'Western'
+            """
             lo = (row['LATITUDE'],row['LONGITUDE'])
             if(row['ZIP'] in ZipOfpla_dict):
                 min_d = 100000.0
@@ -375,7 +410,7 @@ def Write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, reg
                     re = ''
             else: 
                 zi = int(row['ZIP'])
-                for i in range(-5,6):
+                for i in range(-10,11):
                     min_d = 100000.0
                     min_s = ""
                     if(str(zi+i) in ZipOfpla_dict):
@@ -387,26 +422,16 @@ def Write_sub(clean_data, zone_dic, zone_dic1, LocOfpla_dict, ZipOfpla_dict, reg
                     re = region[min_s]
                 else:
                     re = ''
+            """
+            
         else:
             re = 'Eastern'
-        if row['STATE'] == 'MT' or row['STATE'] == 'TX':
-            if re == '' and row['STATE'] == 'MT':
-                code = zone_dic1[('MT','Eastern')]
-                re = 'Eastern'
-            elif re == '' and row['STATE'] == 'TX':
-                code = zone_dic1[('TX','Texas')]
-                re = 'Texas'
-            else:
-                code = zone_dic1[(row['STATE'],re)]
-                re = 'Eastern'
-        elif row['STATE'] == 'SD':
-            code = zone_dic1[('SD','Eastern')]
-            re = 'Eastern'
-        else:
-            code = zone_dic1[(row['STATE'], re)]
+        
+        
+        code = zone_dic1[(row['STATE'], re)]
         sub_code[row['ID']] = code
         re_code[row['ID']] = re
-        csv_writer.writerow([row['ID'], row['NAME'], row['LATITUDE'], row['LONGITUDE'], code, row['TYPE'], re])
+        csv_writer.writerow([row['ID'], row['NAME'], row['ZIP'], row['LATITUDE'], row['LONGITUDE'], re, code, row['TYPE'], row['STATE']])
         
     sub.close()
 
@@ -423,13 +448,54 @@ def Write_Bus(clean_data, sub_code, re_code,KV_dict):
 
     with open("output/bus.csv", "w", newline="") as bus:
         csv_writer = csv.writer(bus)
-        csv_writer.writerow(["bus_id", "Pd", "zone_id", "baseKV", "interconnect"])
+        csv_writer.writerow(
+            [
+                "bus_id",
+                "type",
+                "Pd",
+                "Qd",
+                "Gs",
+                "Bs",
+                "zone_id",
+                "Vm",
+                "Va",
+                "baseKV",
+                "loss_zone",
+                "Vmax",
+                "Vmin",
+                "lam_P",
+                "lam_Q",
+                "mu_Vmax",
+                "mu_Vmin",
+                "interconnect",
+                "state"
+            ])
         missingSub = []
         for index, row in clean_data.iterrows():
             sub = (row["LATITUDE"], row["LONGITUDE"])
             if sub in KV_dict:
                 csv_writer.writerow(
-                    [row["ID"], round(row["Pd"], 3), sub_code[row["ID"]], KV_dict[sub],re_code[row["ID"]]]
+                    [
+                        row["ID"],
+                        1,
+                        round(row["Pd"], 3),
+                        0.0,
+                        0.0,
+                        0.0,
+                        sub_code[row["ID"]],
+                        0.0,
+                        0.0,
+                        KV_dict[sub],
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        re_code[row["ID"]],
+                        row["STATE"]
+                    ]
                 )
             else:
                 missingSub.append(sub)
@@ -470,27 +536,53 @@ def Write_branch(lines):
     csv_writer.writerow(
             [
                 "branch_id",
-                "branch_device_type",
                 "from_bus_id",
-                "from_bus_name",
                 "to_bus_id",
-                "to_bus_name",
-                "length_in_mile",
-                "reactance",
+                "r",
+                "x",
+                "b",
                 "rateA",
+                "rateB",
+                "rateC",
+                "ratio",
+                "angle",
+                "status",
+                "angmin",
+                "angmax",
+                "Pf",
+                "Qf",
+                "Qt",
+                "mu_Sf",
+                "mu_St",
+                "mu_angmin",
+                "mu_angmin",
+                "branch_device_type",
                 "interconnect"
             ])
     csv_writer1.writerow(
             [
                 "branch_id",
-                "branch_device_type",
                 "from_bus_id",
-                "from_bus_name",
                 "to_bus_id",
-                "to_bus_name",
-                "length_in_mile",
-                "reactance",
+                "r",
+                "x",
+                "b",
                 "rateA",
+                "rateB",
+                "rateC",
+                "ratio",
+                "angle",
+                "status",
+                "angmin",
+                "angmax",
+                "Pf",
+                "Qf",
+                "Qt",
+                "mu_Sf",
+                "mu_St",
+                "mu_angmin",
+                "mu_angmin",
+                "branch_device_type",
                 "interconnect"
             ])
     csv_writer2.writerow(
@@ -499,8 +591,24 @@ def Write_branch(lines):
                 "from_bus_id",
                 "to_bus_id",
                 'status',
+                'Pf',
+                'Pt',
+                "Qf",
+                "Qt",
+                "Vf",
+                "Vt",
                 'Pmin',
                 'Pmax',
+                'QminF',
+                'QmaxF',
+                'QminT',
+                'QmaxT',
+                'loss0',
+                'loss1',
+                'muPmin',
+                'muPmax',
+                'muQminF',
+                'muQmaxF',
                 'from_interconnect',
                 'to_interconnect'
             ])
@@ -512,11 +620,87 @@ def Write_branch(lines):
         if row['line_type'] == 'DC':
             from_connect = bus_dict[row["from_bus_id"]]
             to_connect = bus_dict[row["to_bus_id"]]
-            csv_writer2.writerow([row["branch_id"],row["from_bus_id"],row["to_bus_id"],1,-200,200,from_connect,to_connect])
+            csv_writer2.writerow(
+                [
+                    row["branch_id"],
+                    row["from_bus_id"],
+                    row["to_bus_id"],
+                    1,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -200,
+                    200,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    from_connect,
+                    to_connect
+                ])
         elif row['line_type'] == 'Phase Shifter':
-            csv_writer1.writerow(row)
+            csv_writer1.writerow(
+                [
+                    row["branch_id"],
+                    row["from_bus_id"],
+                    row["to_bus_id"],
+                    0.0,
+                    row["reactance"],
+                    0.0,
+                    row["rateA"],
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    row["line_type"],
+                    row["interconnect"]                   
+                ])
         else:
-            csv_writer.writerow(row)
+            csv_writer.writerow(
+                [
+                    row["branch_id"],
+                    row["from_bus_id"],
+                    row["to_bus_id"],
+                    0.0,
+                    row["reactance"],
+                    0.0,
+                    row["rateA"],
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    row["line_type"],
+                    row["interconnect"]                   
+                ])
             
     branch.close()
     phase.close()

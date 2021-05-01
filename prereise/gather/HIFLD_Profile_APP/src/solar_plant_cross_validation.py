@@ -38,7 +38,7 @@ def solar_plant_cross_validation():
         
     raw_plantname = [column for column in raw_solar]
     plant_not_exist_in_hifld = [i for i in raw_plantname if i not in solar_plants]
-    raw_solar.drop(plant_not_exist_in_hifld,axis=1)
+    raw_solar.drop(plant_not_exist_in_hifld,axis=1,inplace=True)
 
     pmax_list = hifldplants['Pmax'].drop_duplicates().to_list().sort()
     for plant in hifldplants.iloc:

@@ -6,7 +6,7 @@ from getpass import getpass
 
 
 print("solar data nsrdb_sam population")
-electricity_grid = Grid("Texas")
+electricity_grid = Grid('USA')
 
 solar_farm = electricity_grid.plant.groupby('type').get_group('solar')
 
