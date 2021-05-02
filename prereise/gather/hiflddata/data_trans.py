@@ -235,7 +235,7 @@ def get_max_island(graph):
     :return: (*list*) -- list of nodes inside the largest island.
     """
 
-    return list(max(nx.connected_components(graph), key=len))
+    return set(max(nx.connected_components(graph), key=len))
 
 
 def init_kv(clean_data, max_value=1100, min_value=0):
@@ -739,8 +739,10 @@ def data_transform(e_csv, t_csv, z_csv):
 
     lines, n_dict = neighbors(sub_by_coord_dict, sub_name_dict)
     graph = graph_of_net(n_dict)
+    max_island_set = get_max_island(graph)
+    clean_data = clean_data[clean_data[["LATITUDE", "LONGITUDE"]].apply(tuple, 1).isin(max_island_set)]
     print("Island Detection: number of nodes in graph = ", len(graph.nodes))
-    print("Island Detection: max island size = ", len(get_max_island(graph)))
+    print("Island Detection: max island size = ", len(max_island_set))
     kv_dict, to_cal = init_kv(clean_data)
     cal_kv(n_dict, graph, kv_dict, to_cal)
     bus_id_to_kv = get_bus_id_to_kv(clean_data, kv_dict)
