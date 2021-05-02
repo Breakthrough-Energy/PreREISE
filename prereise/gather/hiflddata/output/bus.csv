@@ -737,7 +737,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 108769,0,52,138.0,Eastern
 108771,0,52,345.0,Eastern
 108772,0,35,138.0,Eastern
-108776,0,52,138.0,Eastern
+108776,0,52,383.75,Eastern
 108779,0,52,138.0,Eastern
 108780,0,52,138.0,Eastern
 108781,0,52,138.0,Eastern
@@ -5018,14 +5018,14 @@ bus_id,Pd,zone_id,baseKV,interconnect
 114188,0,16,115.0,Eastern
 114189,0,16,115.0,Eastern
 114190,0,16,115.0,Eastern
-114191,0,16,115.0,Eastern
-114192,0,16,115.0,Eastern
-114193,0,16,115.0,Eastern
-114194,0,16,115.0,Eastern
-114195,0,16,115.0,Eastern
-114196,0,16,115.0,Eastern
-114197,0,16,115.0,Eastern
-114198,0,16,115.0,Eastern
+114191,0,16,500.0,Eastern
+114192,0,16,500.0,Eastern
+114193,0,16,500.0,Eastern
+114194,0,16,500.0,Eastern
+114195,0,16,500.0,Eastern
+114196,0,16,500.0,Eastern
+114197,0,16,500.0,Eastern
+114198,0,16,500.0,Eastern
 114199,0,16,153.33333333333331,Eastern
 114200,0,1,115.0,Eastern
 114201,0,1,115.0,Eastern
@@ -5237,7 +5237,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 114433,0,16,69.0,Eastern
 114434,0,16,69.0,Eastern
 114436,0,16,153.33333333333331,Eastern
-114437,0,16,172.5,Eastern
+114437,0,16,365.0,Eastern
 114438,0,16,500.0,Eastern
 114441,0,48,138.0,Eastern
 114444,0,48,69.0,Eastern
@@ -5384,8 +5384,8 @@ bus_id,Pd,zone_id,baseKV,interconnect
 114605,0,1,161.0,Eastern
 114606,0,1,161.0,Eastern
 114607,0,1,161.0,Eastern
-114608,0,16,500.0,Eastern
-114609,0,16,500.0,Eastern
+114608,0,16,230.0,Eastern
+114609,0,16,230.0,Eastern
 114610,0,16,230.0,Eastern
 114613,0,16,86.25,Eastern
 114616,0,16,69.0,Eastern
@@ -7380,6 +7380,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 117043,0,48,69.0,Eastern
 117044,0,48,69.0,Eastern
 117045,0,48,138.0,Eastern
+117047,0,48,34.0,Eastern
 117049,0,48,138.0,Eastern
 117050,0,48,138.0,Eastern
 117051,0,48,138.0,Eastern
@@ -8881,7 +8882,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 118818,0,36,138.0,Eastern
 118819,0,36,138.0,Eastern
 118820,0,36,138.0,Eastern
-118821,0,36,138.0,Eastern
+118821,0,36,163.875,Eastern
 118824,0,36,138.0,Eastern
 118825,0,36,138.0,Eastern
 118826,0,36,138.0,Eastern
@@ -8928,7 +8929,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 118870,0,36,138.0,Eastern
 118871,0,36,138.0,Eastern
 118872,0,36,138.0,Eastern
-118873,0,36,138.0,Eastern
+118873,0,36,150.9375,Eastern
 118874,0,36,69.0,Eastern
 118875,0,36,138.0,Eastern
 118876,0,36,69.0,Eastern
@@ -9973,7 +9974,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 120351,0,8,69.0,Eastern
 120352,0,8,69.0,Eastern
 120356,0,8,138.0,Eastern
-120365,0,8,230.0,Eastern
+120365,0,8,69.0,Eastern
 120372,0,8,69.0,Eastern
 120373,0,8,230.0,Eastern
 120374,0,8,69.0,Eastern
@@ -15296,8 +15297,8 @@ bus_id,Pd,zone_id,baseKV,interconnect
 129109,0,34,115.0,Eastern
 129110,0,34,138.0,Eastern
 129111,0,34,138.0,Eastern
-129112,0,34,138.0,Eastern
-129113,0,34,138.0,Eastern
+129112,0,34,115.0,Eastern
+129113,0,34,115.0,Eastern
 129114,0,15,69.0,Eastern
 129115,0,15,103.5,Eastern
 129116,0,15,138.0,Eastern
@@ -15353,7 +15354,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 129176,0,34,319.0,Eastern
 129177,0,34,319.0,Eastern
 129178,0,34,319.0,Eastern
-129179,0,34,138.0,Eastern
+129179,0,34,126.5,Eastern
 129180,0,34,138.0,Eastern
 129182,0,34,319.0,Eastern
 129183,0,34,319.0,Eastern
@@ -17607,6 +17608,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 133200,0,30,138.0,Eastern
 133202,0,21,69.0,Eastern
 133203,0,30,230.0,Eastern
+133204,0,30,230.0,Eastern
 133207,0,51,115.0,Eastern
 133208,0,51,345.0,Eastern
 133209,0,51,115.0,Eastern
@@ -17898,6 +17900,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 133864,0,26,230.0,Eastern
 133865,0,48,230.0,Eastern
 133866,0,48,69.0,Eastern
+133867,0,52,34.0,Eastern
 133868,0,52,138.0,Eastern
 133869,0,52,138.0,Eastern
 133870,0,48,115.0,Eastern
@@ -18183,6 +18186,8 @@ bus_id,Pd,zone_id,baseKV,interconnect
 134326,0,27,115.0,Eastern
 134327,0,27,115.0,Eastern
 134331,0,27,115.0,Eastern
+134334,0,27,115.0,Eastern
+134335,0,27,115.0,Eastern
 134336,0,27,115.0,Eastern
 134337,0,27,115.0,Eastern
 134338,0,27,115.0,Eastern
@@ -18193,11 +18198,14 @@ bus_id,Pd,zone_id,baseKV,interconnect
 134343,0,27,115.0,Eastern
 134344,0,27,115.0,Eastern
 134345,0,27,115.0,Eastern
+134346,0,27,115.0,Eastern
+134347,0,27,115.0,Eastern
 134348,0,27,115.0,Eastern
 134349,0,27,115.0,Eastern
 134350,0,27,115.0,Eastern
 134351,0,27,115.0,Eastern
 134352,0,27,115.0,Eastern
+134353,0,27,115.0,Eastern
 134354,0,27,115.0,Eastern
 134355,0,27,115.0,Eastern
 134356,0,27,115.0,Eastern
@@ -18208,7 +18216,10 @@ bus_id,Pd,zone_id,baseKV,interconnect
 134361,0,27,115.0,Eastern
 134362,0,27,115.0,Eastern
 134363,0,27,115.0,Eastern
+134366,0,27,115.0,Eastern
 134367,0,27,115.0,Eastern
+134372,0,27,115.0,Eastern
+134373,0,27,115.0,Eastern
 134375,0,27,115.0,Eastern
 134376,0,27,115.0,Eastern
 134377,0,27,115.0,Eastern
@@ -20053,7 +20064,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 136887,0,52,138.0,Eastern
 136888,0,52,138.0,Eastern
 136890,0,52,69.0,Eastern
-136891,0,52,138.0,Eastern
+136891,0,52,422.5,Eastern
 136892,0,52,138.0,Eastern
 136893,0,35,345.0,Eastern
 136894,0,35,138.0,Eastern
@@ -21971,7 +21982,6 @@ bus_id,Pd,zone_id,baseKV,interconnect
 139310,0,34,115.0,Eastern
 139311,0,34,115.0,Eastern
 139312,0,34,115.0,Eastern
-139313,0,48,230.0,Eastern
 139314,0,48,230.0,Eastern
 139319,0,18,115.0,Eastern
 139320,0,18,230.0,Eastern
@@ -24961,7 +24971,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 143276,0,16,284.5,Eastern
 143277,0,16,284.5,Eastern
 143278,0,16,138.0,Eastern
-143279,0,16,320.0,Eastern
+143279,0,16,230.0,Eastern
 143280,0,16,184.0,Eastern
 143281,0,16,230.0,Eastern
 143282,0,16,230.0,Eastern
@@ -25111,9 +25121,9 @@ bus_id,Pd,zone_id,baseKV,interconnect
 143435,0,23,115.0,Eastern
 143436,0,23,172.5,Eastern
 143437,0,16,115.0,Eastern
-143438,0,16,115.0,Eastern
-143439,0,16,115.0,Eastern
-143440,0,16,172.5,Eastern
+143438,0,16,500.0,Eastern
+143439,0,16,500.0,Eastern
+143440,0,16,365.0,Eastern
 143441,0,8,199.33333333333334,Eastern
 143442,0,8,115.0,Eastern
 143443,0,8,115.0,Eastern
@@ -27033,12 +27043,12 @@ bus_id,Pd,zone_id,baseKV,interconnect
 146166,0,18,69.0,Eastern
 146167,0,18,69.0,Eastern
 146169,0,18,149.5,Eastern
-146170,0,48,230.0,Eastern
 146172,0,48,230.0,Eastern
 146173,0,18,230.0,Eastern
 146174,0,18,230.0,Eastern
 146175,0,18,365.0,Eastern
 146180,0,18,69.0,Eastern
+146198,0,18,115.0,Eastern
 146199,0,48,230.0,Eastern
 146200,0,48,230.0,Eastern
 146201,0,48,230.0,Eastern
@@ -27089,6 +27099,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 146249,0,18,230.0,Eastern
 146263,0,18,115.0,Eastern
 146267,0,18,115.0,Eastern
+146284,0,18,115.0,Eastern
 146286,0,18,172.5,Eastern
 146287,0,18,230.0,Eastern
 146288,0,18,230.0,Eastern
@@ -27121,7 +27132,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 146340,0,48,230.0,Eastern
 146341,0,48,230.0,Eastern
 146342,0,48,365.0,Eastern
-146343,0,48,500.0,Eastern
+146343,0,48,230.0,Eastern
 146344,0,48,230.0,Eastern
 146345,0,48,172.5,Eastern
 146346,0,48,230.0,Eastern
@@ -27182,7 +27193,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 146411,0,48,184.0,Eastern
 146412,0,48,138.0,Eastern
 146413,0,48,138.0,Eastern
-146414,0,48,138.0,Eastern
+146414,0,48,216.375,Eastern
 146421,0,38,138.0,Eastern
 146422,0,52,138.0,Eastern
 146425,0,48,115.0,Eastern
@@ -27594,7 +27605,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 146945,0,26,500.0,Eastern
 146946,0,48,115.0,Eastern
 146947,0,48,115.0,Eastern
-146948,0,18,500.0,Eastern
+146948,0,18,319.0,Eastern
 146951,0,26,115.0,Eastern
 146952,0,26,230.0,Eastern
 146953,0,26,230.0,Eastern
@@ -27627,7 +27638,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 146982,0,26,230.0,Eastern
 146984,0,26,230.0,Eastern
 146985,0,48,138.0,Eastern
-146986,0,48,138.0,Eastern
+146986,0,48,235.96875,Eastern
 146987,0,48,138.0,Eastern
 146988,0,48,138.0,Eastern
 146989,0,48,138.0,Eastern
@@ -27656,7 +27667,6 @@ bus_id,Pd,zone_id,baseKV,interconnect
 147025,0,38,138.0,Eastern
 147026,0,38,138.0,Eastern
 147027,0,52,138.0,Eastern
-147028,0,48,765.0,Eastern
 147029,0,52,138.0,Eastern
 147030,0,48,115.0,Eastern
 147031,0,48,115.0,Eastern
@@ -27942,7 +27952,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 147344,0,48,138.0,Eastern
 147345,0,48,138.0,Eastern
 147346,0,48,241.5,Eastern
-147347,0,48,138.0,Eastern
+147347,0,48,164.125,Eastern
 147348,0,48,138.0,Eastern
 147349,0,48,138.0,Eastern
 147353,0,52,138.0,Eastern
@@ -28117,8 +28127,6 @@ bus_id,Pd,zone_id,baseKV,interconnect
 147560,0,48,230.0,Eastern
 147561,0,48,230.0,Eastern
 147562,0,48,230.0,Eastern
-147563,0,48,230.0,Eastern
-147564,0,48,230.0,Eastern
 147565,0,48,230.0,Eastern
 147566,0,48,230.0,Eastern
 147567,0,48,230.0,Eastern
@@ -28144,7 +28152,6 @@ bus_id,Pd,zone_id,baseKV,interconnect
 147612,0,48,138.0,Eastern
 147613,0,48,115.0,Eastern
 147614,0,48,115.0,Eastern
-147615,0,48,115.0,Eastern
 147616,0,48,115.0,Eastern
 147617,0,48,138.0,Eastern
 147618,0,26,230.0,Eastern
@@ -30159,7 +30166,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 149868,0,16,138.0,Eastern
 149869,0,16,103.5,Eastern
 149870,0,16,230.0,Eastern
-149871,0,16,365.0,Eastern
+149871,0,16,230.0,Eastern
 149872,0,16,230.0,Eastern
 149873,0,16,365.0,Eastern
 149874,0,16,138.0,Eastern
@@ -30286,7 +30293,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 150010,0,16,138.0,Eastern
 150011,0,16,115.0,Eastern
 150012,0,16,115.0,Eastern
-150013,0,16,115.0,Eastern
+150013,0,16,230.0,Eastern
 150014,0,16,103.5,Eastern
 150015,0,16,138.0,Eastern
 150016,0,16,138.0,Eastern
@@ -30589,12 +30596,12 @@ bus_id,Pd,zone_id,baseKV,interconnect
 150372,0,8,115.0,Eastern
 150373,0,8,500.0,Eastern
 150374,0,8,138.0,Eastern
-150375,0,52,138.0,Eastern
+150375,0,52,422.5,Eastern
 150376,0,52,138.0,Eastern
 150377,0,52,138.0,Eastern
 150378,0,48,138.0,Eastern
 150379,0,8,138.0,Eastern
-150380,0,52,138.0,Eastern
+150380,0,52,241.5,Eastern
 150381,0,8,138.0,Eastern
 150382,0,26,100.0,Eastern
 150383,0,26,100.0,Eastern
@@ -30607,7 +30614,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 150391,0,40,115.0,Eastern
 150392,0,40,69.0,Eastern
 150393,0,35,138.0,Eastern
-150394,0,52,138.0,Eastern
+150394,0,52,422.5,Eastern
 150395,0,26,100.0,Eastern
 150396,0,8,138.0,Eastern
 150397,0,8,126.5,Eastern
@@ -30623,7 +30630,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 150411,0,8,138.0,Eastern
 150412,0,8,138.0,Eastern
 150413,0,8,138.0,Eastern
-150414,0,52,138.0,Eastern
+150414,0,52,349.25,Eastern
 150415,0,8,138.0,Eastern
 150416,0,26,365.0,Eastern
 150417,0,40,230.0,Eastern
@@ -30699,7 +30706,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 150493,0,8,138.0,Eastern
 150495,0,8,138.0,Eastern
 150496,0,8,69.0,Eastern
-150497,0,8,122.66666666666667,Eastern
+150497,0,8,69.0,Eastern
 150498,0,8,69.0,Eastern
 150499,0,8,69.0,Eastern
 150500,0,8,69.0,Eastern
@@ -30903,7 +30910,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 150715,0,8,230.0,Eastern
 150716,0,8,319.0,Eastern
 150717,0,38,345.0,Eastern
-150718,0,38,138.0,Eastern
+150718,0,38,189.75,Eastern
 150719,0,8,184.0,Eastern
 150720,0,8,138.0,Eastern
 150721,0,8,230.0,Eastern
@@ -31151,7 +31158,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 150996,0,26,197.5,Eastern
 150999,0,35,138.0,Eastern
 151000,0,35,138.0,Eastern
-151002,0,52,138.0,Eastern
+151002,0,52,349.25,Eastern
 151003,0,52,69.0,Eastern
 151004,0,52,69.0,Eastern
 151006,0,35,138.0,Eastern
@@ -31438,7 +31445,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 151347,0,35,69.0,Eastern
 151348,0,52,138.0,Eastern
 151349,0,52,138.0,Eastern
-151355,0,35,138.0,Eastern
+151355,0,35,422.5,Eastern
 151356,0,35,103.5,Eastern
 151357,0,35,138.0,Eastern
 151360,0,8,138.0,Eastern
@@ -34692,6 +34699,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 155326,0,52,345.0,Eastern
 155327,0,52,138.0,Eastern
 155328,0,48,138.0,Eastern
+155329,0,48,34.0,Eastern
 155330,0,1,161.0,Eastern
 155331,0,1,161.0,Eastern
 155332,0,1,161.0,Eastern
@@ -36047,7 +36055,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 157334,0,20,138.0,Eastern
 157335,0,20,138.0,Eastern
 157338,0,35,138.0,Eastern
-157340,0,42,230.0,Eastern
+157340,0,42,287.5,Eastern
 157341,0,12,241.5,Eastern
 157347,0,22,161.0,Eastern
 157348,0,12,138.0,Eastern
@@ -39332,7 +39340,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 161591,0,48,138.0,Eastern
 161592,0,48,138.0,Eastern
 161593,0,48,69.0,Eastern
-161594,0,48,138.0,Eastern
+161594,0,48,186.984375,Eastern
 161595,0,48,69.0,Eastern
 161596,0,13,69.0,Eastern
 161597,0,26,230.0,Eastern
@@ -39477,7 +39485,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 161791,0,35,69.0,Eastern
 161793,0,42,115.0,Eastern
 161794,0,42,69.0,Eastern
-161795,0,42,176.33333333333334,Eastern
+161795,0,42,214.66666666666666,Eastern
 161797,0,42,69.0,Eastern
 161798,0,42,69.0,Eastern
 161799,0,42,115.0,Eastern
@@ -40076,6 +40084,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 162513,0,26,66.0,Eastern
 162514,0,26,66.0,Eastern
 162515,0,26,66.0,Eastern
+162516,0,26,66.0,Eastern
 162517,0,26,66.0,Eastern
 162518,0,26,66.0,Eastern
 162519,0,26,66.0,Eastern
@@ -43586,20 +43595,20 @@ bus_id,Pd,zone_id,baseKV,interconnect
 169974,0,16,159.72222222222223,Eastern
 169975,0,16,115.0,Eastern
 169976,0,16,115.0,Eastern
-169977,0,16,115.0,Eastern
-169978,0,16,115.0,Eastern
-169979,0,16,115.0,Eastern
-169980,0,16,115.0,Eastern
-169981,0,16,115.0,Eastern
-169982,0,16,115.0,Eastern
-169983,0,16,115.0,Eastern
-169984,0,16,115.0,Eastern
-169985,0,16,115.0,Eastern
-169986,0,16,115.0,Eastern
-169987,0,16,115.0,Eastern
-169988,0,16,115.0,Eastern
-169989,0,16,115.0,Eastern
-169990,0,16,172.5,Eastern
+169977,0,16,500.0,Eastern
+169978,0,16,500.0,Eastern
+169979,0,16,500.0,Eastern
+169980,0,16,500.0,Eastern
+169981,0,16,500.0,Eastern
+169982,0,16,500.0,Eastern
+169983,0,16,500.0,Eastern
+169984,0,16,500.0,Eastern
+169985,0,16,500.0,Eastern
+169986,0,16,500.0,Eastern
+169987,0,16,500.0,Eastern
+169988,0,16,500.0,Eastern
+169989,0,16,500.0,Eastern
+169990,0,16,365.0,Eastern
 169991,0,16,69.0,Eastern
 169993,0,16,115.0,Eastern
 169994,0,16,115.0,Eastern
@@ -45480,8 +45489,8 @@ bus_id,Pd,zone_id,baseKV,interconnect
 173338,0,16,69.0,Eastern
 173344,0,36,138.0,Eastern
 173345,0,36,138.0,Eastern
-173346,0,36,138.0,Eastern
-173347,0,36,138.0,Eastern
+173346,0,36,241.5,Eastern
+173347,0,36,181.125,Eastern
 173353,0,36,138.0,Eastern
 173354,0,36,103.5,Eastern
 173355,0,36,69.0,Eastern
@@ -47032,6 +47041,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 201834,0,47,115.0,Western
 201836,0,24,92.0,Eastern
 201837,0,50,138.0,Western
+201838,0,50,103.5,Western
 201842,0,50,115.0,Western
 201844,0,47,92.0,Western
 201845,0,47,69.0,Western
@@ -48083,6 +48093,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 203081,0,50,115.0,Western
 203083,0,24,69.0,Eastern
 203085,0,50,69.0,Western
+203086,0,37,115.0,Western
 203087,0,5,115.0,Western
 203089,0,37,126.5,Western
 203090,0,37,92.0,Western
@@ -51838,6 +51849,12 @@ bus_id,Pd,zone_id,baseKV,interconnect
 207087,0,50,126.5,Western
 207088,0,50,138.0,Western
 207089,0,50,126.5,Western
+207093,0,50,69.0,Western
+207094,0,50,69.0,Western
+207095,0,50,69.0,Western
+207096,0,50,69.0,Western
+207097,0,50,115.0,Western
+207098,0,50,69.0,Western
 207102,0,50,138.0,Western
 207103,0,50,138.0,Western
 207105,0,50,103.5,Western
@@ -51921,6 +51938,9 @@ bus_id,Pd,zone_id,baseKV,interconnect
 207184,0,37,230.0,Western
 207185,0,37,230.0,Western
 207186,0,37,172.5,Western
+207187,0,37,115.0,Western
+207188,0,37,115.0,Western
+207189,0,11,115.0,Western
 207190,0,11,115.0,Western
 207191,0,11,115.0,Western
 207192,0,11,115.0,Western
@@ -55301,6 +55321,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 301521,0,44,138.0,Texas
 301523,0,44,138.0,Texas
 301524,0,4,283.0,Western
+301527,0,3,69.0,Western
 301528,0,3,69.0,Western
 301529,0,44,103.5,Texas
 301530,0,4,63.0,Western
@@ -55917,7 +55938,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 302494,0,45,115.0,Eastern
 302495,0,44,138.0,Texas
 302496,0,44,138.0,Texas
-302497,0,3,230.0,Western
+302497,0,3,149.5,Western
 302498,0,44,138.0,Texas
 302499,0,4,70.0,Western
 302500,0,44,138.0,Texas
@@ -56305,6 +56326,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 303062,0,4,92.5,Western
 303063,0,44,69.0,Texas
 303067,0,32,69.0,Western
+303069,0,4,172.5,Western
 303070,0,44,207.0,Texas
 303074,0,4,60.0,Western
 303078,0,4,63.0,Western
@@ -57301,7 +57323,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 304666,0,44,103.5,Texas
 304667,0,44,115.0,Texas
 304668,0,32,149.5,Western
-304671,0,3,230.0,Western
+304671,0,3,149.5,Western
 304673,0,44,103.5,Texas
 304674,0,32,230.0,Western
 304675,0,44,103.5,Texas
@@ -57534,6 +57556,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 305063,0,44,69.0,Texas
 305064,0,4,66.0,Western
 305065,0,4,230.0,Western
+305067,0,3,69.0,Western
 305068,0,4,63.0,Western
 305069,0,44,103.5,Texas
 305072,0,32,92.0,Western
@@ -57904,6 +57927,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 305540,0,33,232.5,Western
 305541,0,45,103.5,Eastern
 305542,0,44,103.5,Texas
+305544,0,32,69.0,Western
 305545,0,3,69.0,Western
 305546,0,44,89.7,Texas
 305549,0,44,230.0,Texas
@@ -58294,6 +58318,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 306135,0,44,138.0,Texas
 306136,0,44,103.5,Texas
 306138,0,44,103.5,Texas
+306140,0,4,67.5,Western
 306142,0,45,92.0,Eastern
 306146,0,3,69.0,Western
 306147,0,44,138.0,Texas
@@ -59225,6 +59250,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 307686,0,44,103.5,Texas
 307687,0,44,103.5,Texas
 307688,0,44,138.0,Texas
+307689,0,3,69.0,Western
 307690,0,4,115.0,Western
 307691,0,44,89.7,Texas
 307692,0,45,115.0,Eastern
@@ -59383,6 +59409,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 307915,0,4,66.0,Western
 307916,0,44,138.0,Texas
 307917,0,44,138.0,Texas
+307918,0,4,115.0,Western
 307919,0,4,90.5,Western
 307920,0,4,60.0,Western
 307921,0,44,138.0,Texas
@@ -60734,6 +60761,7 @@ bus_id,Pd,zone_id,baseKV,interconnect
 310053,0,44,103.5,Texas
 310054,0,4,115.0,Western
 310055,0,44,103.5,Texas
+310056,0,3,69.0,Western
 310059,0,4,115.0,Western
 310061,0,44,69.0,Texas
 310063,0,44,103.5,Texas

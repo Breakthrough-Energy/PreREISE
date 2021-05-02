@@ -3,4 +3,3 @@ dcline_id,from_bus_id,to_bus_id,status,Pmin,Pmax,from_interconnect,to_interconne
 310053,306987,309801,1,-200,200,Western,Western
 108354,135642,133416,1,-200,200,Eastern,Eastern
 131914,133682,136723,1,-200,200,Eastern,Eastern
-150123,134143,143552,1,-200,200,Eastern,Eastern

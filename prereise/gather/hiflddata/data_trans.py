@@ -137,16 +137,30 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
             line["geometry"]["coordinates"][0][-1][1],
             line["geometry"]["coordinates"][0][-1][0],
         )
-        candidate_coordinates = sub_name_dict.get(
-            line["properties"]["SUB_1"]
-        ) + sub_name_dict.get(line["properties"]["SUB_2"])
+        start_candidate_coordinates = sub_name_dict.get(line["properties"]["SUB_1"])
+        end_candidate_coordinates = sub_name_dict.get(line["properties"]["SUB_2"])
 
-        sub1 = min(
-            candidate_coordinates, key=lambda p: compute_geo_dist(p, start_coord)
-        )
-        sub2 = min(candidate_coordinates, key=lambda p: compute_geo_dist(p, end_coord))
+        sub1 = min(start_candidate_coordinates, key=lambda p: compute_geo_dist(p, start_coord))
+        sub2 = min(end_candidate_coordinates, key=lambda p: compute_geo_dist(p, end_coord))
+
+        # If the distance between start_coord and sub1 is more than 100 miles (similar for end_coord and sub2),
+        # we consider it is invalid matching. Those subs got removed during cleanup and could not be matched
+        if compute_geo_dist(sub1, start_coord) > 100 or compute_geo_dist(sub2, end_coord) > 100:
+            print(
+                "INFO: sub1 or sub2 name identified with wrong coordinates for transmission line: ", line
+            )
+            missing_lines.append(line)
+            continue
 
         dist = compute_geo_dist(start_coord, end_coord)
+
+        if sub1 == sub2:
+            # e.g., ID 300380 with SUB1 and SUB2 both HARRINGTON, both matched to the same sub
+            print(
+                "INFO: sub1 and sub2 being same for transmission line: ", line
+            )
+            missing_lines.append(line)
+            continue
 
         lines.append(
             [
@@ -160,8 +174,6 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
             ]
         )
 
-        if sub1 == sub2:
-            continue
         n_dict[sub1].append(sub2)
         n_dict[sub2].append(sub1)
 
