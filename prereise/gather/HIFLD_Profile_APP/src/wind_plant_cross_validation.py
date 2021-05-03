@@ -42,11 +42,11 @@ def wind_plant_cross_validation():
     raw_wind.drop(plant_not_exist_in_hifld,axis=1,inplace=True)
     #print(hifldplants['Pmax'].drop_duplicates().to_list().sort())
     pmax_list = sorted(hifldplants['Pmax'].drop_duplicates().to_list())
-    print(pmax_list)
+    #print(pmax_list)
     for plant in hifldplants.iloc:
         if (plant['Pmax'] not in id_map_pmax) and (str(plant['plant_id']) in raw_plantname):
             id_map_pmax[plant['Pmax']] = str(plant['plant_id'])
-    print(id_map_pmax[0.6])
+
     for plant in hifldplants.iloc:
         if str(plant['plant_id']) not in raw_plantname:
             simpmax = 0.0

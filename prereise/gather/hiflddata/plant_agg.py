@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
 
-from data_trans import Clean, get_Zone
+from data_trans import clean, get_Zone
 
 coord_precision = ".9f"
 
@@ -513,7 +513,7 @@ def write_gen(plant_dict, type_dict, curve):
         for key in plant_dict:
             c1 = plant_dict[key][4]/plant_dict[key][5]
             pid = key[0]+'-'+key[1]+'-'+key[2]
-            if(pid in curve):
+            if(pid in curve and curve[pid][1] > 0):
                 csv_writer.writerow(
                     [
                         plant_dict[key][8],

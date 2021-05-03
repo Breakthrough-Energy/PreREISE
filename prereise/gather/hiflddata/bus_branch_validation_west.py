@@ -47,30 +47,30 @@ def get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state):
         del branch_need_update[br]
         
     for br in branch_need_update:
-    if branch_need_update[br][0] in bus_acc or (branch_need_update[br][1] in bus_acc): 
-        if branch_need_update[br][0] in bus_acc:
-            if(branch_need_update[br][1] in bus_will_update and bus_will_update[branch_need_update[br][1]] != bus_acc[branch_need_update[br][0]]):
-                print(br,bus_acc[branch_need_update[br][0]],bus_will_update[branch_need_update[br][1]])
-            else:
-                if (bus_state[branch_need_update[br][1]],bus_acc[branch_need_update[br][0]]) in zone_map:
-                    bus_will_update[branch_need_update[br][1]] = bus_acc[branch_need_update[br][0]]
-                    branch_will_update[br] = bus_acc[branch_need_update[br][0]]
+        if branch_need_update[br][0] in bus_acc or (branch_need_update[br][1] in bus_acc): 
+            if branch_need_update[br][0] in bus_acc:
+                if(branch_need_update[br][1] in bus_will_update and bus_will_update[branch_need_update[br][1]] != bus_acc[branch_need_update[br][0]]):
+                    print(br,bus_acc[branch_need_update[br][0]],bus_will_update[branch_need_update[br][1]])
                 else:
-                    print(br,branch_need_update[br][1])
-                    br_delete.append(br)
-                    bus_delete.append(branch_need_update[br][1])
+                    if (bus_state[branch_need_update[br][1]],bus_acc[branch_need_update[br][0]]) in zone_map:
+                        bus_will_update[branch_need_update[br][1]] = bus_acc[branch_need_update[br][0]]
+                        branch_will_update[br] = bus_acc[branch_need_update[br][0]]
+                    else:
+                        print(br,branch_need_update[br][1])
+                        br_delete.append(br)
+                        bus_delete.append(branch_need_update[br][1])
 
-        elif branch_need_update[br][1] in bus_acc:
-            if(branch_need_update[br][0] in bus_will_update and bus_will_update[branch_need_update[br][0]] != bus_acc[branch_need_update[br][1]]):
-                print(br,bus_acc[branch_need_update[br][1]],bus_will_update[branch_need_update[br][0]])
-            else:
-                if (bus_state[branch_need_update[br][0]],bus_acc[branch_need_update[br][1]]) in zone_map:
-                    bus_will_update[branch_need_update[br][0]] = bus_acc[branch_need_update[br][1]]
-                    branch_will_update[br] = bus_acc[branch_need_update[br][1]]
+            elif branch_need_update[br][1] in bus_acc:
+                if(branch_need_update[br][0] in bus_will_update and bus_will_update[branch_need_update[br][0]] != bus_acc[branch_need_update[br][1]]):
+                    print(br,bus_acc[branch_need_update[br][1]],bus_will_update[branch_need_update[br][0]])
                 else:
-                    print(br,branch_need_update[br][0])
-                    br_delete.append(br)
-                    bus_delete.append(branch_need_update[br][0])
+                    if (bus_state[branch_need_update[br][0]],bus_acc[branch_need_update[br][1]]) in zone_map:
+                        bus_will_update[branch_need_update[br][0]] = bus_acc[branch_need_update[br][1]]
+                        branch_will_update[br] = bus_acc[branch_need_update[br][1]]
+                    else:
+                        print(br,branch_need_update[br][0])
+                        br_delete.append(br)
+                        bus_delete.append(branch_need_update[br][0])
                     
     for br in branch_will_update:
         del branch_need_update[br]

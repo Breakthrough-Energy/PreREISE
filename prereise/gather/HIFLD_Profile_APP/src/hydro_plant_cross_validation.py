@@ -43,7 +43,7 @@ def hydro_plant_cross_validation():
     plant_not_exist_in_hifld = [i for i in raw_plantname if i not in hydro_plants]
     raw_hydro.drop(plant_not_exist_in_hifld,axis=1,inplace=True)
 
-    pmax_list = hifldplants['Pmax'].drop_duplicates().to_list().sort()
+    pmax_list = sorted(hifldplants['Pmax'].drop_duplicates().to_list())
     for plant in hifldplants.iloc:
         if (plant['Pmax'] not in id_map_pmax) and (str(plant['plant_id']) in raw_plantname):
             id_map_pmax[plant['Pmax']] = str(plant['plant_id'])

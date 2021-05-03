@@ -82,6 +82,7 @@ def compute_substation_load(row, total_count_dict, low_kv_count_dict, load_dict)
     if load_dict.get(county_fips) is None:
         return 0
 
+
     if total_count_dict.get(county_fips) < 10:
         return load_dict.get(county_fips) / total_count_dict.get(county_fips)
     elif row["base_KV"] <= 115:

@@ -16,6 +16,8 @@ def agg_dic():
         z_d[tu] = z["zone_id"][i]
     for i in range(len(z1)):
         tu = (z1["state"][i], z1["interconnect"][i])
+        if tu == ('New Mexico','Eastern'):
+            tu = ('New Mexico','Western')
         z_d1[str(z1["zone_id"][i])] = z_d[tu]
     
     return z_d1
@@ -25,7 +27,7 @@ if __name__ == '__main__':
     z_d1 = agg_dic()
     df = pd.read_csv('demand_input/base_demand.csv')
     df1 = pd.DataFrame(df['UTC Time'])
-    for i in range(1,54):
+    for i in range(1,53):
         df1[i] = np.zeros(8784,dtype=int)
     for index in df.columns:
         if(index == 'UTC Time'):
@@ -34,8 +36,8 @@ if __name__ == '__main__':
             key = z_d1[index]
             df1[key] = df1[key] + df[index]
 
-    df1[41] = 0.15 * df1[42]
-    df1[42] = 0.85 * df1[42]
+    df1[40] = 0.15 * df1[41]
+    df1[40] = 0.85 * df1[41]
     df1.to_csv('demand_output/demand.csv', index=False)
 
 

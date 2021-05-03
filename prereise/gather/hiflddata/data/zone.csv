@@ -29,26 +29,25 @@ zone_id,zone_name,state,interconnect,time_zone
 28,NE,Nebraska,Eastern,ETC/GMT+6
 29,NH,New Hampshire,Eastern,ETC/GMT+5
 30,NJ,New Jersey,Eastern,ETC/GMT+5
-31,NM,New Mexico,Eastern,ETC/GMT+7
-32,NM,New Mexico,Western,ETC/GMT+7
-33,NV,Nevada,Western,ETC/GMT+8
-34,NY,New York,Eastern,ETC/GMT+5
-35,OH,Ohio,Eastern,ETC/GMT+5
-36,OK,Oklahoma,Eastern,ETC/GMT+6
-37,OR,Oregon,Western,ETC/GMT+8
-38,PA,Pennsylvania,Eastern,ETC/GMT+5
-39,RI,Rhode Island,Eastern,ETC/GMT+5
-40,SC,South Carolina,Eastern,ETC/GMT+5
-41,SD,South Dakota,Western,ETC/GMT+6
-42,SD,South Dakota,Eastern,ETC/GMT+6
-43,TN,Tennessee,Eastern,ETC/GMT+6
-44,TX,Texas,Texas,ETC/GMT+6
-45,TX,Texas,Eastern,ETC/GMT+6
-46,TX,Texas,Western,ETC/GMT+7
-47,UT,Utah,Western,ETC/GMT+7
-48,VA,Virginia,Eastern,ETC/GMT+5
-49,VT,Vermont,Eastern,ETC/GMT+5
-50,WA,Washington,Western,ETC/GMT+8
-51,WI,Wisconsin,Eastern,ETC/GMT+6
-52,WV,West Virginia,Eastern,ETC/GMT+5
-53,WY,Wyoming,Western,ETC/GMT+7
+31,NM,New Mexico,Western,ETC/GMT+7
+32,NV,Nevada,Western,ETC/GMT+8
+33,NY,New York,Eastern,ETC/GMT+5
+34,OH,Ohio,Eastern,ETC/GMT+5
+35,OK,Oklahoma,Eastern,ETC/GMT+6
+36,OR,Oregon,Western,ETC/GMT+8
+37,PA,Pennsylvania,Eastern,ETC/GMT+5
+38,RI,Rhode Island,Eastern,ETC/GMT+5
+39,SC,South Carolina,Eastern,ETC/GMT+5
+40,SD,South Dakota,Western,ETC/GMT+6
+41,SD,South Dakota,Eastern,ETC/GMT+6
+42,TN,Tennessee,Eastern,ETC/GMT+6
+43,TX,Texas,Texas,ETC/GMT+6
+44,TX,Texas,Eastern,ETC/GMT+6
+45,TX,Texas,Western,ETC/GMT+7
+46,UT,Utah,Western,ETC/GMT+7
+47,VA,Virginia,Eastern,ETC/GMT+5
+48,VT,Vermont,Eastern,ETC/GMT+5
+49,WA,Washington,Western,ETC/GMT+8
+50,WI,Wisconsin,Eastern,ETC/GMT+6
+51,WV,West Virginia,Eastern,ETC/GMT+5
+52,WY,Wyoming,Western,ETC/GMT+7
