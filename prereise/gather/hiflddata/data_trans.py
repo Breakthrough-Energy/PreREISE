@@ -766,6 +766,8 @@ def compute_reactance_and_type(line_type, kv_from, kv_to, dist, vol):
             for kv, x in kv_xperunit_calculate_1:
                 if vol <= kv:
                     return x * dist, "Phase Shifter"
+        elif dist < 0.031:  # If two are within 0.031 mile (~50 meters) range, they are in the same substation
+            return kv_from_to_xperunit_calculate_4.get((kv_from, kv_to), 0.00436) * dist, "Line"
         else:  # AC Transmission Line
             # calculate 2
             for kv, x in kv_xperunit_calculate_2:
@@ -804,10 +806,10 @@ def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
                     if vol <= kv:
                         return rateA
             else:
-                # (SIL*43.261*length)-0.6678
+                # SIL*43.261*(length^-0.6678)
                 for kv, sil in kv_rate_A_calucate_3:
                     if vol <= kv:
-                        return pow(sil * 43.261 * dist, -0.6678)
+                        return sil * 43.261 * pow(dist, -0.6678)
     else:  # Transformer
         # calcuate 5: Use 700MVA or 800MVA for all 2-winding single transformers as a high-level approximation
         return 700.0
