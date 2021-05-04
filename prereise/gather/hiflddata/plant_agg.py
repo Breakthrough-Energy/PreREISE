@@ -342,7 +342,7 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                 cur = 0
             #if(bus_id == 100000):
             #    print(row['PLANT'],row['NAME'],row['ZIP'],re)
-            list1 = [bus_id, pmax, 0, pmin, cur, 1, re, row['TYPE'], plant_id]
+            list1 = [bus_id, pmax, 0, pmin, cur, 1, re, row['TYPE'], plant_id,min_d]
             plant_dict[tu] = list1
         else:
             list1 = plant_dict[tu]
@@ -424,7 +424,8 @@ def write_plant(plant_dict):
                 "GenFuelCost",
                 "GenIOB",
                 "GenIOC",
-                "GenIOD"]
+                "GenIOD",
+                "distance"]
         )
         print(len(plant_dict))
         for key in plant_dict:
@@ -466,6 +467,7 @@ def write_plant(plant_dict):
                     0.0,
                     0.0,
                     0.0,
+                    list1[9]
                 ]
             )
     final_bus = set(pd.read_csv("output/bus.csv")["bus_id"])

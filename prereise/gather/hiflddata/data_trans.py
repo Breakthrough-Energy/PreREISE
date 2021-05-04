@@ -777,7 +777,7 @@ def compute_reactance_and_type(line_type, kv_from, kv_to, dist, vol):
         return x * dist, "Transformer"
 
 
-def compute_rate_a(line_type, KV_from, KV_to, dist, vol):
+def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
     """Compute the rateA based on the type of each transmission line
 
     :param str line_type: type of the transmission line between two substations
@@ -791,9 +791,10 @@ def compute_rate_a(line_type, KV_from, KV_to, dist, vol):
     if line_type.startswith("DC"):
         # initial setup for DC
         return 200
-
+    elif dist < 0.031:  # If two are within 0.031 mile (~50 meters) range, they are in the same substation
+        return 1793.0
     # line type is AC
-    if KV_from == KV_to:
+    if kv_from == kv_to:
         if dist < 0.01:  # Phase shifter
             return 0.0
         else:  # AC Transmission Line
