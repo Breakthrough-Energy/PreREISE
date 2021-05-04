@@ -1,5 +1,7 @@
 import pandas as pd
 
+###please run this after running ercot_topology_validation
+
 def get_Zone(Z_csv):
     """Generate a dictionary of zone using the zone.csv
 
