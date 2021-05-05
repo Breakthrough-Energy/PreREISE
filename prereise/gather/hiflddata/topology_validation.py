@@ -1,0 +1,149 @@
+import pandas as pd
+
+###please run this after running ercot_topology_validation
+
+def get_Zone(Z_csv):
+    """Generate a dictionary of zone using the zone.csv
+
+    :param str Z_csv: path of the zone.csv file
+    :return: (*dict*) -- a dict mapping the STATE to its ID.
+    """
+
+    zone = pd.read_csv(Z_csv)
+
+    zone_map = {}
+    for i in range(len(zone)):
+        tu = (zone["zone_name"][i], zone["interconnect"][i])
+        zone_map[tu] = zone["zone_id"][i]
+    return zone_map
+
+def get_across_branch(branch,bus_dict):
+    branch_need_update = {}
+    bus_acc = {}
+    for br in branch.iloc:
+        if(bus_dict[br['from_bus_id']] != bus_dict[br['to_bus_id']]):
+            branch_need_update[br['branch_id']] = (br['from_bus_id'],br['to_bus_id'])
+        else:
+            if br['from_bus_id'] in bus_acc and bus_acc[br['from_bus_id']] != bus_dict[br['from_bus_id']]:
+                print(br['from_bus_id'])
+            else:
+                bus_acc[br['from_bus_id']] = bus_dict[br['from_bus_id']]
+            if br['to_bus_id'] in bus_acc and bus_acc[br['to_bus_id']] != bus_dict[br['to_bus_id']]:
+                print(br['to_bus_id'])
+            else:
+                bus_acc[br['to_bus_id']] = bus_dict[br['to_bus_id']]    
+    return branch_need_update, bus_acc
+
+def get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state):
+    bus_will_update={}
+    branch_will_update={}
+    need_to_jus={}
+    br_delete=[]
+    bus_delete=[]
+    for br in branch_need_update:
+        if branch_need_update[br][0] in bus_acc and (branch_need_update[br][1] in bus_acc):
+            #print(br,branch_need_update[br][0],branch_need_update[br][1])
+            br_delete.append(br)
+
+    for br in br_delete:
+        del branch_need_update[br]
+        
+    for br in branch_need_update:
+        if branch_need_update[br][0] in bus_acc or (branch_need_update[br][1] in bus_acc): 
+            if branch_need_update[br][0] in bus_acc:
+                if(branch_need_update[br][1] in bus_will_update and bus_will_update[branch_need_update[br][1]] != bus_acc[branch_need_update[br][0]]):
+                    print(br,bus_acc[branch_need_update[br][0]],bus_will_update[branch_need_update[br][1]])
+                else:
+                    if (bus_state[branch_need_update[br][1]],bus_acc[branch_need_update[br][0]]) in zone_map:
+                        bus_will_update[branch_need_update[br][1]] = bus_acc[branch_need_update[br][0]]
+                        branch_will_update[br] = bus_acc[branch_need_update[br][0]]
+                    else:
+                        print(br,branch_need_update[br][1])
+                        br_delete.append(br)
+                        bus_delete.append(branch_need_update[br][1])
+
+            elif branch_need_update[br][1] in bus_acc:
+                if(branch_need_update[br][0] in bus_will_update and bus_will_update[branch_need_update[br][0]] != bus_acc[branch_need_update[br][1]]):
+                    print(br,bus_acc[branch_need_update[br][1]],bus_will_update[branch_need_update[br][0]])
+                else:
+                    if (bus_state[branch_need_update[br][0]],bus_acc[branch_need_update[br][1]]) in zone_map:
+                        bus_will_update[branch_need_update[br][0]] = bus_acc[branch_need_update[br][1]]
+                        branch_will_update[br] = bus_acc[branch_need_update[br][1]]
+                    else:
+                        print(br,branch_need_update[br][0])
+                        br_delete.append(br)
+                        bus_delete.append(branch_need_update[br][0])
+                    
+    for br in branch_will_update:
+        del branch_need_update[br]
+
+    for br in br_delete:
+        if(br in branch_need_update):
+            del branch_need_update[br]
+
+    for br in branch_need_update:
+        br_delete.append(br)
+        bus_delete.append(branch_need_update[br][0])
+        bus_delete.append(branch_need_update[br][1])
+
+    return bus_will_update, branch_will_update, need_to_jus, br_delete, bus_delete
+
+def update_sub(sub,bus_will_update,bus_delete,zone_map):
+    for index,row in sub.iterrows():
+        if(row['sub_id'] in bus_will_update):
+            sub.loc[index,'interconnect'] = bus_will_update[row['sub_id']]
+            print(sub.loc[index,'zone_id'])
+            sub.loc[index,'zone_id'] = zone_map[(row['state'],bus_will_update[row['sub_id']])]
+            print(sub.loc[index,'zone_id'])
+            print(row['sub_id'],bus_will_update[row['sub_id']])
+    sub = sub[-sub.sub_id.isin(bus_delete)]
+    return sub
+
+def update_bus(bus,bus_will_update,bus_delete,zone_map):
+    for index,row in bus.iterrows():
+        if(row['bus_id'] in bus_will_update):
+            bus.loc[index,'interconnect'] = bus_will_update[row['bus_id']]
+            print(bus.loc[index,'zone_id'])
+            bus.loc[index,'zone_id'] = zone_map[(row['state'],bus_will_update[row['bus_id']])]
+            print(bus.loc[index,'zone_id'])
+            print(row['bus_id'],bus_will_update[row['bus_id']])
+    bus = bus[-bus.bus_id.isin(bus_delete)]
+    return bus
+
+def update_bus2sub(bus2sub,bus_will_update,bus_delete):
+    for index,row in bus2sub.iterrows():
+        if(row['bus_id'] in bus_will_update):
+            bus2sub.loc[index,'interconnect'] = bus_will_update[row['bus_id']]
+            print(row['bus_id'],bus_will_update[row['bus_id']])
+    bus2sub = bus2sub[-bus2sub.bus_id.isin(bus_delete)]
+    return bus2sub
+
+def update_branch(branch,branch_will_update,br_delete):
+    for index,row in branch.iterrows():
+        if(row['branch_id'] in branch_will_update):
+            branch.loc[index,'interconnect'] = branch_will_update[row['branch_id']]
+            print(row['branch_id'],branch_will_update[row['branch_id']])
+    branch = branch[-branch.branch_id.isin(br_delete)]
+    return branch
+
+def bus_branch_validation():
+    zone_map = get_Zone("data/zone.csv")
+    branch = pd.read_csv('output/branch.csv')
+    bus = pd.read_csv('output/bus.csv')
+    bus_dict = bus.set_index('bus_id')['interconnect'].to_dict()
+    bus_state = bus.set_index('bus_id')['state'].to_dict()
+    sub = pd.read_csv('output/sub.csv')
+    bus2sub = pd.read_csv('output/bus2sub.csv')
+    branch_need_update, bus_acc = get_across_branch(branch,bus_dict)
+    bus_will_update, branch_will_update, need_to_jus, br_delete, bus_delete = get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state)
+    bus = update_bus(bus,bus_will_update,bus_delete,zone_map)
+    sub = update_sub(sub,bus_will_update,bus_delete,zone_map)
+    bus2sub = update_bus2sub(bus2sub,bus_will_update,bus_delete)
+    branch = update_branch(branch,branch_will_update,br_delete)
+    branch.to_csv("output/branch.csv",index=False)
+    bus.to_csv("output/bus.csv",index=False)
+    bus2sub.to_csv("output/bus2sub.csv",index=False)
+    sub.to_csv("output/sub.csv",index=False)
+
+if __name__ == "__main__":
+    bus_branch_validation()
