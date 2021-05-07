@@ -244,13 +244,13 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                 if county in nm_east:
                     re = 'Eastern'
                 else:
-                    #code = zone_dic1[(row['STATE'],re)]
+
                     re = 'Western'
             elif row['STATE'] == 'MT':
                 if county in mt_east:
                     re = 'Eastern'
                 else:
-                    #code = zone_dic1[(row['STATE'],re)]
+
                     re = 'Western'
             else:
                     re = 'Eastern'
@@ -259,12 +259,11 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
             plant_id = row['OBJECTID']
             bus_id = 100000
             if row["PLANT"] in loc_of_plant:
+                lat = loc_of_plant[row["PLANT"]][0]
+                lon = loc_of_plant[row["PLANT"]][1]
                 #print(u)
                 if row["ZIP"] in ZipOfsub_dict[re]:
-                    #if(re == 'Texas'):
-                        #print(row["ZIP"])
-
-                    #print(u)
+                    
                     min_d = 1000000.0
                     for value in ZipOfsub_dict[re][row["ZIP"]]:
 
@@ -279,8 +278,7 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                             #print(value)
 
                             bus_id = value
-                    #if(bus_id == 100000 and re =='Texas'):
-                    #    print(row['PLANT'],row['NAME'],row['ZIP'],re)
+                    
 
                 # if this zip does not contain subs, we try to find subs in neighbor zip.
                 else:
@@ -315,8 +313,11 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                     if(bus_id == 100000 and re =='Texas'):
                         print(row['PLANT'],row['NAME'],row['ZIP'],re)
             else:
+
                 if row["ZIP"] in ZipOfsub_dict[re]:
                     bus_id = ZipOfsub_dict[re][row["ZIP"]][0]
+                    lat = LocOfsub_dict[bus_id][0]
+                    lon = LocOfsub_dict[bus_id][1]
                 else:
                     #print(row['PLANT'],row['NAME'],row['ZIP'],re)
                     continue
@@ -342,7 +343,7 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                 cur = 0
             #if(bus_id == 100000):
             #    print(row['PLANT'],row['NAME'],row['ZIP'],re)
-            list1 = [bus_id, pmax, 0, pmin, cur, 1, re, row['TYPE'], plant_id,min_d]
+            list1 = [bus_id, pmax, 0, pmin, cur, 1, re, row['TYPE'], plant_id,min_d,lat,lon, row['ZIP'],row['STATE']]
             plant_dict[tu] = list1
         else:
             list1 = plant_dict[tu]
@@ -425,7 +426,11 @@ def write_plant(plant_dict):
                 "GenIOB",
                 "GenIOC",
                 "GenIOD",
-                "distance"]
+                "distance",
+                "lat",
+                "lon",
+                'zip',
+                'state']
         )
         print(len(plant_dict))
         for key in plant_dict:
@@ -467,7 +472,11 @@ def write_plant(plant_dict):
                     0.0,
                     0.0,
                     0.0,
-                    list1[9]
+                    list1[9],
+                    list1[10],
+                    list1[11],
+                    list1[12],
+                    list1[13]
                 ]
             )
     final_bus = set(pd.read_csv("output/bus.csv")["bus_id"])

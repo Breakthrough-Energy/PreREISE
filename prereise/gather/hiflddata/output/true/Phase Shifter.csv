@@ -1,0 +1,1 @@
+branch_id,from_bus_id,to_bus_id,r,x,b,rateA,rateB,rateC,ratio,angle,status,angmin,angmax,Pf,Qf,Qt,mu_Sf,mu_St,mu_angmin,mu_angmin,branch_device_type,interconnect
