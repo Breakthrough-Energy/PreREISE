@@ -55,7 +55,7 @@ if __name__ == "__main__":
                 pmax = bus_pmax[bus_id]
             else:
                 pmax = 0.0
-            if(bus_capacity < 1.2*abs(pmax - true_load)):
+            if(bus_capacity < 1.2*(true_load - pmax)):
                 csv_writer1.writerow([bus_id,pmax,bus_capacity,true_load])
                 #print(plant['plant_id'],plant['bus_id'],plant['distance'],plant['Pmax'],bus_capacity)
             csv_writer.writerow([bus_id,pmax,bus_capacity,true_load])

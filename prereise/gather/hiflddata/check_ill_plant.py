@@ -50,7 +50,7 @@ if __name__ == "__main__":
         for plant in plants.iloc:
             bus_capacity = bus_line_total_capa[plant['bus_id']]
             true_load = bus_load[plant['bus_id']]
-            if(bus_capacity < 1.2*abs(plant['Pmax'] - true_load)):
+            if(bus_capacity < 1.2*(plant['Pmax'] - true_load)):
                 csv_writer1.writerow([plant['plant_id'],plant['bus_id'],plant['distance'],plant['Pmax'],bus_capacity,true_load])
                 #print(plant['plant_id'],plant['bus_id'],plant['distance'],plant['Pmax'],bus_capacity)
             csv_writer.writerow([plant['plant_id'],plant['bus_id'],plant['distance'],plant['Pmax'],bus_capacity,true_load])
