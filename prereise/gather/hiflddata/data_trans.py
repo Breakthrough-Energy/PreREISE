@@ -64,7 +64,7 @@ def clean(e_csv, zone_dic):
     :return: (*pandas.DataFrame*) -- a pandas Dataframe storing the substations after dropping the invalid ones.
     """
     return pd.read_csv(e_csv, dtype={"COUNTYFIPS": str}).query(
-        "STATE in @zone_dic and STATUS == 'IN SERVICE' and LINES != 0"
+        "STATE in @zone_dic and LINES != 0"
     )
 
 
@@ -153,8 +153,12 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
                 line_type,  # line type
                 sub_by_coord_dict.get(sub1)[0],  # from substation id
                 sub_by_coord_dict.get(sub1)[1],  # from substation name
+                sub_by_coord_dict.get(sub1)[2],  # from substation state
+                sub_by_coord_dict.get(sub1)[3],  # from substation county
                 sub_by_coord_dict.get(sub2)[0],  # to substation id
                 sub_by_coord_dict.get(sub2)[1],  # to substation name
+                sub_by_coord_dict.get(sub2)[2],  # to substation state
+                sub_by_coord_dict.get(sub2)[3],  # to substation county
                 dist,  # distance between start point and end point of the line.
             ]
         )
@@ -169,8 +173,12 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
             "line_type",
             "from_bus_id",
             "from_bus_name",
+            "from_bus_state",
+            "from_bus_county",
             "to_bus_id",
             "to_bus_name",
+            "to_bus_state",
+            "to_bus_county",
             "length_in_mile",
         ],
     )
@@ -321,7 +329,7 @@ def set_sub(clean_data):
             raise Exception(
                 f"WARNING: substations coordinates conflict check: {location}"
             )
-        sub_by_coord_dict[location] = (row["ID"], row["NAME"])
+        sub_by_coord_dict[location] = (row["ID"], row["NAME"], row["STATE"], row["COUNTY"])
         if row["NAME"] not in sub_name_dict:
             sub_name_dict[row["NAME"]] = []
         sub_name_dict[row["NAME"]].append((row["LATITUDE"], row["LONGITUDE"]))
@@ -844,6 +852,12 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
             row["to_bus_id"],
             row["length_in_mile"],
         )
+        from_bus_state, from_bus_county, to_bus_state, to_bus_county = (
+            row["from_bus_state"],
+            row["from_bus_county"],
+            row["to_bus_state"],
+            row["to_bus_county"],
+        )
         kv_from, kv_to = bus_id_to_kv[from_bus_id], bus_id_to_kv[to_bus_id]
         node_id_set.add(from_bus_id)
         node_id_set.add(to_bus_id)
@@ -851,6 +865,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
         reactance, type = compute_reactance_and_type(
             line_type, kv_from, kv_to, dist, vol
         )
+ 
         rate_a = compute_rate_a(line_type, kv_from, kv_to, dist, vol)
         line_types.append(type)
         rateas.append(rate_a)
@@ -884,7 +899,7 @@ def DataTransform(E_csv, T_csv, Z_csv):
     print("Island Detection: max island size = ", len(max_island_set))
     KV_dict, to_cal = InitKV(clean_data)
     cal_kv(n_dict, graph, KV_dict, to_cal)
-    compute_load_dist(clean_data, KV_dict)
+    clean_data = compute_load_dist(clean_data, KV_dict)
 
     bus_id_to_kv = get_bus_id_to_KV(clean_data, KV_dict)
     lines, node_id_set = calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines)

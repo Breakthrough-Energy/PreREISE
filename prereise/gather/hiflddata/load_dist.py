@@ -3,7 +3,11 @@ import pandas as pd
 # Apply 2.01kw per person in USA from TAMU paper
 load_consumption_per_person = 2.01 / 1000
 
-
+# Special case for NYC area: aggregate the neighbor counties
+# NYC COUNTYFIPS:
+# 36081 (Queens), 36047 (Kings), 36005 (Bronx)
+# 36085 (Richmond), 36061 (NewYork), 36119 (Westchester), 36059 (Nassau)
+nyc_countyfips = set(['36047', '36005', '36085', '36061'])
 def compute_load_dist(substation_data, KV_dict):
     """Compute the Pd for each bus based on zip code and population information
     :param pandas.DataFrame substation_data: substation dataframe as returned by :func:`Clean`
@@ -56,12 +60,14 @@ def compute_load_dist(substation_data, KV_dict):
     )
     zip_load_dict = dict(zip(us_zip_population["zip"], us_zip_population["load"]))
     zip_load_assigned_dict = dict(zip(us_zip_population["zip"], us_zip_population["load"]*0))
+    substation_data = substation_data.sort_values(by=['LINES'], ascending=False)
     substation_data["Pd_zip"] = substation_data.apply(
         lambda row: compute_substation_load_by_zip(
             row, zip_total_count_dict, zip_load_dict, zip_load_assigned_dict, county_load_dict
         ),
         axis=1,
     )
+    substation_data = substation_data.sort_values(by=['OBJECTID'])
 
     load_substation = substation_data[substation_data["Pd_zip"] > 0][["ID", "COUNTYFIPS"]]
 
@@ -90,6 +96,8 @@ def compute_substation_load_by_county(row, county_load_sub_total_count_dict, cou
     if row["base_KV"] < 0 or row["Pd_zip"] <= 0:
         return 0
     county_fips = row["COUNTYFIPS"]
+    if county_fips in nyc_countyfips:
+        return 0
     if county_load_dict.get(county_fips) is None or county_load_dict.get(county_fips) <= 0:
         return 0
 
@@ -108,7 +116,7 @@ def compute_substation_load_by_zip(row, zip_total_count_dict, zip_load_dict, zip
         bus_load = zip_load_dict.get(zip)
     else:
         # Take half of the buses as load bus
-        load_bus_size = zip_total_count_dict.get(zip)/2
+        load_bus_size = zip_total_count_dict.get(zip)*0.6
         bus_load = min(zip_load_dict.get(zip)/load_bus_size,
                        zip_load_dict.get(zip) - zip_load_assigned_dict.get(zip))
 
