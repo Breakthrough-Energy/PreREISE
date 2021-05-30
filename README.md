@@ -14,17 +14,23 @@ guide can be found [here](https://breakthrough-energy.github.io/docs/).
 Here are the instructions to install the **PreREISE** package. We strongly recommend
 that you pick one of the following options.
 
+**NOTE: you MUST have
+[PowerSimData](https://github.com/Breakthrough-Energy/PowerSimData/) cloned in
+a folder adjacent to your clone of PreREISE as the installation of packages
+in requirements.txt depends on files in PowerSimData.**
 
 ### A. Using pipenv
 If not already done, install `pipenv` by following the instructions on their
-[webpage](https://pipenv.pypa.io/en/latest/). Then run:
+[webpage](https://pipenv.pypa.io/en/latest/). If running `pipenv`
+does not work after installation, make sure you also followed steps 
+[here](https://pipenv.pypa.io/en/latest/install/#pragmatic-installation-of-pipenv)
+that address modifying your PATH. Then run:
 ```bash
 pipenv sync
 pipenv shell
 ```
 in the root folder of the package. The first command will create a virtual environment
 and install the dependencies. The second command will activate the environment.
-
 
 ### B. Using the ***requirements.txt*** file
 First create an environment using `venv` (more details
