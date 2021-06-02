@@ -75,6 +75,33 @@ differentiated using a lowercase letter added right after the year, e.g,
 
 ### A. Wind data
 
+#### How to download
+
+Wind data can be downloaded via a python script. When in the terminal at the project
+root directory, you can run:
+
+```bash
+python -m prereise.cli.download.download_manager wind_data \
+    --region REGION \
+    --start_date START_DATE \
+    --end_date END_DATE \
+    --file_path FILEPATH
+```
+
+For example, if you would like to download the wind data for regions Texas and Western
+between the dates of June 5th, 2020 and Janurary 2nd, 2021 into data.pkl, you can run:
+
+```bash
+python -m prereise.cli.download.download_manager wind_data \
+    --region Texas \
+    --region Western \
+    --start_date 2020-05-06 \
+    --end_date 2021-01-02 \
+    --file_path ./data.pkl
+```
+You can run `python -m prereise.cli.download.download_manager wind_data -h` for more
+details.
+
 #### i. Rapid Refresh
 [RAP][RAP] (Rapid Refresh) is the continental-scale NOAA hourly-updated
 assimilation/modeling system operational at the National Centers for Environmental
