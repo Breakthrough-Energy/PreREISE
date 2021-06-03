@@ -44,6 +44,7 @@ def get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state):
         if branch_need_update[br][0] in bus_acc and (branch_need_update[br][1] in bus_acc):
             #print(br,branch_need_update[br][0],branch_need_update[br][1])
             br_delete.append(br)
+    
 
     for br in br_delete:
         del branch_need_update[br]
@@ -73,6 +74,7 @@ def get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state):
                         print(br,branch_need_update[br][0])
                         br_delete.append(br)
                         bus_delete.append(branch_need_update[br][0])
+
                     
     for br in branch_will_update:
         del branch_need_update[br]
@@ -83,8 +85,9 @@ def get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state):
 
     for br in branch_need_update:
         br_delete.append(br)
-        bus_delete.append(branch_need_update[br][0])
-        bus_delete.append(branch_need_update[br][1])
+        #bus_delete.append(branch_need_update[br][0])
+        #bus_delete.append(branch_need_update[br][1])
+
 
     return bus_will_update, branch_will_update, need_to_jus, br_delete, bus_delete
 
@@ -114,7 +117,7 @@ def update_bus2sub(bus2sub,bus_will_update,bus_delete):
     for index,row in bus2sub.iterrows():
         if(row['bus_id'] in bus_will_update):
             bus2sub.loc[index,'interconnect'] = bus_will_update[row['bus_id']]
-            print(row['bus_id'],bus_will_update[row['bus_id']])
+            #print(row['bus_id'],bus_will_update[row['bus_id']])
     bus2sub = bus2sub[-bus2sub.bus_id.isin(bus_delete)]
     return bus2sub
 
@@ -122,7 +125,7 @@ def update_branch(branch,branch_will_update,br_delete):
     for index,row in branch.iterrows():
         if(row['branch_id'] in branch_will_update):
             branch.loc[index,'interconnect'] = branch_will_update[row['branch_id']]
-            print(row['branch_id'],branch_will_update[row['branch_id']])
+            #print(row['branch_id'],branch_will_update[row['branch_id']])
     branch = branch[-branch.branch_id.isin(br_delete)]
     return branch
 
