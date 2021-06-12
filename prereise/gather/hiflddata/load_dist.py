@@ -8,10 +8,14 @@ load_consumption_per_person = 2.01 / 1000
 # 36081 (Queens), 36047 (Kings), 36005 (Bronx)
 # 36085 (Richmond), 36061 (NewYork), 36119 (Westchester), 36059 (Nassau)
 nyc_countyfips = set(['36047', '36005', '36085', '36061'])
+
 def compute_load_dist(substation_data, KV_dict):
     """Compute the Pd for each bus based on zip code and population information
-    :param pandas.DataFrame substation_data: substation dataframe as returned by :func:`Clean`
+    :param pandas.DataFrame substation_data: substation dataframe loaded from HIFLD raw data after clean-up
+    :param dict KV_dict: a dict of substation's baseKV value.
+    :return pandas.DataFrame substation_data: substation dataframe with pd column computed and added
     """
+
     # Firstly distribute load at zip code level for existing zip codes in HIFLD model
     us_zip_population = pd.read_csv(
         "data/uszips.csv",
@@ -93,6 +97,13 @@ def compute_load_dist(substation_data, KV_dict):
 
 
 def compute_substation_load_by_county(row, county_load_sub_total_count_dict, county_load_dict):
+    """Compute the load for each substation based on its COUNTY population information
+    :param pandas.DataFrame.row: one row in the substation dataframe
+    :param dict county_load_sub_total_count_dict: a dict of substation count in each county
+    :param dict county_load_dict: a dict of county's load
+    :return float: the load allocated to this substation
+    """
+
     if row["base_KV"] < 0 or row["Pd_zip"] <= 0:
         return 0
     county_fips = row["COUNTYFIPS"]
@@ -105,6 +116,15 @@ def compute_substation_load_by_county(row, county_load_sub_total_count_dict, cou
 
 
 def compute_substation_load_by_zip(row, zip_total_count_dict, zip_load_dict, zip_load_assigned_dict, county_load_dict):
+    """Compute the load for each substation based on its ZIP code population information
+    :param pandas.DataFrame.row: one row in the substation dataframe
+    :param dict zip_total_count_dict: a dict of substation count in each zip
+    :param dict zip_load_dict: a dict of zip's total load
+    :param dict zip_load_assigned_dict: a dict of allocated load for each zip
+    :param dict county_load_dict: a dict of county's total load
+    :return float: the load allocated to this substation
+    """
+
     if row["base_KV"] < 0:
         return 0
     zip = row["ZIP"]
