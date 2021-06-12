@@ -3,6 +3,11 @@ import csv
 coord_precision = ".9f"
 
 def bus_branch_neigh(branches):
+    """Generate a dictionary of neighbor buses for each bus.
+
+    :param pandas.DataFrame branch: branch DataFrame from branch.csv
+    :return: (*dict*) -- bus_nei, a dict of neighbor buses of each bus.
+    """
     bus_nei = {}
     
     for br in branches.iloc:
@@ -20,6 +25,15 @@ def bus_branch_neigh(branches):
 
 
 def find_neigh(bus, depth, load,re):
+    bus_branch_neigh(branches):
+    """Use BFS to find buses need to add branches.
+
+    :param str bus: Id of the start bus.
+    :param int depth: the depth of BFS search.
+    :param float load: load of the start bus.
+    :param str re: Interconnect of the start bus.
+    """
+
     global new_branch_id
     global bus_line_total_capa
     if(depth == 0):
@@ -39,6 +53,13 @@ def find_neigh(bus, depth, load,re):
 
 
 def new_branch(buses,bus_load, add_branch,new_branch_id, depth):
+    """Calculate branches need to be added
+
+    :param pandas.DataFrame buses: bus DataFrame from bus.csv.
+    :param dict bus_load: a dict of loads assigned to each bus.
+    :param int depth: the depth of BFS search.
+    :return: (*dict*) -- add_branch: a dict of branches to be added.
+    """
     global bus_line_total_capa
     for bu in buses.iloc:
         bus_capacity = bus_line_total_capa[bu['bus_id']]

@@ -6,7 +6,7 @@ def get_Zone(Z_csv):
     """Generate a dictionary of zone using the zone.csv
 
     :param str Z_csv: path of the zone.csv file
-    :return: (*dict*) -- a dict mapping the STATE to its ID.
+    :return: (*dict*) -- a dict mapping the name and interconnect to its ID.
     """
 
     zone = pd.read_csv(Z_csv)
@@ -18,6 +18,13 @@ def get_Zone(Z_csv):
     return zone_map
 
 def get_across_branch(branch,bus_dict):
+    """Generate 2 dictionaries of branches and buses
+
+    :param pandas.DataFrame branch: branch DataFrame from branch.csv
+    :param dict bus_dict:a dict of buses' interconnect
+    :return: (*dict*) -- branch_need_update, a dict of branches to be updated mapping to its 2 linked bus.
+    :return: (*dict*) -- bus_acc, a dict of accurate buses mapping to their interconnect
+    """
     branch_need_update = {}
     bus_acc = {}
     for br in branch.iloc:
@@ -35,9 +42,20 @@ def get_across_branch(branch,bus_dict):
     return branch_need_update, bus_acc
 
 def get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state):
+    """
+
+    :param dict branch_need_update: branch dict , returned by :func: `get_across_branch`
+    :param dict bus_acc:bus dict, returned by :func: `get_across_branch`
+    :param dict zone_map:zone_id dict, returned by :func: `get_Zone`.
+    :param dict bus_state:a dict mapping state to its ID.
+    :return: (*dict*) -- branch_will_update, a dict of branches to be updated mapping to its interconnect.
+    :return: (*dict*) -- bus_will_update, a dict of buses mapping to its new interconnect.
+    :return: (*list*) -- bus_delete, a list of buses need to be deleted.
+    :return: (*list*) -- br_delete, a list of branches need to be deleted.
+    """
     bus_will_update={}
     branch_will_update={}
-    need_to_jus={}
+
     br_delete=[]
     bus_delete=[]
     for br in branch_need_update:
@@ -89,9 +107,17 @@ def get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state):
         #bus_delete.append(branch_need_update[br][1])
 
 
-    return bus_will_update, branch_will_update, need_to_jus, br_delete, bus_delete
+    return bus_will_update, branch_will_update, br_delete, bus_delete
 
 def update_sub(sub,bus_will_update,bus_delete,zone_map):
+    """Update sub.csv
+
+    :param pandas.DataFrame sub: substation DataFrame from sub.csv. 
+    :param dict bus_will_update: a dict of buses mapping to its new interconnect, returned by :func: `get_update_branch_bus`.
+    :param list bus_delete: a list of buses need to be deleted, returned by :func: `get_update_branch_bus`.
+    :param dict zone_map:zone_id dict, returned by :func: `get_Zone`.
+    :return: (*pandas.DataFrame*) -- sub, final substation DataFrame.
+    """
     for index,row in sub.iterrows():
         if(row['sub_id'] in bus_will_update):
             sub.loc[index,'interconnect'] = bus_will_update[row['sub_id']]
@@ -103,6 +129,14 @@ def update_sub(sub,bus_will_update,bus_delete,zone_map):
     return sub
 
 def update_bus(bus,bus_will_update,bus_delete,zone_map):
+    """Update bus.csv
+
+    :param pandas.DataFrame bus: bus DataFrame from bus.csv. 
+    :param dict bus_will_update: a dict of buses mapping to its new interconnect, returned by :func: `get_update_branch_bus`.
+    :param list bus_delete: a list of buses need to be deleted, returned by :func: `get_update_branch_bus`.
+    :param dict zone_map:zone_id dict, returned by :func: `get_Zone`.
+    :return: (*pandas.DataFrame*) -- bus, final bus DataFrame.
+    """
     for index,row in bus.iterrows():
         if(row['bus_id'] in bus_will_update):
             bus.loc[index,'interconnect'] = bus_will_update[row['bus_id']]
@@ -114,6 +148,13 @@ def update_bus(bus,bus_will_update,bus_delete,zone_map):
     return bus
 
 def update_bus2sub(bus2sub,bus_will_update,bus_delete):
+    """Update bus2sub.csv
+
+    :param pandas.DataFrame bus2sub: bus2sub DataFrame from bus2sub.csv. 
+    :param dict bus_will_update: a dict of buses mapping to its new interconnect, returned by :func: get_update_branch_bus().
+    :param list bus_delete: a list of buses need to be deleted, returned by :func: get_update_branch_bus().
+    :return: (*pandas.DataFrame*) -- bus2sub, final bus DataFrame.
+    """
     for index,row in bus2sub.iterrows():
         if(row['bus_id'] in bus_will_update):
             bus2sub.loc[index,'interconnect'] = bus_will_update[row['bus_id']]
@@ -122,6 +163,13 @@ def update_bus2sub(bus2sub,bus_will_update,bus_delete):
     return bus2sub
 
 def update_branch(branch,branch_will_update,br_delete):
+    """Update branch.csv
+
+    :param pandas.DataFrame branch: branch DataFrame from bus2sub.csv. 
+    :param dict branch_will_update: a dict of branches to be updated mapping to its interconnect, returned by :func: `get_update_branch_bus`.
+    :param list br_delete: a list of branches need to be deleted, returned by :func: `get_update_branch_bus()`
+    :return: (*pandas.DataFrame*) -- branch, final branch DataFrame.
+    """
     for index,row in branch.iterrows():
         if(row['branch_id'] in branch_will_update):
             branch.loc[index,'interconnect'] = branch_will_update[row['branch_id']]
@@ -130,6 +178,7 @@ def update_branch(branch,branch_will_update,br_delete):
     return branch
 
 def bus_branch_validation():
+    
     zone_map = get_Zone("data/zone.csv")
     branch = pd.read_csv('output/branch.csv')
     bus = pd.read_csv('output/bus.csv')
@@ -138,7 +187,7 @@ def bus_branch_validation():
     sub = pd.read_csv('output/sub.csv')
     bus2sub = pd.read_csv('output/bus2sub.csv')
     branch_need_update, bus_acc = get_across_branch(branch,bus_dict)
-    bus_will_update, branch_will_update, need_to_jus, br_delete, bus_delete = get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state)
+    bus_will_update, branch_will_update, br_delete, bus_delete = get_update_branch_bus(branch_need_update,bus_acc, zone_map,bus_state)
     bus = update_bus(bus,bus_will_update,bus_delete,zone_map)
     sub = update_sub(sub,bus_will_update,bus_delete,zone_map)
     bus2sub = update_bus2sub(bus2sub,bus_will_update,bus_delete)

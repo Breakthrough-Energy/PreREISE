@@ -3,6 +3,13 @@ import csv
 coord_precision = ".9f"
 
 def avai_load(buses, bus_pmax, bus_line_total_capa):
+    """Calculate the avaiable capacity for each bus
+
+    :param pandas.DataFrame buses: branch DataFrame from bus.csv
+    :param dict bus_pmax: a dict of buses' total load from linked plants.
+    :param dict bus_line_total_capa: a dict of buses' total capacity of linked lines.
+    :return: (*dict*) -- avaiable_load, a dict of the avaiable capacity for each bus.
+    """
     avaiable_load = {}
     for bus in buses.iloc:
         bus_id = bus['bus_id']
@@ -23,9 +30,10 @@ def avai_load(buses, bus_pmax, bus_line_total_capa):
 def LocOfsub(subs):
     """Get the latitude and longitude of substations, and the substations in the area of each zip code
 
-    :param dict clean_data:  a dict of substations as returned by :func:`data_trans.Clean`
+    :param dict subs:  a dict of substations from sub.csv
     :return: (*dict*) -- LocOfsub_dict, dict mapping the geo coordinate (x,y) to substations.
     :return: (*dict*) -- ZipOfsub_dict, dict mapping the zip code to a group of substations.
+    :return: (*dict*) -- ziplist, a list of dicts contain all zip codes in each interconnect.
     """
     LocOfsub_dict = {}
     ZipOfsub_dict = {}
@@ -74,7 +82,19 @@ def LocOfsub(subs):
     return LocOfsub_dict, ZipOfsub_dict, ziplist
 
 def new_plant(plants,pl_curve, bus_line_total_capa,bus_load, ziplist, ZipOfsub_dict, avaiable_load,add_plant,plant_remove,new_plant_id):
-    
+    """Calculate the plants to be created
+
+    :param pandas.DataFrame plants:  plants from plant.csv.
+    :param dict pl_curve:  a dict of consumption curve of plants.
+    :param dict bus_line_total_capa: a dict of buses' total capacity of linked lines.
+    :param dict bus_load: a dict of loads assigned to each bus.
+    :param dict ziplist: a list of dicts contain all zip codes in each interconnect, returned by :func: `LocOfsub`.
+    :param dict ZipOfsub_dict: dict mapping the zip code to a group of substations, returned by :func: `LocOfsub`.
+    :param dict avaiable_load: a dict of the avaiable capacity for each bus, returned by :func: `avai_load`.
+   
+    :return: (*dict*) -- add_plant, a dict of plants need to be added.
+    :return: (*dict*) -- plant_remove, a dict of plants need to be deleted.
+    """
     for plant in plants.iloc:
         bus_capacity = bus_line_total_capa[plant['bus_id']]
         true_load = bus_load[plant['bus_id']]
@@ -96,6 +116,20 @@ def new_plant(plants,pl_curve, bus_line_total_capa,bus_load, ziplist, ZipOfsub_d
     return add_plant,plant_remove
 
 def find_near_sub(lat, lon, pmax, re, Zip, ziplist, ZipOfsub_dict, avaiable_load):
+    """Find 5 nearest avaiable buses which can afford the load of plant
+
+    :param float lat: the latitude of plant.
+    :param float lon: the longitude of plant.
+    :param float pmax: pmax of plant.
+    :param str re: interconnect of plant.
+    :param int Zip: zip code of plant.
+    :param dict ziplist: a list of dicts contain all zip codes in each interconnect, returned by :func: `LocOfsub`.
+    :param dict ZipOfsub_dict: dict mapping the zip code to a group of substations, returned by :func: `LocOfsub`.
+    :param dict avaiable_load: a dict of the avaiable capacity for each bus, returned by :func: `avai_load`.
+   
+    :return: (*list*) -- nei_bus, a list of 5 nearest buses.
+    :return: (*dict*) -- avaiable_load, a dict of the avaiable capacity for each bus.
+    """
     standard = pmax
     nei_bus = []
     index = len(ziplist[re]) - 1
@@ -138,10 +172,22 @@ def find_near_sub(lat, lon, pmax, re, Zip, ziplist, ZipOfsub_dict, avaiable_load
     return nei_bus, avaiable_load
 
 def remove_plant(plants,plant_remove):
+    """Update plant
+
+    :param pandas.DataFrame plants:  plants from plant.csv.
+    :param dict plant_remove, a dict of plants need to be deleted, returned by :func: `new_plant`.
+    :return: (*pandas.DataFrame*) -- plants, updated plants.
+    """
     plants = plants[-plants.plant_id.isin(plant_remove)]
     return plants
 
 def remove_gen(gencosts,plant_remove):
+     """Update gencosts
+
+    :param pandas.DataFrame gencosts:  plants from gencost.csv.
+    :param dict plant_remove, a dict of plants need to be deleted, returned by :func: `new_plant`.
+    :return: (*pandas.DataFrame*) -- gencosts, updated plants.
+    """
     gencosts = gencosts[-gencosts.plant_id.isin(plant_remove)]
     return gencosts
 

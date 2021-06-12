@@ -13,6 +13,11 @@ Uncertain = ['MT','SD','TX']
 
 
 def get_Zone(Z_csv):
+     """Generate a dictionary of zone using the zone.csv
+
+    :param str Z_csv: path of the zone.csv file
+    :return: (*dict*) -- a dict mapping the STATE to its ID.
+    """
     zone = pd.read_csv(Z_csv)
 
     # Create dictionary to store the mapping of states and codes
@@ -22,12 +27,22 @@ def get_Zone(Z_csv):
     return zone_dic
 
 def map_plant_county(P_csv):
+    """Generate a dictionary of county using the Power_Plants.csv
+
+    :param str P_csv: path of the Power_Plants.csv file
+    :return: (*dict*) -- a dict mapping the plant county to its name.
+    """
     plant = pd.read_csv(P_csv)
     county_dic = plant.set_index('NAME')['COUNTY'].to_dict()
     return county_dic
 
-def Clean(E_csv,zone_dic):
-    csv_data = pd.read_csv(E_csv)
+def Clean(e_csv,zone_dic):
+    """Clean data; remove substations which are outside the United States or not available.
+    :param str e_csv: path of the HIFLD substation csv file
+    :param dict zone_dic: zone dict as returned by :func:`get_zone`
+    :return: (*pandas.DataFrame*) -- a pandas Dataframe storing the substations after dropping the invalid ones.
+    """
+    csv_data = pd.read_csv(e_csv)
     Num_sub = len(csv_data)
     row_indexs = []
     for i in range(Num_sub):
@@ -37,6 +52,11 @@ def Clean(E_csv,zone_dic):
     return clean_data
 
 def Clean_p(P_csv):
+    """Clean data; remove plants which are not available.
+    :param str P_csv: path of the HIFLD plants csv file
+    :param dict zone_dic: zone dict as returned by :func:`get_zone`
+    :return: (*pandas.DataFrame*) -- a pandas Dataframe storing the plants after dropping the invalid ones.
+    """
     csv_data = pd.read_csv(P_csv)
     Num_sub = len(csv_data)
     row_indexs = []
@@ -47,6 +67,11 @@ def Clean_p(P_csv):
     return clean_data
 
 def map_interconnect_sub(bus_csv):
+    """Generate a list of dictionaries of buses in each interconnect using the bus.csv
+
+    :param str bus_csv: Power_Plants of the zone.csv file
+    :return: (*dict*) -- a dict mapping the plant county to its name.
+    """
     inter_bus = {}
     bus = pd.read_csv(bus_csv)
     inter_bus['Eastern'] = []
@@ -60,7 +85,7 @@ def map_interconnect_sub(bus_csv):
 def LocOfsub(bus_csv):
     """Get the latitude and longitude of substations, and the substations in the area of each zip code
 
-    :param dict clean_data:  a dict of substations as returned by :func:`data_trans.Clean`
+    :param str bus_csv:  path of the sub.csv file
     :return: (*dict*) -- LocOfsub_dict, dict mapping the geo coordinate (x,y) to substations.
     :return: (*dict*) -- ZipOfsub_dict, dict mapping the zip code to a group of substations.
     """
@@ -95,7 +120,7 @@ def Cal_P(G_csv):
     """Calculate the Pmin for each plant
 
     :param dict G_csv: path of the EIA generator profile csv file
-    :return: (*list*) -- a list of Pmin for the plants.
+    :return: (*dict*) -- a dict of Pmin for the plants.
     """
 
     Pmin = {}
@@ -109,7 +134,7 @@ def Cal_P(G_csv):
 def Loc_of_plant():
     """Get the latitude and longitude of plants
 
-    :return: (*list*) -- a list of power plants' geo coordinates.
+    :return: (*dict*) -- a dict of power plants' geo coordinates.
     """
 
     loc_of_plant = {}
@@ -123,6 +148,10 @@ def Loc_of_plant():
     return loc_of_plant
 
 def getCostCurve():
+    """Get the latitude and longitude of plants
+
+    :return: (*dict*) -- a dict of power plants' c1 data.
+    """
     points = {}
     csv_data = pd.read_csv("data/needs.csv")
     df = np.array(csv_data)
@@ -133,6 +162,10 @@ def getCostCurve():
     return points
 
 def getCostCurve2():
+    """Get the latitude and longitude of plants
+
+    :return: (*dict*) -- a dict of power plants' c2,c1,c0 data.
+    """
     curve = {}
     csv_data = pd.read_csv("data/curve.csv")
     df = np.array(csv_data)
@@ -143,6 +176,9 @@ def getCostCurve2():
     return curve
 
 def Getregion():
+    """Get the interconnect of plants
+    :return: (*dict*) -- a dict of power plants' interconnect.
+    """
     region = {}
     csv_data = pd.read_csv("data/needs.csv")
     df = np.array(csv_data)
@@ -490,6 +526,7 @@ def write_gen(plant_dict, type_dict, curve):
 
     :param dict plant_dict:  a dict of power plants as returned by :func:`Plant_agg`
     :param dict type_dict:  a dict of generator types
+    :param dict curve:  a dict of consumption curves
     """
     type_d = {'CONVENTIONAL HYDROELECTRIC' : 'hydro',
               'HYDROELECTRIC PUMPED STORAGE':'hydro', 
