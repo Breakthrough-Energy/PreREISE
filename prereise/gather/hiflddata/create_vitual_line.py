@@ -25,7 +25,6 @@ def bus_branch_neigh(branches):
 
 
 def find_neigh(bus, depth, load,re):
-    bus_branch_neigh(branches):
     """Use BFS to find buses need to add branches.
 
     :param str bus: Id of the start bus.

@@ -13,7 +13,7 @@ Uncertain = ['MT','SD','TX']
 
 
 def get_Zone(Z_csv):
-     """Generate a dictionary of zone using the zone.csv
+    """Generate a dictionary of zone using the zone.csv
 
     :param str Z_csv: path of the zone.csv file
     :return: (*dict*) -- a dict mapping the STATE to its ID.
