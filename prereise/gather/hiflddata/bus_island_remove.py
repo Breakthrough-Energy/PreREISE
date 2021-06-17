@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-import csv
-import json
-import os.path
-
 import networkx as nx
 import pandas as pd
 

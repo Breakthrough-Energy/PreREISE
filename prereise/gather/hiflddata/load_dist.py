@@ -10,10 +10,10 @@ load_consumption_per_person = 2.01 / 1000
 nyc_countyfips = set(["36047", "36005", "36085", "36061"])
 
 
-def compute_load_dist(substation_data, KV_dict):
+def compute_load_dist(substation_data, kv_dict):
     """Compute the Pd for each bus based on zip code and population information
     :param pandas.DataFrame substation_data: substation dataframe loaded from HIFLD raw data after clean-up
-    :param dict KV_dict: a dict of substation's baseKV value.
+    :param dict kv_dict: a dict of substation's baseKV value.
     :return pandas.DataFrame substation_data: substation dataframe with pd column computed and added
     """
 
@@ -44,7 +44,7 @@ def compute_load_dist(substation_data, KV_dict):
     )
 
     substation_data["base_KV"] = substation_data.apply(
-        lambda row: KV_dict.get((row["LATITUDE"], row["LONGITUDE"])), axis=1
+        lambda row: kv_dict.get((row["LATITUDE"], row["LONGITUDE"])), axis=1
     )
 
     substation_vol = substation_data[["ID", "COUNTYFIPS", "base_KV", "ZIP"]]

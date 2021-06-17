@@ -3,7 +3,6 @@ import math
 
 import numpy as np
 import pandas as pd
-from data_trans import clean, get_Zone
 from geopy.distance import geodesic
 
 coord_precision = ".9f"
@@ -12,13 +11,13 @@ West = ["WA", "OR", "CA", "NV", "AK", "ID", "UT", "AZ", "WY", "CO", "NM"]
 Uncertain = ["MT", "SD", "TX"]
 
 
-def get_Zone(Z_csv):
+def get_zone(z_csv):
     """Generate a dictionary of zone using the zone.csv
 
-    :param str Z_csv: path of the zone.csv file
+    :param str z_csv: path of the zone.csv file
     :return: (*dict*) -- a dict mapping the STATE to its ID.
     """
-    zone = pd.read_csv(Z_csv)
+    zone = pd.read_csv(z_csv)
 
     # Create dictionary to store the mapping of states and codes
     zone_dic = {}
@@ -27,27 +26,27 @@ def get_Zone(Z_csv):
     return zone_dic
 
 
-def map_plant_county(P_csv):
+def map_plant_county(p_csv):
     """Generate a dictionary of county using the Power_Plants.csv
 
-    :param str P_csv: path of the Power_Plants.csv file
+    :param str p_csv: path of the Power_Plants.csv file
     :return: (*dict*) -- a dict mapping the plant county to its name.
     """
-    plant = pd.read_csv(P_csv)
+    plant = pd.read_csv(p_csv)
     county_dic = plant.set_index("NAME")["COUNTY"].to_dict()
     return county_dic
 
 
-def Clean(e_csv, zone_dic):
+def clean(e_csv, zone_dic):
     """Clean data; remove substations which are outside the United States or not available.
     :param str e_csv: path of the HIFLD substation csv file
     :param dict zone_dic: zone dict as returned by :func:`get_zone`
     :return: (*pandas.DataFrame*) -- a pandas Dataframe storing the substations after dropping the invalid ones.
     """
     csv_data = pd.read_csv(e_csv)
-    Num_sub = len(csv_data)
+    num_sub = len(csv_data)
     row_indexs = []
-    for i in range(Num_sub):
+    for i in range(num_sub):
         if (
             (csv_data["STATE"][i] not in zone_dic)
             or (csv_data["STATUS"][i] != "IN SERVICE")
@@ -58,16 +57,16 @@ def Clean(e_csv, zone_dic):
     return clean_data
 
 
-def Clean_p(P_csv):
+def clean_p(p_csv):
     """Clean data; remove plants which are not available.
-    :param str P_csv: path of the HIFLD plants csv file
+    :param str p_csv: path of the HIFLD plants csv file
     :param dict zone_dic: zone dict as returned by :func:`get_zone`
     :return: (*pandas.DataFrame*) -- a pandas Dataframe storing the plants after dropping the invalid ones.
     """
-    csv_data = pd.read_csv(P_csv)
-    Num_sub = len(csv_data)
+    csv_data = pd.read_csv(p_csv)
+    num_sub = len(csv_data)
     row_indexs = []
-    for i in range(Num_sub):
+    for i in range(num_sub):
         if csv_data["STATUS"][i] != "OP":
             row_indexs.append(i)
     clean_data = csv_data.drop(labels=row_indexs)
@@ -90,18 +89,18 @@ def map_interconnect_sub(bus_csv):
     return inter_bus
 
 
-def LocOfsub(bus_csv):
+def loc_of_sub(bus_csv):
     """Get the latitude and longitude of substations, and the substations in the area of each zip code
 
     :param str bus_csv:  path of the sub.csv file
     :return: (*dict*) -- LocOfsub_dict, dict mapping the geo coordinate (x,y) to substations.
     :return: (*dict*) -- ZipOfsub_dict, dict mapping the zip code to a group of substations.
     """
-    LocOfsub_dict = {}
-    ZipOfsub_dict = {}
-    ZipOfsub_dict["Eastern"] = {}
-    ZipOfsub_dict["Western"] = {}
-    ZipOfsub_dict["Texas"] = {}
+    loc_of_sub_dict = {}
+    zip_of_sub_dict = {}
+    zip_of_sub_dict["Eastern"] = {}
+    zip_of_sub_dict["Western"] = {}
+    zip_of_sub_dict["Texas"] = {}
     bus = pd.read_csv(bus_csv)
     for index, row in bus.iterrows():
         loc = (
@@ -112,34 +111,34 @@ def LocOfsub(bus_csv):
         sub = row["sub_id"]
         zi = str(row["zip"])
         re = row["interconnect"]
-        LocOfsub_dict[sub] = loc
+        loc_of_sub_dict[sub] = loc
 
-        if zi in ZipOfsub_dict[re]:
-            list1 = ZipOfsub_dict[re][zi]
+        if zi in zip_of_sub_dict[re]:
+            list1 = zip_of_sub_dict[re][zi]
             list1.append(sub)
-            ZipOfsub_dict[re][zi] = list1
+            zip_of_sub_dict[re][zi] = list1
         else:
             list1 = [sub]
-            ZipOfsub_dict[re][zi] = list1
-    return LocOfsub_dict, ZipOfsub_dict
+            zip_of_sub_dict[re][zi] = list1
+    return loc_of_sub_dict, zip_of_sub_dict
 
 
-def Cal_P(G_csv):
+def cal_pmin(g_csv):
     """Calculate the Pmin for each plant
 
-    :param dict G_csv: path of the EIA generator profile csv file
+    :param dict g_csv: path of the EIA generator profile csv file
     :return: (*dict*) -- a dict of Pmin for the plants.
     """
 
-    Pmin = {}
-    csv_data = pd.read_csv(G_csv)
+    pmin = {}
+    csv_data = pd.read_csv(g_csv)
     for index, row in csv_data.iterrows():
         tu = (str(row["Plant Name"]).upper(), row["Energy Source 1"])
-        Pmin[tu] = row["Minimum Load (MW)"]
-    return Pmin
+        pmin[tu] = row["Minimum Load (MW)"]
+    return pmin
 
 
-def Loc_of_plant():
+def get_loc_of_plant():
     """Get the latitude and longitude of plants
 
     :return: (*dict*) -- a dict of power plants' geo coordinates.
@@ -156,7 +155,7 @@ def Loc_of_plant():
     return loc_of_plant
 
 
-def getCostCurve():
+def get_cost_curve():
     """Get the latitude and longitude of plants
 
     :return: (*dict*) -- a dict of power plants' c1 data.
@@ -171,7 +170,7 @@ def getCostCurve():
     return points
 
 
-def getCostCurve2():
+def get_cost_curve2():
     """Get the latitude and longitude of plants
 
     :return: (*dict*) -- a dict of power plants' c2,c1,c0 data.
@@ -186,7 +185,7 @@ def getCostCurve2():
     return curve
 
 
-def Getregion():
+def get_region():
     """Get the interconnect of plants
     :return: (*dict*) -- a dict of power plants' interconnect.
     """
@@ -207,12 +206,12 @@ def Getregion():
     return region
 
 
-def Plant_agg(
+def plant_agg(
     clean_data,
-    ZipOfsub_dict,
+    zip_of_sub_dict,
     loc_of_plant,
-    LocOfsub_dict,
-    Pmin,
+    loc_of_sub_dict,
+    pmin,
     region,
     points,
     county_dic,
@@ -319,31 +318,31 @@ def Plant_agg(
         u = (row["PLANT"], row["PRIM_FUEL"])
         r = (row["PLANT"], row["NAME"])
         if row["TYPE"] in sto:
-            SOC_max = 1
-            SOC_min = 0
-            Pchr_max = min(row["WINTER_CAP"], row["SUMMER_CAP"])
-            Pdis_max = min(row["WINTER_CAP"], row["SUMMER_CAP"])
-            ChargeEfficiency = math.sqrt(sto_dict[row["TYPE"]])
-            DischargeEfficiency = math.sqrt(sto_dict[row["TYPE"]])
-            LossFactor = 0.99
-            TerminalMax = 0.80
-            TerminalMin = 0.20
-            SOC_intial = 0.50
+            soc_max = 1
+            soc_min = 0
+            pchr_max = min(row["WINTER_CAP"], row["SUMMER_CAP"])
+            pdis_max = min(row["WINTER_CAP"], row["SUMMER_CAP"])
+            charge_efficiency = math.sqrt(sto_dict[row["TYPE"]])
+            discharge_efficiency = math.sqrt(sto_dict[row["TYPE"]])
+            loss_factor = 0.99
+            terminal_max = 0.80
+            terminal_min = 0.20
+            soc_intial = 0.50
 
             csv_writer.writerow(
                 [
                     r[0] + "-" + r[1],
                     row["TYPE"],
-                    SOC_max,
-                    SOC_min,
-                    Pchr_max,
-                    Pdis_max,
-                    ChargeEfficiency,
-                    DischargeEfficiency,
-                    LossFactor,
-                    TerminalMax,
-                    TerminalMin,
-                    SOC_intial,
+                    soc_max,
+                    soc_min,
+                    pchr_max,
+                    pdis_max,
+                    charge_efficiency,
+                    discharge_efficiency,
+                    loss_factor,
+                    terminal_max,
+                    terminal_min,
+                    soc_intial,
                 ]
             )
             continue
@@ -358,7 +357,7 @@ def Plant_agg(
                 county = ""
             if row["STATE"] in West:
                 re = "Western"
-            elif row["STATE"] is "TX":
+            elif row["STATE"] == "TX":
                 if county in tx_west:
                     re = "Western"
                 elif county in tx_east:
@@ -392,18 +391,20 @@ def Plant_agg(
                 lat = loc_of_plant[row["PLANT"]][0]
                 lon = loc_of_plant[row["PLANT"]][1]
                 # print(u)
-                if row["ZIP"] in ZipOfsub_dict[re]:
+                if row["ZIP"] in zip_of_sub_dict[re]:
 
                     min_d = 1000000.0
-                    for value in ZipOfsub_dict[re][row["ZIP"]]:
+                    for value in zip_of_sub_dict[re][row["ZIP"]]:
 
                         # calculate the distance between the plant and substations
                         if (
-                            geodesic(loc_of_plant[row["PLANT"]], LocOfsub_dict[value]).m
+                            geodesic(
+                                loc_of_plant[row["PLANT"]], loc_of_sub_dict[value]
+                            ).m
                             < min_d
                         ):
                             min_d = geodesic(
-                                loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
+                                loc_of_plant[row["PLANT"]], loc_of_sub_dict[value]
                             ).m
                             # print(value)
 
@@ -417,8 +418,8 @@ def Plant_agg(
                     min_d = 1000000.0
 
                     for i in range(-100, 101):
-                        if str(zi + i) in ZipOfsub_dict[re]:
-                            for value in ZipOfsub_dict[re][str(zi + i)]:
+                        if str(zi + i) in zip_of_sub_dict[re]:
+                            for value in zip_of_sub_dict[re][str(zi + i)]:
                                 # if value not in inter_bus[re]:
                                 #    continue
                                 # print(value)
@@ -426,17 +427,19 @@ def Plant_agg(
                                     print(
                                         geodesic(
                                             loc_of_plant[row["PLANT"]],
-                                            LocOfsub_dict[value],
+                                            loc_of_sub_dict[value],
                                         ).m
                                     )
                                 if (
                                     geodesic(
-                                        loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
+                                        loc_of_plant[row["PLANT"]],
+                                        loc_of_sub_dict[value],
                                     ).m
                                     < min_d
                                 ):
                                     min_d = geodesic(
-                                        loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
+                                        loc_of_plant[row["PLANT"]],
+                                        loc_of_sub_dict[value],
                                     ).m
                                     # print(value)
 
@@ -445,22 +448,22 @@ def Plant_agg(
                         print(row["PLANT"], row["NAME"], row["ZIP"], re)
             else:
 
-                if row["ZIP"] in ZipOfsub_dict[re]:
-                    bus_id = ZipOfsub_dict[re][row["ZIP"]][0]
-                    lat = LocOfsub_dict[bus_id][0]
-                    lon = LocOfsub_dict[bus_id][1]
+                if row["ZIP"] in zip_of_sub_dict[re]:
+                    bus_id = zip_of_sub_dict[re][row["ZIP"]][0]
+                    lat = loc_of_sub_dict[bus_id][0]
+                    lon = loc_of_sub_dict[bus_id][1]
                 else:
                     # print(row['PLANT'],row['NAME'],row['ZIP'],re)
                     continue
-            if u in Pmin:
-                pmin = Pmin[u]
+            if u in pmin:
+                pmin = pmin[u]
                 pmin = pmin.replace(",", "")
             else:
                 pmin = 0.0
 
             try:
                 pmin = float(pmin)
-            except:
+            except ValueError:
                 pmin = 0.0
             # else:
             # print(tu)
@@ -639,32 +642,6 @@ def write_gen(plant_dict, type_dict, curve):
     :param dict type_dict:  a dict of generator types
     :param dict curve:  a dict of consumption curves
     """
-    type_d = {
-        "CONVENTIONAL HYDROELECTRIC": "hydro",
-        "HYDROELECTRIC PUMPED STORAGE": "hydro",
-        "NATURAL GAS STEAM TURBINE": "ng",
-        "CONVENTIONAL STEAM COAL": "coal",
-        "NATURAL GAS FIRED COMBINED CYCLE": "ng",
-        "NATURAL GAS FIRED COMBUSTION TURBINE": "ng",
-        "PETROLEUM LIQUIDS": "dfo",
-        "PETROLEUM COKE": "coal",
-        "NATURAL GAS INTERNAL COMBUSTION ENGINE": "ng",
-        "NUCLEAR": "nuclear",
-        "ONSHORE WIND TURBINE": "wind",
-        "SOLAR PHOTOVOLTAIC": "solar",
-        "GEOTHERMAL": "geothermal",
-        "LANDFILL GAS": "ng",
-        "WOOD/WOOD WASTE BIOMASS": "other",
-        "COAL INTEGRATED GASIFICATION COMBINED CYCLE": "coal",
-        "OTHER GASES": "other",
-        "MUNICIPAL SOLID WASTE": "other",
-        "ALL OTHER": "other",
-        "OTHER WASTE BIOMASS": "other",
-        "OTHER NATURAL GAS": "ng",
-        "OFFSHORE WIND TURBINE": "wind_offshore",
-        "SOLAR THERMAL WITHOUT ENERGY STORAGE": "solar",
-        "SOLAR THERMAL WITH ENERGY STORAGE": "solar",
-    }
 
     with open("output/gencost.csv", "w", newline="") as gencost:
         csv_writer = csv.writer(gencost)
@@ -710,36 +687,34 @@ def write_gen(plant_dict, type_dict, curve):
     final_gen.to_csv("output/gencost.csv", index=False)
 
 
-def Plant(E_csv, U_csv, G2019_csv, Z_csv, P_csv, bus_csv):
+def plant(u_csv, g2019_csv, p_csv, bus_csv):
     """Entry point to start the gencost and power plant data processing
 
-    :param str E_csv: path of the HIFLD substation csv file
-    :param str U_csv: path of the general unit csv file
-    :param str G2019_csv: path of the EIA generator profile csv file
+    :param str e_csv: path of the HIFLD substation csv file
+    :param str u_csv: path of the general unit csv file
+    :param str g2019_csv: path of the EIA generator profile csv file
     """
 
-    zone_dic = get_Zone(Z_csv)
-    county_dic = map_plant_county(P_csv)
+    county_dic = map_plant_county(p_csv)
     # inter_bus = map_interconnect_sub(bus_csv)
-    clean_sub = Clean(E_csv, zone_dic)
-    LocOfsub_dict, ZipOfsub_dict = LocOfsub(bus_csv)
-    loc_of_plant = Loc_of_plant()
-    clean_data = Clean_p(U_csv)
-    Pmin = Cal_P(G2019_csv)
+    loc_of_sub_dict, zip_of_sub_dict = loc_of_sub(bus_csv)
+    loc_of_plant = get_loc_of_plant()
+    clean_data = clean_p(u_csv)
+    pmin = cal_pmin(g2019_csv)
 
     type_dict = {}
     type_data = pd.read_csv("data/type.csv")
     for index, row in type_data.iterrows():
         type_dict[row["TYPE"]] = row["Type_code"]
-    region = Getregion()
-    points = getCostCurve()
-    curve = getCostCurve2()
-    plant_dict = Plant_agg(
+    region = get_region()
+    points = get_cost_curve()
+    curve = get_cost_curve2()
+    plant_dict = plant_agg(
         clean_data,
-        ZipOfsub_dict,
+        zip_of_sub_dict,
         loc_of_plant,
-        LocOfsub_dict,
-        Pmin,
+        loc_of_sub_dict,
+        pmin,
         region,
         points,
         county_dic,
@@ -749,11 +724,9 @@ def Plant(E_csv, U_csv, G2019_csv, Z_csv, P_csv, bus_csv):
 
 
 if __name__ == "__main__":
-    Plant(
-        "data/Electric_Substations.csv",
+    plant(
         "data/General_Units.csv",
         "data/Generator_Y2019.csv",
-        "data/zone.csv",
         "data/Power_Plants.csv",
         "output/sub.csv",
     )

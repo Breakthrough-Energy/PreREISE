@@ -1,8 +1,6 @@
 import csv
-import glob
-import json
-import os.path
 
+import numpy as np
 import pandas as pd
 from scipy import optimize
 
@@ -31,9 +29,9 @@ def clean_epa():
             "HEAT_INPUT (mmBtu)",
         ],
     )
-    Num_sub = len(df)
+    num_sub = len(df)
     row_indexs = []
-    for i in range(Num_sub):
+    for i in range(num_sub):
         if (
             pd.isnull(df["OP_TIME"][i])
             or (df["OP_TIME"][i] == 0.0)
@@ -47,7 +45,7 @@ def clean_epa():
     clean_data.to_csv("data/epa.csv", index=False, header=False)
 
 
-def getGen():
+def get_gen():
     gen = []
     csv_data = pd.read_csv("data/General_Units.csv")
     df = np.array(csv_data)
@@ -59,7 +57,7 @@ def getGen():
     return gen
 
 
-def getEpaDict(gen):
+def get_epa_dict(gen):
     epa = {}
     csv = pd.read_csv("epa.csv", header=None)
     df = np.array(csv)
@@ -85,7 +83,7 @@ def getEpaDict(gen):
     return epa
 
 
-def aggList(list1, list2):
+def agg_list(list1, list2):
     list3 = []
     len1 = len(list1)
     len2 = len(list2)
@@ -101,20 +99,20 @@ def aggList(list1, list2):
     return list3
 
 
-def Clean_p(P_csv):
-    csv_data = pd.read_csv(P_csv)
-    Num_sub = len(csv_data)
+def clean_p(p_csv):
+    csv_data = pd.read_csv(p_csv)
+    num_sub = len(csv_data)
     row_indexs = []
-    for i in range(Num_sub):
+    for i in range(num_sub):
         if csv_data["STATUS"][i] != "OP":
             row_indexs.append(i)
     clean_data = csv_data.drop(labels=row_indexs)
     return clean_data
 
 
-def Plant_agg(clean_data, epa):
+def plant_agg(clean_data, epa):
     plant_dict = {}
-    n = 0
+    # n = 0
     p = 0
     q = 0
     for index, row in clean_data.iterrows():
@@ -142,7 +140,7 @@ def Plant_agg(clean_data, epa):
             if r in epa:
                 p = p + 1
                 list1 = plant_dict[tu]
-                plant_dict[tu] = aggList(list1, epa[r])
+                plant_dict[tu] = agg_list(list1, epa[r])
             elif (row["PLANT"] + "-cc") in epa:
                 q = q + 1
                 plant_dict[tu] = epa[row["PLANT"] + "-cc"]
@@ -189,8 +187,8 @@ if __name__ == "__main__":
     # print(csv_list)
     # marge(csv_list, output_csv_path)
     # distinct(output_csv_path)
-    gen = getGen()
-    epa = getEpaDict(gen)
-    clean_data = Clean_p("data/General_Units.csv")
-    plant_dict = Plant_agg(clean_data, epa)
+    gen = get_gen()
+    epa = get_epa_dict(gen)
+    clean_data = clean_p("data/General_Units.csv")
+    plant_dict = plant_agg(clean_data, epa)
     to_csv(plant_dict)

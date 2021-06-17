@@ -1,5 +1,3 @@
-import csv
-
 import pandas as pd
 
 coord_precision = ".9f"
@@ -17,7 +15,7 @@ def avai_load(buses, bus_pmax, bus_line_total_capa):
     for bus in buses.iloc:
         bus_id = bus["bus_id"]
         bus_capacity = bus_line_total_capa[bus_id]
-        true_load = bus["true_load"]
+        # true_load = bus["true_load"]
         if bus_id in bus_pmax:
             pmax = bus_pmax[bus_id]
         else:
@@ -30,7 +28,7 @@ def avai_load(buses, bus_pmax, bus_line_total_capa):
     return avaiable_load
 
 
-def LocOfsub(subs):
+def loc_of_sub(subs):
     """Get the latitude and longitude of substations, and the substations in the area of each zip code
 
     :param dict subs:  a dict of substations from sub.csv
@@ -38,11 +36,11 @@ def LocOfsub(subs):
     :return: (*dict*) -- ZipOfsub_dict, dict mapping the zip code to a group of substations.
     :return: (*dict*) -- ziplist, a list of dicts contain all zip codes in each interconnect.
     """
-    LocOfsub_dict = {}
-    ZipOfsub_dict = {}
-    ZipOfsub_dict["Eastern"] = {}
-    ZipOfsub_dict["Western"] = {}
-    ZipOfsub_dict["Texas"] = {}
+    loc_of_sub_dict = {}
+    zip_of_sub_dict = {}
+    zip_of_sub_dict["Eastern"] = {}
+    zip_of_sub_dict["Western"] = {}
+    zip_of_sub_dict["Texas"] = {}
     ziplist = {}
     ziplist["Eastern"] = []
     ziplist["Western"] = []
@@ -58,24 +56,24 @@ def LocOfsub(subs):
         zi = row["zip"]
         re = row["interconnect"]
 
-        if zi in ZipOfsub_dict[re]:
-            list1 = ZipOfsub_dict[re][zi]
+        if zi in zip_of_sub_dict[re]:
+            list1 = zip_of_sub_dict[re][zi]
             list1.append(sub)
-            ZipOfsub_dict[re][zi] = list1
+            zip_of_sub_dict[re][zi] = list1
         else:
             list1 = [sub]
-            ZipOfsub_dict[re][zi] = list1
+            zip_of_sub_dict[re][zi] = list1
 
         if zi not in ziplist[re]:
             ziplist[re].append(zi)
 
-        LocOfsub_dict[sub] = loc
+        loc_of_sub_dict[sub] = loc
 
     ziplist["Eastern"] = sorted(ziplist["Eastern"])
     ziplist["Western"] = sorted(ziplist["Western"])
     ziplist["Texas"] = sorted(ziplist["Texas"])
 
-    return LocOfsub_dict, ZipOfsub_dict, ziplist
+    return loc_of_sub_dict, zip_of_sub_dict, ziplist
 
 
 def new_plant(
@@ -84,7 +82,7 @@ def new_plant(
     bus_line_total_capa,
     bus_load,
     ziplist,
-    ZipOfsub_dict,
+    zip_of_sub_dict,
     avaiable_load,
     add_plant,
     plant_remove,
@@ -97,7 +95,7 @@ def new_plant(
     :param dict bus_line_total_capa: a dict of buses' total capacity of linked lines.
     :param dict bus_load: a dict of loads assigned to each bus.
     :param dict ziplist: a list of dicts contain all zip codes in each interconnect, returned by :func: `LocOfsub`.
-    :param dict ZipOfsub_dict: dict mapping the zip code to a group of substations, returned by :func: `LocOfsub`.
+    :param dict zip_of_sub_dict: dict mapping the zip code to a group of substations, returned by :func: `LocOfsub`.
     :param dict avaiable_load: a dict of the avaiable capacity for each bus, returned by :func: `avai_load`.
 
     :return: (*dict*) -- add_plant, a dict of plants need to be added.
@@ -112,12 +110,12 @@ def new_plant(
             lon = plant["lat"]
             pmax = plant["Pmax"]
             pmin = plant["Pmin"]
-            Type = plant["type"]
+            plant_type = plant["type"]
             re = plant["interconnect"]
-            Zip = plant["zip"]
+            plant_zip = plant["zip"]
             plant_remove[plant["plant_id"]] = []
             nei_bus, avaiable_load = find_near_sub(
-                lat, lon, pmax, re, Zip, ziplist, ZipOfsub_dict, avaiable_load
+                lat, lon, pmax, re, plant_zip, ziplist, zip_of_sub_dict, avaiable_load
             )
             for bu in nei_bus:
                 add_plant[new_plant_id] = [
@@ -125,7 +123,7 @@ def new_plant(
                     pmin * 0.2,
                     bu,
                     re,
-                    Type,
+                    plant_type,
                     pl_curve[plant["plant_id"]][0],
                     pl_curve[plant["plant_id"]][1],
                     pl_curve[plant["plant_id"]][2],
@@ -135,16 +133,18 @@ def new_plant(
     return add_plant, plant_remove
 
 
-def find_near_sub(lat, lon, pmax, re, Zip, ziplist, ZipOfsub_dict, avaiable_load):
+def find_near_sub(
+    lat, lon, pmax, re, plant_zip, ziplist, zip_of_sub_dict, avaiable_load
+):
     """Find 5 nearest avaiable buses which can afford the load of plant
 
     :param float lat: the latitude of plant.
     :param float lon: the longitude of plant.
     :param float pmax: pmax of plant.
     :param str re: interconnect of plant.
-    :param int Zip: zip code of plant.
+    :param int plant_zip: zip code of plant.
     :param dict ziplist: a list of dicts contain all zip codes in each interconnect, returned by :func: `LocOfsub`.
-    :param dict ZipOfsub_dict: dict mapping the zip code to a group of substations, returned by :func: `LocOfsub`.
+    :param dict zip_of_sub_dict: dict mapping the zip code to a group of substations, returned by :func: `LocOfsub`.
     :param dict avaiable_load: a dict of the avaiable capacity for each bus, returned by :func: `avai_load`.
 
     :return: (*list*) -- nei_bus, a list of 5 nearest buses.
@@ -155,7 +155,7 @@ def find_near_sub(lat, lon, pmax, re, Zip, ziplist, ZipOfsub_dict, avaiable_load
     index = len(ziplist[re]) - 1
     shift = 0
     for i in range(len(ziplist[re])):
-        if ziplist[re][i] >= Zip:
+        if ziplist[re][i] >= plant_zip:
             index = i
             break
     while len(nei_bus) < 5:
@@ -164,7 +164,7 @@ def find_near_sub(lat, lon, pmax, re, Zip, ziplist, ZipOfsub_dict, avaiable_load
             break
         if index - shift >= 0:
             zip_code = ziplist[re][index - shift]
-            for sub in ZipOfsub_dict[re][zip_code]:
+            for sub in zip_of_sub_dict[re][zip_code]:
                 if sub not in avaiable_load:
                     break
                 if avaiable_load[sub] > standard:
@@ -180,7 +180,7 @@ def find_near_sub(lat, lon, pmax, re, Zip, ziplist, ZipOfsub_dict, avaiable_load
             break
         if index + shift < len(ziplist[re]):
             zip_code = ziplist[re][index + shift]
-            for sub in ZipOfsub_dict[re][zip_code]:
+            for sub in zip_of_sub_dict[re][zip_code]:
                 if sub not in avaiable_load:
                     break
                 if avaiable_load[sub] > standard:
@@ -261,7 +261,7 @@ if __name__ == "__main__":
             bus_line_total_capa[br["to_bus_id"]] = (
                 bus_line_total_capa[br["to_bus_id"]] + br["rateA"]
             )
-    LocOfsub_dict, ZipOfsub_dict, ziplist = LocOfsub(subs)
+    LocOfsub_dict, ZipOfsub_dict, ziplist = loc_of_sub(subs)
     bus_pmax = plants["Pmax"].groupby(plants["bus_id"]).sum().to_dict()
     pl_curve = {}
     for pl in gencosts.iloc:

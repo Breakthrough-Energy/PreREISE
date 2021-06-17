@@ -23,7 +23,7 @@ kv_xperunit_calculate_2 = (
 )
 
 # RateA Calculate 3
-kv_rate_A_calucate_3 = (
+kv_rate_a_calucate_3 = (
     (69, 86),
     (100, 181),
     (115, 239),
@@ -37,7 +37,7 @@ kv_rate_A_calucate_3 = (
 )
 
 # RateA Calculate 3
-kv_sil_calucate_3 = (
+kv_sil_calculate_3 = (
     (69, 13),
     (100, 30),
     (115, 35),

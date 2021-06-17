@@ -1,16 +1,16 @@
 import pandas as pd
 
-###please run this after running ercot_topology_validation
+# please run this after running ercot_topology_validation
 
 
-def get_Zone(Z_csv):
+def get_zone(z_csv):
     """Generate a dictionary of zone using the zone.csv
 
-    :param str Z_csv: path of the zone.csv file
+    :param str z_csv: path of the zone.csv file
     :return: (*dict*) -- a dict mapping the name and interconnect to its ID.
     """
 
-    zone = pd.read_csv(Z_csv)
+    zone = pd.read_csv(z_csv)
 
     zone_map = {}
     for i in range(len(zone)):
@@ -224,7 +224,7 @@ def update_branch(branch, branch_will_update, br_delete):
 
 def bus_branch_validation():
 
-    zone_map = get_Zone("data/zone.csv")
+    zone_map = get_zone("data/zone.csv")
     branch = pd.read_csv("output/branch.csv")
     bus = pd.read_csv("output/bus.csv")
     bus_dict = bus.set_index("bus_id")["interconnect"].to_dict()

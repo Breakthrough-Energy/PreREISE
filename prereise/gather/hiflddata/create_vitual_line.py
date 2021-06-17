@@ -1,5 +1,3 @@
-import csv
-
 import pandas as pd
 
 coord_precision = ".9f"

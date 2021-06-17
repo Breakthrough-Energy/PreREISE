@@ -10,8 +10,8 @@ def mkdir(path):
 
     path = path.strip()
     path = path.rstrip("\\")
-    isExists = os.path.exists(path)
-    if not isExists:
+    is_exists = os.path.exists(path)
+    if not is_exists:
         os.makedirs(path)
         return True
     else:

@@ -13,103 +13,103 @@ def mkdir(path):
 
     path = path.strip()
     path = path.rstrip("\\")
-    isExists = os.path.exists(path)
-    if not isExists:
+    is_exists = os.path.exists(path)
+    if not is_exists:
         os.makedirs(path)
         return True
     else:
         return False
 
 
-def get_Zone():
-    wind_West = ["UTC"]
-    wind_East = ["UTC"]
-    wind_Texas = ["UTC"]
-    solar_West = ["UTC"]
-    solar_East = ["UTC"]
-    solar_Texas = ["UTC"]
-    hydro_West = ["UTC"]
-    hydro_East = ["UTC"]
-    hydro_Texas = ["UTC"]
+def get_zone():
+    wind_west = ["UTC"]
+    wind_east = ["UTC"]
+    wind_texas = ["UTC"]
+    solar_west = ["UTC"]
+    solar_east = ["UTC"]
+    solar_texas = ["UTC"]
+    hydro_west = ["UTC"]
+    hydro_east = ["UTC"]
+    hydro_texas = ["UTC"]
     with open("HIFLD_Case_for_Profile_Input/plant.csv", "r") as f:
         reader = csv.reader(f)
         result = list(reader)
         for line in result:
             if line[26] == "hydro":
                 if line[27] == "Eastern":
-                    hydro_East.append(str(line[0]))
+                    hydro_east.append(str(line[0]))
                 elif line[27] == "Western":
-                    hydro_West.append(str(line[0]))
+                    hydro_west.append(str(line[0]))
                 elif line[27] == "Texas":
-                    hydro_Texas.append(str(line[0]))
+                    hydro_texas.append(str(line[0]))
             elif line[26] == "solar":
                 if line[27] == "Eastern":
-                    solar_East.append(str(line[0]))
+                    solar_east.append(str(line[0]))
                 elif line[27] == "Western":
-                    solar_West.append(str(line[0]))
+                    solar_west.append(str(line[0]))
                 elif line[27] == "Texas":
-                    solar_Texas.append(str(line[0]))
+                    solar_texas.append(str(line[0]))
             elif line[26] == "wind" or line[26] == "wind_offshore":
                 if line[27] == "Eastern":
-                    wind_East.append(str(line[0]))
+                    wind_east.append(str(line[0]))
                 elif line[27] == "Western":
-                    wind_West.append(str(line[0]))
+                    wind_west.append(str(line[0]))
                 elif line[27] == "Texas":
-                    wind_Texas.append(str(line[0]))
+                    wind_texas.append(str(line[0]))
 
     return (
-        wind_West,
-        wind_East,
-        wind_Texas,
-        solar_West,
-        solar_East,
-        solar_Texas,
-        hydro_West,
-        hydro_East,
-        hydro_Texas,
+        wind_west,
+        wind_east,
+        wind_texas,
+        solar_west,
+        solar_east,
+        solar_texas,
+        hydro_west,
+        hydro_east,
+        hydro_texas,
     )
 
 
-def devide_Wind(wind_West, wind_East, wind_Texas, east=False, west=False, texas=False):
+def devide_wind(wind_west, wind_east, wind_texas, east=False, west=False, texas=False):
     demand = pd.read_csv("output/HIFLD_Profiles_Final/wind.csv")
     if east:
-        df = demand[wind_East]
+        df = demand[wind_east]
         df.to_csv("output/HIFLD_Profiles_Final/eastern/wind.csv", index=False)
     if west:
-        df = demand[wind_West]
+        df = demand[wind_west]
         df.to_csv("output/HIFLD_Profiles_Final/western/wind.csv", index=False)
     if west:
-        df = demand[wind_Texas]
+        df = demand[wind_texas]
         df.to_csv("output/HIFLD_Profiles_Final/texas/wind.csv", index=False)
 
 
-def devide_Solar(
-    solar_West, solar_East, solar_Texas, east=False, west=False, texas=False
+def devide_solar(
+    solar_west, solar_east, solar_texas, east=False, west=False, texas=False
 ):
     demand = pd.read_csv("output/HIFLD_Profiles_Final/solar.csv")
     if east:
-        df = demand[solar_East]
+        df = demand[solar_east]
         df.to_csv("output/HIFLD_Profiles_Final/eastern/solar.csv", index=False)
     if west:
-        df = demand[solar_West]
+        df = demand[solar_west]
         df.to_csv("output/HIFLD_Profiles_Final/western/solar.csv", index=False)
     if west:
-        df = demand[solar_Texas]
+        df = demand[solar_texas]
         df.to_csv("output/HIFLD_Profiles_Final/texas/solar.csv", index=False)
 
 
-def devide_Hydro(
-    hydro_West, hydro_East, hydro_Texas, east=False, west=False, texas=False
+def devide_hydro(
+    hydro_west, hydro_east, hydro_texas, east=False, west=False, texas=False
 ):
     demand = pd.read_csv("output/HIFLD_Profiles_Final/hydro.csv")
     if east:
-        df = demand[hydro_East]
+        df = demand[hydro_east]
         df.to_csv("output/HIFLD_Profiles_Final/eastern/hydro.csv", index=False)
     if west:
-        df = demand[hydro_West]
+        df = demand[hydro_west]
         df.to_csv("output/HIFLD_Profiles_Final/western/hydro.csv", index=False)
     if west:
-        df = demand[hydro_Texas]
+        df = demand[hydro_texas]
         df.to_csv("output/HIFLD_Profiles_Final/texas/hydro.csv", index=False)
 
 
@@ -124,16 +124,16 @@ if __name__ == "__main__":
 
     mkdir(mkpath)
     (
-        wind_West,
-        wind_East,
-        wind_Texas,
-        solar_West,
-        solar_East,
-        solar_Texas,
-        hydro_West,
-        hydro_East,
-        hydro_Texas,
-    ) = get_Zone()
-    devide_Wind(wind_West, wind_East, wind_Texas, east=True, west=True, texas=True)
+        wind_west,
+        wind_east,
+        wind_texas,
+        solar_west,
+        solar_east,
+        solar_texas,
+        hydro_west,
+        hydro_east,
+        hydro_texas,
+    ) = get_zone()
+    devide_wind(wind_west, wind_east, wind_texas, east=True, west=True, texas=True)
     # devide_Solar(solar_West, solar_East, solar_Texas, east = False, west = False, texas = False)
-    devide_Hydro(hydro_West, hydro_East, hydro_Texas, east=True, west=True, texas=True)
+    devide_hydro(hydro_west, hydro_east, hydro_texas, east=True, west=True, texas=True)
