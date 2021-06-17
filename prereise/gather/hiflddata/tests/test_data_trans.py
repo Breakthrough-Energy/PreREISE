@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
 from unittest.mock import patch
 
 import pandas as pd
-from haversine import Unit, haversine
 from pandas.testing import assert_frame_equal
 
 from prereise.gather.hiflddata.data_trans import (
     cal_kv,
     clean,
-    compute_geo_dist,
     get_max_island,
     get_neighbors,
     get_zone,
@@ -73,14 +70,6 @@ def test_meter_to_mile():
     actual_result = meter_to_mile(12335.89)
     expected_result = 12335.89 / 1609.34
     assert expected_result == actual_result
-
-
-def test_compute_geo_dist():
-    sub1 = (45.76842336, -91.86474437)
-    sub2 = (29.99917553, -82.93498639)
-    actual_result = compute_geo_dist(sub1, sub2)
-    expected_result = haversine(sub1, sub2, Unit.MILES)
-    assert actual_result == expected_result
 
 
 def test_get_max_island():
