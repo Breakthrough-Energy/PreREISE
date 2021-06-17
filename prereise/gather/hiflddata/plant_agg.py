@@ -3,7 +3,7 @@ import math
 
 import numpy as np
 import pandas as pd
-from haversine import haversine
+from powersimdata.utility.distance import haversine
 
 coord_precision = ".9f"
 

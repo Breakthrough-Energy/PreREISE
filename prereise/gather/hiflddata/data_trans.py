@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-
 import csv
 import json
 import os.path
@@ -11,7 +7,7 @@ from collections import defaultdict
 import networkx as nx
 import numpy as np
 import pandas as pd
-from haversine import Unit, haversine
+from powersimdata.utility.distance import haversine
 
 from prereise.gather.hiflddata.load_dist import compute_load_dist
 from prereise.gather.hiflddata.transmission_param import (
@@ -228,7 +224,7 @@ def compute_geo_dist(sub1, sub2):
     :return: (*float*) -- distance between two geo coordinates.
     """
 
-    return haversine(sub1, sub2, Unit.MILES)
+    return haversine(sub1, sub2)
 
 
 def graph_of_net(n_dict):
