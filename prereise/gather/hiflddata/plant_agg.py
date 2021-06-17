@@ -1,15 +1,15 @@
 import csv
 import math
+
 import numpy as np
 import pandas as pd
-from geopy.distance import geodesic
-
 from data_trans import clean, get_Zone
+from geopy.distance import geodesic
 
 coord_precision = ".9f"
 
-West = ['WA','OR','CA','NV','AK','ID','UT','AZ','WY','CO','NM']
-Uncertain = ['MT','SD','TX']
+West = ["WA", "OR", "CA", "NV", "AK", "ID", "UT", "AZ", "WY", "CO", "NM"]
+Uncertain = ["MT", "SD", "TX"]
 
 
 def get_Zone(Z_csv):
@@ -26,6 +26,7 @@ def get_Zone(Z_csv):
         zone_dic[zone["zone_name"][i]] = zone["zone_id"][i]
     return zone_dic
 
+
 def map_plant_county(P_csv):
     """Generate a dictionary of county using the Power_Plants.csv
 
@@ -33,10 +34,11 @@ def map_plant_county(P_csv):
     :return: (*dict*) -- a dict mapping the plant county to its name.
     """
     plant = pd.read_csv(P_csv)
-    county_dic = plant.set_index('NAME')['COUNTY'].to_dict()
+    county_dic = plant.set_index("NAME")["COUNTY"].to_dict()
     return county_dic
 
-def Clean(e_csv,zone_dic):
+
+def Clean(e_csv, zone_dic):
     """Clean data; remove substations which are outside the United States or not available.
     :param str e_csv: path of the HIFLD substation csv file
     :param dict zone_dic: zone dict as returned by :func:`get_zone`
@@ -46,10 +48,15 @@ def Clean(e_csv,zone_dic):
     Num_sub = len(csv_data)
     row_indexs = []
     for i in range(Num_sub):
-        if((csv_data['STATE'][i] not in zone_dic) or (csv_data['STATUS'][i] != 'IN SERVICE') or (csv_data['LINES'][i] == 0)):
+        if (
+            (csv_data["STATE"][i] not in zone_dic)
+            or (csv_data["STATUS"][i] != "IN SERVICE")
+            or (csv_data["LINES"][i] == 0)
+        ):
             row_indexs.append(i)
-    clean_data = csv_data.drop(labels = row_indexs)
+    clean_data = csv_data.drop(labels=row_indexs)
     return clean_data
+
 
 def Clean_p(P_csv):
     """Clean data; remove plants which are not available.
@@ -66,6 +73,7 @@ def Clean_p(P_csv):
     clean_data = csv_data.drop(labels=row_indexs)
     return clean_data
 
+
 def map_interconnect_sub(bus_csv):
     """Generate a list of dictionaries of buses in each interconnect using the bus.csv
 
@@ -74,11 +82,11 @@ def map_interconnect_sub(bus_csv):
     """
     inter_bus = {}
     bus = pd.read_csv(bus_csv)
-    inter_bus['Eastern'] = []
-    inter_bus['Western'] = []
-    inter_bus['Texas'] = []
+    inter_bus["Eastern"] = []
+    inter_bus["Western"] = []
+    inter_bus["Texas"] = []
     for row in bus.iloc:
-        inter_bus[row['interconnect']].append(row['bus_id'])
+        inter_bus[row["interconnect"]].append(row["bus_id"])
     return inter_bus
 
 
@@ -91,9 +99,9 @@ def LocOfsub(bus_csv):
     """
     LocOfsub_dict = {}
     ZipOfsub_dict = {}
-    ZipOfsub_dict['Eastern'] = {}
-    ZipOfsub_dict['Western'] = {}
-    ZipOfsub_dict['Texas'] = {}
+    ZipOfsub_dict["Eastern"] = {}
+    ZipOfsub_dict["Western"] = {}
+    ZipOfsub_dict["Texas"] = {}
     bus = pd.read_csv(bus_csv)
     for index, row in bus.iterrows():
         loc = (
@@ -126,7 +134,7 @@ def Cal_P(G_csv):
     Pmin = {}
     csv_data = pd.read_csv(G_csv)
     for index, row in csv_data.iterrows():
-        tu = (str(row["Plant Name"]).upper(),row['Energy Source 1'])
+        tu = (str(row["Plant Name"]).upper(), row["Energy Source 1"])
         Pmin[tu] = row["Minimum Load (MW)"]
     return Pmin
 
@@ -147,6 +155,7 @@ def Loc_of_plant():
         loc_of_plant[row["NAME"]] = loc
     return loc_of_plant
 
+
 def getCostCurve():
     """Get the latitude and longitude of plants
 
@@ -161,6 +170,7 @@ def getCostCurve():
         points[name] = int(pla[13])
     return points
 
+
 def getCostCurve2():
     """Get the latitude and longitude of plants
 
@@ -172,8 +182,9 @@ def getCostCurve2():
     cost = df.tolist()
     for pla in cost:
         name = pla[0]
-        curve[name] = (pla[1],pla[2],pla[3])
+        curve[name] = (pla[1], pla[2], pla[3])
     return curve
+
 
 def Getregion():
     """Get the interconnect of plants
@@ -185,121 +196,204 @@ def Getregion():
     needs = df.tolist()
     for pla in needs:
         name = (str(pla[0]).upper(), pla[4])
-        if (name not in region):
-            if(pla[8][0:3] == 'ERC'):
-                re = 'Texas'
-            elif(pla[8][0:3] == 'WEC'):
-                re = 'Western'
+        if name not in region:
+            if pla[8][0:3] == "ERC":
+                re = "Texas"
+            elif pla[8][0:3] == "WEC":
+                re = "Western"
             else:
-                re = 'Eastern'
+                re = "Eastern"
             region[name] = re
     return region
 
-def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, region, points, county_dic):
+
+def Plant_agg(
+    clean_data,
+    ZipOfsub_dict,
+    loc_of_plant,
+    LocOfsub_dict,
+    Pmin,
+    region,
+    points,
+    county_dic,
+):
     """Aggregate the plant by zip code and build the plant dict with geo-based aggregation
 
     :return: (*dict*) -- a dict for power plant after aggregation
     """
 
     plant_dict = {}
-    storage = open('output/storage.csv','w',newline="")
+    storage = open("output/storage.csv", "w", newline="")
     csv_writer = csv.writer(storage)
     csv_writer.writerow(
-            [
-                'Storage_name',
-                'Type',
-                'SOC_max',
-                'SOC_min',
-                'Pchr_max',
-                'Pdis_max',
-                'Charge Efficiency',
-                'Discharge Efficiency',
-                'Loss Factor',
-                'Terminal Max',
-                'Terminal Min',
-                'SOC_intial'
-            ])
-    sto = ['BATTERIES', 'NATURAL GAS WITH COMPRESSED AIR STORAGE','FLYWHEELS']
+        [
+            "Storage_name",
+            "Type",
+            "SOC_max",
+            "SOC_min",
+            "Pchr_max",
+            "Pdis_max",
+            "Charge Efficiency",
+            "Discharge Efficiency",
+            "Loss Factor",
+            "Terminal Max",
+            "Terminal Min",
+            "SOC_intial",
+        ]
+    )
+    sto = ["BATTERIES", "NATURAL GAS WITH COMPRESSED AIR STORAGE", "FLYWHEELS"]
     sto_dict = {
-                'BATTERIES' :0.95,
-                'NATURAL GAS WITH COMPRESSED AIR STORAGE':0.50,
-                'FLYWHEELS':0.90
-                }
-    tx_west = ['EL PASO','HUDSPETH']
-    tx_east = ['BOWIE','MORRIS','CASS','CAMP','UPSHUR','GREGG','MARION','HARRISON','PANOLA','SHELBY','SAN AUGUSTINE','SABINE','JASPER','NEWTON',
-               'ORANGE','JEFFERSON','LIBERTY','HARDIN','TYLER','POLK','TRINITY','WALKER','SAN JACINTO','DALLAM','SHERMAN','HANSFORD','OCHLTREE'
-               'LIPSCOMB','HARTLEY','MOORE','HUTCHINSON','HEMPHILL','RANDALL','DONLEY','PARMER','BAILEY','LAMB','HALE','COCHRAN','HOCKLEY','LUBBOCK',
-               'YOAKUM','TERRY','LYNN','GAINES']
-    sd_west = ['LAWRENCE', 'BUTTE', 'FALL RIVER']
-    nm_east = ['CURRY', 'LEA', 'QUAY', 'ROOSEVELT', 'UNION']
-    mt_east = ['CARTER','CUSTER','ROSEBUD','PRAIRIE','POWDER RIVER','DANIELS','MCCONE','DAWSON','RICHLAND','FALLON',
-               'GARFIELD','ROOSEVELT','PHILLIPS','SHERIDAN','VALLEY','WIBAUX']            
+        "BATTERIES": 0.95,
+        "NATURAL GAS WITH COMPRESSED AIR STORAGE": 0.50,
+        "FLYWHEELS": 0.90,
+    }
+    tx_west = ["EL PASO", "HUDSPETH"]
+    tx_east = [
+        "BOWIE",
+        "MORRIS",
+        "CASS",
+        "CAMP",
+        "UPSHUR",
+        "GREGG",
+        "MARION",
+        "HARRISON",
+        "PANOLA",
+        "SHELBY",
+        "SAN AUGUSTINE",
+        "SABINE",
+        "JASPER",
+        "NEWTON",
+        "ORANGE",
+        "JEFFERSON",
+        "LIBERTY",
+        "HARDIN",
+        "TYLER",
+        "POLK",
+        "TRINITY",
+        "WALKER",
+        "SAN JACINTO",
+        "DALLAM",
+        "SHERMAN",
+        "HANSFORD",
+        "OCHLTREE" "LIPSCOMB",
+        "HARTLEY",
+        "MOORE",
+        "HUTCHINSON",
+        "HEMPHILL",
+        "RANDALL",
+        "DONLEY",
+        "PARMER",
+        "BAILEY",
+        "LAMB",
+        "HALE",
+        "COCHRAN",
+        "HOCKLEY",
+        "LUBBOCK",
+        "YOAKUM",
+        "TERRY",
+        "LYNN",
+        "GAINES",
+    ]
+    sd_west = ["LAWRENCE", "BUTTE", "FALL RIVER"]
+    nm_east = ["CURRY", "LEA", "QUAY", "ROOSEVELT", "UNION"]
+    mt_east = [
+        "CARTER",
+        "CUSTER",
+        "ROSEBUD",
+        "PRAIRIE",
+        "POWDER RIVER",
+        "DANIELS",
+        "MCCONE",
+        "DAWSON",
+        "RICHLAND",
+        "FALLON",
+        "GARFIELD",
+        "ROOSEVELT",
+        "PHILLIPS",
+        "SHERIDAN",
+        "VALLEY",
+        "WIBAUX",
+    ]
     for index, row in clean_data.iterrows():
-        tu = (row["PLANT"], row["PRIM_FUEL"], row['PRIM_MVR'])
-        u = (row['PLANT'],row['PRIM_FUEL'])
-        r = (row['PLANT'],row['NAME'])
-        if(row['TYPE'] in sto):
+        tu = (row["PLANT"], row["PRIM_FUEL"], row["PRIM_MVR"])
+        u = (row["PLANT"], row["PRIM_FUEL"])
+        r = (row["PLANT"], row["NAME"])
+        if row["TYPE"] in sto:
             SOC_max = 1
             SOC_min = 0
-            Pchr_max = min(row["WINTER_CAP"],row["SUMMER_CAP"])
-            Pdis_max = min(row["WINTER_CAP"],row["SUMMER_CAP"])
-            ChargeEfficiency = math.sqrt(sto_dict[row['TYPE']])
-            DischargeEfficiency = math.sqrt(sto_dict[row['TYPE']])
+            Pchr_max = min(row["WINTER_CAP"], row["SUMMER_CAP"])
+            Pdis_max = min(row["WINTER_CAP"], row["SUMMER_CAP"])
+            ChargeEfficiency = math.sqrt(sto_dict[row["TYPE"]])
+            DischargeEfficiency = math.sqrt(sto_dict[row["TYPE"]])
             LossFactor = 0.99
             TerminalMax = 0.80
             TerminalMin = 0.20
             SOC_intial = 0.50
-            
 
-            csv_writer.writerow([r[0]+'-'+r[1], row['TYPE'],SOC_max, SOC_min, Pchr_max, Pdis_max, ChargeEfficiency, DischargeEfficiency, LossFactor, TerminalMax, TerminalMin, SOC_intial])
+            csv_writer.writerow(
+                [
+                    r[0] + "-" + r[1],
+                    row["TYPE"],
+                    SOC_max,
+                    SOC_min,
+                    Pchr_max,
+                    Pdis_max,
+                    ChargeEfficiency,
+                    DischargeEfficiency,
+                    LossFactor,
+                    TerminalMax,
+                    TerminalMin,
+                    SOC_intial,
+                ]
+            )
             continue
-        
+
         if r in region:
-                re = region[r]
+            re = region[r]
         else:
-            if(row['PLANT'] in county_dic):
-                county = county_dic[row['PLANT']]
+            if row["PLANT"] in county_dic:
+                county = county_dic[row["PLANT"]]
             else:
-                #print("no plant",row['PLANT'])
-                county = ''
-            if row['STATE'] in West:
-                re = 'Western'
-            elif row['STATE'] is 'TX':
+                # print("no plant",row['PLANT'])
+                county = ""
+            if row["STATE"] in West:
+                re = "Western"
+            elif row["STATE"] is "TX":
                 if county in tx_west:
-                    re = 'Western'
+                    re = "Western"
                 elif county in tx_east:
-                    re = 'Eastern'
+                    re = "Eastern"
                 else:
-                    re = 'Texas'
-            elif row['STATE'] == 'SD':
+                    re = "Texas"
+            elif row["STATE"] == "SD":
                 if county in sd_west:
-                    re = 'Western'
+                    re = "Western"
                 else:
-                    re = 'Eastern'
-            elif row['STATE'] == 'NM':
+                    re = "Eastern"
+            elif row["STATE"] == "NM":
                 if county in nm_east:
-                    re = 'Eastern'
+                    re = "Eastern"
                 else:
 
-                    re = 'Western'
-            elif row['STATE'] == 'MT':
+                    re = "Western"
+            elif row["STATE"] == "MT":
                 if county in mt_east:
-                    re = 'Eastern'
+                    re = "Eastern"
                 else:
 
-                    re = 'Western'
+                    re = "Western"
             else:
-                    re = 'Eastern'
-        
+                re = "Eastern"
+
         if tu not in plant_dict:
-            plant_id = row['OBJECTID']
+            plant_id = row["OBJECTID"]
             bus_id = 100000
             if row["PLANT"] in loc_of_plant:
                 lat = loc_of_plant[row["PLANT"]][0]
                 lon = loc_of_plant[row["PLANT"]][1]
-                #print(u)
+                # print(u)
                 if row["ZIP"] in ZipOfsub_dict[re]:
-                    
+
                     min_d = 1000000.0
                     for value in ZipOfsub_dict[re][row["ZIP"]]:
 
@@ -311,29 +405,30 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                             min_d = geodesic(
                                 loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
                             ).m
-                            #print(value)
+                            # print(value)
 
                             bus_id = value
-                    
 
                 # if this zip does not contain subs, we try to find subs in neighbor zip.
                 else:
-                    
+
                     zi = int(row["ZIP"])
-                    
+
                     min_d = 1000000.0
-                    
- 
-                    for i in range(-100, 101):                        
+
+                    for i in range(-100, 101):
                         if str(zi + i) in ZipOfsub_dict[re]:
                             for value in ZipOfsub_dict[re][str(zi + i)]:
-                                #if value not in inter_bus[re]:
+                                # if value not in inter_bus[re]:
                                 #    continue
-                                #print(value)
-                                if(row["PLANT"] == 'INGLESIDE COGENERATION'):
-                                    print(geodesic(
-                                        loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
-                                    ).m)
+                                # print(value)
+                                if row["PLANT"] == "INGLESIDE COGENERATION":
+                                    print(
+                                        geodesic(
+                                            loc_of_plant[row["PLANT"]],
+                                            LocOfsub_dict[value],
+                                        ).m
+                                    )
                                 if (
                                     geodesic(
                                         loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
@@ -343,11 +438,11 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                                     min_d = geodesic(
                                         loc_of_plant[row["PLANT"]], LocOfsub_dict[value]
                                     ).m
-                                    #print(value)
+                                    # print(value)
 
                                     bus_id = value
-                    if(bus_id == 100000 and re =='Texas'):
-                        print(row['PLANT'],row['NAME'],row['ZIP'],re)
+                    if bus_id == 100000 and re == "Texas":
+                        print(row["PLANT"], row["NAME"], row["ZIP"], re)
             else:
 
                 if row["ZIP"] in ZipOfsub_dict[re]:
@@ -355,11 +450,11 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                     lat = LocOfsub_dict[bus_id][0]
                     lon = LocOfsub_dict[bus_id][1]
                 else:
-                    #print(row['PLANT'],row['NAME'],row['ZIP'],re)
+                    # print(row['PLANT'],row['NAME'],row['ZIP'],re)
                     continue
-            if(u in Pmin): 
+            if u in Pmin:
                 pmin = Pmin[u]
-                pmin = pmin.replace(',','')
+                pmin = pmin.replace(",", "")
             else:
                 pmin = 0.0
 
@@ -367,25 +462,40 @@ def Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, regi
                 pmin = float(pmin)
             except:
                 pmin = 0.0
-            #else:
-                #print(tu)
+            # else:
+            # print(tu)
             pmax = row["NAMPLT_CAP"]
             if pmax < 0.0:
                 pmax = 0.0
-            if(r in points):
+            if r in points:
                 cur = points[r]
- 
+
             else:
                 cur = 0
-            #if(bus_id == 100000):
+            # if(bus_id == 100000):
             #    print(row['PLANT'],row['NAME'],row['ZIP'],re)
-            list1 = [bus_id, pmax, 0, pmin, cur, 1, re, row['TYPE'], plant_id,min_d,lat,lon, row['ZIP'],row['STATE']]
+            list1 = [
+                bus_id,
+                pmax,
+                0,
+                pmin,
+                cur,
+                1,
+                re,
+                row["TYPE"],
+                plant_id,
+                min_d,
+                lat,
+                lon,
+                row["ZIP"],
+                row["STATE"],
+            ]
             plant_dict[tu] = list1
         else:
             list1 = plant_dict[tu]
             if row["NAMPLT_CAP"] > 0:
                 list1[1] = list1[1] + row["NAMPLT_CAP"]
-            if(r in points):
+            if r in points:
                 list1[4] = list1[4] + points[r]
                 list1[5] = list1[5] + 1
             plant_dict[tu] = list1
@@ -399,32 +509,32 @@ def write_plant(plant_dict):
     :param dict plant_dict:  a dict of power plants as returned by :func:`Plant_agg`
     """
 
-    
-    type_d = {'CONVENTIONAL HYDROELECTRIC' : 'hydro',
-              'HYDROELECTRIC PUMPED STORAGE':'hydro', 
-              'NATURAL GAS STEAM TURBINE' : 'ng',
-              'CONVENTIONAL STEAM COAL' : 'coal',
-              'NATURAL GAS FIRED COMBINED CYCLE' : 'ng',
-              'NATURAL GAS FIRED COMBUSTION TURBINE': 'ng',
-              'PETROLEUM LIQUIDS':'dfo',
-              'PETROLEUM COKE':'coal',
-              'NATURAL GAS INTERNAL COMBUSTION ENGINE':'ng',
-              'NUCLEAR' : 'nuclear',
-              'ONSHORE WIND TURBINE':'wind',
-              'SOLAR PHOTOVOLTAIC':'solar',
-              'GEOTHERMAL':'geothermal',
-              'LANDFILL GAS' : 'ng',
-              'WOOD/WOOD WASTE BIOMASS' : 'other',
-              'COAL INTEGRATED GASIFICATION COMBINED CYCLE' :'coal',
-              'OTHER GASES' : 'other',
-              'MUNICIPAL SOLID WASTE' : 'other',
-              'ALL OTHER':'other',
-              'OTHER WASTE BIOMASS' : 'other',
-              'OTHER NATURAL GAS' : 'ng',
-              'OFFSHORE WIND TURBINE' :'wind_offshore',
-              'SOLAR THERMAL WITHOUT ENERGY STORAGE':'solar',
-              'SOLAR THERMAL WITH ENERGY STORAGE':'solar'
-              }
+    type_d = {
+        "CONVENTIONAL HYDROELECTRIC": "hydro",
+        "HYDROELECTRIC PUMPED STORAGE": "hydro",
+        "NATURAL GAS STEAM TURBINE": "ng",
+        "CONVENTIONAL STEAM COAL": "coal",
+        "NATURAL GAS FIRED COMBINED CYCLE": "ng",
+        "NATURAL GAS FIRED COMBUSTION TURBINE": "ng",
+        "PETROLEUM LIQUIDS": "dfo",
+        "PETROLEUM COKE": "coal",
+        "NATURAL GAS INTERNAL COMBUSTION ENGINE": "ng",
+        "NUCLEAR": "nuclear",
+        "ONSHORE WIND TURBINE": "wind",
+        "SOLAR PHOTOVOLTAIC": "solar",
+        "GEOTHERMAL": "geothermal",
+        "LANDFILL GAS": "ng",
+        "WOOD/WOOD WASTE BIOMASS": "other",
+        "COAL INTEGRATED GASIFICATION COMBINED CYCLE": "coal",
+        "OTHER GASES": "other",
+        "MUNICIPAL SOLID WASTE": "other",
+        "ALL OTHER": "other",
+        "OTHER WASTE BIOMASS": "other",
+        "OTHER NATURAL GAS": "ng",
+        "OFFSHORE WIND TURBINE": "wind_offshore",
+        "SOLAR THERMAL WITHOUT ENERGY STORAGE": "solar",
+        "SOLAR THERMAL WITH ENERGY STORAGE": "solar",
+    }
 
     with open("output/plant.csv", "w", newline="") as plant:
         csv_writer = csv.writer(plant)
@@ -465,15 +575,16 @@ def write_plant(plant_dict):
                 "distance",
                 "lat",
                 "lon",
-                'zip',
-                'state']
+                "zip",
+                "state",
+            ]
         )
         print(len(plant_dict))
         for key in plant_dict:
             list1 = plant_dict[key]
             pmax = list1[1]
-            if(pmax < 2*list1[3]):
-                pmax = 2*list1[3]
+            if pmax < 2 * list1[3]:
+                pmax = 2 * list1[3]
             csv_writer.writerow(
                 [
                     list1[8],
@@ -512,7 +623,7 @@ def write_plant(plant_dict):
                     list1[10],
                     list1[11],
                     list1[12],
-                    list1[13]
+                    list1[13],
                 ]
             )
     final_bus = set(pd.read_csv("output/bus.csv")["bus_id"])
@@ -528,40 +639,52 @@ def write_gen(plant_dict, type_dict, curve):
     :param dict type_dict:  a dict of generator types
     :param dict curve:  a dict of consumption curves
     """
-    type_d = {'CONVENTIONAL HYDROELECTRIC' : 'hydro',
-              'HYDROELECTRIC PUMPED STORAGE':'hydro', 
-              'NATURAL GAS STEAM TURBINE' : 'ng',
-              'CONVENTIONAL STEAM COAL' : 'coal',
-              'NATURAL GAS FIRED COMBINED CYCLE' : 'ng',
-              'NATURAL GAS FIRED COMBUSTION TURBINE': 'ng',
-              'PETROLEUM LIQUIDS':'dfo',
-              'PETROLEUM COKE':'coal',
-              'NATURAL GAS INTERNAL COMBUSTION ENGINE':'ng',
-              'NUCLEAR' : 'nuclear',
-              'ONSHORE WIND TURBINE':'wind',
-              'SOLAR PHOTOVOLTAIC':'solar',
-              'GEOTHERMAL':'geothermal',
-              'LANDFILL GAS' : 'ng',
-              'WOOD/WOOD WASTE BIOMASS' : 'other',
-              'COAL INTEGRATED GASIFICATION COMBINED CYCLE' :'coal',
-              'OTHER GASES' : 'other',
-              'MUNICIPAL SOLID WASTE' : 'other',
-              'ALL OTHER':'other',
-              'OTHER WASTE BIOMASS' : 'other',
-              'OTHER NATURAL GAS' : 'ng',
-              'OFFSHORE WIND TURBINE' :'wind_offshore',
-              'SOLAR THERMAL WITHOUT ENERGY STORAGE':'solar',
-              'SOLAR THERMAL WITH ENERGY STORAGE':'solar'
-              }
-
+    type_d = {
+        "CONVENTIONAL HYDROELECTRIC": "hydro",
+        "HYDROELECTRIC PUMPED STORAGE": "hydro",
+        "NATURAL GAS STEAM TURBINE": "ng",
+        "CONVENTIONAL STEAM COAL": "coal",
+        "NATURAL GAS FIRED COMBINED CYCLE": "ng",
+        "NATURAL GAS FIRED COMBUSTION TURBINE": "ng",
+        "PETROLEUM LIQUIDS": "dfo",
+        "PETROLEUM COKE": "coal",
+        "NATURAL GAS INTERNAL COMBUSTION ENGINE": "ng",
+        "NUCLEAR": "nuclear",
+        "ONSHORE WIND TURBINE": "wind",
+        "SOLAR PHOTOVOLTAIC": "solar",
+        "GEOTHERMAL": "geothermal",
+        "LANDFILL GAS": "ng",
+        "WOOD/WOOD WASTE BIOMASS": "other",
+        "COAL INTEGRATED GASIFICATION COMBINED CYCLE": "coal",
+        "OTHER GASES": "other",
+        "MUNICIPAL SOLID WASTE": "other",
+        "ALL OTHER": "other",
+        "OTHER WASTE BIOMASS": "other",
+        "OTHER NATURAL GAS": "ng",
+        "OFFSHORE WIND TURBINE": "wind_offshore",
+        "SOLAR THERMAL WITHOUT ENERGY STORAGE": "solar",
+        "SOLAR THERMAL WITH ENERGY STORAGE": "solar",
+    }
 
     with open("output/gencost.csv", "w", newline="") as gencost:
         csv_writer = csv.writer(gencost)
-        csv_writer.writerow(["plant_id","type", "startup","shutdown","n", "c2", "c1", "c0", "interconnect"])
+        csv_writer.writerow(
+            [
+                "plant_id",
+                "type",
+                "startup",
+                "shutdown",
+                "n",
+                "c2",
+                "c1",
+                "c0",
+                "interconnect",
+            ]
+        )
         for key in plant_dict:
-            c1 = plant_dict[key][4]/plant_dict[key][5]
-            pid = key[0]+'-'+key[1]+'-'+key[2]
-            if(pid in curve and curve[pid][1] > 0):
+            c1 = plant_dict[key][4] / plant_dict[key][5]
+            pid = key[0] + "-" + key[1] + "-" + key[2]
+            if pid in curve and curve[pid][1] > 0:
                 csv_writer.writerow(
                     [
                         plant_dict[key][8],
@@ -572,25 +695,15 @@ def write_gen(plant_dict, type_dict, curve):
                         curve[pid][0],
                         curve[pid][1],
                         curve[pid][2],
-                        plant_dict[key][6]
+                        plant_dict[key][6],
                     ]
                 )
-                
+
             else:
-                #print(pid)
+                # print(pid)
                 csv_writer.writerow(
-                    [
-                        plant_dict[key][8],
-                        2,
-                        0,
-                        0,
-                        3,
-                        0,
-                        c1,
-                        0,
-                        plant_dict[key][6]
-                    ]
-                    )
+                    [plant_dict[key][8], 2, 0, 0, 3, 0, c1, 0, plant_dict[key][6]]
+                )
     final_gen = pd.read_csv("output/gencost.csv")
     final_plant = set(pd.read_csv("output/plant.csv")["plant_id"])
     final_gen = final_gen[final_gen["plant_id"].isin(final_plant)]
@@ -607,7 +720,7 @@ def Plant(E_csv, U_csv, G2019_csv, Z_csv, P_csv, bus_csv):
 
     zone_dic = get_Zone(Z_csv)
     county_dic = map_plant_county(P_csv)
-    #inter_bus = map_interconnect_sub(bus_csv)
+    # inter_bus = map_interconnect_sub(bus_csv)
     clean_sub = Clean(E_csv, zone_dic)
     LocOfsub_dict, ZipOfsub_dict = LocOfsub(bus_csv)
     loc_of_plant = Loc_of_plant()
@@ -621,7 +734,16 @@ def Plant(E_csv, U_csv, G2019_csv, Z_csv, P_csv, bus_csv):
     region = Getregion()
     points = getCostCurve()
     curve = getCostCurve2()
-    plant_dict = Plant_agg(clean_data, ZipOfsub_dict, loc_of_plant, LocOfsub_dict, Pmin, region, points,county_dic)
+    plant_dict = Plant_agg(
+        clean_data,
+        ZipOfsub_dict,
+        loc_of_plant,
+        LocOfsub_dict,
+        Pmin,
+        region,
+        points,
+        county_dic,
+    )
     write_plant(plant_dict)
     write_gen(plant_dict, type_dict, curve)
 

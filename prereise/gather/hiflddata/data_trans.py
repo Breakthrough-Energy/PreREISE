@@ -7,14 +7,19 @@ import json
 import os.path
 import zipfile
 from collections import defaultdict
-import numpy as np
+
 import networkx as nx
+import numpy as np
 import pandas as pd
-
 from haversine import Unit, haversine
-
 from load_dist import compute_load_dist
-from transmission_param import kv_xperunit_calculate_1, kv_xperunit_calculate_2, kv_rate_A_calucate_3, kv_sil_calucate_3, kv_from_to_xperunit_calculate_4
+from transmission_param import (
+    kv_from_to_xperunit_calculate_4,
+    kv_rate_A_calucate_3,
+    kv_sil_calucate_3,
+    kv_xperunit_calculate_1,
+    kv_xperunit_calculate_2,
+)
 
 
 def get_Zone(Z_csv):
@@ -35,9 +40,9 @@ def get_Zone(Z_csv):
         zone_dic1[tu] = zone["zone_id"][i]
     return zone_dic, zone_dic1
 
-West = ['WA','OR','CA','NV','AK','ID','UT','AZ','WY','CO','NM']
-Uncertain = ['MT','SD','TX']
 
+West = ["WA", "OR", "CA", "NV", "AK", "ID", "UT", "AZ", "WY", "CO", "NM"]
+Uncertain = ["MT", "SD", "TX"]
 
 
 def Getregion():
@@ -46,16 +51,17 @@ def Getregion():
     df = np.array(csv_data)
     needs = df.tolist()
     for pla in needs:
-        name = (str(pla[0]).upper())
-        if (name not in region):
-            if(pla[8][0:3] == 'ERC'):
-                re = 'Texas'
-            elif(pla[8][0:3] == 'WEC'):
-                re = 'Western'
+        name = str(pla[0]).upper()
+        if name not in region:
+            if pla[8][0:3] == "ERC":
+                re = "Texas"
+            elif pla[8][0:3] == "WEC":
+                re = "Western"
             else:
-                re = 'Eastern'
+                re = "Eastern"
             region[name] = re
     return region
+
 
 def clean(e_csv, zone_dic):
     """Clean data; remove substations which are outside the United States or not available.
@@ -125,14 +131,22 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
         start_candidate_coordinates = sub_name_dict.get(line["properties"]["SUB_1"])
         end_candidate_coordinates = sub_name_dict.get(line["properties"]["SUB_2"])
 
-        sub1 = min(start_candidate_coordinates, key=lambda p: compute_geo_dist(p, start_coord))
-        sub2 = min(end_candidate_coordinates, key=lambda p: compute_geo_dist(p, end_coord))
+        sub1 = min(
+            start_candidate_coordinates, key=lambda p: compute_geo_dist(p, start_coord)
+        )
+        sub2 = min(
+            end_candidate_coordinates, key=lambda p: compute_geo_dist(p, end_coord)
+        )
 
         # If the distance between start_coord and sub1 is more than 100 miles (similar for end_coord and sub2),
         # we consider it is invalid matching. Those subs got removed during cleanup and could not be matched
-        if compute_geo_dist(sub1, start_coord) > 100 or compute_geo_dist(sub2, end_coord) > 100:
+        if (
+            compute_geo_dist(sub1, start_coord) > 100
+            or compute_geo_dist(sub2, end_coord) > 100
+        ):
             print(
-                "INFO: sub1 or sub2 name identified with wrong coordinates for transmission line: ", line
+                "INFO: sub1 or sub2 name identified with wrong coordinates for transmission line: ",
+                line,
             )
             missing_lines.append(line)
             continue
@@ -141,9 +155,7 @@ def neighbors(sub_by_coord_dict, sub_name_dict):
 
         if sub1 == sub2:
             # e.g., ID 300380 with SUB1 and SUB2 both HARRINGTON, both matched to the same sub
-            print(
-                "INFO: sub1 and sub2 being same for transmission line: ", line
-            )
+            print("INFO: sub1 and sub2 being same for transmission line: ", line)
             missing_lines.append(line)
             continue
 
@@ -216,7 +228,6 @@ def compute_geo_dist(sub1, sub2):
     """
 
     return haversine(sub1, sub2, Unit.MILES)
-
 
 
 def graph_of_net(n_dict):
@@ -329,7 +340,12 @@ def set_sub(clean_data):
             raise Exception(
                 f"WARNING: substations coordinates conflict check: {location}"
             )
-        sub_by_coord_dict[location] = (row["ID"], row["NAME"], row["STATE"], row["COUNTY"])
+        sub_by_coord_dict[location] = (
+            row["ID"],
+            row["NAME"],
+            row["STATE"],
+            row["COUNTY"],
+        )
         if row["NAME"] not in sub_name_dict:
             sub_name_dict[row["NAME"]] = []
         sub_name_dict[row["NAME"]].append((row["LATITUDE"], row["LONGITUDE"]))
@@ -342,59 +358,140 @@ def Write_sub(clean_data, zone_dic, zone_dic1, region):
     :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
     :param dict zone_dic: zone dict as returned by :func:`get_Zone`
     """
-    tx_west = ['EL PASO','HUDSPETH']
-    tx_east = ['BOWIE','MORRIS','CASS','CAMP','UPSHUR','GREGG','MARION','HARRISON','PANOLA','SHELBY','SAN AUGUSTINE','SABINE','JASPER','NEWTON',
-               'ORANGE','JEFFERSON','LIBERTY','HARDIN','TYLER','POLK','TRINITY','WALKER','SAN JACINTO','DALLAM','SHERMAN','HANSFORD','OCHLTREE'
-               'LIPSCOMB','HARTLEY','MOORE','HUTCHINSON','HEMPHILL','RANDALL','DONLEY','PARMER','BAILEY','LAMB','HALE','COCHRAN','HOCKLEY','LUBBOCK',
-               'YOAKUM','TERRY','LYNN','GAINES']
+    tx_west = ["EL PASO", "HUDSPETH"]
+    tx_east = [
+        "BOWIE",
+        "MORRIS",
+        "CASS",
+        "CAMP",
+        "UPSHUR",
+        "GREGG",
+        "MARION",
+        "HARRISON",
+        "PANOLA",
+        "SHELBY",
+        "SAN AUGUSTINE",
+        "SABINE",
+        "JASPER",
+        "NEWTON",
+        "ORANGE",
+        "JEFFERSON",
+        "LIBERTY",
+        "HARDIN",
+        "TYLER",
+        "POLK",
+        "TRINITY",
+        "WALKER",
+        "SAN JACINTO",
+        "DALLAM",
+        "SHERMAN",
+        "HANSFORD",
+        "OCHLTREE" "LIPSCOMB",
+        "HARTLEY",
+        "MOORE",
+        "HUTCHINSON",
+        "HEMPHILL",
+        "RANDALL",
+        "DONLEY",
+        "PARMER",
+        "BAILEY",
+        "LAMB",
+        "HALE",
+        "COCHRAN",
+        "HOCKLEY",
+        "LUBBOCK",
+        "YOAKUM",
+        "TERRY",
+        "LYNN",
+        "GAINES",
+    ]
 
-    sd_west = ['LAWRENCE', 'BUTTE', 'FALL RIVER']
-    #nm_east = ['CURRY', 'LEA', 'QUAY', 'ROOSEVELT', 'UNION']
-    mt_east = ['CARTER','CUSTER','ROSEBUD','PRAIRIE','POWDER RIVER','DANIELS','MCCONE','DAWSON','RICHLAND','FALLON',
-               'GARFIELD','ROOSEVELT','PHILLIPS','SHERIDAN','VALLEY','WIBAUX']
-    sub = open('output/sub.csv','w',newline='')
+    sd_west = ["LAWRENCE", "BUTTE", "FALL RIVER"]
+    # nm_east = ['CURRY', 'LEA', 'QUAY', 'ROOSEVELT', 'UNION']
+    mt_east = [
+        "CARTER",
+        "CUSTER",
+        "ROSEBUD",
+        "PRAIRIE",
+        "POWDER RIVER",
+        "DANIELS",
+        "MCCONE",
+        "DAWSON",
+        "RICHLAND",
+        "FALLON",
+        "GARFIELD",
+        "ROOSEVELT",
+        "PHILLIPS",
+        "SHERIDAN",
+        "VALLEY",
+        "WIBAUX",
+    ]
+    sub = open("output/sub.csv", "w", newline="")
     csv_writer = csv.writer(sub)
-    csv_writer.writerow(["sub_id","name","zip","lat","lon","interconnect","zone_id","type","state"])
+    csv_writer.writerow(
+        [
+            "sub_id",
+            "name",
+            "zip",
+            "lat",
+            "lon",
+            "interconnect",
+            "zone_id",
+            "type",
+            "state",
+        ]
+    )
     sub_code = {}
     re_code = {}
     for index, row in clean_data.iterrows():
-        if(row['STATE'] in West):
-            re = 'Western'
-        elif(row['STATE'] in Uncertain):
-            if row['STATE'] == 'TX':
-                if row['COUNTY'] in tx_west:
-                    re = 'Western'
-                elif row['COUNTY'] in tx_east:
-                    re = 'Eastern'
+        if row["STATE"] in West:
+            re = "Western"
+        elif row["STATE"] in Uncertain:
+            if row["STATE"] == "TX":
+                if row["COUNTY"] in tx_west:
+                    re = "Western"
+                elif row["COUNTY"] in tx_east:
+                    re = "Eastern"
                 else:
-                    re = 'Texas'
+                    re = "Texas"
 
-            elif row['STATE'] == 'SD':
-                if row['COUNTY'] in sd_west:
-                    re = 'Western'
+            elif row["STATE"] == "SD":
+                if row["COUNTY"] in sd_west:
+                    re = "Western"
                 else:
-                    re = 'Eastern'
-            elif row['STATE'] == 'MT':
-                if row['COUNTY'] in mt_east:
-                    re = 'Eastern'
+                    re = "Eastern"
+            elif row["STATE"] == "MT":
+                if row["COUNTY"] in mt_east:
+                    re = "Eastern"
                 else:
-                    #code = zone_dic1[(row['STATE'],re)]
-                    re = 'Western'
+                    # code = zone_dic1[(row['STATE'],re)]
+                    re = "Western"
         else:
-            re = 'Eastern'
-        
-        
-        code = zone_dic1[(row['STATE'], re)]
-        sub_code[row['ID']] = code
-        re_code[row['ID']] = re
-        csv_writer.writerow([row['ID'], row['NAME'], row['ZIP'], row['LATITUDE'], row['LONGITUDE'], re, code, row['TYPE'], row['STATE']])
-        
+            re = "Eastern"
+
+        code = zone_dic1[(row["STATE"], re)]
+        sub_code[row["ID"]] = code
+        re_code[row["ID"]] = re
+        csv_writer.writerow(
+            [
+                row["ID"],
+                row["NAME"],
+                row["ZIP"],
+                row["LATITUDE"],
+                row["LONGITUDE"],
+                re,
+                code,
+                row["TYPE"],
+                row["STATE"],
+            ]
+        )
+
     sub.close()
 
     return re_code, sub_code
 
 
-def Write_Bus(clean_data, sub_code, re_code,KV_dict):
+def Write_Bus(clean_data, sub_code, re_code, KV_dict):
     """Write the data to bus.csv as output
 
     :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
@@ -424,8 +521,9 @@ def Write_Bus(clean_data, sub_code, re_code,KV_dict):
                 "mu_Vmax",
                 "mu_Vmin",
                 "interconnect",
-                "state"
-            ])
+                "state",
+            ]
+        )
         missingSub = []
         for index, row in clean_data.iterrows():
             sub = (row["LATITUDE"], row["LONGITUDE"])
@@ -450,7 +548,7 @@ def Write_Bus(clean_data, sub_code, re_code,KV_dict):
                         0.0,
                         0.0,
                         re_code[row["ID"]],
-                        row["STATE"]
+                        row["STATE"],
                     ]
                 )
             else:
@@ -464,7 +562,7 @@ def Write_Bus(clean_data, sub_code, re_code,KV_dict):
     print(missingSub[:20])
 
 
-def Write_bus2sub(clean_data,re_code):
+def Write_bus2sub(clean_data, re_code):
     """Write the data to bus2sub.csv as output
 
     :param pandas.DataFrame clean_data: substation dataframe as returned by :func:`Clean`
@@ -482,98 +580,101 @@ def Write_branch(lines):
 
     :param list lines:  a list of lines as returned by :func:`Neighbors`
     """
-    branch = open('output/branch.csv','w',newline="")
-    phase = open('output/Phase Shifter.csv','w',newline="")
-    dc = open('output/dcline.csv','w',newline="")
+    branch = open("output/branch.csv", "w", newline="")
+    phase = open("output/Phase Shifter.csv", "w", newline="")
+    dc = open("output/dcline.csv", "w", newline="")
 
     csv_writer = csv.writer(branch)
     csv_writer1 = csv.writer(phase)
     csv_writer2 = csv.writer(dc)
     csv_writer.writerow(
-            [
-                "branch_id",
-                "from_bus_id",
-                "to_bus_id",
-                "r",
-                "x",
-                "b",
-                "rateA",
-                "rateB",
-                "rateC",
-                "ratio",
-                "angle",
-                "status",
-                "angmin",
-                "angmax",
-                "Pf",
-                "Qf",
-                "Qt",
-                "mu_Sf",
-                "mu_St",
-                "mu_angmin",
-                "mu_angmax",
-                "branch_device_type",
-                "interconnect"
-            ])
+        [
+            "branch_id",
+            "from_bus_id",
+            "to_bus_id",
+            "r",
+            "x",
+            "b",
+            "rateA",
+            "rateB",
+            "rateC",
+            "ratio",
+            "angle",
+            "status",
+            "angmin",
+            "angmax",
+            "Pf",
+            "Qf",
+            "Qt",
+            "mu_Sf",
+            "mu_St",
+            "mu_angmin",
+            "mu_angmax",
+            "branch_device_type",
+            "interconnect",
+        ]
+    )
     csv_writer1.writerow(
-            [
-                "branch_id",
-                "from_bus_id",
-                "to_bus_id",
-                "r",
-                "x",
-                "b",
-                "rateA",
-                "rateB",
-                "rateC",
-                "ratio",
-                "angle",
-                "status",
-                "angmin",
-                "angmax",
-                "Pf",
-                "Qf",
-                "Qt",
-                "mu_Sf",
-                "mu_St",
-                "mu_angmin",
-                "mu_angmax",
-                "branch_device_type",
-                "interconnect"
-            ])
+        [
+            "branch_id",
+            "from_bus_id",
+            "to_bus_id",
+            "r",
+            "x",
+            "b",
+            "rateA",
+            "rateB",
+            "rateC",
+            "ratio",
+            "angle",
+            "status",
+            "angmin",
+            "angmax",
+            "Pf",
+            "Qf",
+            "Qt",
+            "mu_Sf",
+            "mu_St",
+            "mu_angmin",
+            "mu_angmax",
+            "branch_device_type",
+            "interconnect",
+        ]
+    )
     csv_writer2.writerow(
-            [
-                "dcline_id",
-                "from_bus_id",
-                "to_bus_id",
-                'status',
-                'Pf',
-                'Pt',
-                "Qf",
-                "Qt",
-                "Vf",
-                "Vt",
-                'Pmin',
-                'Pmax',
-                'QminF',
-                'QmaxF',
-                'QminT',
-                'QmaxT',
-                'loss0',
-                'loss1',
-                'muPmin',
-                'muPmax',
-                'muQminF',
-                'muQmaxF',
-                'from_interconnect',
-                'to_interconnect'
-            ])
-    bus_pd = pd.read_csv('output/bus.csv')
+        [
+            "dcline_id",
+            "from_bus_id",
+            "to_bus_id",
+            "status",
+            "Pf",
+            "Pt",
+            "Qf",
+            "Qt",
+            "Vf",
+            "Vt",
+            "Pmin",
+            "Pmax",
+            "QminF",
+            "QmaxF",
+            "QminT",
+            "QmaxT",
+            "loss0",
+            "loss1",
+            "muPmin",
+            "muPmax",
+            "muQminF",
+            "muQmaxF",
+            "from_interconnect",
+            "to_interconnect",
+        ]
+    )
+    bus_pd = pd.read_csv("output/bus.csv")
     bus_dict = {}
     for bus in bus_pd.iloc():
-        bus_dict[bus['bus_id']] = bus['interconnect']
+        bus_dict[bus["bus_id"]] = bus["interconnect"]
     for _, row in lines.iterrows():
-        if row['line_type'] == 'DC':
+        if row["line_type"] == "DC":
             from_connect = bus_dict[row["from_bus_id"]]
             to_connect = bus_dict[row["to_bus_id"]]
             csv_writer2.writerow(
@@ -601,8 +702,9 @@ def Write_branch(lines):
                     0.0,
                     0.0,
                     from_connect,
-                    to_connect
-                ])
+                    to_connect,
+                ]
+            )
         else:
             csv_writer.writerow(
                 [
@@ -628,11 +730,14 @@ def Write_branch(lines):
                     0.0,
                     0.0,
                     row["line_type"],
-                    row["interconnect"]                   
-                ])
+                    row["interconnect"],
+                ]
+            )
     branch.close()
     phase.close()
     dc.close()
+
+
 """
         elif row['line_type'] == 'Phase Shifter':
             csv_writer1.writerow(
@@ -662,7 +767,7 @@ def Write_branch(lines):
                     row["interconnect"]                   
                 ])
 """
-        
+
 
 def compute_reactance_and_type(line_type, kv_from, kv_to, dist, vol):
     """Compute the reactance based on the type of each transmission line
@@ -685,8 +790,13 @@ def compute_reactance_and_type(line_type, kv_from, kv_to, dist, vol):
             for kv, x in kv_xperunit_calculate_1:
                 if vol <= kv:
                     return x * dist, "Phase Shifter"
-        elif dist < 0.031:  # If two are within 0.031 mile (~50 meters) range, they are in the same substation
-            return kv_from_to_xperunit_calculate_4.get((kv_from, kv_to), 0.00436) * dist, "Line"
+        elif (
+            dist < 0.031
+        ):  # If two are within 0.031 mile (~50 meters) range, they are in the same substation
+            return (
+                kv_from_to_xperunit_calculate_4.get((kv_from, kv_to), 0.00436) * dist,
+                "Line",
+            )
         else:  # AC Transmission Line
             # calculate 2
             for kv, x in kv_xperunit_calculate_2:
@@ -712,7 +822,9 @@ def compute_rate_a(line_type, kv_from, kv_to, dist, vol):
     if line_type.startswith("DC"):
         # initial setup for DC
         return 200
-    elif dist < 0.031:  # If two are within 0.031 mile (~50 meters) range, they are in the same substation
+    elif (
+        dist < 0.031
+    ):  # If two are within 0.031 mile (~50 meters) range, they are in the same substation
         return 1793.0
     # line type is AC
     if kv_from == kv_to:
@@ -783,7 +895,7 @@ def calculate_reactance_and_rate_a(bus_id_to_kv, lines, raw_lines):
         reactance, type = compute_reactance_and_type(
             line_type, kv_from, kv_to, dist, vol
         )
- 
+
         rate_a = compute_rate_a(line_type, kv_from, kv_to, dist, vol)
         line_types.append(type)
         rateas.append(rate_a)
@@ -801,8 +913,8 @@ def DataTransform(E_csv, T_csv, Z_csv):
     :param str T_csv: path of the HIFLD transmission csv file
     :param str Z_csv: path of the zone csv file
     """
-    
-    zone_dic, zone_dic1= get_Zone(Z_csv)
+
+    zone_dic, zone_dic1 = get_Zone(Z_csv)
 
     clean_data = clean(E_csv, zone_dic)
 
@@ -812,7 +924,9 @@ def DataTransform(E_csv, T_csv, Z_csv):
     lines, n_dict = neighbors(sub_by_coord_dict, sub_name_dict)
     graph = graph_of_net(n_dict)
     max_island_set = get_max_island(graph)
-    clean_data = clean_data[clean_data[["LATITUDE", "LONGITUDE"]].apply(tuple, 1).isin(max_island_set)]
+    clean_data = clean_data[
+        clean_data[["LATITUDE", "LONGITUDE"]].apply(tuple, 1).isin(max_island_set)
+    ]
     print("Island Detection: number of nodes in graph = ", len(graph.nodes))
     print("Island Detection: max island size = ", len(max_island_set))
     KV_dict, to_cal = InitKV(clean_data)
@@ -824,11 +938,13 @@ def DataTransform(E_csv, T_csv, Z_csv):
     clean_data = clean_data[clean_data["ID"].isin(node_id_set)]
 
     region = Getregion()
-    
+
     re_code, sub_code = Write_sub(clean_data, zone_dic, zone_dic1, region)
-    Write_Bus(clean_data, sub_code,re_code, KV_dict)
-    Write_bus2sub(clean_data,re_code)
-    lines["interconnect"] = lines.apply(lambda row: re_code.get(row["from_bus_id"]), axis=1)
+    Write_Bus(clean_data, sub_code, re_code, KV_dict)
+    Write_bus2sub(clean_data, re_code)
+    lines["interconnect"] = lines.apply(
+        lambda row: re_code.get(row["from_bus_id"]), axis=1
+    )
     Write_branch(lines)
 
 

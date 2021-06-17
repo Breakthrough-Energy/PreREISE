@@ -1,4 +1,3 @@
-
 # Reactance Calculate 1
 kv_xperunit_calculate_1 = (
     (69, 0.2293),
