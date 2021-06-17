@@ -22,8 +22,14 @@ from prereise.gather.hiflddata.data_trans import (
 @patch("prereise.gather.hiflddata.data_trans.pd.read_csv")
 def test_get_zone(read_csv):
     zone_file_path = "zone.csv"
-    read_csv.return_value = pd.DataFrame(data={"STATE": ["AL", "AR"], "ID": [1, 2]})
-    zone_dict = get_zone(zone_file_path)
+    read_csv.return_value = pd.DataFrame(
+        data={
+            "zone_name": ["AL", "AR"],
+            "zone_id": [1, 2],
+            "interconnect": ["West", "West"],
+        }
+    )
+    zone_dict, zone_dict1 = get_zone(zone_file_path)
     expected_result = {"AL": 1, "AR": 2}
     assert zone_dict == expected_result
 
@@ -34,7 +40,7 @@ def test_clean(read_csv):
     csv_data = {
         "STATE": ["AL", "AR"],
         "STATUS": ["IN SERVICE", "OUTAGE"],
-        "LINES": [5, 3],
+        "LINES": [5, 0],
     }
     zone_dict = {"AL": 1, "AR": 2}
     read_csv.return_value = pd.DataFrame(data=csv_data)

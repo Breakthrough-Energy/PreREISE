@@ -3,7 +3,7 @@ import math
 
 import numpy as np
 import pandas as pd
-from geopy.distance import geodesic
+from haversine import haversine
 
 coord_precision = ".9f"
 
@@ -398,14 +398,14 @@ def plant_agg(
 
                         # calculate the distance between the plant and substations
                         if (
-                            geodesic(
+                            haversine(
                                 loc_of_plant[row["PLANT"]], loc_of_sub_dict[value]
-                            ).m
+                            )
                             < min_d
                         ):
-                            min_d = geodesic(
+                            min_d = haversine(
                                 loc_of_plant[row["PLANT"]], loc_of_sub_dict[value]
-                            ).m
+                            )
                             # print(value)
 
                             bus_id = value
@@ -425,22 +425,22 @@ def plant_agg(
                                 # print(value)
                                 if row["PLANT"] == "INGLESIDE COGENERATION":
                                     print(
-                                        geodesic(
+                                        haversine(
                                             loc_of_plant[row["PLANT"]],
                                             loc_of_sub_dict[value],
-                                        ).m
+                                        )
                                     )
                                 if (
-                                    geodesic(
+                                    haversine(
                                         loc_of_plant[row["PLANT"]],
                                         loc_of_sub_dict[value],
-                                    ).m
+                                    )
                                     < min_d
                                 ):
-                                    min_d = geodesic(
+                                    min_d = haversine(
                                         loc_of_plant[row["PLANT"]],
                                         loc_of_sub_dict[value],
-                                    ).m
+                                    )
                                     # print(value)
 
                                     bus_id = value
