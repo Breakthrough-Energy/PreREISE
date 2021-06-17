@@ -1,5 +1,0 @@
-dcline_id,from_bus_id,to_bus_id,status,Pf,Pt,Qf,Qt,Vf,Vt,Pmin,Pmax,QminF,QmaxF,QminT,QmaxT,loss0,loss1,muPmin,muPmax,muQminF,muQmaxF,from_interconnect,to_interconnect
-308464,201321,309154,1,0.0,0.0,0.0,0.0,0.0,0.0,-200,200,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,Western,Western
-310053,306987,309801,1,0.0,0.0,0.0,0.0,0.0,0.0,-200,200,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,Western,Western
-108354,135642,133416,1,0.0,0.0,0.0,0.0,0.0,0.0,-200,200,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,Eastern,Eastern
-131914,133682,136723,1,0.0,0.0,0.0,0.0,0.0,0.0,-200,200,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,Eastern,Eastern
