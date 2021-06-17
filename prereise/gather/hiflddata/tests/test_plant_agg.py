@@ -9,7 +9,6 @@ from prereise.gather.hiflddata.plant_agg import (
     clean_p,
     get_loc_of_plant,
     loc_of_sub,
-    plant_agg,
 )
 
 
