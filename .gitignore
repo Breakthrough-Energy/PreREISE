@@ -142,6 +142,7 @@ Thumbs.db
 
 # Data
 prereise/gather/winddata/data/StatePowerCurves.csv
+prereise/gather/hiflddata/data/unzip/
 
 # Jupyter Notebook
 share/
