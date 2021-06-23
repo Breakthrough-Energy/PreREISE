@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from prereise.cli.data_sources import WindData, get_data_sources_list
+from prereise.cli.data_sources.wind_data import WindData
 
 TEXAS_REGION_LIST = ["Texas"]
 STRING_DATE_2021_12_1 = "2021-12-1"
@@ -25,8 +25,8 @@ def test_winddata_end_date_before_start_date(wind_data_object):
         )
 
 
-@patch("prereise.cli.data_sources.rap")
-@patch("prereise.cli.data_sources.Grid")
+@patch("prereise.cli.data_sources.wind_data.rap")
+@patch("prereise.cli.data_sources.wind_data.Grid")
 def test_winddata_happy_path(grid, rap, wind_data_object):
     grid_mock = MagicMock()
     wind_farms = MagicMock()
@@ -46,9 +46,9 @@ def test_winddata_happy_path(grid, rap, wind_data_object):
     data.to_pickle.assert_called_with(CURRENT_DIRECTORY_FILEPATH)
 
 
-@patch("prereise.cli.data_sources.rap")
-@patch("prereise.cli.data_sources.Grid")
-@patch("prereise.cli.data_sources.logging")
+@patch("prereise.cli.data_sources.wind_data.rap")
+@patch("prereise.cli.data_sources.wind_data.Grid")
+@patch("prereise.cli.data_sources.wind_data.logging")
 def test_winddata_missing_files(logging, grid, rap, wind_data_object):
     grid_mock = MagicMock()
     wind_farms = MagicMock()
@@ -69,8 +69,8 @@ def test_winddata_missing_files(logging, grid, rap, wind_data_object):
     logging.warning.assert_called_with("There are 2 files missing")
 
 
-@patch("prereise.cli.data_sources.rap")
-@patch("prereise.cli.data_sources.Grid")
+@patch("prereise.cli.data_sources.wind_data.rap")
+@patch("prereise.cli.data_sources.wind_data.Grid")
 def test_winddata_repeated_regions(grid, rap, wind_data_object):
     rap.retrieve_data.return_value = (MagicMock(), [None, None])
     wind_data_object.extract(
@@ -80,8 +80,3 @@ def test_winddata_repeated_regions(grid, rap, wind_data_object):
         CURRENT_DIRECTORY_FILEPATH,
     )
     grid.assert_called_with(TEXAS_REGION_LIST)
-
-
-def test_get_data_sources_list():
-    data_sources_list = get_data_sources_list()
-    assert isinstance(data_sources_list[0], WindData)

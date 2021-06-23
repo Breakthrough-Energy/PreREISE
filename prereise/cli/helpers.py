@@ -37,7 +37,7 @@ def add_data_source_to_download_parser(data_source, parser):
     that the user can interact with and download via the
     command line tool
 
-    :param prereise.cli.data_sources.DataSource data_source: an
+    :param prereise.cli.data_sources.data_source.DataSource data_source: an
         instance of a class that implements the abstract class DataSource
     :param argparse.ArgumentParser parser: parser that implements command
         line interface functionality
