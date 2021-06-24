@@ -1,3 +1,27 @@
+"""
+Read data 
+        -- demand.csv  This file must be provided and the zones in this demand.csv must be consistent with the zone.csv
+        --  bus.csv  sub.csv bus2sub.csv branch.csv plant.csv gencost.csv
+
+Write data for grid simulation
+        -- plant.csv, gencost.csv
+Core Tasks
+        -- ill plant: Pmax over 1500 or the assigned bus could not afford its Pmax
+        -- 1 Calcualte load for each bus (CL4B)
+        -- 2 Calcualte Pmax for each bus (CP4B), Pmax = \sum_{i \in Plants conneted with the Bus} Pmax_{i}
+        -- 3 Divide ill plants into virtual plants (DP2vP) , default number = 5
+Core Subtask        
+        -- 1 CL4B
+            -- 1.1 Calculate the total Pd in each zone
+            -- 1.2 Calculate the max value for each zone in demand.csv
+            -- 1.3 The load of a bus is pd * (max_demand / total Pd)
+        -- 3 DP2vP
+            -- 3.1 Calculate the total capacity for each bus
+            -- 3.2 Calculate the avaiable extra load that each bus could afford
+            -- 3.3 For ill plants, find 5 nearest buses that could afford its Pmax
+            -- 3.4 Create 5 virtual smaller plants and assigned them to the 5 buses, delete the ill plant
+"""
+
 import pandas as pd
 
 coord_precision = ".9f"
@@ -289,7 +313,6 @@ if __name__ == "__main__":
     )
 
     for pl in add_plant:
-        # a = [[bu,1,0,0,0,0,zone_id,0,0,0,0,0,0,0,add_bus[bu][3],add_bus[bu][4]]]
         new = pd.DataFrame(
             {
                 "plant_id": pl,
@@ -333,7 +356,7 @@ if __name__ == "__main__":
     plants = remove_plant(plants, plant_remove)
 
     for pl in add_plant:
-        # a = [[bu,1,0,0,0,0,zone_id,0,0,0,0,0,0,0,add_bus[bu][3],add_bus[bu][4]]]
+
         new = pd.DataFrame(
             {
                 "plant_id": pl,
