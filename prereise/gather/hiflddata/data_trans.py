@@ -1,10 +1,10 @@
 """
 Read data from Homeland Infrastructure Foundation-Level Data (HIFLD)  and Configuration Data
         --  HIFLD Data:  transmission line, substation
-        --  Configuration Data:  Zone.csv
+        --  Configuration Data:  zone.csv
 
 Write data for grid simulation
-        -- Bus.csv  Sub.csv Bus2Sub.csv Branch.csv
+        -- bus.csv  sub.csv bus2sub.csv branch.csv
 
 Core Tasks
         -- 1 Electrcity grid topology population (EGTP)

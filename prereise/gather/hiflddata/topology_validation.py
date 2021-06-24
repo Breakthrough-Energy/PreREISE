@@ -1,3 +1,41 @@
+"""
+Read data  (data populated by data_trans.py)
+        -- bus.csv  sub.csv bus2sub.csv branch.csv  zone.csv
+
+Write data for grid simulation
+        -- bus.csv  sub.csv bus2sub.csv branch.csv
+Core Task
+        -- Revise the ill buses and tranmission lines
+        -- ill bus: in the wrong U.S. interconnect region
+        -- ill tranmission line: connected with two different U.S. interconnect region
+Preproces
+        -- Create Hashmaps
+            -- Map Bus ID to U.S. interconnect region
+            -- Map Bus ID to U.S. State
+Core Subtask
+        -- ill branch set UNION normal branch set = whole branch set
+        -- normal bus set UNION unlable bus set = whole bus set
+
+        -- identify all ill branch
+            -- a branch is ill when its two ends are in two different U.S. interconnect region
+        -- identify all normal bus
+            -- For each line, if the line is normal line, then the two ends of this line are normal bus
+            -- The lable for normal bus cannot be changed once it is assigned
+
+        -- In ill branch set, find the branch whose two ends are both normal bus. 
+            -- Delete the branch. 
+            -- In this situtation, the branch is ill and across two different interconnect regions. 
+            -- However, the two end buses are unchangable due each bus is connected with the large network in each region.
+        -- In ill branch set, find the branch whose two ends are one normal bus and one unlable bus.
+            -- Assgin the unlable bus' interconnect region as the normal bus' interconnect region. 
+            -- Assgin this branch's interconnnect region as the normal bus' interconnect region.
+            -- In this sitution, one end of the branch is connected with the network of the region. The other end is a island. 
+        -- In ill brnach set, find the branch whose two ends are both unlable buses.
+            -- Delete the branch and both unlable buses.
+            -- In this situtation, this branch is a island. 
+        
+"""
+
 import pandas as pd
 
 # please run this after running ercot_topology_validation
