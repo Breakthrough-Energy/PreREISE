@@ -1,3 +1,28 @@
+"""
+Read data 
+        -- demand.csv  This file must be provided and the zones in this demand.csv must be consistent with the zone.csv
+        --  bus.csv branch.csv plant.csv
+
+Write data for grid simulation
+        -- branch.csv
+
+Core Tasks
+        -- ill bus: the total capacity of lines linked with the bus could not afford the load
+        -- 1 Calcualte load for each bus (CL4B)
+        -- 2 Calcualte Pmax for each bus (CP4B)
+        -- 3 Create virtual lines for ill bus (CVL4B)
+
+Core Subtask   
+        -- 1 CL4B
+            -- 1.1 Calculate the total Pd in each zone
+            -- 1.2 Calculate the max value for each zone in demand.csv
+            -- 1.3 The load of a bus is pd * (max_demand / total Pd)
+        -- 3 CVL4B
+            -- 3.1 Calculate the total capacity for each bus
+            -- 3.2 For ill buses, BFS the neighbor buses in 2 depth
+            -- 3.3 Create virtual lines until the bus and its neighbor buses could afford its load
+"""
+
 import pandas as pd
 
 coord_precision = ".9f"
@@ -74,12 +99,10 @@ if __name__ == "__main__":
     plants = pd.read_csv("output/plant.csv")
 
     buses = pd.read_csv("output/bus.csv")
-    # subs = pd.read_csv('output/sub.csv')
     demands = pd.read_csv("data/demand.csv")
     demands = demands.drop("UTC Time", axis=1)
 
     bus_line_total_capa = {}
-    # bus_load = buses.set_index('bus_id')['Pd'].to_dict()
 
     grouped = buses["Pd"].groupby(buses["zone_id"])
     sum_pd = grouped.sum().to_dict()
@@ -130,7 +153,6 @@ if __name__ == "__main__":
         loc = loc + 1
         if (loc % num) == 0:
             print(loc / num, "%")
-        # a = [[bu,1,0,0,0,0,zone_id,0,0,0,0,0,0,0,add_bus[bu][3],add_bus[bu][4]]]
         new = pd.DataFrame(
             {
                 "branch_id": br,
