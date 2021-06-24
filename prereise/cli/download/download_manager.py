@@ -10,8 +10,9 @@ def generate_parser():
     :return: (*argparse.ArgumentParser*)
     """
     parser = argparse.ArgumentParser()
+    subparser = parser.add_subparsers()
     for data_source in get_data_sources_list():
-        add_data_source_to_download_parser(data_source, parser)
+        add_data_source_to_download_parser(data_source, subparser)
     return parser
 
 

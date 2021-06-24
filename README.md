@@ -78,34 +78,77 @@ differentiated using a lowercase letter added right after the year, e.g,
 ***demand_vJan2021c.csv*** (third) and so forth.
 
 
-### A. Wind data
+### How to download
 
-#### How to download
-
-Wind data can be downloaded via a python script. When in the terminal at the project
-root directory, you can run:
+Most data can be downloaded via our download manager python script. After setting
+up the project via the [setup instructions](#1-setupinstall), when in the terminal
+at the project root directory, you can run:
 
 ```bash
-python -m prereise.cli.download.download_manager wind_data \
+> python -m prereise.cli.download.download_manager -h
+usage: download_manager.py [-h]
+                           {wind_data_rap,solar_data_ga,solar_data_nsrdb} ...
+
+positional arguments:
+  {wind_data_rap,solar_data_ga,solar_data_nsrdb}
+    wind_data_rap       Download wind data from National Centers for
+                        Environmental Prediction
+    solar_data_ga       Download solar data from the Gridded Atmospheric Wind
+                        Integration National Dataset Toolkit
+    solar_data_nsrdb    Download solar data from the National Solar Radiation
+                        Database
+
+optional arguments:
+  -h, --help            show this help message and exit
+```
+Currently supported data sources to download from are:
+
+[Rapid Refresh from National Centers for Environmental Prediction](#i-rapid-refresh)
+
+```bash
+python -m prereise.cli.download.download_manager wind_data_rap \
     --region REGION \
     --start_date START_DATE \
     --end_date END_DATE \
     --file_path FILEPATH
 ```
 
-For example, if you would like to download the wind data for regions Texas and Western
-between the dates of June 5th, 2020 and Janurary 2nd, 2021 into data.pkl, you can run:
-
+[Gridded Atmospheric Wind Integration National Dataset Toolkit](#i-the-gridded-atmospheric-wind-integration-national-dataset-toolkit)
 ```bash
-python -m prereise.cli.download.download_manager wind_data \
+python -m prereise.cli.download.download_manager solar_data_ga \
+    --region REGION \
+    --start_date START_DATE \
+    --end_date END_DATE \
+    --file_path FILEPATH \
+    --key API_KEY
+```
+
+[The National Solar Radiation Database](#ii-the-national-solar-radiation-database)
+```bash
+python -m prereise.cli.download.download_manager solar_data_nsrdb \
+    --region REGION \
+    --method METHOD \
+    --year YEAR \
+    --file_path FILEPATH \
+    --email EMAIL \
+    --key API_KEY
+```
+
+As a concrete example, if you would like to download the wind data from Rapid 
+Refresh from National Centers for Environmental Prediction for regions Texas and Western
+between the dates of June 5th, 2020 and Janurary 2nd, 2021 into data.pkl, you can run:
+```bash
+python -m prereise.cli.download.download_manager wind_data_rap \
     --region Texas \
     --region Western \
     --start_date 2020-05-06 \
     --end_date 2021-01-02 \
     --file_path ./data.pkl
 ```
-You can run `python -m prereise.cli.download.download_manager wind_data -h` for more
-details.
+You can run `python -m prereise.cli.download.download_manager DATA_SOURCE_OPTION -h` for more
+details, where `DATA_SOURCE_OPTION` is `wind_data_rap`, `solar_data_nsrdb`, etc.
+
+### A. Wind data
 
 #### i. Rapid Refresh
 [RAP][RAP] (Rapid Refresh) is the continental-scale NOAA hourly-updated
