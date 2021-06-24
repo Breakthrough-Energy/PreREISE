@@ -1,3 +1,15 @@
+"""
+Read data 
+        --  branch.csv
+Write data for grid simulation
+        -- branch.csv
+Core Tasks
+        -- Merge the parallel virtual lines
+Core Subtask   
+        -- 1 For virtual lines ehich have the same ends, keep one of them and delete others
+        -- 3 Calculate the new x and rateA of this line       
+"""
+
 import pandas as pd
 
 
