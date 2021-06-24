@@ -1,3 +1,39 @@
+"""
+Read data from Homeland Infrastructure Foundation-Level Data (HIFLD)  and Configuration Data
+        --  HIFLD Data:  transmission line, substation
+        --  Configuration Data:  Zone.csv
+
+Write data for grid simulation
+        -- Bus.csv  Sub.csv Bus2Sub.csv Branch.csv
+
+Core Tasks
+        -- 1 Electrcity grid topology population (EGTP)
+        -- 2 Calcualte the BaseKV for each Bus/Substation (CBKV)
+        -- 3 Assign U.S. Interconnection Region to each Bus/Substation (AIR2B)
+        -- 4 Calculate power load for each substation  (CPD4S)
+        -- 5 Calcluate transmission line paramaters RateA and X (CLPRAX)
+
+Preprocess Tasks
+        -- 1 Create Hashmaps for zones
+            -- 1.1 Map zone name to Zone ID
+            -- 1.2 Map (zone name, zone interconnection region)  to Zone ID
+        -- 2 Clean substation data
+            -- 2.1 remove states not in zone.csv
+            -- 2.2 remove sustation without any lines
+            -- 2.3 remove substation without countyFIPS
+        -- 3 Create Hashmap for substation
+            -- 3.1 Map geo location (latitude, longitude) to (substation ID, substation name, substation state, substation county)
+            -- 3.2 Map substation name to location (latitude, longtitude)
+        -- 4 Creat Hashmap for tramission line
+            -- 4.1 Map transmission ID to raw parameters. (a row of data from HIFLD transmission line file)
+        -- 5 Creat List/Hashmap for tranmssion line /Substation
+            -- 5.1 List of clean tranmssion line datas
+            -- 5.2 Map Substation ID to List of neighbor substations
+
+Postprocess Tasks
+        -- 1 remove islands
+"""
+
 import csv
 import json
 import os.path
