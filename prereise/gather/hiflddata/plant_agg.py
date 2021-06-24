@@ -1,3 +1,43 @@
+"""
+Read data from Homeland Infrastructure Foundation-Level Data (HIFLD) and Energy Information Ademinstration (EIA) data 
+        --  HIFLD Data:  General_Units, Power_Plants
+        --  EIA Data:  Generator_Y2019, needs
+        --  Others: curve.csv (populated by epa.py), sub.csv
+Write data for grid simulation
+        -- plant.csv, gencost.csv, storage.csv
+Core Tasks
+        -- 1 Calcualte the Pmin for each plant (CP4P)
+        -- 2 Assign U.S. Interconnection Region to each plant (AIR2P)
+        -- 3 Calculate cost curve for each plant  (CC4P)
+        -- 4 Aggregate general units based on plant, fuel and mover (AGU)
+        -- 5 Find nearest substation for each plant (FNS4P)
+        
+Core Subtask
+        -- 1 CC4P
+            --1.1 If plant in curve.csv , use the c2, c1, c0 from curve
+            --1.2 If not in curve.csv, use c1 from needs.csv, set c2 and c0 as 0
+        -- 2 AGU
+            --2.1 For units which have the same plant, fuel and mover, merge their parameters and only keep one plant
+        -- 3 FNS4P
+            -- 3.1 If zip of plant is in its interconnect region, find the bus which have the smallest geo distance from the plant.
+            -- 3.2 If not in in its interconnect region, find the nearest bus in the interval [zip - 100, zip + 100]
+
+Preprocess Tasks
+        -- 1 Create Hashmaps for county
+            -- 1.1 Map plant name to county
+        -- 2 Clean general units data
+            -- 2.1 remove units not in service
+        -- 3 Create Hashmap for location of plants and substations
+            -- 3.1 Map interconnect to a dict, which maps zip to a list of substation names
+            -- 3.2 Map substation name to location (latitude, longtitude)
+            -- 3.3 Map unit name to location (latitude, longtitude)
+        -- 4 Creat Hashmaps for cost curve
+            -- 4.1 For plant in curve.csv, map plant name to c2, c1, c0
+                --- cost = c2 * p**2 + c1 * p + c0
+            -- 4.2 For plant in need.csv, map plant name to c1
+
+"""
+
 import csv
 import math
 
