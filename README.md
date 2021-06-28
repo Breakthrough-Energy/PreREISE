@@ -1,5 +1,10 @@
+![logo](https://raw.githubusercontent.com/Breakthrough-Energy/docs/master/source/_static/img/BE_Sciences_RGB_Horizontal_Color.svg)
+[![codecov](https://codecov.io/gh/Breakthrough-Energy/PreREISE/branch/develop/graph/badge.svg?token=4KA0ESPUA4)](https://codecov.io/gh/Breakthrough-Energy/PreREISE)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![Tests](https://github.com/Breakthrough-Energy/PreREISE/workflows/Pytest/badge.svg)
+[![Documentation](https://github.com/Breakthrough-Energy/docs/actions/workflows/publish.yml/badge.svg)](https://breakthrough-energy.github.io/docs/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # PreREISE
 This package gathers and builds demand, hydro, solar, and wind profiles. The profiles
