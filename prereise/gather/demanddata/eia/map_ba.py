@@ -95,3 +95,28 @@ def map_buses_to_county(bus_county_map):
         except TypeError:
             bus_no_county_match.append(index)
     return bus_county_map, bus_no_county_match
+
+
+def map_buses_to_ba(bus_gis):
+    """Find the Balancing Authority in the U.S. territory that each bus in the query grid
+    belongs to.
+
+    :param (*pandas.DataFrame*) bus_gis: data frame contains a list of
+        entries with lat and long of buses.
+    :return: (*pandas.DataFrame*) data frame of BA that buses
+        locate
+    """
+
+    b2c_key = map_buses_to_county(bus_gis)[0].dropna()
+
+    # read json file for BA_County Map
+    import json
+
+    with open("BA_County_map.json") as f:
+        ba_county_map = json.load(f)
+
+    ba2county = pd.DataFrame(
+        [[k, v] for k, a in ba_county_map.items() for v in a], columns=["BA", "County"]
+    )
+
+    return pd.merge(b2c_key, ba2county, on=["County"], suffixes=("", ""))
