@@ -107,7 +107,7 @@ def map_buses_to_ba(bus_gis):
         locate
     """
 
-    b2c_key = map_buses_to_county(bus_gis)[0].dropna()
+    b2c_key = map_buses_to_county(bus_gis)[0].iloc[:, :-1].dropna()
 
     # read json file for BA_County Map
     import json
@@ -119,4 +119,8 @@ def map_buses_to_ba(bus_gis):
         [[k, v] for k, a in ba_county_map.items() for v in a], columns=["BA", "County"]
     )
 
-    return pd.merge(b2c_key, ba2county, on=["County"], suffixes=("", ""))
+    return (
+        b2c_key.reset_index()
+        .merge(ba2county, how="left", on=["County"], suffixes=("", ""))
+        .set_index("bus_id")
+    )
