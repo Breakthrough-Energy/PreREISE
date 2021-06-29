@@ -124,5 +124,3 @@ def map_buses_to_ba(bus_gis):
         .merge(ba2county, how="left", on=["County"], suffixes=("", ""))
         .set_index("bus_id")
     )
-
- 
