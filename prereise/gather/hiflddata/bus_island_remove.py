@@ -8,7 +8,7 @@ Core Task
 Core Subtask
         -- Create the graph for the HIFLD transmission network
         -- Find the max island for each U.S. interconnect region (EI, WECC, ERCOT)
-        -- Remove other small islands        
+        -- Remove other small islands
 """
 
 import networkx as nx

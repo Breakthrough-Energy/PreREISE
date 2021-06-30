@@ -1,5 +1,5 @@
 """
-Read data 
+Read data
         -- demand.csv  This file must be provided and the zones in this demand.csv must be consistent with the zone.csv
         --  bus.csv  sub.csv bus2sub.csv branch.csv plant.csv gencost.csv
 
@@ -8,9 +8,9 @@ Write data for grid simulation
 Core Tasks
         -- ill plant: Pmax over 1500 or the assigned bus could not afford its Pmax
         -- 1 Calcualte load for each bus (CL4B)
-        -- 2 Calcualte Pmax for each bus (CP4B), Pmax = \sum_{i \in Plants conneted with the Bus} Pmax_{i}
+        -- 2 Calcualte Pmax for each bus (CP4B), Pmax = sum{i in Plants conneted with the Bus} Pmax_{i}
         -- 3 Divide ill plants into virtual plants (DP2vP) , default number = 5
-Core Subtask        
+Core Subtask
         -- 1 CL4B
             -- 1.1 Calculate the total Pd in each zone
             -- 1.2 Calculate the max value for each zone in demand.csv

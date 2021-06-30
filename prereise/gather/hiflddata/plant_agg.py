@@ -1,5 +1,5 @@
 """
-Read data from Homeland Infrastructure Foundation-Level Data (HIFLD) and Energy Information Ademinstration (EIA) data 
+Read data from Homeland Infrastructure Foundation-Level Data (HIFLD) and Energy Information Ademinstration (EIA) data
         --  HIFLD Data:  General_Units, Power_Plants
         --  EIA Data:  Generator_Y2019, needs
         --  Others: curve.csv (populated by epa.py), sub.csv
@@ -11,7 +11,7 @@ Core Tasks
         -- 3 Calculate cost curve for each plant  (CC4P)
         -- 4 Aggregate general units based on plant, fuel and mover (AGU)
         -- 5 Find nearest substation for each plant (FNS4P)
-        
+
 Core Subtask
         -- 1 CC4P
             --1.1 If plant in curve.csv , use the c2, c1, c0 from curve

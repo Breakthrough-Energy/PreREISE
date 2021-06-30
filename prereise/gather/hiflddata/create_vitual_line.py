@@ -1,5 +1,5 @@
 """
-Read data 
+Read data
         -- demand.csv  This file must be provided and the zones in this demand.csv must be consistent with the zone.csv
         --  bus.csv branch.csv plant.csv
 
@@ -12,7 +12,7 @@ Core Tasks
         -- 2 Calcualte Pmax for each bus (CP4B)
         -- 3 Create virtual lines for ill bus (CVL4B)
 
-Core Subtask   
+Core Subtask
         -- 1 CL4B
             -- 1.1 Calculate the total Pd in each zone
             -- 1.2 Calculate the max value for each zone in demand.csv
