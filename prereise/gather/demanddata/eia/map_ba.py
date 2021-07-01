@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import requests
 from tqdm import tqdm
@@ -107,24 +109,18 @@ def map_buses_to_ba(bus_gis):
         locate
     """
 
-    b2c_key = map_buses_to_county(bus_gis)[0].iloc[:, :-1].dropna()
+    b2c_key = map_buses_to_county(bus_gis)[0].iloc[:, :-1]
 
     # read json file for BA_County Map
-    import json
-
-<<<<<<< HEAD
     with open("../../data/BA_County_map.json") as f:
-=======
-    with open("BA_County_map.json") as f:
->>>>>>> b0752649ead7f4271d360230c5cae39f2d2ec0f5
         ba_county_map = json.load(f)
 
     ba2county = pd.DataFrame(
         [[k, v] for k, a in ba_county_map.items() for v in a], columns=["BA", "County"]
     )
 
-    return (
-        b2c_key.reset_index()
-        .merge(ba2county, how="left", on=["County"], suffixes=("", ""))
-        .set_index("bus_id")
-    )
+    county_ba_map = ba2county.set_index("County").to_dict("dict")["BA"]
+
+    bus_ba_map = b2c_key["County"].map(county_ba_map)
+
+    return bus_ba_map
