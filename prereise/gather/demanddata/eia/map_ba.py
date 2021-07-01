@@ -115,12 +115,8 @@ def map_buses_to_ba(bus_gis):
     with open("../../data/BA_County_map.json") as f:
         ba_county_map = json.load(f)
 
-    ba2county = pd.DataFrame(
-        [[k, v] for k, a in ba_county_map.items() for v in a], columns=["BA", "County"]
-    )
+    county_ba_map = {
+        value: key for key in ba_county_map for value in ba_county_map[key]
+    }
 
-    county_ba_map = ba2county.set_index("County").to_dict("dict")["BA"]
-
-    bus_ba_map = b2c_key["County"].map(county_ba_map).rename("BA", inplace=True)
-
-    return bus_ba_map
+    return b2c_key["County"].map(county_ba_map).rename("BA", inplace=True)
