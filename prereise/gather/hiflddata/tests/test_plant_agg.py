@@ -38,8 +38,8 @@ def test_loc_of_sub(read_csv):
     read_csv.return_value = pd.DataFrame(data=csv_data)
     loc_of_sub_dict, zip_of_sub_dict = loc_of_sub(csv_data_path)
     expected_loc_of_sub_dict = {
-        "1-Feb": ("45.768423361", "-91.864744373"),
-        "1-Mar": ("45.538501812", "-90.311812314"),
+        "1-Feb": (45.768423361, -91.864744373),
+        "1-Mar": (45.538501812, -90.311812314),
     }
     expected_zip_of_sub_dict = {
         "Eastern": {"35476": ["1-Feb"]},
@@ -74,7 +74,7 @@ def test_loc_of_plant(read_csv):
     read_csv.return_value = pd.DataFrame(data=csv_data)
     loc_of_plant = get_loc_of_plant()
     expected_loc_of_plant = {
-        "AMALGAMATED": ("45.768423360", "-91.864744370"),
-        "CASTLE": ("45.538501810", "-90.311812310"),
+        "AMALGAMATED": (45.76842336, -91.86474437),
+        "CASTLE": (45.53850181, -90.31181231),
     }
     assert loc_of_plant == expected_loc_of_plant

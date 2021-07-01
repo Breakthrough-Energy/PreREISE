@@ -45,8 +45,6 @@ import numpy as np
 import pandas as pd
 from powersimdata.utility.distance import haversine
 
-coord_precision = ".9f"
-
 West = ["WA", "OR", "CA", "NV", "AK", "ID", "UT", "AZ", "WY", "CO", "NM"]
 Uncertain = ["MT", "SD", "TX"]
 
@@ -143,10 +141,7 @@ def loc_of_sub(bus_csv):
     zip_of_sub_dict["Texas"] = {}
     bus = pd.read_csv(bus_csv)
     for index, row in bus.iterrows():
-        loc = (
-            format(row["lat"], coord_precision),
-            format(row["lon"], coord_precision),
-        )
+        loc = (row["lat"], row["lon"])
 
         sub = row["sub_id"]
         zi = str(row["zip"])
@@ -170,12 +165,12 @@ def cal_pmin(g_csv):
     :return: (*dict*) -- a dict of Pmin for the plants.
     """
 
-    pmin = {}
+    pmin_dict = {}
     csv_data = pd.read_csv(g_csv)
     for index, row in csv_data.iterrows():
         tu = (str(row["Plant Name"]).upper(), row["Energy Source 1"])
-        pmin[tu] = row["Minimum Load (MW)"]
-    return pmin
+        pmin_dict[tu] = row["Minimum Load (MW)"]
+    return pmin_dict
 
 
 def get_loc_of_plant():
@@ -187,10 +182,7 @@ def get_loc_of_plant():
     loc_of_plant = {}
     csv_data = pd.read_csv("data/Power_Plants.csv")
     for index, row in csv_data.iterrows():
-        loc = (
-            format(row["LATITUDE"], coord_precision),
-            format(row["LONGITUDE"], coord_precision),
-        )
+        loc = (row["LATITUDE"], row["LONGITUDE"])
         loc_of_plant[row["NAME"]] = loc
     return loc_of_plant
 
@@ -251,7 +243,7 @@ def plant_agg(
     zip_of_sub_dict,
     loc_of_plant,
     loc_of_sub_dict,
-    pmin,
+    pmin_dict,
     region,
     points,
     county_dic,
@@ -495,8 +487,8 @@ def plant_agg(
                 else:
                     # print(row['PLANT'],row['NAME'],row['ZIP'],re)
                     continue
-            if u in pmin:
-                pmin = pmin[u]
+            if u in pmin_dict:
+                pmin = pmin_dict[u]
                 pmin = pmin.replace(",", "")
             else:
                 pmin = 0.0
@@ -740,7 +732,7 @@ def plant(u_csv, g2019_csv, p_csv, bus_csv):
     loc_of_sub_dict, zip_of_sub_dict = loc_of_sub(bus_csv)
     loc_of_plant = get_loc_of_plant()
     clean_data = clean_p(u_csv)
-    pmin = cal_pmin(g2019_csv)
+    pmin_dict = cal_pmin(g2019_csv)
 
     type_dict = {}
     type_data = pd.read_csv("data/type.csv")
@@ -754,7 +746,7 @@ def plant(u_csv, g2019_csv, p_csv, bus_csv):
         zip_of_sub_dict,
         loc_of_plant,
         loc_of_sub_dict,
-        pmin,
+        pmin_dict,
         region,
         points,
         county_dic,
