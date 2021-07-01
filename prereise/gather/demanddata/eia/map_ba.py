@@ -112,11 +112,6 @@ def map_buses_to_ba(bus_gis):
     b2c_key = map_buses_to_county(bus_gis)[0].iloc[:, :-1]
 
     # read json file for BA_County Map
-<<<<<<< HEAD
-=======
-    import json
-
->>>>>>> ce21f00d847a6b9da53e043a6a8d26dd5d4c6028
     with open("../../data/BA_County_map.json") as f:
         ba_county_map = json.load(f)
 
