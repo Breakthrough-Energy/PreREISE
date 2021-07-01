@@ -24,17 +24,7 @@ This program will remove the islands in each interconnects. It returns branch.cs
 This program will create plant.csv, gencost.csv.
 
 
-5(optional). Run command "python bus_island_detect.py" 
-
-This program returns all islands in each interconnect. It is used to detect if each interconnect is a connected system.
-
-
-6(optional. Need demand.csv in "data" folder). Run command "python check_ill_plant.py" & "python check_ill_bus.py"
-
-This program is used to check ill buses and plants. The output is in folder "output/check_plant".
-
-
-7.Copy the documents in “output”, paste in “powersimdata/network/usa_tamu/data” manually. If it is the first time to run project，also copy the zone.csv in “hiflddata/data” folder to “powersimdata/network/usa_tamu/data”.
+5.Copy the documents in “output”, paste in “powersimdata/network/usa_tamu/data” manually. If it is the first time to run project，also copy the zone.csv in “hiflddata/data” folder to “powersimdata/network/usa_tamu/data”.
 
 
 
