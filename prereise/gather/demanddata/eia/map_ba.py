@@ -121,6 +121,6 @@ def map_buses_to_ba(bus_gis):
 
     county_ba_map = ba2county.set_index("County").to_dict("dict")["BA"]
 
-    bus_ba_map = b2c_key["County"].map(county_ba_map)
+    bus_ba_map = b2c_key["County"].map(county_ba_map).rename("BA", inplace=True)
 
     return bus_ba_map
