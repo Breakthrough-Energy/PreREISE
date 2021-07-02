@@ -9,12 +9,14 @@ battery_size_list = []
 
 
 def get_input_day(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
-    """determines month of each day and
-    day of week for any given day in the year
+    """Determine month of each day and day of week for any given day in the year.
 
-    :param list[int] month_days: a list of integers where each value in the list represents the number of days in that month (0 indexed)
-    :param list[int] month_first_day: a list of integers where each value in the list represents the day of the week of the first day of that month (0 indexed)
-    :return: np.ndarray -- first list stores the day of the week for each day of the year, second list stores the month the day is in for each day of the year
+    :param list month_days: a list of integers where each value in the list represents
+        the number of days in that month (0 indexed).
+    :param list month_first_day: a list of integers where each value in the list
+        represents the day of the week of the first day of that month (0 indexed).
+    :return: (*np.ndarray*) -- first list stores the day of the week for each day of
+        the year, second list stores the month the day is in for each day of the year.
 
     """
     # initalize day counter
@@ -50,12 +52,13 @@ def get_input_day(month_days: list[int], month_first_day: list[int]) -> np.ndarr
 
 
 def get_input_month(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
-    """determines month of each day
+    """Determine month of each day
 
-    :param list[int] month_days: a list of integers where each value in the list represents the number of days in that month (0 indexed)
-    :param list[int] month_first_day: a list of integers where each value in the list represents the day of the week of the first day of that month (0 indexed)
-    :return: np.ndarray -- stores the month the day is in for each day of the year
-
+    :param list month_days: a list of integers where each value in the list represents
+        the number of days in that month (0 indexed).
+    :param list month_first_day: a list of integers where each value in the list
+        represents the day of the week of the first day of that month (0 indexed).
+    :return: (*np.ndarray*) -- stores the month the day is in for each day of the year.
     """
     # initalize day counter
     day_count = 0
@@ -77,33 +80,37 @@ def get_input_month(month_days: list[int], month_first_day: list[int]) -> np.nda
 
 
 def get_month2(data: np.array(list[float or int])) -> np.array(int):
-    """gets month2 value from data
-    :param np.array(list[float or int]) data: the data to get months from
-    :return: np.array(int) -- list of months
+    """Get month2 value from data.
+
+    :param np.array data: the data to get months from.
+    :return: (*np.array*) -- list of months.
     """
     return np.array([x[5] % 100 for x in data], int)
 
 
 def get_dayofweek2(data: np.array(list[float or int])) -> np.array(int):
-    """gets dayofweek2 value from data
-    :param np.array(list[float or int]) data: the data to get day of week from
-    :return: np.array(int) -- the day of the week for each entry in data
+    """Get dayofweek2 value from data.
+
+    :param np.array data: the data to get day of week from.
+    :return: (*np.array*) -- the day of the week for each entry in data.
     """
     return np.array([x[6] for x in data], int)
 
 
 def get_day2(data: np.array(list[float or int])) -> np.array(int):
-    """gets day2 value from data
-    :param np.array(list[float or int]) data: the data to get day of week from
-    :return: np.array(int) -- indicates weekend or weekday for every day
+    """Get day2 value from data.
+
+    :param np.array data: the data to get day of week from.
+    :return: (*np.array*) -- indicates weekend or weekday for every day.
     """
     return np.array([x[7] for x in data])
 
 
 def load_data(census_1: int) -> list[list[float or int]]:
-    """loads the data at nhts_census.mat
-    :param int census_1: the type of census
-    :return: list[list] -- the data loaded from nths_census.mat
+    """Load the data at nhts_census.mat
+
+    :param int census_1: the type of census.
+    :return: (*list*) -- the data loaded from nths_census.mat.
     """
     # somehow load in 'nhts_census.mat'
     nhts_census = loadmat("nhts_census.mat")
@@ -116,9 +123,11 @@ def load_data(census_1: int) -> list[list[float or int]]:
 
 
 def remove_ldt(newdata: list[list[float or int]]) -> list[list[float or int]]:
-    """removes light duty trucks from data loaded from nths_census.mat
-    :param list[list] newdata: the data returned from load_data
-    :return: list[list] -- the data loaded from load_data with lal rows involving LDT removed
+    """Remove light duty trucks from data loaded from nths_census.mat.
+
+    :param list newdata: the data returned from load_data.
+    :return: (*list*) -- the data loaded from load_data with lal rows involving LDT
+        removed.
     """
     # keep track of which rows to delete
     rows_to_delete = set()
@@ -141,13 +150,15 @@ def remove_ldt(newdata: list[list[float or int]]) -> list[list[float or int]]:
 def total_daily_vmt(
     census_1: int, comm_type: int, locationstrategy: list[int], input_day: list[int]
 ) -> np.array[list[float]]:
-    """loads data and uses the parameters to calculate total_daily_vmt
+    """load data and use the parameters to calculate total_daily_vmt.
 
     :param int census_1: the type of census
     :param int comm_type: the type of Commute
-    :param list[int] locationstrategy: strategy for each location
-    :param list[int] input_day: day of the week for each day in the year derived from first_func
-    :return: list[[int, int]] -- daily_vmt_total each row is a year of entries for each vehicle type
+    :param list locationstrategy: strategy for each location
+    :param list input_day: day of the week for each day in the year derived from
+        first_func
+    :return: (*list*) -- daily_vmt_total each row is a year of entries for each vehicle
+        type
     """
     # get the data
     data = np.array(remove_ldt(load_data(census_1)))
