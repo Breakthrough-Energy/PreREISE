@@ -1,21 +1,21 @@
-#up to line 117 done
+# up to line 117 done
 import numpy as np
-
 
 kate = 1
 battery_size_list = []
 
-#can use PHEV and EV
+# can use PHEV and EV
+
 
 def get_inputDay(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
-    '''determines month of each day and
+    """determines month of each day and
     day of week for any given day in the year
 
     :param list[int] month_days: a list of integers where each value in the list represents the number of days in that month (0 indexed)
     :param list[int] month_first_day: a list of integers where each value in the list represents the day of the week of the first day of that month (0 indexed)
     :return: np.ndarray -- first list stores the day of the week for each day of the year, second list stores the month the day is in for each day of the year
 
-    '''
+    """
     # initalize day counter
     D_count = 0
 
@@ -49,13 +49,13 @@ def get_inputDay(month_days: list[int], month_first_day: list[int]) -> np.ndarra
 
 
 def get_inputMonth(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
-    '''determines month of each day
+    """determines month of each day
 
     :param list[int] month_days: a list of integers where each value in the list represents the number of days in that month (0 indexed)
     :param list[int] month_first_day: a list of integers where each value in the list represents the day of the week of the first day of that month (0 indexed)
     :return: np.ndarray -- stores the month the day is in for each day of the year
 
-    '''
+    """
     # initalize day counter
     D_count = 0
 
@@ -65,62 +65,64 @@ def get_inputMonth(month_days: list[int], month_first_day: list[int]) -> np.ndar
     # iterate over 12 months
     for i in range(len(month_days)):
 
-        #initialize first day of each month for use in the next for loop
+        # initialize first day of each month for use in the next for loop
         k = month_first_day[i]
 
-        #Iterate over the day of each month
+        # Iterate over the day of each month
         for j in range(month_days[i]):
             # Populate inputMonth with month of each day ex: inputMonth[100] gives us month number of day 101
             inputMonth[D_count] = i
 
-            #increment day counter
+            # increment day counter
             D_count += 1
 
     return inputMonth
 
 
-def get_month2(data: np.array(list[float or int]])) -> np.array(int):
-    '''gets month2 value from data
+def get_month2(data: np.array(list[float or int])) -> np.array(int):
+    """gets month2 value from data
     :param np.array(list[float or int]) data: the data to get months from
     :return: np.array(int) -- list of months
-    '''
+    """
     return np.array([x[5] % 100 for x in data], int)
 
 
-def get_dayofweek2(data: np.array(list[float or int]])) -> np.array(int):
-    '''gets dayofweek2 value from data
+def get_dayofweek2(data: np.array(list[float or int])) -> np.array(int):
+    """gets dayofweek2 value from data
     :param np.array(list[float or int]) data: the data to get day of week from
     :return: np.array(int) -- the day of the week for each entry in data
-    '''
+    """
     return np.array([x[6] for x in data], int)
 
-def get_day2(data: np.array(list[float or int]])) -> np.array(int):
-    '''gets day2 value from data
+
+def get_day2(data: np.array(list[float or int])) -> np.array(int):
+    """gets day2 value from data
     :param np.array(list[float or int]) data: the data to get day of week from
     :return: np.array(int) -- indicates weekend or weekday for every day
-    '''
+    """
     return np.array([x[7] for x in data])
 
+
 def load_data(census_1: int) -> list[list[float or int]]:
-    '''loads the data at nhts_census.mat
+    """loads the data at nhts_census.mat
     :param int census_1: the type of census
     :return: list[list] -- the data loaded from nths_census.mat
-    '''
+    """
     # somehow load in 'nhts_census.mat'
-    nhts_census = scipy.io.loadmat('nhts_census.mat')
+    nhts_census = scipy.io.loadmat("nhts_census.mat")
 
     # census_1 will be 1-9 incluse, so i in range(1,10)
-    for i in range(1,10):
+    for i in range(1, 10):
         # return the proper one
         if census_1 == i:
-            return nhts_census[f'census_{i}_sorted']
+            return nhts_census[f"census_{i}_sorted"]
 
 
 def remove_ldt(newdata: list[list[float or int]]) -> list[list[float or int]]:
-    '''removes light duty trucks from data loaded from nths_census.mat
+    """removes light duty trucks from data loaded from nths_census.mat
     :param list[list] newdata: the data returned from load_data
     :return: list[list] -- the data loaded from load_data with lal rows involving LDT removed
-    '''
+    """
     # keep track of which rows to delete
     rows_to_delete = set()
     for vtype in range(len(newdata)):
@@ -137,17 +139,19 @@ def remove_ldt(newdata: list[list[float or int]]) -> list[list[float or int]]:
     return data
 
 
-#ldt = light duty truck
-#ldv = light duty vehicle
-def total_daily_vmt(census_1: int, Comm_type: int, locationstrategy: list[int], inputday: list[int]) -> np.array[list[float]]
-    '''loads data and uses the parameters to calculate total_daily_vmt
+# ldt = light duty truck
+# ldv = light duty vehicle
+def total_daily_vmt(
+    census_1: int, Comm_type: int, locationstrategy: list[int], inputday: list[int]
+) -> np.array[list[float]]:
+    """loads data and uses the parameters to calculate total_daily_vmt
 
     :param int census_1: the type of census
     :param int Comm_type: the type of Commute
     :param list[int] locationstrategy: strategy for each location
     :param list[int] inputday: day of the week for each day in the year derived from first_func
     :return: list[[int, int]] -- daily_vmt_total each row is a year of entries for each vehicle type
-    '''
+    """
     # get the data
     data = np.array(remove_ldt(load_data(census_1)))
     n = len(data)
@@ -156,13 +160,17 @@ def total_daily_vmt(census_1: int, Comm_type: int, locationstrategy: list[int], 
     # way to remove the data)
     if Comm_type == 1:
         if all([i != 2 for i in locationstrategy]):
-            locationstrategy = 2                    #putting this part in function means rest of code won't be able to see change in locationstrategy value
-                                                    #will have to use global or return locationstrategy and reassign
+            locationstrategy = 2  # putting this part in function means rest of code won't be able to see change in locationstrategy value
+            # will have to use global or return locationstrategy and reassign
             print('"locationstrategy" changed to "Home and Work" for Comm_type == 1')
         # isolates home->work trips
-        trip_home_work = [i for i in range(len(data)) if (data[i][14] == 1 + data[i][15]== 11) == 2]
+        trip_home_work = [
+            i for i in range(len(data)) if (data[i][14] == 1 + data[i][15] == 11) == 2
+        ]
         # isolates work->home trips
-        trip_work_home = [i for i in range(len(data)) if (data[i][14] == 11 + data[i][15]== 1) == 2]
+        trip_work_home = [
+            i for i in range(len(data)) if (data[i][14] == 11 + data[i][15] == 1) == 2
+        ]
 
         # set trips from work to home and vice versa to 0 in column 12 (0 indexed, 13 1 indexed)
         for trip in trip_home_work:
@@ -172,10 +180,10 @@ def total_daily_vmt(census_1: int, Comm_type: int, locationstrategy: list[int], 
             data[trip][12] = 0
 
     # pre-processing of vehicle trip data to determine VMT and trips per day to speed up later operation
-    month2 =  get_month2(data)
+    month2 = get_month2(data)
     dayofweek2 = get_dayofweek2(data)
 
-    for its in range(len(data)): #kef
+    for its in range(len(data)):  # kef
         # weekend in the case of 1 or 7
         if data[its][6] == 1 or data[its][6] == 7:
             data[its][7] = 1
