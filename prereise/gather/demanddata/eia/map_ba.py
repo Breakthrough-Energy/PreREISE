@@ -1,6 +1,12 @@
+import inspect
+import json
+import os
+
 import pandas as pd
 import requests
 from tqdm import tqdm
+
+import prereise
 
 
 def aggregate_ba_demand(demand, mapping):
@@ -95,3 +101,35 @@ def map_buses_to_county(bus_county_map):
         except TypeError:
             bus_no_county_match.append(index)
     return bus_county_map, bus_no_county_match
+
+
+def map_buses_to_ba(bus_df):
+    """Find the Balancing Authority in the U.S. territory that each query bus belongs to
+    based on GIS information.
+
+    :param (*pandas.DataFrame*) bus_df: data frame contains a list of entries with
+        lat and long of buses.
+    :return: (*tuple*) -- the first entry is the input data frame with two columns,
+        "County" and "BA", added for each bus and the second entry is the list of bus
+        indices that no BA matches.
+    """
+
+    bus_ba_map, _ = map_buses_to_county(bus_df)
+
+    # read json file for BA_County Map
+    filepath = os.path.join(
+        os.path.dirname(inspect.getfile(prereise)),
+        "gather",
+        "data",
+        "BA_County_map.json",
+    )
+    with open(filepath) as f:
+        ba_county_map = json.load(f)
+
+    county_ba_map = {
+        value: key for key in ba_county_map for value in ba_county_map[key]
+    }
+    bus_ba_map["BA"] = bus_ba_map["County"].map(county_ba_map)
+    bus_no_ba_match = list(bus_ba_map.query("BA.isna()").index)
+
+    return bus_ba_map, bus_no_ba_match
