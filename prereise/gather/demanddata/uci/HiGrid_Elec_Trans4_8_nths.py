@@ -1,5 +1,6 @@
 # up to line 117 done
 import numpy as np
+from scipy.io import loadmat
 
 kate = 1
 battery_size_list = []
@@ -7,7 +8,7 @@ battery_size_list = []
 # can use PHEV and EV
 
 
-def get_inputDay(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
+def get_input_day(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
     """determines month of each day and
     day of week for any given day in the year
 
@@ -17,10 +18,10 @@ def get_inputDay(month_days: list[int], month_first_day: list[int]) -> np.ndarra
 
     """
     # initalize day counter
-    D_count = 0
+    day_count = 0
 
     # initialize
-    inputDay = np.zeros(365, int)
+    input_day = np.zeros(365, int)
 
     # iterate over 12 months
     for i in range(len(month_days)):
@@ -32,9 +33,9 @@ def get_inputDay(month_days: list[int], month_first_day: list[int]) -> np.ndarra
 
             # if k < 6: weekday, if k >= 6: weekend
             if k < 6:
-                inputDay[D_count] = 2
+                input_day[day_count] = 2
             elif k >= 6:
-                inputDay[D_count] = 1
+                input_day[day_count] = 1
 
             # restarts the week counter independent of the intial day
             if k == 7:
@@ -43,12 +44,12 @@ def get_inputDay(month_days: list[int], month_first_day: list[int]) -> np.ndarra
                 k += 1
 
             # increment day counter
-            D_count += 1
+            day_count += 1
 
-    return inputDay
+    return input_day
 
 
-def get_inputMonth(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
+def get_input_month(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
     """determines month of each day
 
     :param list[int] month_days: a list of integers where each value in the list represents the number of days in that month (0 indexed)
@@ -57,26 +58,22 @@ def get_inputMonth(month_days: list[int], month_first_day: list[int]) -> np.ndar
 
     """
     # initalize day counter
-    D_count = 0
+    day_count = 0
 
     # initialize integers because all zeros
-    inputMonth = np.zeros(365, int)
+    input_month = np.zeros(365, int)
 
     # iterate over 12 months
     for i in range(len(month_days)):
-
-        # initialize first day of each month for use in the next for loop
-        k = month_first_day[i]
-
         # Iterate over the day of each month
         for j in range(month_days[i]):
-            # Populate inputMonth with month of each day ex: inputMonth[100] gives us month number of day 101
-            inputMonth[D_count] = i
+            # Populate input_month with month of each day ex: input_month[100] gives us month number of day 101
+            input_month[day_count] = i
 
             # increment day counter
-            D_count += 1
+            day_count += 1
 
-    return inputMonth
+    return input_month
 
 
 def get_month2(data: np.array(list[float or int])) -> np.array(int):
@@ -109,7 +106,7 @@ def load_data(census_1: int) -> list[list[float or int]]:
     :return: list[list] -- the data loaded from nths_census.mat
     """
     # somehow load in 'nhts_census.mat'
-    nhts_census = scipy.io.loadmat("nhts_census.mat")
+    nhts_census = loadmat("nhts_census.mat")
 
     # census_1 will be 1-9 incluse, so i in range(1,10)
     for i in range(1, 10):
@@ -142,14 +139,14 @@ def remove_ldt(newdata: list[list[float or int]]) -> list[list[float or int]]:
 # ldt = light duty truck
 # ldv = light duty vehicle
 def total_daily_vmt(
-    census_1: int, Comm_type: int, locationstrategy: list[int], inputday: list[int]
+    census_1: int, comm_type: int, locationstrategy: list[int], input_day: list[int]
 ) -> np.array[list[float]]:
     """loads data and uses the parameters to calculate total_daily_vmt
 
     :param int census_1: the type of census
-    :param int Comm_type: the type of Commute
+    :param int comm_type: the type of Commute
     :param list[int] locationstrategy: strategy for each location
-    :param list[int] inputday: day of the week for each day in the year derived from first_func
+    :param list[int] input_day: day of the week for each day in the year derived from first_func
     :return: list[[int, int]] -- daily_vmt_total each row is a year of entries for each vehicle type
     """
     # get the data
@@ -158,11 +155,11 @@ def total_daily_vmt(
     # removes VMT for trips from work->home and home-> work
     # (not exactly correct due to chained trips involving work and home but no
     # way to remove the data)
-    if Comm_type == 1:
+    if comm_type == 1:
         if all([i != 2 for i in locationstrategy]):
             locationstrategy = 2  # putting this part in function means rest of code won't be able to see change in locationstrategy value
             # will have to use global or return locationstrategy and reassign
-            print('"locationstrategy" changed to "Home and Work" for Comm_type == 1')
+            print('"locationstrategy" changed to "Home and Work" for comm_type == 1')
         # isolates home->work trips
         trip_home_work = [
             i for i in range(len(data)) if (data[i][14] == 1 + data[i][15] == 11) == 2
@@ -180,9 +177,6 @@ def total_daily_vmt(
             data[trip][12] = 0
 
     # pre-processing of vehicle trip data to determine VMT and trips per day to speed up later operation
-    month2 = get_month2(data)
-    dayofweek2 = get_dayofweek2(data)
-
     for its in range(len(data)):  # kef
         # weekend in the case of 1 or 7
         if data[its][6] == 1 or data[its][6] == 7:
@@ -196,7 +190,7 @@ def total_daily_vmt(
 
     for day_iter in range(365):
         for i in range(n):
-            if day2[i] == inputday[day_iter]:
+            if day2[i] == input_day[day_iter]:
                 daily_vmt_total[day_iter][0] += data[i][12]
                 daily_vmt_total[day_iter][1] += 1
 
