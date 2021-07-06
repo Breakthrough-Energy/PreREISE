@@ -145,11 +145,14 @@ def remove_ldt(data: pd.DataFrame) -> pd.DataFrame:
 # ldt = light duty truck
 # ldv = light duty vehicle
 def total_daily_vmt(
-    census_1: int, comm_type: int, locationstrategy: list[int], input_day: list[int]
+    census_region: int,
+    comm_type: int,
+    locationstrategy: list[int],
+    input_day: list[int],
 ) -> np.array[list[float]]:
     """load data and use the parameters to calculate total_daily_vmt.
 
-    :param int census_1: the type of census
+    :param int census_region: the type of census
     :param int comm_type: the type of Commute
     :param list locationstrategy: strategy for each location
     :param list input_day: day of the week for each day in the year derived from
@@ -158,40 +161,33 @@ def total_daily_vmt(
         type
     """
     # get the data
-    data = np.array(remove_ldt(load_data(census_1)))
+    data = remove_ldt(load_data(census_region))
     n = len(data)
-    # removes VMT for trips from work->home and home-> work
-    # (not exactly correct due to chained trips involving work and home but no
-    # way to remove the data)
+
     if comm_type == 1:
+        # removes VMT for trips from work->home and home-> work
+        # (not exactly correct due to chained trips involving work and home but no
+        # way to remove the data)
         if all([i != 2 for i in locationstrategy]):
-            locationstrategy = 2  # putting this part in function means rest of code won't be able to see change in locationstrategy value
+            locationstrategy = 2
+            # putting this part in function means rest of code won't be able to see
+            # change in locationstrategy value.
             # will have to use global or return locationstrategy and reassign
             print('"locationstrategy" changed to "Home and Work" for comm_type == 1')
         # isolates home->work trips
-        trip_home_work = [
-            i for i in range(len(data)) if (data[i][14] == 1 + data[i][15] == 11) == 2
-        ]
+        trip_home_work = data.loc[data["why from"] == 1 and data["why to"] == 11]
         # isolates work->home trips
-        trip_work_home = [
-            i for i in range(len(data)) if (data[i][14] == 11 + data[i][15] == 1) == 2
-        ]
+        trip_work_home = data.loc[data["why from"] == 11 and data["why to"] == 1]
 
-        # set trips from work to home and vice versa to 0 in column 12 (0 indexed, 13 1 indexed)
-        for trip in trip_home_work:
-            data[trip][12] = 0
+        # set trips from work to home to 0 distance
+        data.loc[trip_work_home.index, "Miles traveled"] = 0
+        data.loc[trip_home_work.index, "Miles traveled"] = 0
 
-        for trip in trip_work_home:
-            data[trip][12] = 0
-
-    # pre-processing of vehicle trip data to determine VMT and trips per day to speed up later operation
-    for its in range(len(data)):  # kef
-        # weekend in the case of 1 or 7
-        if data[its][6] == 1 or data[its][6] == 7:
-            data[its][7] = 1
-        # weekday in the case of 2-6 (inclusive)
-        elif 2 <= data[its][6] and data[its][6] <= 6:
-            data[its][7] = 2
+    # pre-processing of vehicle trip data to determine weekday or weekend
+    # weekend in the case of 1 or 7
+    data.loc[data["Day of Week"].isin({1, 7}), "If Weekend"] = 1
+    # weekday in the case of 2-6 (inclusive)
+    data.loc[data["Day of Week"].isin(list(range(2, 7))), "If Weekend"] = 2
 
     day2 = get_day2(data)
     daily_vmt_total = np.array([[0, 0] for i in range(365)])
