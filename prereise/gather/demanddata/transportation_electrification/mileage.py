@@ -131,27 +131,15 @@ def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataF
     return df
 
 
-def remove_ldt(newdata: list[list[float or int]]) -> list[list[float or int]]:
+def remove_ldt(data: pd.DataFrame) -> pd.DataFrame:
     """Remove light duty trucks from data loaded from nths_census.mat.
 
-    :param list newdata: the data returned from load_data.
-    :return: (*list*) -- the data loaded from load_data with lal rows involving LDT
-        removed.
+    :param pandas.DataFrame data: the data returned from load_data.
+    :return: (*pandas.DataFrame*) -- the data loaded from load_data with all rows
+        involving LDT removed.
     """
-    # keep track of which rows to delete
-    rows_to_delete = set()
-    for vtype in range(len(newdata)):
-        # >4 for LDV, <5 for LDT
-        if newdata[vtype][16] < 5:
-            rows_to_delete.add(vtype)
 
-    # create a new list for all the data values that don't include the rows we want to remove
-    data = []
-    for i in range(len(newdata)):
-        if i not in rows_to_delete:
-            data.append(newdata[i])
-
-    return data
+    return data.loc[data["Vehicle type"] < 5].copy()
 
 
 # ldt = light duty truck
