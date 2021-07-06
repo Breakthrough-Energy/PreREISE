@@ -1,6 +1,9 @@
 # up to line 117 done
 import numpy as np
+import pandas as pd
 from scipy.io import loadmat
+
+from prereise.gather.demanddata.transportation_electrification import const
 
 kate = 1
 battery_size_list = []
@@ -106,20 +109,26 @@ def get_day2(data: np.array(list[float or int])) -> np.array(int):
     return np.array([x[7] for x in data])
 
 
-def load_data(census_1: int) -> list[list[float or int]]:
-    """Load the data at nhts_census.mat
+def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataFrame:
+    """Load the data at nhts_census.mat.
 
-    :param int census_1: the type of census.
-    :return: (*list*) -- the data loaded from nths_census.mat.
+    :param int census_region: the census region to load data from.
+    :param str filepath: the path to the matfile.
+    :raises ValueError: if the census division is not between 1 and 9, inclusive.
+    :return: (*pandas.DataFrame*) -- the data loaded from nths_census.mat, with column
+        names added.
     """
-    # somehow load in 'nhts_census.mat'
-    nhts_census = loadmat("nhts_census.mat")
+    if not (1 <= census_region <= 9):
+        raise ValueError("census_region must be between 1 and 9 (inclusive).")
 
-    # census_1 will be 1-9 incluse, so i in range(1,10)
-    for i in range(1, 10):
-        # return the proper one
-        if census_1 == i:
-            return nhts_census[f"census_{i}_sorted"]
+    # Somehow load in the matfile
+    nhts_census = loadmat(filepath)
+    # Load the data for the desired region
+    raw_data = nhts_census[f"census_{census_region}_sorted"]
+    # Convert to data frame, adding column names
+    df = pd.DataFrame(raw_data, columns=const.nhts_census_column_names)
+
+    return df
 
 
 def remove_ldt(newdata: list[list[float or int]]) -> list[list[float or int]]:
