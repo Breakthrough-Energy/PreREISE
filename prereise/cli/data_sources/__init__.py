@@ -1,4 +1,8 @@
-from prereise.cli.data_sources.wind_data import WindData
+from prereise.cli.data_sources.solar_data import (
+    SolarDataGriddedAtmospheric,
+    SolarDataNationalSolarRadiationDatabase,
+)
+from prereise.cli.data_sources.wind_data import WindDataRapidRefresh
 
 
 def get_data_sources_list():
@@ -6,4 +10,8 @@ def get_data_sources_list():
 
     :return: (*list*)
     """
-    return [WindData()]
+    return [
+        WindDataRapidRefresh(),
+        SolarDataGriddedAtmospheric(),
+        SolarDataNationalSolarRadiationDatabase(),
+    ]

@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import datetime
 
-from prereise.cli.constants import DATE_FMT
+from prereise.cli.constants import DATE_FMT, YEAR_FMT
 
 
 def validate_date(date_string):
@@ -13,6 +13,16 @@ def validate_date(date_string):
     """
     datetime.strptime(date_string, DATE_FMT)
     return date_string
+
+
+def validate_year(year_string):
+    """Helper function to validate year strings
+
+    :param str year_string: year in string format to be validated
+    :return: (*str*) -- validated year string
+    """
+    datetime.strptime(year_string, YEAR_FMT)
+    return year_string
 
 
 def validate_file_path(file_path):
@@ -32,17 +42,16 @@ def validate_file_path(file_path):
     return file_path
 
 
-def add_data_source_to_download_parser(data_source, parser):
+def add_data_source_to_download_parser(data_source, subparsers):
     """Helper function that adds an additional source of data
     that the user can interact with and download via the
     command line tool
 
     :param prereise.cli.data_sources.data_source.DataSource data_source: an
         instance of a class that implements the abstract class DataSource
-    :param argparse.ArgumentParser parser: parser that implements command
+    :param argparse.ArgumentParser subparsers: subparser object that implements command
         line interface functionality
     """
-    subparsers = parser.add_subparsers()
     subparser = subparsers.add_parser(
         data_source.command_name, help=data_source.command_help
     )

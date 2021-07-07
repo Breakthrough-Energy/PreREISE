@@ -2,17 +2,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from prereise.cli.data_sources.wind_data import WindData
-
-TEXAS_REGION_LIST = ["Texas"]
-STRING_DATE_2021_12_1 = "2021-12-1"
-STRING_DATE_2021_5_1 = "2019-5-1"
-CURRENT_DIRECTORY_FILEPATH = "./"
+from prereise.cli.data_sources.tests.conftest import (
+    CURRENT_DIRECTORY_FILEPATH,
+    STRING_DATE_2021_5_1,
+    STRING_DATE_2021_12_1,
+    TEXAS_REGION_LIST,
+)
+from prereise.cli.data_sources.wind_data import WindDataRapidRefresh
 
 
 @pytest.fixture
 def wind_data_object():
-    return WindData()
+    return WindDataRapidRefresh()
 
 
 def test_winddata_end_date_before_start_date(wind_data_object):
@@ -67,16 +68,3 @@ def test_winddata_missing_files(logging, grid, rap, wind_data_object):
     )
     data.to_pickle.assert_called_with(CURRENT_DIRECTORY_FILEPATH)
     logging.warning.assert_called_with("There are 2 files missing")
-
-
-@patch("prereise.cli.data_sources.wind_data.rap")
-@patch("prereise.cli.data_sources.wind_data.Grid")
-def test_winddata_repeated_regions(grid, rap, wind_data_object):
-    rap.retrieve_data.return_value = (MagicMock(), [None, None])
-    wind_data_object.extract(
-        [TEXAS_REGION_LIST[0], TEXAS_REGION_LIST[0]],
-        STRING_DATE_2021_5_1,
-        STRING_DATE_2021_12_1,
-        CURRENT_DIRECTORY_FILEPATH,
-    )
-    grid.assert_called_with(TEXAS_REGION_LIST)

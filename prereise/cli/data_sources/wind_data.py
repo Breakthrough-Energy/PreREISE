@@ -3,20 +3,26 @@ from datetime import datetime
 
 from powersimdata.input.grid import Grid
 
-from prereise.cli.constants import DATE_FMT
+from prereise.cli.constants import (
+    DATE_FMT,
+    END_DATE_HELP_STRING,
+    FILE_PATH_HELP_STRING,
+    REGION_CHOICES,
+    START_DATE_HELP_STRING,
+)
 from prereise.cli.data_sources.data_source import DataSource
 from prereise.cli.helpers import validate_date, validate_file_path
 from prereise.gather.winddata.rap import rap
 
 
-class WindData(DataSource):
+class WindDataRapidRefresh(DataSource):
     @property
     def command_name(self):
         """See :py:func:`prereise.cli.data_sources.data_source.DataSource.command_name`
 
         :return: (*str*)
         """
-        return "wind_data"
+        return "wind_data_rap"
 
     @property
     def command_help(self):
@@ -24,7 +30,7 @@ class WindData(DataSource):
 
         :return: (*str*)
         """
-        return "Download wind data"
+        return "Download wind data from National Centers for Environmental Prediction"
 
     @property
     def extract_arguments(self):
@@ -36,7 +42,7 @@ class WindData(DataSource):
             {
                 "command_flags": ["--region", "-r"],
                 "required": True,
-                "choices": ["Texas", "Eastern", "Western"],
+                "choices": REGION_CHOICES,
                 "type": str,
                 "action": "append",
             },
@@ -44,20 +50,19 @@ class WindData(DataSource):
                 "command_flags": ["--start_date", "-sd"],
                 "required": True,
                 "type": validate_date,
-                "help": "The start date for the data download in format 'YYYY-MM-DD'",
+                "help": START_DATE_HELP_STRING,
             },
             {
                 "command_flags": ["--end_date", "-ed"],
                 "required": True,
                 "type": validate_date,
-                "help": "The end date for the data download in format 'YYYY-MM-DD'",
+                "help": END_DATE_HELP_STRING,
             },
             {
                 "command_flags": ["--file_path", "-fp"],
                 "required": True,
                 "type": validate_file_path,
-                "help": "The file path to store the downloaded data. Must include filename "
-                "and .pkl file extension.",
+                "help": FILE_PATH_HELP_STRING,
             },
         ]
 
@@ -69,12 +74,11 @@ class WindData(DataSource):
         :param str end_date: date designating when to end the data download
         :param str file_path: file location on local filesystem on where to store the data
         """
-        regions = list(set(region))
         assert datetime.strptime(start_date, DATE_FMT) <= datetime.strptime(
             end_date, DATE_FMT
         )
 
-        grid = Grid(regions)
+        grid = Grid(region)
         wind_farms = grid.plant.groupby("type").get_group("wind")
         data, missing = rap.retrieve_data(
             wind_farms, start_date=start_date, end_date=end_date

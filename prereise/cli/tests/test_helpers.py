@@ -6,6 +6,7 @@ from prereise.cli.helpers import (
     add_data_source_to_download_parser,
     validate_date,
     validate_file_path,
+    validate_year,
 )
 
 
@@ -29,6 +30,16 @@ def test_validate_date():
 def test_validate_date_bad_date():
     with pytest.raises(ValueError):
         validate_date("2020-01-49")
+
+
+def test_validate_year():
+    year = "2020"
+    assert validate_year(year) == year
+
+
+def test_validate_year_bad_year():
+    with pytest.raises(ValueError):
+        validate_year("2020233")
 
 
 @patch("prereise.cli.helpers.os")
@@ -57,12 +68,10 @@ def test_validate_file_path_is_direcotry(os):
 
 
 def test_add_data_source_to_download_parser(data_source):
-    parser = MagicMock()
     subparsers = MagicMock()
     subparser = MagicMock()
     subparsers.add_parser.return_value = subparser
-    parser.add_subparsers.return_value = subparsers
-    add_data_source_to_download_parser(data_source, parser)
+    add_data_source_to_download_parser(data_source, subparsers)
     subparsers.add_parser.assert_called_with(
         data_source.command_name, help=data_source.command_help
     )
