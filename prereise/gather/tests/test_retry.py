@@ -3,15 +3,15 @@ import pytest
 from prereise.gather.request_util import retry
 
 
-class CustomException(Exception):
+class CustomError(Exception):
     pass
 
 
 def test_max_times_reached():
-    @retry(max_attempts=3, allowed_exceptions=CustomException)
+    @retry(max_attempts=3, allowed_exceptions=CustomError)
     def no_fail(x=[]):
         x.append(len(x))
-        raise CustomException()
+        raise CustomError()
 
     counts = []
     no_fail(counts)
@@ -19,11 +19,11 @@ def test_max_times_reached():
 
 
 def test_raises_after_max_attempts():
-    @retry(max_attempts=3, raises=True, allowed_exceptions=CustomException)
+    @retry(max_attempts=3, raises=True, allowed_exceptions=CustomError)
     def func():
-        raise CustomException()
+        raise CustomError()
 
-    with pytest.raises(CustomException):
+    with pytest.raises(CustomError):
         func()
 
 
@@ -55,11 +55,11 @@ def test_unhandled_exception():
 def test_counter_attribute():
     limit = 3
 
-    @retry(max_attempts=limit, allowed_exceptions=CustomException)
+    @retry(max_attempts=limit, allowed_exceptions=CustomError)
     def best_attempt():
         x = best_attempt.retry_count
         if best_attempt.retry_count < limit:
-            raise CustomException
+            raise CustomError
         return x
 
     assert limit == best_attempt()
