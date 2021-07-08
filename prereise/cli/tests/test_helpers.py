@@ -1,13 +1,17 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from powersimdata.input.grid import Grid
 
 from prereise.cli.helpers import (
     add_data_source_to_download_parser,
     validate_date,
     validate_file_path,
+    validate_grid_model,
     validate_year,
 )
+
+INVALID_GRID_MODEL = "INVALID_GRID_MODEL"
 
 
 @pytest.fixture
@@ -20,6 +24,23 @@ def data_source():
     ]
     data_source_mock.extract = MagicMock()
     return data_source_mock
+
+
+def test_validate_grid_model():
+    for grid_model in list(Grid.SUPPORTED_MODELS):
+        assert validate_grid_model(grid_model) == grid_model
+
+
+def test_validate_grid_model_mat_file(tmp_path):
+    tmp_mat_file = tmp_path / "tmp_file.mat"
+    tmp_mat_file.write_text("CONTENT")
+    path = str(tmp_mat_file)
+    assert validate_grid_model(path) == path
+
+
+def test_validate_grid_model_bad_value():
+    with pytest.raises(ValueError):
+        validate_grid_model(INVALID_GRID_MODEL)
 
 
 def test_validate_date():

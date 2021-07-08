@@ -7,6 +7,7 @@ from prereise.cli.data_sources.tests.conftest import (
     STRING_DATE_2021_5_1,
     STRING_DATE_2021_12_1,
     TEXAS_REGION_LIST,
+    VALID_GRID_MODEL,
 )
 from prereise.cli.data_sources.wind_data import WindDataRapidRefresh
 
@@ -23,6 +24,7 @@ def test_winddata_end_date_before_start_date(wind_data_object):
             STRING_DATE_2021_12_1,
             STRING_DATE_2021_5_1,
             CURRENT_DIRECTORY_FILEPATH,
+            VALID_GRID_MODEL,
         )
 
 
@@ -40,6 +42,7 @@ def test_winddata_happy_path(grid, rap, wind_data_object):
         STRING_DATE_2021_5_1,
         STRING_DATE_2021_12_1,
         CURRENT_DIRECTORY_FILEPATH,
+        VALID_GRID_MODEL,
     )
     rap.retrieve_data.assert_called_with(
         wind_farms, start_date=STRING_DATE_2021_5_1, end_date=STRING_DATE_2021_12_1
@@ -62,6 +65,7 @@ def test_winddata_missing_files(logging, grid, rap, wind_data_object):
         STRING_DATE_2021_5_1,
         STRING_DATE_2021_12_1,
         CURRENT_DIRECTORY_FILEPATH,
+        VALID_GRID_MODEL,
     )
     rap.retrieve_data.assert_called_with(
         wind_farms, start_date=STRING_DATE_2021_5_1, end_date=STRING_DATE_2021_12_1

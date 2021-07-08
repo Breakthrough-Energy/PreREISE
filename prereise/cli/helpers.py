@@ -2,7 +2,30 @@ import logging
 import os
 from datetime import datetime
 
+from powersimdata.input.grid import Grid
+
 from prereise.cli.constants import DATE_FMT, YEAR_FMT
+
+
+def validate_grid_model(grid_model):
+    """Helper function to validate grid model parameter. Does
+    NOT validate the actual contents of the grid file.
+
+    :param str grid_model: file path to a .mat file that represents
+        the grid, or a supported default grid selection
+    :return: (*str*) -- validated grid model
+    """
+    if grid_model in Grid.SUPPORTED_MODELS:
+        return grid_model
+
+    if grid_model.endswith(".mat") and os.path.isfile(grid_model):
+        return grid_model
+
+    all_supported_models = ", ".join(Grid.SUPPORTED_MODELS)
+
+    raise ValueError(
+        f"grid_model must be either a valid .mat file path or a valid selection of {all_supported_models}"
+    )
 
 
 def validate_date(date_string):
