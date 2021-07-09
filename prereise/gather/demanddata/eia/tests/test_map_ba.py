@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from pandas.testing import assert_series_equal
 
@@ -90,7 +89,7 @@ def test_map_buses_to_ba():
         },
         index=["CA", "Texas", "Beijing"],
     )
-    expected_res = ["LDWP", "ERCOT", np.nan]
-    bus_ba, bus_no_ba_match = map_buses_to_ba(bus_df)
+    expected_res = ["LDWP", "ERCOT", "LDWP"]
+    bus_ba, bus_no_county_match = map_buses_to_ba(bus_df)
     assert bus_ba["BA"].tolist() == expected_res
-    assert bus_no_ba_match == ["Beijing"]
+    assert bus_no_county_match == ["Beijing"]
