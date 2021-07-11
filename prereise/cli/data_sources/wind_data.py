@@ -13,7 +13,7 @@ from prereise.cli.constants import (
     START_DATE_HELP_STRING,
 )
 from prereise.cli.data_sources.data_source import DataSource
-from prereise.cli.helpers import validate_date, validate_file_path, validate_grid_model
+from prereise.cli.helpers import validate_date, validate_file_path
 from prereise.gather.winddata.rap import rap
 
 
@@ -70,7 +70,7 @@ class WindDataRapidRefresh(DataSource):
                 "command_flags": ["--grid_model", "-gm"],
                 "required": False,
                 "default": GRID_MODEL_DEFAULT,
-                "type": validate_grid_model,
+                "choices": list(Grid.SUPPORTED_MODELS),
                 "help": GRID_MODEL_HELP_STRING,
             },
         ]

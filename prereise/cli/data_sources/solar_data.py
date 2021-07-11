@@ -12,12 +12,7 @@ from prereise.cli.constants import (
     START_DATE_HELP_STRING,
 )
 from prereise.cli.data_sources.data_source import DataSource
-from prereise.cli.helpers import (
-    validate_date,
-    validate_file_path,
-    validate_grid_model,
-    validate_year,
-)
+from prereise.cli.helpers import validate_date, validate_file_path, validate_year
 from prereise.gather.solardata.ga_wind import ga_wind
 from prereise.gather.solardata.nsrdb import naive, sam
 
@@ -87,7 +82,7 @@ class SolarDataGriddedAtmospheric(DataSource):
                 "command_flags": ["--grid_model", "-gm"],
                 "required": False,
                 "default": GRID_MODEL_DEFAULT,
-                "type": validate_grid_model,
+                "choices": list(Grid.SUPPORTED_MODELS),
                 "help": GRID_MODEL_HELP_STRING,
             },
         ]
@@ -181,7 +176,7 @@ class SolarDataNationalSolarRadiationDatabase(DataSource):
                 "command_flags": ["--grid_model", "-gm"],
                 "required": False,
                 "default": GRID_MODEL_DEFAULT,
-                "type": validate_grid_model,
+                "choices": list(Grid.SUPPORTED_MODELS),
                 "help": GRID_MODEL_HELP_STRING,
             },
         ]
