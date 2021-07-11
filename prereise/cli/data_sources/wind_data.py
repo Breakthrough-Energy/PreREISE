@@ -14,7 +14,7 @@ from prereise.cli.constants import (
 )
 from prereise.cli.data_sources.data_source import DataSource
 from prereise.cli.helpers import validate_date, validate_file_path
-from prereise.gather.winddata.rap import rap
+from prereise.gather.winddata.rap import impute, rap
 
 
 class WindDataRapidRefresh(DataSource):
@@ -73,9 +73,16 @@ class WindDataRapidRefresh(DataSource):
                 "choices": list(Grid.SUPPORTED_MODELS),
                 "help": GRID_MODEL_HELP_STRING,
             },
+            {
+                "command_flags": ["--no_impute", "-ni"],
+                "action": "store_true",
+                "help": "Flag used to avoid naive gaussian imputing of missing data",
+            },
         ]
 
-    def extract(self, region, start_date, end_date, file_path, grid_model, **kwargs):
+    def extract(
+        self, region, start_date, end_date, file_path, grid_model, no_impute, **kwargs
+    ):
         """See :py:func:`prereise.cli.data_sources.data_source.DataSource.extract`
 
         :param list region: list of regions to download wind farm data for
@@ -84,6 +91,7 @@ class WindDataRapidRefresh(DataSource):
         :param str file_path: file location on local filesystem on where to store the data
         :param str grid_model: .mat file path for a grid model or a string supported by
             `powersimdata.input.grid.Grid.SUPPORTED_MODELS`
+        :param bool no_impute: flag used to avoid naive gaussian imputing of missing data
         """
         assert datetime.strptime(start_date, DATE_FMT) <= datetime.strptime(
             end_date, DATE_FMT
@@ -96,4 +104,8 @@ class WindDataRapidRefresh(DataSource):
         )
         if len(missing) > 0:
             logging.warning(f"There are {len(missing)} files missing")
+            # Imputing any missing data in place
+            if not no_impute:
+                logging.warning("Performing naive gaussian imputing of missing data")
+                impute.gaussian(data, wind_farms, inplace=True)
         data.to_pickle(file_path)
