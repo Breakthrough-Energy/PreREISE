@@ -17,6 +17,7 @@ from prereise.cli.data_sources.tests.conftest import (
     STRING_DATE_2021_12_1,
     STRING_YEAR_2020,
     TEXAS_REGION_LIST,
+    VALID_GRID_MODEL,
 )
 
 
@@ -38,6 +39,7 @@ def test_solar_data_ga_end_date_before_start_date(solar_data_ga_object):
             STRING_DATE_2021_5_1,
             CURRENT_DIRECTORY_FILEPATH,
             API_KEY,
+            VALID_GRID_MODEL,
         )
 
 
@@ -54,6 +56,7 @@ def test_solar_data_ga_happy_path(grid, ga_wind, solar_data_ga_object):
         STRING_DATE_2021_12_1,
         CURRENT_DIRECTORY_FILEPATH,
         API_KEY,
+        VALID_GRID_MODEL,
     )
     ga_wind.retrieve_data.assert_called_with(
         solar_farms,
@@ -73,6 +76,7 @@ def test_solar_data_nsrdb_invalid_method(solar_data_nsrdb_object):
             CURRENT_DIRECTORY_FILEPATH,
             EMAIL,
             API_KEY,
+            VALID_GRID_MODEL,
         )
 
 
@@ -99,6 +103,7 @@ def test_solar_data_nsrdb_happy_path(grid, solar_data_nsrdb_object):
                 CURRENT_DIRECTORY_FILEPATH,
                 EMAIL,
                 API_KEY,
+                VALID_GRID_MODEL,
             )
             method.retrieve_data.assert_called_with(
                 solar_farms, EMAIL, API_KEY, STRING_YEAR_2020

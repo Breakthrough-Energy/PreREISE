@@ -7,6 +7,8 @@ from prereise.cli.constants import (
     DATE_FMT,
     END_DATE_HELP_STRING,
     FILE_PATH_HELP_STRING,
+    GRID_MODEL_DEFAULT,
+    GRID_MODEL_HELP_STRING,
     REGION_CHOICES,
     START_DATE_HELP_STRING,
 )
@@ -64,21 +66,30 @@ class WindDataRapidRefresh(DataSource):
                 "type": validate_file_path,
                 "help": FILE_PATH_HELP_STRING,
             },
+            {
+                "command_flags": ["--grid_model", "-gm"],
+                "required": False,
+                "default": GRID_MODEL_DEFAULT,
+                "choices": list(Grid.SUPPORTED_MODELS),
+                "help": GRID_MODEL_HELP_STRING,
+            },
         ]
 
-    def extract(self, region, start_date, end_date, file_path, **kwargs):
+    def extract(self, region, start_date, end_date, file_path, grid_model, **kwargs):
         """See :py:func:`prereise.cli.data_sources.data_source.DataSource.extract`
 
         :param list region: list of regions to download wind farm data for
         :param str start_date: date designating when to start the data download
         :param str end_date: date designating when to end the data download
         :param str file_path: file location on local filesystem on where to store the data
+        :param str grid_model: .mat file path for a grid model or a string supported by
+            `powersimdata.input.grid.Grid.SUPPORTED_MODELS`
         """
         assert datetime.strptime(start_date, DATE_FMT) <= datetime.strptime(
             end_date, DATE_FMT
         )
 
-        grid = Grid(region)
+        grid = Grid(region, source=grid_model)
         wind_farms = grid.plant.groupby("type").get_group("wind")
         data, missing = rap.retrieve_data(
             wind_farms, start_date=start_date, end_date=end_date

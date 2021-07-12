@@ -6,6 +6,8 @@ from prereise.cli.constants import (
     DATE_FMT,
     END_DATE_HELP_STRING,
     FILE_PATH_HELP_STRING,
+    GRID_MODEL_DEFAULT,
+    GRID_MODEL_HELP_STRING,
     REGION_CHOICES,
     START_DATE_HELP_STRING,
 )
@@ -76,9 +78,18 @@ class SolarDataGriddedAtmospheric(DataSource):
                 "type": str,
                 "help": API_KEY_HELP_STRING,
             },
+            {
+                "command_flags": ["--grid_model", "-gm"],
+                "required": False,
+                "default": GRID_MODEL_DEFAULT,
+                "choices": list(Grid.SUPPORTED_MODELS),
+                "help": GRID_MODEL_HELP_STRING,
+            },
         ]
 
-    def extract(self, region, start_date, end_date, file_path, key, **kwargs):
+    def extract(
+        self, region, start_date, end_date, file_path, key, grid_model, **kwargs
+    ):
         """See :py:func:`prereise.cli.data_sources.data_source.DataSource.extract`
 
         :param list region: list of regions to download data for
@@ -86,11 +97,13 @@ class SolarDataGriddedAtmospheric(DataSource):
         :param str end_date: date designating when to end the data download
         :param str file_path: file location on local filesystem on where to store the data
         :param str key: API key that can be requested at https://developer.nrel.gov/signup/
+        :param str grid_model: .mat file path for a grid model or a string supported by
+            `powersimdata.input.grid.Grid.SUPPORTED_MODELS`
         """
         assert datetime.strptime(start_date, DATE_FMT) <= datetime.strptime(
             end_date, DATE_FMT
         )
-        grid = Grid(region)
+        grid = Grid(region, source=grid_model)
         solar_plants = grid.plant.groupby("type").get_group("solar")
         data = ga_wind.retrieve_data(
             solar_plants, key, start_date=start_date, end_date=end_date
@@ -159,9 +172,18 @@ class SolarDataNationalSolarRadiationDatabase(DataSource):
                 "type": str,
                 "help": API_KEY_HELP_STRING,
             },
+            {
+                "command_flags": ["--grid_model", "-gm"],
+                "required": False,
+                "default": GRID_MODEL_DEFAULT,
+                "choices": list(Grid.SUPPORTED_MODELS),
+                "help": GRID_MODEL_HELP_STRING,
+            },
         ]
 
-    def extract(self, region, method, year, file_path, email, key, **kwargs):
+    def extract(
+        self, region, method, year, file_path, email, key, grid_model, **kwargs
+    ):
         """See :py:func:`prereise.cli.data_sources.data_source.DataSource.extract`
 
         :param list region: list of regions to download data for
@@ -170,8 +192,10 @@ class SolarDataNationalSolarRadiationDatabase(DataSource):
         :param str file_path: file location on local filesystem on where to store the data
         :param str email: email used to sign up at https://developer.nrel.gov/signup/
         :param str key: API key that can be requested at https://developer.nrel.gov/signup/
+        :param str grid_model: .mat file path for a grid model or a string supported by
+            `powersimdata.input.grid.Grid.SUPPORTED_MODELS`
         """
-        grid = Grid(region)
+        grid = Grid(region, source=grid_model)
         solar_plants = grid.plant.groupby("type").get_group("solar")
         if method == NAIVE_STRING:
             data = naive.retrieve_data(solar_plants, email, key, year)
