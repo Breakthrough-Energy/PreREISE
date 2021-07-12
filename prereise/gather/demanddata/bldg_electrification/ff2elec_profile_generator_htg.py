@@ -5,9 +5,6 @@ import pandas as pd
 
 from prereise.gather.demanddata.bldg_electrification import const
 
-# This script creates time series for electricity loads from converting fossil fuel
-# heating to electric heat pumps
-
 
 def calculate_cop(temp_c, model):
     cop_base, cr_base = _calculate_cop_base_cr_base(temp_c, model)
@@ -69,27 +66,33 @@ def htg_to_cop(temp_c, model):
         return calculate_cop(temp_c, model)
 
 
-def generate_profiles(yr_temps=2016, bldg_class="res", hp_model="advperfhp"):
+def generate_profiles(yr_temps, bldg_class, hp_model):
     """Generate and write profiles on dist.
+    Create time series for electricity loads from converting
+    fossil fuel heating to electric heat pumps.
 
-    :param int yr_temps: year for temperature. Default is 2016.
-    :param str bldg_class: type of building. Default is residential.
-    :param str hp_model: type of heat pump. Default is advanced performance cold
-        climate heat pump.
+    :param int yr_temps: year for temperature.
+    :param str bldg_class: type of building.
+    :param str hp_model: type of heat pump.
     :raises TypeError:
-        if ``yr_temps`` is not a float.
+        if ``yr_temps`` is not an int.
         if ``bldg_class`` and ``hp_model`` are not str.
     :raises ValueError:
+        if ``yr_temps`` is not one of the available temperature data year
         if ``bldg_class`` is not 'res' or 'com'
         if ``hp_model`` is not 'advperfhp', 'midperfhp' or 'futurehp'
     """
-    if not isinstance(yr_temps, float):
-        raise TypeError("yr_temps must be a float")
+    if not isinstance(yr_temps, int):
+        raise TypeError("yr_temps must be an int")
     if not isinstance(bldg_class, str):
         raise TypeError("bldg_class must be a str")
     if not isinstance(hp_model, str):
         raise TypeError("hp_model must be a str")
 
+    if yr_temps not in const.yr_temps_all:
+        raise ValueError(
+            "yr_temps must be among available temperature years: {const.yr_temps_first}-{const.yr_temps_last}"
+        )
     if bldg_class not in ["res", "com"]:
         raise ValueError(
             "bldg_class must be one of: \n", "res: residential \n", "com: commercial"
@@ -106,7 +109,7 @@ def generate_profiles(yr_temps=2016, bldg_class="res", hp_model="advperfhp"):
     temp_ref_it = const.temp_ref_com if bldg_class == "com" else const.temp_ref_res
     dir_path = os.path.dirname(os.path.abspath(__file__))
     puma_slopes = pd.read_csv(
-        os.path.join(dir_path, "data", f"puma_slopes_{bldg_class}.csv")
+        os.path.join(dir_path, "data", f"puma_slopes_ff_{bldg_class}.csv")
     )
 
     # Loop through states to create profile outputs
@@ -139,11 +142,10 @@ def generate_profiles(yr_temps=2016, bldg_class="res", hp_model="advperfhp"):
         )
 
         pumalist = [
-            puma_slopes_it[f"htg_slope_{bldg_class}_btu_m2_degC"][i]
-            * puma_data_it[f"{bldg_class}_area_2010_m2"][i]
-            * puma_data_it[f"frac_ff_sh_{bldg_class}_2010"][i]
-            * (const.conv_mmbtu_to_kwh / (10 ** 6) / 1000)
-            for i in range(len(puma_data_it))
+            puma_slopes_it[f"htg_slope_{bldg_class}_mmbtu_m2_degC"]
+            * puma_data_it[f"{bldg_class}_area_2010_m2"]
+            * puma_data_it[f"frac_ff_sh_{bldg_class}_2010"]
+            * (const.conv_mmbtu_to_kwh * const.conv_kw_to_mw)
         ]
 
         elec_htg_ff2hp_puma_mw_it = elec_htg_ff2hp_puma_mw_it.mul(pumalist, axis=0)
