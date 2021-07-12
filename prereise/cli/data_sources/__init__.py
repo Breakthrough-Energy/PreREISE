@@ -1,3 +1,5 @@
+from prereise.cli.data_sources.demand_data import DemandData
+from prereise.cli.data_sources.hydro_data import HydroData
 from prereise.cli.data_sources.solar_data import (
     SolarDataGriddedAtmospheric,
     SolarDataNationalSolarRadiationDatabase,
@@ -14,4 +16,6 @@ def get_data_sources_list():
         WindDataRapidRefresh(),
         SolarDataGriddedAtmospheric(),
         SolarDataNationalSolarRadiationDatabase(),
+        DemandData(),
+        HydroData(),
     ]
