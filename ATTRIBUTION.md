@@ -4,7 +4,7 @@ This package contains a variety of materials, including data sets and related ma
 
 ### Geographical Information
 #### BA to County Mapping
-#### Source
+##### Source
 * Name: Counties in the United States
 * Author: mapchart.net
 * Description: An interactive map contains all the counties in the United
@@ -12,7 +12,7 @@ This package contains a variety of materials, including data sets and related ma
 * Source: https://mapchart.net
 * Exact source location: https://mapchart.net/usa-counties.html
 
-#### Destination
+##### Destination
 * Modifications to source file(s): None
 * Location: ***prereise/gather/data/ba_to_county.txt***
 
@@ -285,7 +285,7 @@ The dataset is used to generate solar profiles.
 
 ---
 ### Wind
-#### Energy Information Administration (EIA) 
+#### Energy Information Administration (EIA)
 ##### Source
 * Name: Form EIA-860
 * Author: EIA
@@ -316,7 +316,7 @@ The dataset is used to generate wind profiles from wind speed profiles.
 The dataset is used to generate wind profiles from wind speed profiles.
 
 ### NREL
-##### Source 
+##### Source
 * Name: Wind Integration National Data set (WIND) toolkit
 * Author: NREL
 * Description: report dedicated to the validation of power output for the NREL WIND toolkit
@@ -332,5 +332,64 @@ The dataset is used to generate wind profiles from wind speed profiles.
 
 ##### Note
 Recommended citation: J. King, A. Clifton and B.-M. Hodge. 2014. Validation of Power Output for the WIND Toolkit, Golden, CO: National Renewable Energy Laboratory. NREL/TP-6A20-74110. https://www.nrel.gov/docs/fy14osti/61714.pdf
+
+
+---
+### Grid
+#### Homeland Infrastructure Foundation-Level Data (HIFLD)
+##### Source
+* Name: Electric Power Transmission Lines
+* Author: HIFLD Open
+* Description: This dataset represents electric power transmission lines. Lines are operated at relatively high voltages varying from 69 kV up to 765 kV, and are capable of transmitting large quantities of electricity over long distances.
+* Source: https://hifld-geoplatform.opendata.arcgis.com/
+* Exact source location: https://hifld-geoplatform.opendata.arcgis.com/datasets/electric-power-transmission-lines/explore?showTable=true
+
+##### Destination
+* Modifications to source file(s): None
+* Location:
+  * https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.csv
+  * https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip
+
+##### General Purpose
+The data are used to populate the transmission topology of U.S. power grid that can be used to run scenarios.
+
+##### Note
+Public use (see https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::electric-power-transmission-lines/about). Users are advised to read the data set's metadata thoroughly to understand appropriate use and data limitations.
+
+
+##### Source
+* Name: Electric Substations
+* Author: HIFLD Open
+* Description: This dataset represents electric power substations primarily associated with electric power transmission. In this layer, substations are considered facilities and equipment that switch, transform, or regulate electric power at voltages equal to, or greater than, 69 kV.
+* Source: https://hifld-geoplatform.opendata.arcgis.com/
+* Exact source location: https://hifld-geoplatform.opendata.arcgis.com/datasets/electric-substations/explore?showTable=true
+
+##### Destination
+* Modifications to source file(s): None
+* Location: https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv
+
+##### General Purpose
+The data are used to populate the substation topology of U.S. power grid that can be used to run scenarios.
+
+##### Note
+Public use (see https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::electric-substations/about). Users are advised to read the data set's metadata thoroughly to understand appropriate use and data limitations.
+
+
+##### Source
+* Name: Power Plants
+* Author: HIFLD Open
+* Description: This dataset represents electric power plants. Included are the following plant types: hydroelectric dams, fossil fuel (coal, natural gas, or oil), nuclear, solar, wind, geothermal, and biomass.
+* Source: https://hifld-geoplatform.opendata.arcgis.com/
+* Exact source location: https://hifld-geoplatform.opendata.arcgis.com/datasets/power-plants/explore?showTable=true
+
+##### Destination
+* Modifications to source file(s): None
+* Location: https://besciences.blob.core.windows.net/datasets/hifld/Power_Plants_Jul2020.csv
+
+##### General Purpose
+The data are used to populate the power generation profile of U.S. transmission network that can be used to run scenarios.
+
+##### Note
+Public use (see https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::power-plants/about). Users are advised to read the data set's metadata thoroughly to understand appropriate use and data limitations.
 
 ---
