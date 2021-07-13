@@ -1,0 +1,55 @@
+zone_id,zone_name,state,interconnect,time_zone
+1,Alabama,Alabama,Eastern,ETC/GMT+6
+2,Arkansas,Arkansas,Eastern,ETC/GMT+6
+3,Arizona,Arizona,Western,ETC/GMT+7
+4,California,California,Western,ETC/GMT+8
+5,Colorado,Colorado,Western,ETC/GMT+7
+6,Connecticut,Connecticut,Eastern,ETC/GMT+5
+7,Delaware,Delaware,Eastern,ETC/GMT+5
+8,Florida,Florida,Eastern,ETC/GMT+6
+9,Georgia,Georgia,Eastern,ETC/GMT+5
+10,Iowa,Iowa,Eastern,ETC/GMT+6
+11,Idaho,Idaho,Western,ETC/GMT+7
+12,Illinois,Illinois,Eastern,ETC/GMT+6
+13,Indiana,Indiana,Eastern,ETC/GMT+5
+14,Kansas,Kansas,Eastern,ETC/GMT+6
+15,Kentucky,Kentucky,Eastern,ETC/GMT+5
+16,Louisiana,Louisiana,Eastern,ETC/GMT+6
+17,Massachusetts,Massachusetts,Eastern,ETC/GMT+5
+18,Maryland,Maryland,Eastern,ETC/GMT+5
+19,Maine,Maine,Eastern,ETC/GMT+5
+20,Michigan,Michigan,Eastern,ETC/GMT+5
+21,Minnesota,Minnesota,Eastern,ETC/GMT+6
+22,Missouri,Missouri,Eastern,ETC/GMT+6
+23,Mississippi,Mississippi,Eastern,ETC/GMT+6
+24,Montana Eastern,Montana,Eastern,ETC/GMT+7
+25,Montana Western,Montana,Western,ETC/GMT+7
+26,North Carolina,North Carolina,Eastern,ETC/GMT+5
+27,North Dakota,North Dakota,Eastern,ETC/GMT+6
+28,Nebraska,Nebraska,Eastern,ETC/GMT+6
+29,New Hampshire,New Hampshire,Eastern,ETC/GMT+5
+30,New Jersey,New Jersey,Eastern,ETC/GMT+5
+31,New Mexico Eastern,New Mexico,Eastern,ETC/GMT+7
+32,New Mexico Western,New Mexico,Western,ETC/GMT+7
+33,Nevada,Nevada,Western,ETC/GMT+8
+34,New York,New York,Eastern,ETC/GMT+5
+35,Ohio,Ohio,Eastern,ETC/GMT+5
+36,Oklahoma,Oklahoma,Eastern,ETC/GMT+6
+37,Oregon,Oregon,Western,ETC/GMT+8
+38,Pennsylvania,Pennsylvania,Eastern,ETC/GMT+5
+39,Rhode Island,Rhode Island,Eastern,ETC/GMT+5
+40,South Carolina,South Carolina,Eastern,ETC/GMT+5
+41,South Dakota Eastern,South Dakota,Eastern,ETC/GMT+6
+42,South Dakota Western,South Dakota,Western,ETC/GMT+6
+43,Tennessee,Tennessee,Eastern,ETC/GMT+6
+44,Texas Eastern,Texas,Eastern,ETC/GMT+6
+45,Texas Panhandle,Texas,Eastern,ETC/GMT+6
+46,ERCOT,Texas,Texas,ETC/GMT+6
+47,El Paso,Texas,Western,ETC/GMT+7
+48,Utah,Utah,Western,ETC/GMT+7
+49,Virginia,Virginia,Eastern,ETC/GMT+5
+50,Vermont,Vermont,Eastern,ETC/GMT+5
+51,Washington,Washington,Western,ETC/GMT+8
+52,Wisconsin,Wisconsin,Eastern,ETC/GMT+6
+53,West Virginia,West Virginia,Eastern,ETC/GMT+5
+54,Wyoming,Wyoming,Western,ETC/GMT+7
