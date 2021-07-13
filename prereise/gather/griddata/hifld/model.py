@@ -1,6 +1,7 @@
 from prereise.gather.griddata.hifld.data_access.load import load_csv
 from prereise.gather.griddata.hifld.calculate.remap import (
     get_zone_mapping,
+    get_sub_mapping,
     get_line_mapping,
 )
 from prereise.gather.griddata.hifld.calculate.clean import clean_substations
@@ -20,7 +21,8 @@ def get_grid_data(e_csv, t_csv, z_csv):
 
     sub_data = load_csv(e_csv, dtypes={"COUNTYFIPS": str})
     clean_data = clean_substations(sub_data, zone_dic)
-
+    sub_by_coord_dict, sub_name_dict = get_sub_mapping(clean_data)
+    
     line_data = load_csv(t_csv)
     raw_lines = get_line_mapping(line_data)
 
