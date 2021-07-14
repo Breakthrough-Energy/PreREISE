@@ -1,5 +1,7 @@
 import copy
 
+import pandas as pd
+
 
 def get_zone_mapping(zone):
     """Generate dictionaries of zone using the zone.csv
@@ -11,12 +13,11 @@ def get_zone_mapping(zone):
         zone_name.
     """
 
-    zone_dic = {}
-    zone_interconnect_dic = {}
-    for i in range(len(zone)):
-        tu = (zone["zone_name"][i], zone["interconnect"][i])
-        zone_dic[zone["zone_name"][i]] = zone["zone_id"][i]
-        zone_interconnect_dic[tu] = zone["zone_id"][i]
+    zone_dic = pd.Series(zone.zone_id, index=zone.zone_name).to_dict()
+    zone_interconnect_dic = pd.Series(
+        zone.zone_id, index=zip(zone.zone_name, zone.interconnect)
+    ).to_dict()
+
     return zone_dic, zone_interconnect_dic
 
 
