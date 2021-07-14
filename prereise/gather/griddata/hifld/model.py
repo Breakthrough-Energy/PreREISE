@@ -26,4 +26,4 @@ def get_grid_data(e_csv, t_csv, z_csv):
     line_data = load_csv(t_csv)
     raw_lines = get_line_mapping(line_data)
 
-    return zone_data, sub_data, line_data
+    return

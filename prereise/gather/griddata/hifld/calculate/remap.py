@@ -6,8 +6,9 @@ def get_zone_mapping(zone):
 
     :param pandas.DataFrame zone: the zone.csv data
     :return: (*tuple*) -- a tuple of two dictionaries, where the first
-    dictionary is a dict mapping the STATE to its ID and the second is a dict
-    mapping a tuple of state and interconnect to its ID.
+        dictionary is a dict mapping the zone_name to its zone_id and the
+        second is a dict mapping a tuple of state and interconnect to its
+        zone_name.
     """
 
     zone_dic = {}
@@ -22,7 +23,7 @@ def get_zone_mapping(zone):
 def get_line_mapping(lines):
     """Create dict to store all the raw transmission line csv data
 
-    :param str t_csv: path of the HIFLD transmission csv file
+    :param str lines: path of the HIFLD transmission csv file
     :return: (*dict*) -- a dict mapping the transmission ID to its raw parameters.
     """
 
@@ -35,9 +36,11 @@ def get_line_mapping(lines):
 def get_sub_mapping(clean_data):
     """Generate the subs
 
-    :param str E_csv: path of the HIFLD substation csv file
-    :return: (*dict*) --  sub_by_coord_dict, a dict mapping from (x, y) to substation detail.
-    :return: (*dict*) --  sub_name_dict, a dict mapping from substation name to its coordinate (x, y).
+    :param str clean_data: cleaned HIFLD substation csv data
+    :return: (*tuple*) --  a tuple of two dictionaries, where the first
+        dictionary is sub_by_coord_dict, a dict mapping from (x, y) to
+        substation detail, and the second is sub_name_dict, a dict mapping from
+        substation name to its coordinate (x, y).
     """
 
     sub_by_coord_dict = {}
