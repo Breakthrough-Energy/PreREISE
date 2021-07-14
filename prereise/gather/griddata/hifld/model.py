@@ -17,11 +17,11 @@ def get_grid_data(e_csv, t_csv, z_csv):
     """
 
     zone_data = load_csv(z_csv)
-    zone_dic, zone_interconnect_dic = get_zone_mapping(zone_data)
+    zone, zone_interconnect = get_zone_mapping(zone_data)
 
     sub_data = load_csv(e_csv, dtypes={"COUNTYFIPS": str})
-    clean_data = clean_substations(sub_data, zone_dic)
-    sub_by_coord_dict, sub_name_dict = get_sub_mapping(clean_data)
+    clean_data = clean_substations(sub_data, zone)
+    sub_by_coord, sub_name = get_sub_mapping(clean_data)
 
     line_data = load_csv(t_csv)
     raw_lines = get_line_mapping(line_data)
