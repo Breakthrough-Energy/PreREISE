@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+from prereise.cli.data_sources.exceptions import CommandNotSupportedError
+
 
 class DataSource(metaclass=ABCMeta):
     """Abstract class that defines a strict interface
@@ -45,3 +47,25 @@ class DataSource(metaclass=ABCMeta):
         the appropriate data and saves it somewhere.
         """
         pass
+
+
+class NotSupportedDataSource(DataSource):
+    @property
+    def command_help(self):
+        """See :py:func:`prereise.cli.data_sources.data_source.DataSource.command_help`
+
+        :return: (*str*) -- help messsage
+        """
+        return "Currently unsupported, please see documentation to see how to download"
+
+    @property
+    def extract_arguments(self):
+        """See :py:func:`prereise.cli.data_sources.data_source.DataSource.extract_arguments`
+
+        :return: (*list*) -- list of arguments to pass into argparse
+        """
+        return []
+
+    def extract(self, **kwargs):
+        """See :py:func:`prereise.cli.data_sources.data_source.DataSource.extract`"""
+        raise CommandNotSupportedError()
