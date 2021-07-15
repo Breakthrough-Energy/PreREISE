@@ -1,0 +1,4 @@
+model,t_low,t_cp,t_high,cop_er,cop_low,cop_cp,cop_high
+midperfhp,-15,20,43,0.93,1.65,3.6,3
+advperfhp,-15,20,43,0.95,2.2,4.8,4
+futurehp,-15,20,43,0.95,2.3232,5.0688,4.2240
