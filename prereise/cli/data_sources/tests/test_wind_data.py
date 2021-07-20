@@ -11,6 +11,8 @@ from prereise.cli.data_sources.tests.conftest import (
 )
 from prereise.cli.data_sources.wind_data import WindDataRapidRefresh
 
+NO_IMPUTE = False
+
 
 @pytest.fixture
 def wind_data_object():
@@ -25,6 +27,7 @@ def test_winddata_end_date_before_start_date(wind_data_object):
             STRING_DATE_2021_5_1,
             CURRENT_DIRECTORY_FILEPATH,
             VALID_GRID_MODEL,
+            NO_IMPUTE,
         )
 
 
@@ -43,6 +46,7 @@ def test_winddata_happy_path(grid, rap, wind_data_object):
         STRING_DATE_2021_12_1,
         CURRENT_DIRECTORY_FILEPATH,
         VALID_GRID_MODEL,
+        NO_IMPUTE,
     )
     rap.retrieve_data.assert_called_with(
         wind_farms, start_date=STRING_DATE_2021_5_1, end_date=STRING_DATE_2021_12_1
@@ -53,7 +57,8 @@ def test_winddata_happy_path(grid, rap, wind_data_object):
 @patch("prereise.cli.data_sources.wind_data.rap")
 @patch("prereise.cli.data_sources.wind_data.Grid")
 @patch("prereise.cli.data_sources.wind_data.logging")
-def test_winddata_missing_files(logging, grid, rap, wind_data_object):
+@patch("prereise.cli.data_sources.wind_data.impute")
+def test_winddata_missing_files(impute, logging, grid, rap, wind_data_object):
     grid_mock = MagicMock()
     wind_farms = MagicMock()
     grid_mock.plant.groupby.return_value.get_group.return_value = wind_farms
@@ -66,9 +71,10 @@ def test_winddata_missing_files(logging, grid, rap, wind_data_object):
         STRING_DATE_2021_12_1,
         CURRENT_DIRECTORY_FILEPATH,
         VALID_GRID_MODEL,
+        NO_IMPUTE,
     )
     rap.retrieve_data.assert_called_with(
         wind_farms, start_date=STRING_DATE_2021_5_1, end_date=STRING_DATE_2021_12_1
     )
     data.to_pickle.assert_called_with(CURRENT_DIRECTORY_FILEPATH)
-    logging.warning.assert_called_with("There are 2 files missing")
+    impute.gaussian.assert_called_with(data, wind_farms, inplace=True)
