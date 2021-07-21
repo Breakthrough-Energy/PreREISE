@@ -107,3 +107,11 @@ dhw_res_mult = [
 ]
 
 dhw_com_mult = [1] * 24  # placeholder in case we need a multiplier for commercial
+
+# Cooking efficiency multipliers
+cooking_multiplier = {
+    ("com", "low"): 0.46,
+    ("com", "high"): 0.4,
+    ("res", "low"): 0.44,
+    ("res", "high"): 0.26,
+}

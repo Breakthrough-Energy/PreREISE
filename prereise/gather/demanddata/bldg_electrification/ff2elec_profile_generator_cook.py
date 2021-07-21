@@ -7,9 +7,9 @@ from prereise.gather.demanddata.bldg_electrification import const
 
 
 def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
-    """This script creates time series for electricity loads from converting 
+    """This script returns hourly electricity loads from converting
     fossil fuel cooking to electric cooking
-    
+
     :param int yr_temps: year for temperature. Default is 2016.
     :param str bldg_class: type of building. Default is residential.
     :param str efficiency: efficiency of cooking. Default is high.
@@ -26,7 +26,7 @@ def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
         raise TypeError("bldg_class must be a str")
     if not isinstance(efficiency, str):
         raise TypeError("efficiency must be a str")
-    
+
     if yr_temps not in const.yr_temps_all:
         raise ValueError(
             "yr_temps must be among available temperature years: {const.yr_temps_first}-{const.yr_temps_last}"
@@ -41,27 +41,27 @@ def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
             "high: High cooking efficiency \n",
             "low: Low cooking efficiency \n",
         )
-    
+
     dir_path = os.path.dirname(os.path.abspath(__file__))
     state_slopes = pd.read_csv(
         os.path.join(dir_path, "data", f"state_slopes_ff_{bldg_class}.csv"),
-        index_col="state"
+        index_col="state",
     )
-    
+
     cook_other = "cook" if bldg_class == "com" else "other"
-    
+
     # Make directory for output profiles
     os.makedirs("Profiles", exist_ok=True)
-    
+
     # Loop through states to create profile outputs
     for state in const.state_list:
-    
+
         # Load and subset relevant data for the state
         puma_data_it = const.puma_data[const.puma_data["state"] == state]
-    
+
         # Load cook constant for state_it
         cook_const_mmbtu_m2 = state_slopes.loc[state, f"{cook_other}_const"]
-    
+
         # Area * frac_ff * efficiency * cook_const * unit conv
         cook_elec = (
             puma_data_it[f"{bldg_class}_area_2010_m2"]
@@ -70,11 +70,11 @@ def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
             * cook_const_mmbtu_m2
             * const.cooking_multiplier[(bldg_class, efficiency)]
         )
-    
+
         # Export profile file as CSV
         cook_elec.to_csv(
             os.path.join(
                 "Profiles",
-                f"elec_cook_ff2hp_{bldg_class}_{state}_{yr_temps}_{efficiency}_mw.csv"
+                f"elec_cook_ff2hp_{bldg_class}_{state}_{yr_temps}_{efficiency}_mw.csv",
             )
         )
