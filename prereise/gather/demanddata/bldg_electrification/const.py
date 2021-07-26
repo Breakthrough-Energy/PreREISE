@@ -54,6 +54,10 @@ state_list = [
     "WY",
 ]
 
+# Years with temperature data
+yr_temps_all = list(range(2008, 2018))
+yr_temps_first, yr_temps_last = yr_temps_all[0], yr_temps_all[-1]
+
 # COP and capacity ratio models based on:
 # (a) 50th percentile NEEP CCHP database [midperfhp],
 # (b) 90th percentile NEEP CCHP database [advperfhp],
@@ -67,4 +71,5 @@ temp_ref_res = 18.3
 temp_ref_com = 16.7
 
 # Unit conversions
+conv_kw_to_mw = 1 / 1000
 conv_mmbtu_to_kwh = 293.0711
