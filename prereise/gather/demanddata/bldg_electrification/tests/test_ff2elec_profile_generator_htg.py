@@ -1,6 +1,6 @@
 import pytest
 
-from prereise.gather.demanddata.bldg_electrification.ff2elec_profile_generator import (
+from prereise.gather.demanddata.bldg_electrification.ff2elec_profile_generator_htg import (
     generate_profiles,
 )
 
