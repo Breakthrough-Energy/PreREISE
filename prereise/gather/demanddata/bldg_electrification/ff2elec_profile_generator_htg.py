@@ -66,7 +66,7 @@ def htg_to_cop(temp_c, model):
         return calculate_cop(temp_c, model)
 
 
-def generate_profiles(yr_temps, bldg_class, hp_model):
+def generate_profiles(yr_temps, bldg_class, hp_model, output_folder="Profiles"):
     """Generate and write profiles on dist.
     Create time series for electricity loads from converting
     fossil fuel heating to electric heat pumps.
@@ -74,6 +74,7 @@ def generate_profiles(yr_temps, bldg_class, hp_model):
     :param int yr_temps: year for temperature.
     :param str bldg_class: type of building.
     :param str hp_model: type of heat pump.
+    :param str output_folder: location to store profiles (will be created if necessary).
     :raises TypeError:
         if ``yr_temps`` is not an int.
         if ``bldg_class`` and ``hp_model`` are not str.
@@ -104,57 +105,47 @@ def generate_profiles(yr_temps, bldg_class, hp_model):
             "advperfhp: advanced performance cold climate heat pump \n",
             "futurehp: future performance heat pump",
         )
+    os.makedirs(output_folder, exist_ok=True)
 
     # parse user data
     temp_ref_it = const.temp_ref_com if bldg_class == "com" else const.temp_ref_res
     dir_path = os.path.dirname(os.path.abspath(__file__))
     puma_slopes = pd.read_csv(
-        os.path.join(dir_path, "data", f"puma_slopes_ff_{bldg_class}.csv")
+        os.path.join(dir_path, "data", f"puma_slopes_ff_{bldg_class}.csv"),
+        index_col="puma",
     )
 
     # Loop through states to create profile outputs
     for state in const.state_list:
         # Load and subset relevant data for the state
-        puma_data_it = const.puma_data[const.puma_data["state"] == state].reset_index()
-        puma_slopes_it = puma_slopes[puma_slopes["state"] == state].reset_index()
-
+        puma_data_it = const.puma_data.query("state == @state")
+        puma_slopes_it = puma_slopes.query("state == @state")
         temps_pumas_it = pd.read_csv(
             f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{yr_temps}.csv"
         )
-        temps_pumas_transpose_it = temps_pumas_it.T
 
         # Compute electric HP loads from fossil fuel conversion
-        elec_htg_ff2hp_puma_mw_it_ref_temp = temps_pumas_transpose_it.applymap(
-            lambda x: temp_ref_it - x if temp_ref_it - x >= 0 else 0
+        elec_htg_ff2hp_puma_mw_it_ref_temp = temps_pumas_it.applymap(
+            lambda x: max(temp_ref_it - x, 0)
         )
-        elec_htg_ff2hp_puma_mw_it_func = temps_pumas_transpose_it.apply(
-            lambda x: np.reciprocal(htg_to_cop(x, hp_model)), 1
-        )
-        elec_htg_ff2hp_puma_mw_it_func = pd.DataFrame(
-            elec_htg_ff2hp_puma_mw_it_func.to_list()
-        )
-        elec_htg_ff2hp_puma_mw_it_func.index = list(
-            elec_htg_ff2hp_puma_mw_it_ref_temp.index
+        elec_htg_ff2hp_puma_mw_it_func = temps_pumas_it.apply(
+            lambda x: np.reciprocal(htg_to_cop(x, hp_model))
         )
 
         elec_htg_ff2hp_puma_mw_it = elec_htg_ff2hp_puma_mw_it_ref_temp.multiply(
             elec_htg_ff2hp_puma_mw_it_func
         )
 
-        pumalist = [
+        pumalist = (
             puma_slopes_it[f"htg_slope_{bldg_class}_mmbtu_m2_degC"]
             * puma_data_it[f"{bldg_class}_area_2010_m2"]
             * puma_data_it[f"frac_ff_sh_{bldg_class}_2010"]
             * (const.conv_mmbtu_to_kwh * const.conv_kw_to_mw)
-        ]
+        )
 
-        elec_htg_ff2hp_puma_mw_it = elec_htg_ff2hp_puma_mw_it.mul(pumalist, axis=0)
-        elec_htg_ff2hp_puma_mw_it = elec_htg_ff2hp_puma_mw_it.T
-
-        elec_htg_ff2hp_puma_mw_it.columns = temps_pumas_it.columns
+        elec_htg_ff2hp_puma_mw_it *= pumalist
 
         # Export profile file as CSV
-        os.makedirs("Profiles", exist_ok=True)
         elec_htg_ff2hp_puma_mw_it.to_csv(
             os.path.join(
                 "Profiles",

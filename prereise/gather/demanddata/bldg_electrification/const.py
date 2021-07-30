@@ -64,7 +64,10 @@ yr_temps_first, yr_temps_last = yr_temps_all[0], yr_temps_all[-1]
 # (c) future HP targets, average of residential and commercial targets [futurehp]
 dir_path = os.path.dirname(os.path.abspath(__file__))
 hp_param = pd.read_csv(os.path.join(dir_path, "data", "hp_parameters.csv"))
-puma_data = pd.read_csv(os.path.join(dir_path, "data", "puma_data.csv"))
+puma_data = pd.read_csv(
+    os.path.join(dir_path, "data", "puma_data.csv"),
+    index_col="puma",
+)
 
 # Reference temperatures for computations
 temp_ref_res = 18.3
