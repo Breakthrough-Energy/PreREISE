@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+import numpy as np
 
 state_list = [
     "AL",
@@ -53,6 +54,8 @@ state_list = [
     "WI",
     "WY",
 ]
+
+classes = ["res", "com"]
 
 # Years with temperature data
 yr_temps_all = list(range(2008, 2018))
@@ -116,3 +119,15 @@ cooking_multiplier = {
     ("res", "low"): 0.44,
     ("res", "high"): 0.26,
 }
+
+# Setting res hot water slope as 0.01x res hot water const
+dhw_lin_scalar = 0.01
+
+bounds_lower_res = [0, 0.00000959, 0.00000269]
+bounds_upper_res = [np.inf, 0.00001827, 0.00000864]
+
+# Setting com cooking const as 1.5x com hot water const
+cook_c_scalar = 1.5
+
+bounds_lower_com = [0, 0.00000796, 0, 0]
+bounds_upper_com = [np.inf, 0.00001858, 0.00000228, np.inf]
