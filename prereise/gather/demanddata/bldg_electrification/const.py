@@ -77,6 +77,7 @@ temp_ref_com = 16.7
 conv_kw_to_mw = 1 / 1000
 conv_mmbtu_to_kwh = 293.0711
 
+eff_htg_ff_base = 0.80  # Assumed efficiency of existing fossil fuel HTG
 eff_dhw_ff_base = 0.58  # Assumed efficiency of existing fossil fuel DHW
 
 dhw_res_mult = [
