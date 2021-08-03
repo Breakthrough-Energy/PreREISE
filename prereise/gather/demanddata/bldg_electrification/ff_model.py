@@ -79,10 +79,10 @@ def calculate_state_slopes(puma_data):
                 frac_ff_other = puma_data_it["frac_ff_sh_com_2010"]
 
             # puma area * percentage
-            areas_ff_sh_it = (puma_data_it[f"{clas}_area_2010_m2"] * frac_ff_sh)
-            areas_ff_dhw_it = (puma_data_it[f"{clas}_area_2010_m2"] * frac_ff_dhw)
-            areas_ff_other_it = (puma_data_it[f"{clas}_area_2010_m2"] * frac_ff_other)
-            areas_ff_cook_it = (puma_data_it[f"{clas}_area_2010_m2"] * frac_ff_cook)
+            areas_ff_sh_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_sh[i] for i in range(len(puma_data_it))]
+            areas_ff_dhw_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_dhw[i] for i in range(len(puma_data_it))]
+            areas_ff_other_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_other[i] for i in range(len(puma_data_it))]
+            areas_ff_cook_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_cook[i] for i in range(len(puma_data_it))]
 
             # sum of previous areas to be used in fitting
             sum_areaff_sh = sum(areas_ff_sh_it)
