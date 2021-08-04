@@ -1,12 +1,9 @@
-# up to line 117 done
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
 from prereise.gather.demanddata.transportation_electrification import const
 
-kate = 1
-battery_size_list = []
 
 # can use PHEV and EV
 
@@ -190,7 +187,7 @@ def total_daily_vmt(
     data.loc[data["Day of Week"].isin(list(range(2, 7))), "If Weekend"] = 2
 
     day2 = get_day2(data)
-    daily_vmt_total = np.array([[0, 0] for i in range(365)])
+    daily_vmt_total = np.zeros(365)
 
     for day_iter in range(365):
         for i in range(n):
