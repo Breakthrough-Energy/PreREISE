@@ -1,109 +1,55 @@
 import numpy as np
 import pandas as pd
-
 from scipy.io import loadmat
 
 from prereise.gather.demanddata.transportation_electrification import const
 
-# can use PHEV and EV
 
+def get_model_year_dti(model_year: int) -> pd.DatetimeIndex:
+    return pd.date_range(start="{}-01-01", end="{}-12-31", freq="D").format(model_year,model_year)
 
-def get_input_day(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
-    """Determine month of each day and day of week for any given day in the year.
-
-    :param list month_days: a list of integers where each value in the list represents
-        the number of days in that month (0 indexed).
-    :param list month_first_day: a list of integers where each value in the list
-        represents the day of the week of the first day of that month (0 indexed).
-    :return: (*np.ndarray*) -- first list stores the day of the week for each day of
-        the year, second list stores the month the day is in for each day of the year.
-
+def get_input_day(model_year_dti: pd.DatetimeIndex) -> np.ndarray:
+    """Determine whether each day of the year is a weekend (1) or weekday (2)
+    
+    :param pd.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
+    :return: (*np.ndarray*) array of 1s and 2s indicating weekend/weekday designations for the model year.
+    
     """
-    # initalize day counter
-    day_count = 0
-
-    # initialize
-    input_day = np.zeros(365, int)
-
-    # iterate over 12 months
-    for i in range(len(month_days)):
-        # initialize first day of each month for use in the next for loop
-        k = month_first_day[i]
-
-        # Iterate over the day of each month
-        for j in range(month_days[i]):
-
-            # if k < 6: weekday, if k >= 6: weekend
-            if k < 6:
-                input_day[day_count] = 2
-            elif k >= 6:
-                input_day[day_count] = 1
-
-            # restarts the week counter independent of the intial day
-            if k == 7:
-                k = 1
-            else:
-                k += 1
-
-            # increment day counter
-            day_count += 1
-
+    ifweekend = model_year_dti.dayofweek.isin({5,6})
+    input_day = np.zeros(len(ifweekend_bool))
+    for i in range(len(ifweekend_bool)):
+        if ifweekend_bool(i) == True:
+            input_day(i) = 1
+        else:
+            input_day(i) = 2
     return input_day
 
 
-def get_input_month(month_days: list[int], month_first_day: list[int]) -> np.ndarray:
+def get_input_month(model_year_dti: pd.DatetimeIndex) -> np.ndarray(int):
     """Determine month of each day
 
-    :param list month_days: a list of integers where each value in the list represents
-        the number of days in that month (0 indexed).
-    :param list month_first_day: a list of integers where each value in the list
-        represents the day of the week of the first day of that month (0 indexed).
+    :param pd.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
     :return: (*np.ndarray*) -- stores the month the day is in for each day of the year.
     """
-    # initalize day counter
-    day_count = 0
+    return model_year_dti.month
 
-    # initialize integers because all zeros
-    input_month = np.zeros(365, int)
+def get_data_month(data: pd.DataFrame) -> np.array(int):
+    """Get month value from data.
 
-    # iterate over 12 months
-    for i in range(len(month_days)):
-        # Iterate over the day of each month
-        for j in range(month_days[i]):
-            # Populate input_month with month of each day ex: input_month[100] gives us month number of day 101
-            input_month[day_count] = i
-
-            # increment day counter
-            day_count += 1
-
-    return input_month
-
-
-def get_month2(data: np.array(list[float or int])) -> np.array(int):
-    """Get month2 value from data.
-
-    :param np.array data: the data to get months from.
+    :param pd.DataFrame data: the data to get months from.
     :return: (*np.array*) -- list of months.
     """
-    return np.array([x[5] % 100 for x in data], int)
+    return data("Date".month)
 
 
-def get_dayofweek2(data: np.array(list[float or int])) -> np.array(int):
-    """Get dayofweek2 value from data.
+def get_data_day(data: pd.DataFrame) -> np.array(int):
+    """Get weekday/weekend designation value from data.
 
-    :param np.array data: the data to get day of week from.
-    :return: (*np.array*) -- the day of the week for each entry in data.
-    """
-    return np.array([x[6] for x in data], int)
-
-
-def get_day2(data: np.array(list[float or int])) -> np.array(int):
-    """Get day2 value from data.
-
-    :param np.array data: the data to get day of week from.
+    :param pd.DataFrame data: the data to get day of week from.
     :return: (*np.array*) -- indicates weekend or weekday for every day.
     """
-    return np.array([x[7] for x in data])
+    return data("If Weekend")
+
 
 
 def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataFrame:
