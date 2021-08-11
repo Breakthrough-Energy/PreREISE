@@ -1,3 +1,5 @@
+model_year = 2040
+
 nhts_census_column_names = [
     "Household",
     "Vehicle ID",

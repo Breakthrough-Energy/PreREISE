@@ -5,24 +5,17 @@ from scipy.io import loadmat
 from prereise.gather.demanddata.transportation_electrification import const
 
 
-def get_model_year_dti(model_year: int) -> pd.DatetimeIndex:
-    return pd.date_range(start="{}-01-01", end="{}-12-31", freq="D").format(model_year,model_year)
+def get_model_year_dti(model_year: int) -> pandas.DatetimeIndex:
+    return pd.date_range(start=f'{model_year}-01-01', end=f'{model_year}-12-31', freq="D")
 
-def get_input_day(model_year_dti: pd.DatetimeIndex) -> np.ndarray:
-    """Determine whether each day of the year is a weekend (1) or weekday (2)
-    
+def get_input_day(model_year_dti: pandas.DatetimeIndex) -> np.ndarray:
+    """Determine whether each day of the model year is a weekend (1) or weekday (2)
+
     :param pd.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
     :return: (*np.ndarray*) array of 1s and 2s indicating weekend/weekday designations for the model year.
-    
+
     """
-    ifweekend = model_year_dti.dayofweek.isin({5,6})
-    input_day = np.zeros(len(ifweekend_bool))
-    for i in range(len(ifweekend_bool)):
-        if ifweekend_bool(i) == True:
-            input_day(i) = 1
-        else:
-            input_day(i) = 2
-    return input_day
+    return model_year_dti.dayofweek.isin(range(5)).astype(int) + 1
 
 
 def get_input_month(model_year_dti: pd.DatetimeIndex) -> np.ndarray(int):
@@ -33,26 +26,26 @@ def get_input_month(model_year_dti: pd.DatetimeIndex) -> np.ndarray(int):
     """
     return model_year_dti.month
 
-def get_data_month(data: pd.DataFrame) -> np.array(int):
+def get_data_month(data: pd.DataFrame) -> pandas.Series:
     """Get month value from data.
 
     :param pd.DataFrame data: the data to get months from.
-    :return: (*np.array*) -- list of months.
+    :return: (*pandas.Series*) -- list of months.
     """
-    return data("Date".month)
+    return data["Date"].dt.month
 
 
-def get_data_day(data: pd.DataFrame) -> np.array(int):
+def get_data_day(data: pandas.DataFrame) -> np.array(int):
     """Get weekday/weekend designation value from data.
 
     :param pd.DataFrame data: the data to get day of week from.
     :return: (*np.array*) -- indicates weekend or weekday for every day.
     """
-    return data("If Weekend")
+    return data["If Weekend"]
 
 
 
-def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataFrame:
+def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pandas.DataFrame:
     """Load the data at nhts_census.mat.
 
     :param int census_region: the census region to load data from.
@@ -92,7 +85,7 @@ def total_daily_vmt(
     comm_type: int,
     locationstrategy: list[int],
     input_day: list[int],
-) -> np.array[list[float]]:
+) -> np.array[float]:
     """load data and use the parameters to calculate total_daily_vmt.
 
     :param int census_region: the type of census
@@ -133,9 +126,9 @@ def total_daily_vmt(
     data.loc[data["Day of Week"].isin(list(range(2, 7))), "If Weekend"] = 2
 
     day2 = get_day2(data)
-    daily_vmt_total = np.zeros(365)
+    daily_vmt_total = np.zeros(len(input_day))
 
-    for day_iter in range(365):
+    for day_iter in range(len(input_day)):
         for i in range(n):
             if day2[i] == input_day[day_iter]:
                 daily_vmt_total[day_iter][0] += data[i][12]
