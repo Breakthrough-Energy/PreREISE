@@ -58,6 +58,27 @@ def filter_lines_with_unavailable_substations(lines):
     return lines.query("SUB_1 != 'NOT AVAILABLE' and SUB_2 != 'NOT AVAILABLE'").copy()
 
 
+def filter_lines_with_no_matching_substations(lines, substations):
+    """Filter lines with one or more substation name not present in the ``substations``
+    data frame, and report the number dropped.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    :return: (*pandas.DataFrame*) -- lines with matching substations.
+    """
+    num_lines = len(lines)
+    matching_names = substations["NAME"]  # noqa: F841
+    filtered = lines.query(
+        "SUB_1 not in @matching_names or SUB_2 not in @matching_names"
+    )
+    num_filtered = len(filtered)
+    print(
+        f"dropping {num_filtered} lines with one or more substations not found in "
+        f"substations table out of a starting total of {num_lines}"
+    )
+    return lines.query("SUB_1 in @matching_names and SUB_2 in @matching_names").copy()
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
@@ -74,3 +95,6 @@ def build_transmission():
 
     # Filter lines
     lines_with_substations = filter_lines_with_unavailable_substations(hifld_lines)
+    lines_with_matching_substations = filter_lines_with_no_matching_substations(
+        lines_with_substations, substations_with_lines
+    )
