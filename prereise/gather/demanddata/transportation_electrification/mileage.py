@@ -7,9 +7,9 @@ from prereise.gather.demanddata.transportation_electrification import const
 
 def get_model_year_dti(model_year: int) -> pd.DatetimeIndex:
     return pd.date_range(
-        start=f'{model_year}-01-01', end=f'{model_year}-12-31', freq="D"
+        start=f"{model_year}-01-01", end=f"{model_year}-12-31", freq="D"
     )
-    
+
 
 def get_input_day(model_year_dti: pd.DatetimeIndex) -> np.ndarray:
     """Determine whether each day of the model year is a weekend (1) or weekday (2)
@@ -48,9 +48,7 @@ def get_data_day(data: pd.DataFrame) -> np.array(int):
     return data["If Weekend"]
 
 
-def load_data(
-    census_region: int, filepath: str = "nhts_census.mat"
-) -> pd.DataFrame:
+def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataFrame:
     """Load the data at nhts_census.mat.
 
     :param int census_region: the census region to load data from.
