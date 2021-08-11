@@ -41,6 +41,23 @@ def filter_substations_with_zero_lines(substations):
     return substations.query("LINES != 0").copy()
 
 
+def filter_lines_with_unavailable_substations(lines):
+    """Filter lines with SUB_1 or SUB_2 attribute equal to 'NOT AVAILABLE', and report
+    the number dropped.
+
+    :param pandas.DataFrame lines: data frame of all lines.
+    :return: (*pandas.DataFrame*) -- lines with available substations.
+    """
+    num_lines = len(lines)
+    filtered = lines.query("SUB_1 == 'NOT AVAILABLE' or SUB_2 == 'NOT AVAILABLE'")
+    num_filtered = len(filtered)
+    print(
+        f"dropping {num_filtered} lines with one or more substations listed as "
+        f"'NOT AVAILABLE' out of a starting total of {num_lines}"
+    )
+    return lines.query("SUB_1 != 'NOT AVAILABLE' and SUB_2 != 'NOT AVAILABLE'").copy()
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
@@ -54,3 +71,6 @@ def build_transmission():
     # Filter substations
     substations_with_lines = filter_substations_with_zero_lines(hifld_substations)
     check_for_location_conflicts(substations_with_lines)
+
+    # Filter lines
+    lines_with_substations = filter_lines_with_unavailable_substations(hifld_lines)
