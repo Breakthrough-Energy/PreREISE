@@ -24,6 +24,7 @@ def check_for_location_conflicts(substations):
             f"There are {num_collisions} substations with duplicate lat/lon values"
         )
 
+
 def filter_substations_with_zero_lines(substations):
     """Filter substations with LINES attribute equal to zero, and report the number
     dropped.
@@ -79,6 +80,54 @@ def filter_lines_with_no_matching_substations(lines, substations):
     return lines.query("SUB_1 in @matching_names and SUB_2 in @matching_names").copy()
 
 
+def filter_lines_with_nonmatching_substation_coords(lines, substations, threshold=100):
+    """Filter lines for which either the starting or ending substation, by name, has
+    coordinates judged as too far away (based on the ``threshold`` parameter) from the
+    coodinated listed for the line.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    :param int/float threshold: maximum mismatch distance (miles).
+    :return: (*pandas.DataFrame*) -- lines with matching substations.
+    """
+
+    def find_distance_to_closest_substation(coordinates, name, substations):
+        matching_substations = substations.loc[substations.NAME == name]
+        minimum_distance = matching_substations.apply(
+            lambda x: haversine(coordinates, (x.LATITUDE, x.LONGITUDE)), axis=1
+        ).min()
+        return minimum_distance
+
+    print("Evaluating endpoint location mismatches... (this may take several minutes)")
+    # Coordinates are initially (lon, lat); we reverse to (lat, lon) for haversine
+    start_distance_mismatch = lines.apply(
+        lambda x: find_distance_to_closest_substation(
+            x.loc["COORDINATES"][0][::-1], x.loc["SUB_1"], substations
+        ),
+        axis=1,
+    )
+    end_distance_mismatch = lines.apply(
+        lambda x: find_distance_to_closest_substation(
+            x.loc["COORDINATES"][-1][::-1], x.loc["SUB_2"], substations
+        ),
+        axis=1,
+    )
+    filtered = lines.loc[
+        (start_distance_mismatch > threshold) | (end_distance_mismatch > threshold)
+    ]
+    num_filtered = len(filtered)
+    num_lines = len(lines)
+    print(
+        f"dropping {num_filtered} lines with one or more substations with non-matching "
+        f"coordinates out of a starting total of {num_lines}"
+    )
+
+    remaining = lines.loc[
+        (start_distance_mismatch <= threshold) & (end_distance_mismatch <= threshold)
+    ]
+    return remaining.copy()
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
@@ -97,4 +146,7 @@ def build_transmission():
     lines_with_substations = filter_lines_with_unavailable_substations(hifld_lines)
     lines_with_matching_substations = filter_lines_with_no_matching_substations(
         lines_with_substations, substations_with_lines
+    )
+    lines_with_matching_substations = filter_lines_with_nonmatching_substation_coords(
+        lines_with_matching_substations, substations_with_lines
     )
