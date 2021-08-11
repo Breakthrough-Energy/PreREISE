@@ -5,10 +5,13 @@ from scipy.io import loadmat
 from prereise.gather.demanddata.transportation_electrification import const
 
 
-def get_model_year_dti(model_year: int) -> pandas.DatetimeIndex:
-    return pd.date_range(start=f'{model_year}-01-01', end=f'{model_year}-12-31', freq="D")
+def get_model_year_dti(model_year: int) -> pd.DatetimeIndex:
+    return pd.date_range(
+        start=f'{model_year}-01-01', end=f'{model_year}-12-31', freq="D"
+    )
+    
 
-def get_input_day(model_year_dti: pandas.DatetimeIndex) -> np.ndarray:
+def get_input_day(model_year_dti: pd.DatetimeIndex) -> np.ndarray:
     """Determine whether each day of the model year is a weekend (1) or weekday (2)
 
     :param pd.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
@@ -26,16 +29,17 @@ def get_input_month(model_year_dti: pd.DatetimeIndex) -> np.ndarray(int):
     """
     return model_year_dti.month
 
-def get_data_month(data: pd.DataFrame) -> pandas.Series:
+
+def get_data_month(data: pd.DataFrame) -> pd.Series:
     """Get month value from data.
 
     :param pd.DataFrame data: the data to get months from.
-    :return: (*pandas.Series*) -- list of months.
+    :return: (*pd.Series*) -- list of months.
     """
     return data["Date"].dt.month
 
 
-def get_data_day(data: pandas.DataFrame) -> np.array(int):
+def get_data_day(data: pd.DataFrame) -> np.array(int):
     """Get weekday/weekend designation value from data.
 
     :param pd.DataFrame data: the data to get day of week from.
@@ -44,14 +48,15 @@ def get_data_day(data: pandas.DataFrame) -> np.array(int):
     return data["If Weekend"]
 
 
-
-def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pandas.DataFrame:
+def load_data(
+    census_region: int, filepath: str = "nhts_census.mat"
+) -> pd.DataFrame:
     """Load the data at nhts_census.mat.
 
     :param int census_region: the census region to load data from.
     :param str filepath: the path to the matfile.
     :raises ValueError: if the census division is not between 1 and 9, inclusive.
-    :return: (*pandas.DataFrame*) -- the data loaded from nths_census.mat, with column
+    :return: (*pd.DataFrame*) -- the data loaded from nths_census.mat, with column
         names added.
     """
     if not (1 <= census_region <= 9):
@@ -70,8 +75,8 @@ def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pandas.D
 def remove_ldt(data: pd.DataFrame) -> pd.DataFrame:
     """Remove light duty trucks from data loaded from nths_census.mat.
 
-    :param pandas.DataFrame data: the data returned from load_data.
-    :return: (*pandas.DataFrame*) -- the data loaded from load_data with all rows
+    :param pd.DataFrame data: the data returned from load_data.
+    :return: (*pd.DataFrame*) -- the data loaded from load_data with all rows
         involving LDT removed.
     """
 
@@ -125,12 +130,12 @@ def total_daily_vmt(
     # weekday in the case of 2-6 (inclusive)
     data.loc[data["Day of Week"].isin(list(range(2, 7))), "If Weekend"] = 2
 
-    day2 = get_day2(data)
+    data_day = get_data_day(data)
     daily_vmt_total = np.zeros(len(input_day))
 
     for day_iter in range(len(input_day)):
         for i in range(n):
-            if day2[i] == input_day[day_iter]:
+            if data_day[i] == input_day[day_iter]:
                 daily_vmt_total[day_iter][0] += data[i][12]
                 daily_vmt_total[day_iter][1] += 1
 
