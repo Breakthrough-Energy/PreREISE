@@ -10,6 +10,20 @@ from prereise.gather.griddata.hifld.data_access.load import (
 )
 
 
+def check_for_location_conflicts(substations):
+    """Check for multiple substations with identical lat/lon.
+
+    :param pandas.DataFrame substations: data frame of substations.
+    :raises ValueError: if multiple substations with identical lat/lon.
+    """
+    num_substations = len(substations)
+    num_lat_lon_groups = len(substations.groupby(["LATITUDE", "LONGITUDE"]))
+    if num_lat_lon_groups != num_substations:
+        num_collisions = num_substations - num_lat_lon_groups
+        raise ValueError(
+            f"There are {num_collisions} substations with duplicate lat/lon values"
+        )
+
 def filter_substations_with_zero_lines(substations):
     """Filter substations with LINES attribute equal to zero, and report the number
     dropped.
@@ -39,3 +53,4 @@ def build_transmission():
 
     # Filter substations
     substations_with_lines = filter_substations_with_zero_lines(hifld_substations)
+    check_for_location_conflicts(substations_with_lines)
