@@ -128,6 +128,23 @@ def filter_lines_with_nonmatching_substation_coords(lines, substations, threshol
     return remaining.copy()
 
 
+def filter_lines_with_identical_substation_names(lines):
+    """Filter lines with SUB_1 or SUB_2 attributes equal to each other, and report the
+    number dropped.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :return: (*pandas.DataFrame*) -- lines with distinct substations.
+    """
+    num_lines = len(lines)
+    filtered = lines.query("SUB_1 == SUB_2")
+    num_filtered = len(filtered)
+    print(
+        f"dropping {num_filtered} lines with matching SUB_1 and SUB_2 out of a "
+        f"starting total of {num_lines}"
+    )
+    return lines.query("SUB_1 != SUB_2").copy()
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
@@ -150,3 +167,7 @@ def build_transmission():
     lines_with_matching_substations = filter_lines_with_nonmatching_substation_coords(
         lines_with_matching_substations, substations_with_lines
     )
+    lines_with_matching_substations = filter_lines_with_identical_substation_names(
+        lines_with_matching_substations
+    )
+    return lines_with_matching_substations
