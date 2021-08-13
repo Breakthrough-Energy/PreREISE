@@ -128,5 +128,7 @@ bounds_upper_res = [np.inf, 0.00001827, 0.00000864]
 # Setting com cooking const as 1.5x com hot water const
 cook_c_scalar = 1.5
 
-bounds_lower_com = [0, 0.00000796, 0, 0]
-bounds_upper_com = [np.inf, 0.00001858, 0.00000228, np.inf]
+dhw_low_bound_com = 0.00000796
+dhw_high_bound_com = 0.00001858
+
+other_high_bound_com = 0.00000228
