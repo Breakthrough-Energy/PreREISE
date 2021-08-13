@@ -165,30 +165,65 @@ def calculate_state_slopes(puma_data, year):
                 )
                 hd_monthly_it_other = hd_hourly_it_other.groupby(dti.month).mean()
 
+                bound_lower_consts_par = (
+                    const.dhw_low_bound_com * sum_areaff_dhw
+                    + const.cook_c_scalar * const.dhw_low_bound_com * sum_areaff_cook
+                ) / (sum_areaff_dhw + sum_areaff_cook + sum_areaff_other)
+                bound_upper_consts_par = (
+                    const.dhw_high_bound_com * sum_areaff_dhw
+                    + const.cook_c_scalar * const.dhw_high_bound_com * sum_areaff_cook
+                    + const.other_high_bound_com * sum_areaff_other
+                ) / (sum_areaff_dhw + sum_areaff_cook + sum_areaff_other)
+
+                bounds_lower_com = [0, bound_lower_consts_par, 0]
+                bounds_upper_com = [np.inf, bound_upper_consts_par, np.inf]
+
                 # Fitting function: Returns difference between fitted equation and actual fossil fuel usage for the least_squares function to minimize
                 def func_c(par, sh, other, ff):
                     err = ff - (
                         par[0] * sh
-                        + par[1] * sum_areaff_dhw
-                        + const.cook_c_scalar * par[1] * sum_areaff_cook
-                        + (sum_areaff_other * par[2] + par[3] * other)
+                        + par[1] * (sum_areaff_dhw + sum_areaff_cook + sum_areaff_other)
+                        + par[2] * other
                     )
                     return err
 
                 # Least squares solver
                 lm_it = least_squares(
                     func_c,
-                    const.bounds_lower_com,
+                    bounds_lower_com,
                     args=(hd_monthly_it_sh, hd_monthly_it_other, ff_monthly_it),
-                    bounds=(const.bounds_lower_com, const.bounds_upper_com),
+                    bounds=(bounds_lower_com, bounds_upper_com),
                 )
 
-                # Solved coefficients for slopes and constants
+                # Solved dhw/cook/other constants
+                consts_par = lm_it.x[1]
+
+                bound_decision_point = (
+                    consts_par
+                    * (sum_areaff_dhw + sum_areaff_cook + sum_areaff_other)
+                    / (sum_areaff_dhw + const.cook_c_scalar * sum_areaff_cook)
+                )
+                if bound_decision_point <= const.dhw_high_bound_com:
+                    par_dhw_c = bound_decision_point
+                    par_other_c = 0
+                else:
+                    par_dhw_c = const.dhw_high_bound_com
+                    par_other_c = (
+                        consts_par
+                        * (sum_areaff_dhw + sum_areaff_cook + sum_areaff_other)
+                        - (
+                            const.dhw_high_bound_com * sum_areaff_dhw
+                            + const.cook_c_scalar
+                            * const.dhw_high_bound_com
+                            * sum_areaff_cook
+                        )
+                    ) / sum_areaff_other
+
+                par_cook_c = const.cook_c_scalar * par_dhw_c
+
+                # Solved coefficients for slopes
                 par_sh_l = lm_it.x[0]
-                par_dhw_c = lm_it.x[1]
-                par_cook_c = lm_it.x[1] * const.cook_c_scalar
-                par_other_c = lm_it.x[2]
-                par_other_l = lm_it.x[3]
+                par_other_l = lm_it.x[2]
 
                 # Calculate r2 value of fit
                 residuals = list(lm_it.fun)
