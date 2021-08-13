@@ -73,8 +73,7 @@ puma_data = pd.read_csv(
 )
 
 # Reference temperatures for computations
-temp_ref_res = 18.3
-temp_ref_com = 16.7
+temp_ref = {"res": 18.3, "com": 16.7}
 
 # Unit conversions
 conv_kw_to_mw = 1 / 1000

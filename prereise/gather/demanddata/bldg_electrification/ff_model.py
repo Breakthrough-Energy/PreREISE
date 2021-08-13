@@ -8,32 +8,23 @@ from scipy.optimize import least_squares
 from prereise.gather.demanddata.bldg_electrification import const
 
 
-def calculate_state_slopes(puma_data):
-    # 2010 ff data used for fitting
-    start_date = "2010-01-01"
-    end_date = "2011-01-01"
-    yr_temps = 2010
-
-    # Computing number of hours each month for normalization in the fitting code below
-    dt = pd.date_range(start=start_date, end=end_date, freq="H").to_pydatetime().tolist()
-    datetimes = pd.DataFrame(
-        {"date_time": [dt[i].strftime("%Y-%m-%d %H:%M:%S") for i in range(len(dt) - 1)]}
-    )
-    month_hrly = [int(dt[i].strftime("%m")) for i in range(len(dt) - 1)]
+def calculate_state_slopes(puma_data, year):
+    dti = pd.date_range(start=f"{year}-01-01", end=f"{year}-12-31 23:00:00", freq="H")
+    hours_in_month = dti.month.value_counts()
 
     # Load in historical 2010 fossil fuel usage data
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    ng_usage_data_res = pd.read_csv(
-        os.path.join(dir_path, "data", "ng_monthly_mmbtu_2010_res.csv")
-    )
-    ng_usage_data_com = pd.read_csv(
-        os.path.join(dir_path, "data", "ng_monthly_mmbtu_2010_com.csv")
-    )
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    ng_usage_data = {
+        clas: pd.read_csv(
+            os.path.join(data_dir, f"ng_monthly_mmbtu_2010_{clas}.csv"), index_col=0
+        )
+        for clas in {"res", "com"}
+    }
     fok_usage_data = pd.read_csv(
-        os.path.join(dir_path, "data", "fok_data_bystate_2010.csv")
+        os.path.join(data_dir, "fok_data_bystate_2010.csv"), index_col="state"
     )
     othergas_usage_data = pd.read_csv(
-        os.path.join(dir_path, "data", "propane_data_bystate_2010.csv")
+        os.path.join(data_dir, "propane_data_bystate_2010.csv"), index_col="state"
     )
 
     # Initialize dataframes to store state heating slopes
@@ -56,33 +47,39 @@ def calculate_state_slopes(puma_data):
 
     for state in const.state_list:
         # Load puma data
-        puma_data_it = puma_data[puma_data["state"] == state].reset_index()
+        puma_data_it = const.puma_data.query("state == @state")
         n_tracts = len(puma_data_it)
 
         # Load puma temperatures
         temps_pumas = temps_pumas = pd.read_csv(
-            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{yr_temps}.csv"
+            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{year}.csv"
         )
         temps_pumas_transpose = temps_pumas.T
 
         for clas in const.classes:
-
-            temp_ref_it = const.temp_ref_res if clas == "res" else const.temp_ref_com
-
-            # percentage of puma area that uses fossil fuel
-            frac_ff_sh = puma_data_it[f"frac_ff_sh_{clas}_2010"]
-            frac_ff_dhw = puma_data_it[f"frac_ff_dhw_{clas}_2010"]
-            frac_ff_cook = puma_data_it["frac_ff_cook_com_2010"]
+            # puma area * percentage of puma area that uses fossil fuel
+            areas_ff_sh_it = (
+                puma_data_it[f"{clas}_area_2010_m2"]
+                * puma_data_it[f"frac_ff_sh_{clas}_2010"]
+            )
+            areas_ff_dhw_it = (
+                puma_data_it[f"{clas}_area_2010_m2"]
+                * puma_data_it[f"frac_ff_dhw_{clas}_2010"]
+            )
+            areas_ff_cook_it = (
+                puma_data_it[f"{clas}_area_2010_m2"]
+                * puma_data_it["frac_ff_cook_com_2010"]
+            )
             if clas == "res":
-                frac_ff_other = puma_data_it["frac_ff_other_res_2010"]
+                areas_ff_other_it = (
+                    puma_data_it[f"{clas}_area_2010_m2"]
+                    * puma_data_it["frac_ff_other_res_2010"]
+                )
             else:
-                frac_ff_other = puma_data_it["frac_ff_sh_com_2010"]
-
-            # puma area * percentage
-            areas_ff_sh_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_sh[i] for i in range(len(puma_data_it))]
-            areas_ff_dhw_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_dhw[i] for i in range(len(puma_data_it))]
-            areas_ff_other_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_other[i] for i in range(len(puma_data_it))]
-            areas_ff_cook_it = [puma_data_it[f'{clas}_area_2010_m2'][i] * frac_ff_cook[i] for i in range(len(puma_data_it))]
+                areas_ff_other_it = (
+                    puma_data_it[f"{clas}_area_2010_m2"]
+                    * puma_data_it["frac_ff_sh_com_2010"]
+                )
 
             # sum of previous areas to be used in fitting
             sum_areaff_sh = sum(areas_ff_sh_it)
@@ -91,90 +88,48 @@ def calculate_state_slopes(puma_data):
             sum_areaff_cook = sum(areas_ff_cook_it)
 
             # Load monthly natural gas usage for the state
-            natgas = list(
-                ng_usage_data_res[state] if clas == "res" else ng_usage_data_com[state]
-            )
-            sum_natgas = sum(natgas)
+            natgas = ng_usage_data[clas][state]
             # Load annual fuel oil/kerosene and other gas/propane usage for the state
-            fok = list(
-                fok_usage_data[fok_usage_data["state"] == state][f"fok.{clas}.mmbtu"]
-            )[0]
-            other = list(
-                othergas_usage_data[othergas_usage_data["state"] == state][
-                    f"propane.{clas}.mmbtu"
-                ]
-            )[0]
-            totfuel = fok + sum_natgas + other
+            fok = fok_usage_data.loc[state, f"fok.{clas}.mmbtu"]
+            other = othergas_usage_data.loc[state, f"propane.{clas}.mmbtu"]
+            totfuel = fok + other + natgas.sum()
             # Scale total fossil fuel usage by monthly natural gas
-            ff_usage_data_it = [
-                natgas[i] / sum_natgas * (totfuel) for i in range(len(natgas))
-            ]
+            ff_usage_data_it = totfuel * natgas / natgas.sum()
+            # Fossil fuel average monthly mmbtu, normalized by hours in month
+            ff_monthly_it = ff_usage_data_it / hours_in_month
 
-            temp_ref_lin_dec_it = temp_ref_it
-            temp_ref_lin_inc_it = temp_ref_it
+            # Hourly heating degrees for all pumas in a given state, multiplied by their corresponding area and percent fossil fuel, summed up to one hourly list
+            hd_hourly_it_sh = (
+                temps_pumas_transpose.applymap(
+                    lambda x: max(const.temp_ref[clas] - x, 0)
+                )
+                .mul(areas_ff_sh_it, axis=0)
+                .sum(axis=0)
+            )
+            hd_monthly_it_sh = hd_hourly_it_sh.groupby(dti.month).mean()
 
             if clas == "res":
-
-                # Hourly heating degrees for all pumas in a given state, multiplied by their corresponding area and percent fossil fuel, summed up to one hourly list
-                hd_hourly_it_sh = (
-                    temps_pumas_transpose.applymap(
-                        lambda x: temp_ref_lin_dec_it - x
-                        if temp_ref_lin_dec_it - x >= 0
-                        else 0
-                    )
-                    .mul(areas_ff_sh_it, axis=0)
-                    .sum(axis=0)
-                )
                 hd_hourly_it_dhw = (
-                    temps_pumas_transpose.applymap(lambda x: temp_ref_lin_dec_it - x)
+                    temps_pumas_transpose.applymap(lambda x: const.temp_ref[clas] - x)
                     .mul(areas_ff_dhw_it, axis=0)
                     .sum(axis=0)
                 )
-
-                # Average hd per month
-                df_hourly_it = pd.DataFrame(
-                    {
-                        "month": month_hrly,
-                        "hd_hourly_it_sh": hd_hourly_it_sh,
-                        "hd_hourly_it_dhw": hd_hourly_it_dhw,
-                    }
-                )
-                hd_group_sh = df_hourly_it["hd_hourly_it_sh"].groupby(df_hourly_it["month"])
-                hd_group_dhw = df_hourly_it["hd_hourly_it_dhw"].groupby(
-                    df_hourly_it["month"]
-                )
-                df_monthly_it = pd.DataFrame(
-                    {
-                        "hd_avg_sh": hd_group_sh.mean(),
-                        "hd_avg_dhw": hd_group_dhw.mean(),
-                        "n_hrs": hd_group_sh.count(),
-                    }
-                )
-                # Fossil fuel average monthly mmbtu, normalized by hours in month
-                df_monthly_it["ff_monthly_mmbtu"] = [
-                    ff_usage_data_it[i] / list(df_monthly_it["n_hrs"])[i]
-                    for i in range(len(df_monthly_it))
-                ]
+                hd_monthly_it_dhw = hd_hourly_it_dhw.groupby(dti.month).mean()
 
                 # Fitting function: Returns difference between fitted equation and actual fossil fuel usage for the least_squares function to minimize
                 def func_r(par, sh, dhw, ff):
                     err = ff - (
                         par[0] * sh
-                        + (sum_areaff_dhw * par[1] + const.dhw_lin_scalar * par[1] * dhw)
-                        + sum_areaff_other * par[2]
+                        + par[1] * (sum_areaff_dhw + const.dhw_lin_scalar * dhw)
+                        + par[2] * sum_areaff_other
                     )
                     return err
-
-                # Input data points for fitting
-                data_sh = np.array(df_monthly_it["hd_avg_sh"])
-                data_dhw = np.array(df_monthly_it["hd_avg_dhw"])
-                data_ff = df_monthly_it["ff_monthly_mmbtu"]
 
                 # Least squares solver
                 lm_it = least_squares(
                     func_r,
                     const.bounds_lower_res,
-                    args=(data_sh, data_dhw, data_ff),
+                    args=(hd_monthly_it_sh, hd_monthly_it_dhw, ff_monthly_it),
                     bounds=(const.bounds_lower_res, const.bounds_upper_res),
                 )
 
@@ -188,9 +143,9 @@ def calculate_state_slopes(puma_data):
                 residuals = list(lm_it.fun)
                 sumres = 0
                 sumtot = 0
-                for i in range(len(list(data_ff))):
+                for i in range(len(list(ff_monthly_it))):
                     sumres += residuals[i] ** 2
-                    sumtot += (list(data_ff)[i] - np.mean(data_ff)) ** 2
+                    sumtot += (list(ff_monthly_it)[i] - np.mean(ff_monthly_it)) ** 2
                 r2 = 1 - (sumres / sumtot)
 
                 # Add coefficients to output dataframe
@@ -203,53 +158,15 @@ def calculate_state_slopes(puma_data):
                     par_dhw_l,
                     par_other_c,
                 ]
-
             else:
-
-                # Hourly heating degrees for all pumas in a given state, multiplied by their corresponding area and percent fossil fuel, summed up to one hourly list
-                hd_hourly_it_sh = (
-                    temps_pumas_transpose.applymap(
-                        lambda x: temp_ref_lin_dec_it - x
-                        if temp_ref_lin_dec_it - x >= 0
-                        else 0
-                    )
-                    .mul(areas_ff_sh_it, axis=0)
-                    .sum(axis=0)
-                )
                 hd_hourly_it_other = (
                     temps_pumas_transpose.applymap(
-                        lambda x: x - temp_ref_lin_inc_it
-                        if x - temp_ref_lin_inc_it >= 0
-                        else 0
+                        lambda x: max(x - const.temp_ref[clas], 0)
                     )
                     .mul(areas_ff_other_it, axis=0)
                     .sum(axis=0)
                 )
-
-                # Average hd per month
-                df_hourly_it = pd.DataFrame(
-                    {
-                        "month": month_hrly,
-                        "hd_hourly_it_sh": hd_hourly_it_sh,
-                        "hd_hourly_it_other": hd_hourly_it_other,
-                    }
-                )
-                hd_group_sh = df_hourly_it["hd_hourly_it_sh"].groupby(df_hourly_it["month"])
-                hd_group_other = df_hourly_it["hd_hourly_it_other"].groupby(
-                    df_hourly_it["month"]
-                )
-                df_monthly_it = pd.DataFrame(
-                    {
-                        "hd_avg_sh": hd_group_sh.mean(),
-                        "hd_avg_other": hd_group_other.mean(),
-                        "n_hrs": hd_group_sh.count(),
-                    }
-                )
-                # Fossil fuel average monthly mmbtu, normalized by hours in month
-                df_monthly_it["ff_monthly_mmbtu"] = [
-                    ff_usage_data_it[i] / list(df_monthly_it["n_hrs"])[i]
-                    for i in range(len(df_monthly_it))
-                ]
+                hd_monthly_it_other = hd_hourly_it_other.groupby(dti.month).mean()
 
                 # Fitting function: Returns difference between fitted equation and actual fossil fuel usage for the least_squares function to minimize
                 def func_c(par, sh, other, ff):
@@ -261,16 +178,11 @@ def calculate_state_slopes(puma_data):
                     )
                     return err
 
-                # Input data points for fitting
-                data_sh = np.array(df_monthly_it["hd_avg_sh"])
-                data_other = np.array(df_monthly_it["hd_avg_other"])
-                data_ff = df_monthly_it["ff_monthly_mmbtu"]
-
                 # Least squares solver
                 lm_it = least_squares(
                     func_c,
                     const.bounds_lower_com,
-                    args=(data_sh, data_other, data_ff),
+                    args=(hd_monthly_it_sh, hd_monthly_it_other, ff_monthly_it),
                     bounds=(const.bounds_lower_com, const.bounds_upper_com),
                 )
 
@@ -285,9 +197,9 @@ def calculate_state_slopes(puma_data):
                 residuals = list(lm_it.fun)
                 sumres = 0
                 sumtot = 0
-                for i in range(len(list(data_ff))):
+                for i in range(len(list(ff_monthly_it))):
                     sumres += residuals[i] ** 2
-                    sumtot += (list(data_ff)[i] - np.mean(data_ff)) ** 2
+                    sumtot += (list(ff_monthly_it)[i] - np.mean(ff_monthly_it)) ** 2
                 r2 = 1 - (sumres / sumtot)
 
                 # Add coefficients to output dataframe
@@ -307,11 +219,7 @@ def calculate_state_slopes(puma_data):
 
 
 if __name__ == "__main__":
-    puma_data = pd.read_csv(
-        os.path.join(dir_path, "data", "puma_data.csv"), index_col=False
-    )
-    
-    state_slopes_res, state_slopes_com = calculate_state_slopes(puma_data)
+    state_slopes_res, state_slopes_com = calculate_state_slopes(const.puma_data)
     state_slopes_res.to_csv(
         os.path.join(dir_path, "data", "state_slopes_ff_res.csv"), index=False
     )
@@ -322,6 +230,10 @@ if __name__ == "__main__":
     ##############################################
     # Space heating slope adjustment for climate #
     ##############################################
+
+    puma_data = pd.read_csv(
+        os.path.join(dir_path, "data", "puma_data.csv"), index_col=False
+    )
 
     # Create data frames for space heating fossil fuel usage slopes at each PUMA
     puma_slopes_res = pd.DataFrame(
@@ -356,7 +268,7 @@ if __name__ == "__main__":
 
         # Load puma temperatures
         temps_pumas = pd.read_csv(
-            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{yr_temps}.csv"
+            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{year}.csv"
         )
         temps_pumas_transpose = temps_pumas.T
 
