@@ -52,3 +52,8 @@ abv2state = {
     "WV": "West Virginia",
     "WY": "Wyoming",
 }
+
+blob_paths = {
+    "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
+    "transmission_lines": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
+}
