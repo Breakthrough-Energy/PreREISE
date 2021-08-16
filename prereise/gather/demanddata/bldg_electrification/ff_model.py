@@ -1,8 +1,7 @@
 import os
 
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from scipy.optimize import least_squares
 
 from prereise.gather.demanddata.bldg_electrification import const
@@ -48,7 +47,6 @@ def calculate_state_slopes(puma_data, year):
     for state in const.state_list:
         # Load puma data
         puma_data_it = const.puma_data.query("state == @state")
-        n_tracts = len(puma_data_it)
 
         # Load puma temperatures
         temps_pumas = temps_pumas = pd.read_csv(
@@ -82,7 +80,6 @@ def calculate_state_slopes(puma_data, year):
                 )
 
             # sum of previous areas to be used in fitting
-            sum_areaff_sh = sum(areas_ff_sh_it)
             sum_areaff_dhw = sum(areas_ff_dhw_it)
             sum_areaff_other = sum(areas_ff_other_it)
             sum_areaff_cook = sum(areas_ff_cook_it)
@@ -219,21 +216,24 @@ def calculate_state_slopes(puma_data, year):
 
 
 if __name__ == "__main__":
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
     state_slopes_res, state_slopes_com = calculate_state_slopes(const.puma_data)
     state_slopes_res.to_csv(
-        os.path.join(dir_path, "data", "state_slopes_ff_res.csv"), index=False
+        os.path.join(data_dir, "state_slopes_ff_res.csv"), index=False
     )
     state_slopes_com.to_csv(
-        os.path.join(dir_path, "data", "state_slopes_ff_com.csv"), index=False
+        os.path.join(data_dir, "state_slopes_ff_com.csv"), index=False
     )
 
     ##############################################
     # Space heating slope adjustment for climate #
     ##############################################
 
-    puma_data = pd.read_csv(
-        os.path.join(dir_path, "data", "puma_data.csv"), index_col=False
-    )
+    year = 2010
+    puma_data = pd.read_csv(os.path.join(data_dir, "puma_data.csv"), index_col=False)
+    state_slopes_res.set_index("state", inplace=True)
+    state_slopes_com.set_index("state", inplace=True)
 
     # Create data frames for space heating fossil fuel usage slopes at each PUMA
     puma_slopes_res = pd.DataFrame(
@@ -243,7 +243,8 @@ if __name__ == "__main__":
         columns=(["state", "puma", "htg_slope_com_mmbtu_m2_degC"])
     )
 
-    # Fill above dataframes with each puma and their corresponding un-adjusted statewide heating slope
+    # Fill above dataframes with each puma and their corresponding un-adjusted statewide
+    # heating slope
     for i in range(len(puma_data)):
         state_it = puma_data["state"][i]
 
@@ -251,14 +252,14 @@ if __name__ == "__main__":
         puma_slopes_res.loc[df_index_res] = [
             state_it,
             puma_data["puma"][i],
-            list(state_slopes_res[state_slopes_res["state"] == state_it]["sh_slope"])[0],
+            state_slopes_res.loc[state_it, "sh_slope"],
         ]
 
         df_index_com = len(puma_slopes_com)
         puma_slopes_com.loc[df_index_com] = [
             state_it,
             puma_data["puma"][i],
-            list(state_slopes_com[state_slopes_com["state"] == state_it]["sh_slope"])[0],
+            state_slopes_com.loc[state_it, "sh_slope"],
         ]
 
     puma_data["hd_183C_2010"] = ""
@@ -291,10 +292,10 @@ if __name__ == "__main__":
 
     # Load in state groups consistent with building area scale adjustments
     area_scale_res = pd.read_csv(
-        os.path.join(dir_path, "data", "area_scale_res.csv"), index_col=False
+        os.path.join(data_dir, "area_scale_res.csv"), index_col=False
     )
     area_scale_com = pd.read_csv(
-        os.path.join(dir_path, "data", "area_scale_com.csv"), index_col=False
+        os.path.join(data_dir, "area_scale_com.csv"), index_col=False
     )
 
     # Extract res state groups from area_scale_res
@@ -426,14 +427,13 @@ if __name__ == "__main__":
     )
 
     # Minimize error between actual slopes and fitted function
-    ## Note for fitting to converge, hdd must be divided by 1000 and slopes in btu
+    # Note for fitting to converge, hdd must be divided by 1000 and slopes in btu
     def model(par, hdd_div1000, slope_btu):
         err = (
             slope_btu
             - (par[0] + par[1] * (1 - np.exp(-par[2] * hdd_div1000))) / hdd_div1000
         )
         return err
-
 
     # Least_squares residential model, to solve slope = (a + b*(1 - exp(-c*hdd)))/hdd
     ls_res = least_squares(
@@ -476,21 +476,21 @@ if __name__ == "__main__":
         return (
             (
                 a_model_slope_res_exp
-                + b_model_slope_res_exp * (1 - np.exp(-c_model_slope_res_exp * (x / 1000)))
+                + b_model_slope_res_exp
+                * (1 - np.exp(-c_model_slope_res_exp * (x / 1000)))
             )
             / (x / 1000)
         ) * 10 ** (-6)
-
 
     def func_slope_com_exp(x):
         return (
             (
                 a_model_slope_com_exp
-                + b_model_slope_com_exp * (1 - np.exp(-c_model_slope_com_exp * (x / 1000)))
+                + b_model_slope_com_exp
+                * (1 - np.exp(-c_model_slope_com_exp * (x / 1000)))
             )
             / (x / 1000)
         ) * 10 ** (-6)
-
 
     puma_data["htg_slope_res_mmbtu_m2_degC"] = ""
     puma_data["htg_slope_com_mmbtu_m2_degC"] = ""
@@ -508,7 +508,7 @@ if __name__ == "__main__":
 
         # Residential Adjustments
         # Extract unadjusted heating slope for the given state and class
-        htg_slope_res_mmbtu_m2_degC_basis = list(
+        htg_slope_res_mmbtu_m2_degC_basis = list(  # noqa: N816
             state_slopes_res[state_slopes_res["state"] == state]["sh_slope"]
         )[0]
         # Calculate slope scalar based on hdd, hd, area, and frac_ff
@@ -527,7 +527,8 @@ if __name__ == "__main__":
         )
         # Apply scalar to each puma
         adj_slope_res_list = list(
-            slope_scalar_res_it * puma_data_it["hdd65_normals_2010"].map(func_slope_res_exp)
+            slope_scalar_res_it
+            * puma_data_it["hdd65_normals_2010"].map(func_slope_res_exp)
         )
         for i in range(len(puma_data_it)):
             index_r = len(adj_slopes_res)
@@ -538,7 +539,7 @@ if __name__ == "__main__":
             ]
 
         # Commercial Adjustments
-        htg_slope_com_mmbtu_m2_degC_basis = list(
+        htg_slope_com_mmbtu_m2_degC_basis = list(  # noqa: N816
             state_slopes_com[state_slopes_com["state"] == state]["sh_slope"]
         )[0]
         slope_scalar_com_it = htg_slope_com_mmbtu_m2_degC_basis / (
@@ -555,7 +556,8 @@ if __name__ == "__main__":
             )
         )
         adj_slope_com_list = list(
-            slope_scalar_com_it * puma_data_it["hdd65_normals_2010"].map(func_slope_com_exp)
+            slope_scalar_com_it
+            * puma_data_it["hdd65_normals_2010"].map(func_slope_com_exp)
         )
         for i in range(len(puma_data_it)):
             index_c = len(adj_slopes_com)
@@ -566,9 +568,5 @@ if __name__ == "__main__":
             ]
 
     # Export climate adjusted space heating slopes of each puma
-    adj_slopes_res.to_csv(
-        os.path.join(dir_path, "data", "puma_slopes_ff_res.csv"), index=False
-    )
-    adj_slopes_com.to_csv(
-        os.path.join(dir_path, "data", "puma_slopes_ff_com.csv"), index=False
-    )
+    adj_slopes_res.to_csv(os.path.join(data_dir, "puma_slopes_ff_res.csv"), index=False)
+    adj_slopes_com.to_csv(os.path.join(data_dir, "puma_slopes_ff_com.csv"), index=False)
