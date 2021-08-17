@@ -1,5 +1,6 @@
 import os
 
+import pandas as pd
 from powersimdata.utility.distance import haversine
 
 from prereise.gather.griddata.hifld import const
@@ -83,7 +84,8 @@ def filter_lines_with_no_matching_substations(lines, substations):
 def filter_lines_with_nonmatching_substation_coords(lines, substations, threshold=100):
     """Filter lines for which either the starting or ending substation, by name, has
     coordinates judged as too far away (based on the ``threshold`` parameter) from the
-    coodinated listed for the line.
+    coodinated listed for the line. Additionally, add substation IDs for start and end
+    (SUB_1_ID, SUB_2_ID respectively), since substation names aren't unique identifiers.
 
     :param pandas.DataFrame lines: data frame of lines.
     :param pandas.DataFrame substations: data frame of substations.
@@ -91,30 +93,29 @@ def filter_lines_with_nonmatching_substation_coords(lines, substations, threshol
     :return: (*pandas.DataFrame*) -- lines with matching substations.
     """
 
-    def find_distance_to_closest_substation(coordinates, name, substations):
+    def find_closest_substation_and_distance(coordinates, name, substations):
         matching_substations = substations.loc[substations.NAME == name]
-        minimum_distance = matching_substations.apply(
+        distances = matching_substations.apply(
             lambda x: haversine(coordinates, (x.LATITUDE, x.LONGITUDE)), axis=1
-        ).min()
-        return minimum_distance
+        )
+        return pd.Series([distances.idxmin(), distances.min()], index=["sub", "dist"])
 
     print("Evaluating endpoint location mismatches... (this may take several minutes)")
     # Coordinates are initially (lon, lat); we reverse to (lat, lon) for haversine
-    start_distance_mismatch = lines.apply(
-        lambda x: find_distance_to_closest_substation(
+    start_subs = lines.apply(
+        lambda x: find_closest_substation_and_distance(
             x.loc["COORDINATES"][0][::-1], x.loc["SUB_1"], substations
         ),
         axis=1,
     )
-    end_distance_mismatch = lines.apply(
-        lambda x: find_distance_to_closest_substation(
+    end_subs = lines.apply(
+        lambda x: find_closest_substation_and_distance(
             x.loc["COORDINATES"][-1][::-1], x.loc["SUB_2"], substations
         ),
         axis=1,
     )
-    filtered = lines.loc[
-        (start_distance_mismatch > threshold) | (end_distance_mismatch > threshold)
-    ]
+    # Report the number of lines which will be filtered
+    filtered = lines.loc[(start_subs.dist > threshold) | (end_subs.dist > threshold)]
     num_filtered = len(filtered)
     num_lines = len(lines)
     print(
@@ -122,9 +123,10 @@ def filter_lines_with_nonmatching_substation_coords(lines, substations, threshol
         f"coordinates out of a starting total of {num_lines}"
     )
 
-    remaining = lines.loc[
-        (start_distance_mismatch <= threshold) & (end_distance_mismatch <= threshold)
-    ]
+    # Add substation IDs to lines dataframe
+    lines = lines.assign(SUB_1_ID=start_subs["sub"], SUB_2_ID=end_subs["sub"])
+    # Actually perform the filtering
+    remaining = lines.loc[(start_subs.dist <= threshold) & (end_subs.dist <= threshold)]
     return remaining.copy()
 
 
@@ -149,6 +151,7 @@ def build_transmission():
     """Main user-facing entry point."""
     # Load input data
     hifld_substations = get_hifld_electric_substations(const.blob_paths["substations"])
+    hifld_substations.set_index("ID", inplace=True)
     hifld_lines = get_hifld_electric_power_transmission_lines(
         const.blob_paths["transmission_lines"]
     )
