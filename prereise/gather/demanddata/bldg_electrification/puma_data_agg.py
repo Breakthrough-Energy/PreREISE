@@ -1,0 +1,266 @@
+# This script develops puma-level data directly from census and aggregated from census tract data
+import os
+
+import pandas as pd
+import geopandas as gpd
+
+from prereise.gather.demanddata.bldg_electrification import const
+
+data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+# Load ACS fuel data for 2010
+puma_fuel_2010 = pd.read_csv(os.path.join(data_dir, "puma_fuel_2010.csv"))
+
+# Load tract_puma_mapping
+tract_puma_mapping = pd.read_csv(os.path.join(data_dir, "tract_puma_mapping.csv"))
+
+# Set up puma_data data frame
+puma_data = pd.DataFrame(
+    {"puma": puma_fuel_2010["puma"], "state": puma_fuel_2010["state"]}
+)
+
+# Initialize columns for the loop through states
+init_cols = [
+    "pop_2010",
+    "h_units_2010",
+    "res_area_gbs_m2",
+    "com_area_gbs_m2",
+    "ind_area_gbs_m2",
+    "hdd65_normals_2010",
+    "cdd65_normals_2010",
+    "acpen_res_2010",
+    "res_area_2010_m2",
+    "com_area_2010_m2",
+]
+for i in init_cols:
+    puma_data[i] = ""
+
+# Load RECS and CBECS area scales for res and com
+resscales = pd.read_csv(os.path.join(data_dir, "area_scale_res.csv"))
+comscales = pd.read_csv(os.path.join(data_dir, "area_scale_com.csv"))
+
+# Interpolate a 2010 area to scale model area to corresponding RECS/CBECS area
+resscales["2010_scalar"] = (
+    resscales["RECS2009"] + (resscales["RECS2015"] - resscales["RECS2009"]) / 6
+) / resscales["Model2010"]
+comscales["2010_scalar"] = (
+    comscales["CBECS2012"] - (comscales["CBECS2012"] - comscales["CBECS2003"]) * (2 / 9)
+) / comscales["Model2010"]
+
+
+for state in const.state_list:
+    tract_data_it = pd.read_csv(
+        os.path.join(data_dir, f"tract_data/tract_data_{state}.csv")
+    )
+    # Select pumas in state
+    pumas_it = list(puma_data[puma_data["state"] == state]["puma"])
+    # Rename tract IDs to match all dataframe naming conventions
+    tract_data_it["id"] = [
+        "tract_" + str(i) if len(str(i)) == 11 else "tract_0" + str(i)
+        for i in list(tract_data_it["id"])
+    ]
+
+    # Sum population, housing units, and areas
+    for i in range(5):
+        puma_data.loc[puma_data["state"] == state, init_cols[i]] = list(
+            map(
+                lambda x: sum(
+                    tract_data_it[
+                        tract_data_it["id"].isin(
+                            list(
+                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
+                                    "tract"
+                                ]
+                            )
+                        )
+                    ][init_cols[i].replace("_gbs", "").replace("_", ".")]
+                ),
+                pumas_it,
+            )
+        )
+
+    # Population-weighted average hdd, cdd, and acpen
+    for i in range(5, 8):
+        puma_data.loc[puma_data["state"] == state, init_cols[i]] = list(
+            map(
+                lambda x: sum(
+                    tract_data_it[
+                        tract_data_it["id"].isin(
+                            list(
+                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
+                                    "tract"
+                                ]
+                            )
+                        )
+                    ][
+                        init_cols[i]
+                        .replace("_normals_2010", "")
+                        .replace("_res_2010", ".res")
+                    ]
+                    * tract_data_it[
+                        tract_data_it["id"].isin(
+                            list(
+                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
+                                    "tract"
+                                ]
+                            )
+                        )
+                    ]["pop.2010"]
+                )
+                / sum(
+                    tract_data_it[
+                        tract_data_it["id"].isin(
+                            list(
+                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
+                                    "tract"
+                                ]
+                            )
+                        )
+                    ]["pop.2010"]
+                ),
+                pumas_it,
+            )
+        )
+
+    # Scale puma area from gbs to 2010 RECS/CBECS
+    state_row_scale_res = resscales[resscales.eq(state).any(1)].reset_index()
+    state_row_scale_com = comscales[comscales.eq(state).any(1)].reset_index()
+    rscale = state_row_scale_res["2010_scalar"][0]
+    cscale = state_row_scale_com["2010_scalar"][0]
+    puma_data.loc[puma_data["state"] == state, "res_area_2010_m2"] = (
+        puma_data[puma_data["state"] == state]["res_area_gbs_m2"] * rscale
+    )
+    puma_data.loc[puma_data["state"] == state, "com_area_2010_m2"] = (
+        puma_data[puma_data["state"] == state]["com_area_gbs_m2"] * cscale
+    )
+
+# Calculate res fractions of fuel usage based off puma_fuel_2010 household data
+puma_data["frac_sh_res_natgas"] = (
+    puma_fuel_2010["hh_utilgas"] / puma_fuel_2010["hh_total"]
+)
+puma_data["frac_sh_res_fok"] = puma_fuel_2010["hh_fok"] / puma_fuel_2010["hh_total"]
+puma_data["frac_sh_res_othergas"] = (
+    puma_fuel_2010["hh_othergas"] / puma_fuel_2010["hh_total"]
+)
+puma_data["frac_sh_res_coal"] = puma_fuel_2010["hh_coal"] / puma_fuel_2010["hh_total"]
+puma_data["frac_sh_res_wood"] = puma_fuel_2010["hh_wood"] / puma_fuel_2010["hh_total"]
+puma_data["frac_sh_res_solar"] = puma_fuel_2010["hh_solar"] / puma_fuel_2010["hh_total"]
+puma_data["frac_sh_res_elec"] = puma_fuel_2010["hh_elec"] / puma_fuel_2010["hh_total"]
+puma_data["frac_sh_res_other"] = puma_fuel_2010["hh_other"] / puma_fuel_2010["hh_total"]
+puma_data["frac_sh_res_none"] = puma_fuel_2010["hh_none"] / puma_fuel_2010["hh_total"]
+
+# Regions to differentiate fuel usage: NorthEast, MidWest, SOuth, WEst
+NE = ["MA", "CT", "ME", "NH", "RI", "VT", "NJ", "NY", "PA"]
+MW = ["IL", "MI", "WI", "IN", "OH", "MO", "IA", "MN", "ND", "SD", "KS", "NE"]
+SO = [
+    "VA",
+    "GA",
+    "FL",
+    "DC",
+    "DE",
+    "MD",
+    "WV",
+    "NC",
+    "SC",
+    "TN",
+    "AL",
+    "KY",
+    "MS",
+    "TX",
+    "AR",
+    "LA",
+    "OK",
+]
+WE = ["CO", "ID", "MT", "UT", "WY", "AZ", "NM", "NV", "CA", "AK", "HI", "OR", "WA"]
+
+regions = [NE, MW, SO, WE]
+fuel = ["natgas", "fok", "othergas", "elec"]
+
+for c in const.classes:
+    if c == "res":
+        uselist = ["dhw", "other"]
+    else:
+        uselist = ["sh", "dhw", "cook"]
+    for u in uselist:
+        frac_area = pd.DataFrame(columns=fuel)
+
+        # Compute frac_area for each fuel type in each region
+        for i in regions:
+            fuellist = []
+            for j in fuel:
+                region_df = puma_data[puma_data["state"].isin(i)].reset_index()
+                fuellist.append(
+                    sum(
+                        region_df["frac_sh_res_{}".format(j)]
+                        * region_df["{}_area_2010_m2".format(c)]
+                    )
+                    / sum(region_df["{}_area_2010_m2".format(c)])
+                )
+            df_i = len(frac_area)
+            frac_area.loc[df_i] = fuellist
+
+        # Values calculated externally
+        frac_scale = pd.read_csv("reference_files/frac_target_{}_{}.csv".format(u, c))
+
+        downscalar = frac_scale / frac_area
+
+        upscalar = (frac_scale - frac_area) / (1 - frac_area)
+
+        # Scale frac_hh_fuel to frac_com_fuel
+        for f in fuel:
+            scalar = 1
+            fraccom = []
+            for i in range(len(puma_data)):
+                for j in range(
+                    len(regions)
+                ):  # !! fix index to match region string instead of index number
+                    if puma_data["state"][i] in regions[j]:
+                        reg_index = j
+                if downscalar[f][j] <= 1:
+                    scalar = downscalar[f][j]
+                    fraccom.append(puma_data["frac_sh_res_{}".format(f)][i] * scalar)
+                else:
+                    scalar = upscalar[f][j]
+                    fraccom.append(
+                        (1 - puma_data["frac_sh_res_{}".format(f)][i]) * scalar
+                        + puma_data["frac_sh_res_{}".format(f)][i]
+                    )
+            puma_data["frac_{}_{}_{}".format(u, c, f)] = fraccom
+
+
+# Sum coal, wood, solar and other fractions for frac_com_other
+puma_data["frac_sh_com_other"] = puma_data[
+    ["frac_sh_res_coal", "frac_sh_res_wood", "frac_sh_res_solar", "frac_sh_res_other"]
+].sum(axis=1)
+
+for c in const.classes:
+    if c == "res":
+        uselist = ["sh", "dhw", "other"]
+    else:
+        uselist = ["sh", "dhw", "cook"]
+    for u in uselist:
+        puma_data["frac_ff_{}_{}_2010".format(u, c)] = puma_data[
+            [
+                "frac_{}_{}_natgas".format(u, c),
+                "frac_{}_{}_othergas".format(u, c),
+                "frac_{}_{}_fok".format(u, c),
+            ]
+        ].sum(axis=1)
+        puma_data["frac_elec_{}_{}_2010".format(u, c)] = puma_data[
+            "frac_{}_{}_elec".format(u, c)
+        ]
+
+
+timezones = gpd.GeoDataFrame(gpd.read_file("data/tz_us.shp"))
+pumas = gpd.GeoDataFrame(gpd.read_file("data/pumas.shp"))
+puma_timezone = gpd.overlay(pumas, timezones.to_crs("EPSG:4269"))
+
+puma_timezone["area"] = puma_timezone.area
+puma_timezone.sort_values("area", ascending=False, inplace=True)
+puma_timezone = puma_timezone.drop_duplicates(subset="GEOID10", keep="first")
+puma_timezone.sort_values("GEOID10", ascending=True, inplace=True)
+puma_timezone["puma"] = "puma_" + puma_timezone["GEOID10"]
+
+puma_data["timezone"] = puma_timezone["TZID"]
+
+puma_data.to_csv(os.path.join(data_dir, "puma_data.csv"), index=False)
