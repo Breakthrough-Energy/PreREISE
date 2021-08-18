@@ -93,24 +93,25 @@ def filter_lines_with_nonmatching_substation_coords(lines, substations, threshol
     :return: (*pandas.DataFrame*) -- lines with matching substations.
     """
 
-    def find_closest_substation_and_distance(coordinates, name, substations):
-        matching_substations = substations.loc[substations.NAME == name]
+    def find_closest_substation_and_distance(coordinates, name, substations_groupby):
+        matching_substations = substations_groupby.get_group(name)
         distances = matching_substations.apply(
             lambda x: haversine(coordinates, (x.LATITUDE, x.LONGITUDE)), axis=1
         )
         return pd.Series([distances.idxmin(), distances.min()], index=["sub", "dist"])
 
     print("Evaluating endpoint location mismatches... (this may take several minutes)")
+    substations_groupby = substations.groupby("NAME")
     # Coordinates are initially (lon, lat); we reverse to (lat, lon) for haversine
     start_subs = lines.apply(
         lambda x: find_closest_substation_and_distance(
-            x.loc["COORDINATES"][0][::-1], x.loc["SUB_1"], substations
+            x.loc["COORDINATES"][0][::-1], x.loc["SUB_1"], substations_groupby
         ),
         axis=1,
     )
     end_subs = lines.apply(
         lambda x: find_closest_substation_and_distance(
-            x.loc["COORDINATES"][-1][::-1], x.loc["SUB_2"], substations
+            x.loc["COORDINATES"][-1][::-1], x.loc["SUB_2"], substations_groupby
         ),
         axis=1,
     )
