@@ -132,3 +132,37 @@ dhw_low_bound_com = 0.00000796
 dhw_high_bound_com = 0.00001858
 
 other_high_bound_com = 0.00000228
+
+recs_date_1 = 2009
+recs_date_2 = 2015
+
+cbecs_date_1 = 2003
+cbecs_date_2 = 2012
+
+target_year = 2010
+
+# Regions to differentiate fuel usage: NorthEast, MidWest, SOuth, WEst
+NE = ["MA", "CT", "ME", "NH", "RI", "VT", "NJ", "NY", "PA"]
+MW = ["IL", "MI", "WI", "IN", "OH", "MO", "IA", "MN", "ND", "SD", "KS", "NE"]
+SO = [
+    "VA",
+    "GA",
+    "FL",
+    "DC",
+    "DE",
+    "MD",
+    "WV",
+    "NC",
+    "SC",
+    "TN",
+    "AL",
+    "KY",
+    "MS",
+    "TX",
+    "AR",
+    "LA",
+    "OK",
+]
+WE = ["CO", "ID", "MT", "UT", "WY", "AZ", "NM", "NV", "CA", "AK", "HI", "OR", "WA"]
+
+fuel = ["natgas", "fok", "othergas", "elec"]
