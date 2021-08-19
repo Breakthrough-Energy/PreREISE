@@ -15,9 +15,7 @@ puma_fuel_2010 = pd.read_csv(os.path.join(data_dir, "puma_fuel_2010.csv"))
 tract_puma_mapping = pd.read_csv(os.path.join(data_dir, "tract_puma_mapping.csv"))
 
 # Set up puma_data data frame
-puma_data = pd.DataFrame(
-    {"puma": puma_fuel_2010["puma"], "state": puma_fuel_2010["state"]}
-)
+puma_data = puma_fuel_2010[["puma", "state"]]
 
 # Initialize columns for the loop through states
 init_cols = [
@@ -32,8 +30,6 @@ init_cols = [
     "res_area_2010_m2",
     "com_area_2010_m2",
 ]
-for i in init_cols:
-    puma_data[i] = ""
 
 # Load RECS and CBECS area scales for res and com
 resscales = pd.read_csv(os.path.join(data_dir, "area_scale_res.csv"))
@@ -41,10 +37,10 @@ comscales = pd.read_csv(os.path.join(data_dir, "area_scale_com.csv"))
 
 # Interpolate a 2010 area to scale model area to corresponding RECS/CBECS area
 resscales["2010_scalar"] = (
-    resscales["RECS2009"] + (resscales["RECS2015"] - resscales["RECS2009"]) / 6
+    resscales["RECS2009"] + (resscales["RECS2015"] - resscales["RECS2009"]) * ((const.target_year-const.recs_date_1) / (const.recs_date_2-const.recs_date_1))
 ) / resscales["Model2010"]
 comscales["2010_scalar"] = (
-    comscales["CBECS2012"] - (comscales["CBECS2012"] - comscales["CBECS2003"]) * (2 / 9)
+    comscales["CBECS2003"] + (comscales["CBECS2012"] - comscales["CBECS2003"]) * ((const.target_year-const.cbecs_date_1) / (const.cbecs_date_2-const.cbecs_date_1))
 ) / comscales["Model2010"]
 
 
@@ -53,7 +49,7 @@ for state in const.state_list:
         os.path.join(data_dir, f"tract_data/tract_data_{state}.csv")
     )
     # Select pumas in state
-    pumas_it = list(puma_data[puma_data["state"] == state]["puma"])
+    pumas_it = list(puma_data.query("state == @state")["puma"])
     # Rename tract IDs to match all dataframe naming conventions
     tract_data_it["id"] = [
         "tract_" + str(i) if len(str(i)) == 11 else "tract_0" + str(i)
@@ -149,32 +145,7 @@ puma_data["frac_sh_res_elec"] = puma_fuel_2010["hh_elec"] / puma_fuel_2010["hh_t
 puma_data["frac_sh_res_other"] = puma_fuel_2010["hh_other"] / puma_fuel_2010["hh_total"]
 puma_data["frac_sh_res_none"] = puma_fuel_2010["hh_none"] / puma_fuel_2010["hh_total"]
 
-# Regions to differentiate fuel usage: NorthEast, MidWest, SOuth, WEst
-NE = ["MA", "CT", "ME", "NH", "RI", "VT", "NJ", "NY", "PA"]
-MW = ["IL", "MI", "WI", "IN", "OH", "MO", "IA", "MN", "ND", "SD", "KS", "NE"]
-SO = [
-    "VA",
-    "GA",
-    "FL",
-    "DC",
-    "DE",
-    "MD",
-    "WV",
-    "NC",
-    "SC",
-    "TN",
-    "AL",
-    "KY",
-    "MS",
-    "TX",
-    "AR",
-    "LA",
-    "OK",
-]
-WE = ["CO", "ID", "MT", "UT", "WY", "AZ", "NM", "NV", "CA", "AK", "HI", "OR", "WA"]
-
-regions = [NE, MW, SO, WE]
-fuel = ["natgas", "fok", "othergas", "elec"]
+regions = [const.NE, const.MW, const.SO, const.WE]
 
 for c in const.classes:
     if c == "res":
@@ -182,32 +153,32 @@ for c in const.classes:
     else:
         uselist = ["sh", "dhw", "cook"]
     for u in uselist:
-        frac_area = pd.DataFrame(columns=fuel)
+        frac_area = pd.DataFrame(columns=const.fuel)
 
         # Compute frac_area for each fuel type in each region
         for i in regions:
             fuellist = []
-            for j in fuel:
+            for j in const.fuel:
                 region_df = puma_data[puma_data["state"].isin(i)].reset_index()
                 fuellist.append(
                     sum(
-                        region_df["frac_sh_res_{}".format(j)]
-                        * region_df["{}_area_2010_m2".format(c)]
+                        region_df[f"frac_sh_res_{j}"]
+                        * region_df[f"{c}_area_2010_m2"]
                     )
-                    / sum(region_df["{}_area_2010_m2".format(c)])
+                    / sum(region_df[f"{c}_area_2010_m2"])
                 )
             df_i = len(frac_area)
             frac_area.loc[df_i] = fuellist
 
         # Values calculated externally
-        frac_scale = pd.read_csv("reference_files/frac_target_{}_{}.csv".format(u, c))
+        frac_scale = pd.read_csv(os.path.join(data_dir, f"frac_target_{u}_{c}.csv"))
 
         downscalar = frac_scale / frac_area
 
         upscalar = (frac_scale - frac_area) / (1 - frac_area)
 
         # Scale frac_hh_fuel to frac_com_fuel
-        for f in fuel:
+        for f in const.fuel:
             scalar = 1
             fraccom = []
             for i in range(len(puma_data)):
@@ -218,14 +189,14 @@ for c in const.classes:
                         reg_index = j
                 if downscalar[f][j] <= 1:
                     scalar = downscalar[f][j]
-                    fraccom.append(puma_data["frac_sh_res_{}".format(f)][i] * scalar)
+                    fraccom.append(puma_data[f"frac_sh_res_{f}"][i] * scalar)
                 else:
                     scalar = upscalar[f][j]
                     fraccom.append(
-                        (1 - puma_data["frac_sh_res_{}".format(f)][i]) * scalar
-                        + puma_data["frac_sh_res_{}".format(f)][i]
+                        (1 - puma_data[f"frac_sh_res_{f}"][i]) * scalar
+                        + puma_data[f"frac_sh_res_{f}"][i]
                     )
-            puma_data["frac_{}_{}_{}".format(u, c, f)] = fraccom
+            puma_data[f"frac_{u}_{c}_{f}"] = fraccom
 
 
 # Sum coal, wood, solar and other fractions for frac_com_other
@@ -239,15 +210,15 @@ for c in const.classes:
     else:
         uselist = ["sh", "dhw", "cook"]
     for u in uselist:
-        puma_data["frac_ff_{}_{}_2010".format(u, c)] = puma_data[
+        puma_data[f"frac_ff_{u}_{c}_2010"] = puma_data[
             [
-                "frac_{}_{}_natgas".format(u, c),
-                "frac_{}_{}_othergas".format(u, c),
-                "frac_{}_{}_fok".format(u, c),
+                f"frac_{u}_{c}_natgas",
+                f"frac_{u}_{c}_othergas",
+                f"frac_{u}_{c}_fok",
             ]
         ].sum(axis=1)
-        puma_data["frac_elec_{}_{}_2010".format(u, c)] = puma_data[
-            "frac_{}_{}_elec".format(u, c)
+        puma_data[f"frac_elec_{u}_{c}_2010"] = puma_data[
+            f"frac_{u}_{c}_elec"
         ]
 
 
