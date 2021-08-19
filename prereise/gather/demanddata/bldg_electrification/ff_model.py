@@ -7,6 +7,19 @@ from scipy.optimize import least_squares
 from prereise.gather.demanddata.bldg_electrification import const
 
 
+def calculate_r2(endogenous, residuals):
+    """Calculate r2 value of fit.
+
+    :param iterable endogenous: vector of observations of endogenous variable.
+    :param iterable residuals: vector of residuals between modeled fit and observations.
+    :return: (*float*) -- r-squared value of fit.
+    """
+    sumres = np.square(np.array(residuals)).sum()
+    sumtot = np.square(np.array(endogenous) - np.array(endogenous).mean()).sum()
+    r2 = 1 - (sumres / sumtot)
+    return r2
+
+
 def calculate_state_slopes(puma_data, year):
     dti = pd.date_range(start=f"{year}-01-01", end=f"{year}-12-31 23:00:00", freq="H")
     hours_in_month = dti.month.value_counts()
@@ -115,10 +128,13 @@ def calculate_state_slopes(puma_data, year):
 
                 # Fitting function: Returns difference between fitted equation and actual fossil fuel usage for the least_squares function to minimize
                 def func_r(par, sh, dhw, ff):
-                    err = ff - (
-                        par[0] * sh
-                        + par[1] * (sum_areaff_dhw + const.dhw_lin_scalar * dhw)
-                        + par[2] * sum_areaff_other
+                    err = hours_in_month ** (1 / 2) * (
+                        ff
+                        - (
+                            par[0] * sh
+                            + par[1] * (sum_areaff_dhw + const.dhw_lin_scalar * dhw)
+                            + par[2] * sum_areaff_other
+                        )
                     )
                     return err
 
@@ -136,14 +152,8 @@ def calculate_state_slopes(puma_data, year):
                 par_dhw_l = lm_it.x[1] * const.dhw_lin_scalar
                 par_other_c = lm_it.x[2]
 
-                # Calculate r2 value of fit
-                residuals = list(lm_it.fun)
-                sumres = 0
-                sumtot = 0
-                for i in range(len(list(ff_monthly_it))):
-                    sumres += residuals[i] ** 2
-                    sumtot += (list(ff_monthly_it)[i] - np.mean(ff_monthly_it)) ** 2
-                r2 = 1 - (sumres / sumtot)
+                corrected_residuals = np.array(lm_it.fun) / hours_in_month ** (1 / 2)
+                r2 = calculate_r2(ff_monthly_it, corrected_residuals)
 
                 # Add coefficients to output dataframe
                 df_i = len(state_slopes_res)
@@ -180,10 +190,14 @@ def calculate_state_slopes(puma_data, year):
 
                 # Fitting function: Returns difference between fitted equation and actual fossil fuel usage for the least_squares function to minimize
                 def func_c(par, sh, other, ff):
-                    err = ff - (
-                        par[0] * sh
-                        + par[1] * (sum_areaff_dhw + sum_areaff_cook + sum_areaff_other)
-                        + par[2] * other
+                    err = hours_in_month ** (1 / 2) * (
+                        ff
+                        - (
+                            par[0] * sh
+                            + par[1]
+                            * (sum_areaff_dhw + sum_areaff_cook + sum_areaff_other)
+                            + par[2] * other
+                        )
                     )
                     return err
 
@@ -225,14 +239,8 @@ def calculate_state_slopes(puma_data, year):
                 par_sh_l = lm_it.x[0]
                 par_other_l = lm_it.x[2]
 
-                # Calculate r2 value of fit
-                residuals = list(lm_it.fun)
-                sumres = 0
-                sumtot = 0
-                for i in range(len(list(ff_monthly_it))):
-                    sumres += residuals[i] ** 2
-                    sumtot += (list(ff_monthly_it)[i] - np.mean(ff_monthly_it)) ** 2
-                r2 = 1 - (sumres / sumtot)
+                corrected_residuals = np.array(lm_it.fun) / hours_in_month ** (1 / 2)
+                r2 = calculate_r2(ff_monthly_it, corrected_residuals)
 
                 # Add coefficients to output dataframe
                 df_i = len(state_slopes_com)
