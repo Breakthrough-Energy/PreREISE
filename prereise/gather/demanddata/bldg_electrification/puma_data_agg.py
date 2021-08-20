@@ -23,10 +23,8 @@ init_cols = [
     "h_units_2010",
     "res_area_gbs_m2",
     "com_area_gbs_m2",
-    "ind_area_gbs_m2",
     "hdd65_normals_2010",
     "cdd65_normals_2010",
-    "acpen_res_2010",
     "res_area_2010_m2",
     "com_area_2010_m2",
 ]
@@ -51,18 +49,21 @@ for state in const.state_list:
     # Select pumas in state
     pumas_it = list(puma_data.query("state == @state")["puma"])
     # Rename tract IDs to match all dataframe naming conventions
-    tract_data_it["id"] = [
+    tract_data_it["tract"] = [
         "tract_" + str(i) if len(str(i)) == 11 else "tract_0" + str(i)
         for i in list(tract_data_it["id"])
     ]
-
+    
+    # !! to be used for groupby(). current code relies on numbered index
+    #tract_data_it.set_index('tract', inplace=True)
+    
     # Sum population, housing units, and areas
-    for i in range(5):
+    for i in range(4):
         puma_data.loc[puma_data["state"] == state, init_cols[i]] = list(
             map(
                 lambda x: sum(
                     tract_data_it[
-                        tract_data_it["id"].isin(
+                        tract_data_it["tract"].isin(
                             list(
                                 tract_puma_mapping[tract_puma_mapping["puma"] == x][
                                     "tract"
@@ -74,14 +75,14 @@ for state in const.state_list:
                 pumas_it,
             )
         )
-
-    # Population-weighted average hdd, cdd, and acpen
-    for i in range(5, 8):
+    
+    # Population-weighted average hdd and cdd
+    for i in range(4, 6):
         puma_data.loc[puma_data["state"] == state, init_cols[i]] = list(
             map(
                 lambda x: sum(
                     tract_data_it[
-                        tract_data_it["id"].isin(
+                        tract_data_it["tract"].isin(
                             list(
                                 tract_puma_mapping[tract_puma_mapping["puma"] == x][
                                     "tract"
@@ -94,7 +95,7 @@ for state in const.state_list:
                         .replace("_res_2010", ".res")
                     ]
                     * tract_data_it[
-                        tract_data_it["id"].isin(
+                        tract_data_it["tract"].isin(
                             list(
                                 tract_puma_mapping[tract_puma_mapping["puma"] == x][
                                     "tract"
@@ -105,7 +106,7 @@ for state in const.state_list:
                 )
                 / sum(
                     tract_data_it[
-                        tract_data_it["id"].isin(
+                        tract_data_it["tract"].isin(
                             list(
                                 tract_puma_mapping[tract_puma_mapping["puma"] == x][
                                     "tract"
@@ -145,7 +146,10 @@ puma_data["frac_sh_res_elec"] = puma_fuel_2010["hh_elec"] / puma_fuel_2010["hh_t
 puma_data["frac_sh_res_other"] = puma_fuel_2010["hh_other"] / puma_fuel_2010["hh_total"]
 puma_data["frac_sh_res_none"] = puma_fuel_2010["hh_none"] / puma_fuel_2010["hh_total"]
 
-regions = [const.NE, const.MW, const.SO, const.WE]
+regions = [const.us_northeast, const.us_midwest, const.us_south, const.us_west]
+region_index = ['us_northeast', 'us_midwest', 'us_south', 'us_west']
+
+region_series = pd.Series(regions, index=region_index)
 
 for c in const.classes:
     if c == "res":
@@ -156,7 +160,7 @@ for c in const.classes:
         frac_area = pd.DataFrame(columns=const.fuel)
 
         # Compute frac_area for each fuel type in each region
-        for i in regions:
+        for i in region_series:
             fuellist = []
             for j in const.fuel:
                 region_df = puma_data[puma_data["state"].isin(i)].reset_index()
@@ -182,16 +186,15 @@ for c in const.classes:
             scalar = 1
             fraccom = []
             for i in range(len(puma_data)):
-                for j in range(
-                    len(regions)
-                ):  # !! fix index to match region string instead of index number
+                
+                for j in range(len(regions)):
                     if puma_data["state"][i] in regions[j]:
-                        reg_index = j
-                if downscalar[f][j] <= 1:
-                    scalar = downscalar[f][j]
+                        region_index = j
+                if downscalar[f][region_index] <= 1:
+                    scalar = downscalar[f][region_index]
                     fraccom.append(puma_data[f"frac_sh_res_{f}"][i] * scalar)
                 else:
-                    scalar = upscalar[f][j]
+                    scalar = upscalar[f][region_index]
                     fraccom.append(
                         (1 - puma_data[f"frac_sh_res_{f}"][i]) * scalar
                         + puma_data[f"frac_sh_res_{f}"][i]
