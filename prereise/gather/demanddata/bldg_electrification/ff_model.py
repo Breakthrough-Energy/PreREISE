@@ -268,130 +268,6 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year):
     :return: (*tuple*) -- a pair of pandas.DataFrame objects for per-puma residential
         and commercial slopes, respectively.
     """
-    state_slopes_res = state_slopes_res.set_index("state")
-    state_slopes_com = state_slopes_com.set_index("state")
-
-    # Create data frames for space heating fossil fuel usage slopes at each PUMA
-    puma_slopes_res = pd.DataFrame({"state": puma_data["state"]})
-    puma_slopes_com = pd.DataFrame({"state": puma_data["state"]})
-
-    res_state_htg_slope = []
-    com_state_htg_slope = []
-    for state in puma_data["state"]:
-        res_state_htg_slope.append(state_slopes_res.loc[state, "sh_slope"])
-        com_state_htg_slope.append(state_slopes_com.loc[state, "sh_slope"])
-
-    puma_slopes_res["htg_slope_res_mmbtu_m2_degC"] = res_state_htg_slope
-    puma_slopes_com["htg_slope_com_mmbtu_m2_degC"] = com_state_htg_slope
-
-    for state in const.state_list:
-
-        # Load puma temperatures
-        temps_pumas = pd.read_csv(
-            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{year}.csv"
-        )
-        temps_pumas_transpose = temps_pumas.T
-
-        # Hourly temperature difference below const.temp_ref_res/com for each puma
-        temp_diff_res = temps_pumas_transpose.applymap(
-            lambda x: max(const.temp_ref[("res")] - x, 0)
-        ).T
-        temp_diff_com = temps_pumas_transpose.applymap(
-            lambda x: max(const.temp_ref[("com")] - x, 0)
-        ).T
-
-        puma_data.loc[temp_diff_res.columns, "hd_183C_2010"] = temp_diff_res.sum()
-        puma_data.loc[temp_diff_com.columns, "hd_167C_2010"] = temp_diff_com.sum()
-
-    # Load in state groups consistent with building area scale adjustments
-    area_scale_res = pd.read_csv(
-        os.path.join(data_dir, "area_scale_res.csv"), index_col=False
-    )
-    area_scale_com = pd.read_csv(
-        os.path.join(data_dir, "area_scale_com.csv"), index_col=False
-    )
-
-    # Extract res state groups from area_scale_res
-    res_state_rows = area_scale_res.values.tolist()
-    res_state_groups = [
-        [elem for elem in row if isinstance(elem, str)] for row in res_state_rows
-    ]
-
-    # Extract com state groups from area_scale_com
-    com_state_rows = area_scale_com.values.tolist()
-    com_state_groups = [
-        [elem for elem in row if isinstance(elem, str)] for row in com_state_rows
-    ]
-
-    hdd65listres = []
-    htgslppoplistres = []
-    for res_state_group in res_state_groups:
-        # res state group subset of data
-        pumas_it = puma_data[puma_data["state"].isin(res_state_group)]
-        puma_slopes_res_it = puma_slopes_res[
-            puma_slopes_res["state"].isin(res_state_group)
-        ]
-        # Population weighted heating degree days
-        hdd65listres.append(
-            sum(pumas_it["hdd65_normals_2010"] * pumas_it["pop_2010"])
-            / sum(pumas_it["pop_2010"])
-        )
-        # Population and heating degree day weighted heating slopes
-        htgslppoplistres.append(
-            sum(
-                puma_slopes_res_it["htg_slope_res_mmbtu_m2_degC"]
-                * pumas_it["hdd65_normals_2010"]
-                * pumas_it["pop_2010"]
-            )
-            / sum(pumas_it["hdd65_normals_2010"] * pumas_it["pop_2010"])
-        )
-
-    area_scale_res["hdd_normals_2010_popwtd"] = hdd65listres
-    area_scale_res["htg_slope_res_mmbtu_m2_degC_pophddwtd"] = htgslppoplistres
-
-    hdd65listcom = []
-    htgslppoplistcom = []
-    for com_state_group in com_state_groups:
-        # com state group subset of data
-        pumas_it = puma_data[puma_data["state"].isin(com_state_group)]
-        puma_slopes_com_it = puma_slopes_com[
-            puma_slopes_com["state"].isin(com_state_group)
-        ]
-        # Population weighted heating degree days
-        hdd65listcom.append(
-            sum(pumas_it["hdd65_normals_2010"] * pumas_it["pop_2010"])
-            / sum(pumas_it["pop_2010"])
-        )
-        # Population and heating degree day weighted heating slopes
-        htgslppoplistcom.append(
-            sum(
-                puma_slopes_com_it["htg_slope_com_mmbtu_m2_degC"]
-                * pumas_it["hdd65_normals_2010"]
-                * pumas_it["pop_2010"]
-            )
-            / sum(pumas_it["hdd65_normals_2010"] * pumas_it["pop_2010"])
-        )
-
-    area_scale_com["hdd_normals_2010_popwtd"] = hdd65listcom
-    area_scale_com["htg_slope_com_mmbtu_m2_degC_pophddwtd"] = htgslppoplistcom
-
-    # Interpolating 2010 areas from the two survey years provided
-    area_scale_res["2010_RECS"] = (
-        area_scale_res["RECS2009"]
-        + (area_scale_res["RECS2015"] - area_scale_res["RECS2009"]) / 6
-    )
-    area_scale_com["2010_CBECS"] = area_scale_com["CBECS2012"] - (
-        area_scale_com["CBECS2012"] - area_scale_com["CBECS2003"]
-    ) * (2 / 9)
-
-    # Divide by 1000 for robust solver
-    area_scale_res["hdd_normals_2010_popwtd_div1000"] = (
-        area_scale_res["hdd_normals_2010_popwtd"] / 1000
-    )
-    area_scale_com["hdd_normals_2010_popwtd_div1000"] = (
-        area_scale_com["hdd_normals_2010_popwtd"] / 1000
-    )
-
     # Minimize error between actual slopes and fitted function
     # Note for fitting to converge, hdd must be divided by 1000 and slopes in btu
     def model(par, hdd_div1000, slope_btu):
@@ -401,112 +277,125 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year):
         )
         return err
 
-    # Least_squares residential model, to solve slope = (a + b*(1 - exp(-c*hdd)))/hdd
-    ls_res = least_squares(
-        model,
-        [35, 35, 0.8],
-        args=(
-            np.array(area_scale_res["hdd_normals_2010_popwtd_div1000"]),
-            np.array(area_scale_res["htg_slope_res_mmbtu_m2_degC_pophddwtd"]) * 10 ** 6,
-        ),
-        method="trf",
-        loss="soft_l1",
-        f_scale=0.1,
-        bounds=(0, [100, 100, 1]),
-    )
-    # Residential coefficients output from least squares fit
-    a_model_slope_res_exp = ls_res.x[0]
-    b_model_slope_res_exp = ls_res.x[1]
-    c_model_slope_res_exp = ls_res.x[2]
-
-    # Least_squares commercial model, to solve slope = (a + b*(1 - exp(-c*hdd)))/hdd
-    ls_com = least_squares(
-        model,
-        [35, 35, 0.8],
-        args=(
-            np.array(area_scale_com["hdd_normals_2010_popwtd_div1000"]),
-            np.array(area_scale_com["htg_slope_com_mmbtu_m2_degC_pophddwtd"]) * 10 ** 6,
-        ),
-        method="trf",
-        loss="soft_l1",
-        f_scale=0.1,
-        bounds=(0, [100, 100, 1]),
-    )
-    # Commercial coefficients output from least squares fit
-    a_model_slope_com_exp = ls_com.x[0]
-    b_model_slope_com_exp = ls_com.x[1]
-    c_model_slope_com_exp = ls_com.x[2]
-
     # Functions with solved coefficients for res and com - produces slopes in btu/m2-C for inputs of HDD
-    def func_slope_res_exp(x):
-        return (
-            (
-                a_model_slope_res_exp
-                + b_model_slope_res_exp
-                * (1 - np.exp(-c_model_slope_res_exp * (x / 1000)))
-            )
-            / (x / 1000)
-        ) * 10 ** (-6)
+    def func_slope_exp(x, a, b, c):
+        return (a + b * (1 - np.exp(-c * (x / 1000))) / (x / 1000)) * 1e-6
 
-    def func_slope_com_exp(x):
-        return (
-            (
-                a_model_slope_com_exp
-                + b_model_slope_com_exp
-                * (1 - np.exp(-c_model_slope_com_exp * (x / 1000)))
-            )
-            / (x / 1000)
-        ) * 10 ** (-6)
+    classes = ["res", "com"]
+    hd_col_names = {"res": "hd_183C_2010", "com": "hd_167C_2010"}
+    state_slopes = {
+        "res": state_slopes_res.set_index("state"),
+        "com": state_slopes_com.set_index("state"),
+    }
+    puma_slopes = {clas: puma_data["state"].to_frame() for clas in classes}
+    # Create data frames to hold output
+    adj_slopes = {clas: puma_data["state"].to_frame() for clas in classes}
 
-    adj_slopes_res = pd.DataFrame({"state": puma_data["state"]})
-
-    adj_slopes_com = pd.DataFrame({"state": puma_data["state"]})
-
-    slope_scalar_res = state_slopes_res["sh_slope"] / (
-        (
-            puma_data["hdd65_normals_2010"].map(func_slope_res_exp)
-            * puma_data["hd_183C_2010"]
-            * puma_data["res_area_2010_m2"]
-            * puma_data["frac_ff_sh_res_2010"]
+    for state in const.state_list:
+        # Load puma temperatures
+        temps_pumas = pd.read_csv(
+            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{year}.csv"
         )
-        .groupby(puma_data["state"])
-        .sum()
-        / (
-            puma_data["hd_183C_2010"]
-            * puma_data["res_area_2010_m2"]
-            * puma_data["frac_ff_sh_res_2010"]
+        # Hourly temperature difference below const.temp_ref_res/com for each puma
+        for clas in classes:
+            temp_diff = temps_pumas.applymap(lambda x: max(const.temp_ref[clas] - x, 0))
+            puma_data.loc[temp_diff.columns, hd_col_names[clas]] = temp_diff.sum()
+
+    # Load in state groups consistent with building area scale adjustments
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    area_scale = {
+        clas: pd.read_csv(
+            os.path.join(data_dir, f"area_scale_{clas}.csv"), index_col=False
         )
-        .groupby(puma_data["state"])
-        .sum()
+        for clas in classes
+    }
+
+    # Interpolating 2010 areas from the two survey years provided
+    area_scale["res"]["2010"] = (
+        area_scale["res"]["RECS2009"]
+        + (area_scale["res"]["RECS2015"] - area_scale["res"]["RECS2009"]) / 6
     )
+    area_scale["com"]["2010"] = area_scale["com"]["CBECS2012"] - (
+        area_scale["com"]["CBECS2012"] - area_scale["com"]["CBECS2003"]
+    ) * (2 / 9)
 
-    adj_slopes_res["htg_slope_res_mmbtu_m2_degC"] = puma_data["hdd65_normals_2010"].map(
-        func_slope_res_exp
-    ) * puma_data["state"].map(slope_scalar_res)
-
-    slope_scalar_com = state_slopes_com["sh_slope"] / (
-        (
-            puma_data["hdd65_normals_2010"].map(func_slope_com_exp)
-            * puma_data["hd_167C_2010"]
-            * puma_data["com_area_2010_m2"]
-            * puma_data["frac_ff_sh_com_2010"]
+    for clas in classes:
+        puma_slopes[clas]["htg_slope_mmbtu_m2_degC"] = puma_data["state"].map(
+            state_slopes[clas]["sh_slope"]
         )
-        .groupby(puma_data["state"])
-        .sum()
-        / (
-            puma_data["hd_167C_2010"]
-            * puma_data["com_area_2010_m2"]
-            * puma_data["frac_ff_sh_com_2010"]
+
+        # Extract state groups from area_scale
+        state_to_group = {
+            elem: i
+            for i, row in area_scale[clas].iterrows()
+            for elem in row
+            if isinstance(elem, str)
+        }
+
+        # Calculate population-weighted HDD and slopes
+        state_puma_groupby = puma_data.groupby(puma_data["state"].map(state_to_group))
+        state_puma_slope_groupby = puma_slopes[clas].groupby(
+            puma_data["state"].map(state_to_group)
         )
-        .groupby(puma_data["state"])
-        .sum()
-    )
+        area_scale[clas]["hdd_normals_2010_popwtd"] = [
+            (
+                sum(data["hdd65_normals_2010"] * data["pop_2010"])
+                / data["pop_2010"].sum()
+            )
+            for group, data in state_puma_groupby
+        ]
+        area_scale[clas]["htg_slope_mmbtu_m2_degC_pophddwtd"] = [
+            sum(
+                state_puma_slope_groupby.get_group(group)["htg_slope_mmbtu_m2_degC"]
+                * data["hdd65_normals_2010"]
+                * data["pop_2010"]
+            )
+            / sum(data["hdd65_normals_2010"] * data["pop_2010"])
+            for group, data in state_puma_groupby
+        ]
 
-    adj_slopes_com["htg_slope_com_mmbtu_m2_degC"] = puma_data["hdd65_normals_2010"].map(
-        func_slope_com_exp
-    ) * puma_data["state"].map(slope_scalar_com)
+        ls_args = (
+            # Divide by 1000 for robust solver
+            np.array(area_scale[clas]["hdd_normals_2010_popwtd"]) / 1000,
+            np.array(area_scale[clas]["htg_slope_mmbtu_m2_degC_pophddwtd"]) * 10 ** 6,
+        )
+        ls = least_squares(
+            model,
+            [35, 35, 0.8],
+            args=ls_args,
+            method="trf",
+            loss="soft_l1",
+            f_scale=0.1,
+            bounds=(0, [100, 100, 1]),
+        )
 
-    return adj_slopes_res, adj_slopes_com
+        slope_scalar = state_slopes[clas]["sh_slope"] / (
+            (
+                puma_data["hdd65_normals_2010"].apply(
+                    func_slope_exp, args=(ls.x[0], ls.x[1], ls.x[2])
+                )
+                * puma_data[hd_col_names[clas]]
+                * puma_data[f"{clas}_area_2010_m2"]
+                * puma_data[f"frac_ff_sh_{clas}_2010"]
+            )
+            .groupby(puma_data["state"])
+            .sum()
+            / (
+                puma_data[hd_col_names[clas]]
+                * puma_data[f"{clas}_area_2010_m2"]
+                * puma_data[f"frac_ff_sh_{clas}_2010"]
+            )
+            .groupby(puma_data["state"])
+            .sum()
+        )
+
+        adj_slopes[clas][f"htg_slope_{clas}_mmbtu_m2_degC"] = puma_data["state"].map(
+            slope_scalar
+        ) * puma_data["hdd65_normals_2010"].apply(
+            func_slope_exp, args=(ls.x[0], ls.x[1], ls.x[2])
+        )
+
+    return adj_slopes["res"], adj_slopes["com"]
 
 
 if __name__ == "__main__":
