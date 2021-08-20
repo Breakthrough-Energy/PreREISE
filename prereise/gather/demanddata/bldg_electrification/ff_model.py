@@ -258,24 +258,18 @@ def calculate_state_slopes(puma_data, year):
     return state_slopes_res, state_slopes_com
 
 
-if __name__ == "__main__":
-    year = 2010
-    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-    state_slopes_res, state_slopes_com = calculate_state_slopes(const.puma_data, year)
-    state_slopes_res.to_csv(
-        os.path.join(data_dir, "state_slopes_ff_res.csv"), index=False
-    )
-    state_slopes_com.to_csv(
-        os.path.join(data_dir, "state_slopes_ff_com.csv"), index=False
-    )
-    ##############################################
-    # Space heating slope adjustment for climate #
-    ##############################################
+def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year):
+    """Create per-puma slopes from per-state slopes.
 
-    puma_data = const.puma_data
-
-    state_slopes_res.set_index("state", inplace=True)
-    state_slopes_com.set_index("state", inplace=True)
+    :param pandas.DataFrame puma_data: puma data.
+    :param pandas.DataFrame state_slopes_res: residential state slopes.
+    :param pandas.DataFrame state_slopes_com: commercial state slopes.
+    :param int year: year of temperatures to download.
+    :return: (*tuple*) -- a pair of pandas.DataFrame objects for per-puma residential
+        and commercial slopes, respectively.
+    """
+    state_slopes_res = state_slopes_res.set_index("state")
+    state_slopes_com = state_slopes_com.set_index("state")
 
     # Create data frames for space heating fossil fuel usage slopes at each PUMA
     puma_slopes_res = pd.DataFrame({"state": puma_data["state"]})
@@ -512,6 +506,25 @@ if __name__ == "__main__":
         func_slope_com_exp
     ) * puma_data["state"].map(slope_scalar_com)
 
-    # Export climate adjusted space heating slopes of each puma
+    return adj_slopes_res, adj_slopes_com
+
+
+if __name__ == "__main__":
+    year = 2010
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+    # Calculate and save state slopes
+    state_slopes_res, state_slopes_com = calculate_state_slopes(const.puma_data, year)
+    state_slopes_res.to_csv(
+        os.path.join(data_dir, "state_slopes_ff_res.csv"), index=False
+    )
+    state_slopes_com.to_csv(
+        os.path.join(data_dir, "state_slopes_ff_com.csv"), index=False
+    )
+
+    # Calculate and save puma slopes
+    adj_slopes_res, adj_slopes_com = adjust_puma_slopes(
+        const.puma_data, state_slopes_res, state_slopes_com, year
+    )
     adj_slopes_res.to_csv(os.path.join(data_dir, "puma_slopes_ff_res.csv"))
     adj_slopes_com.to_csv(os.path.join(data_dir, "puma_slopes_ff_com.csv"))
