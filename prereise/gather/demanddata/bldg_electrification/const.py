@@ -141,10 +141,10 @@ cbecs_date_2 = 2012
 
 target_year = 2010
 
-# Regions to differentiate fuel usage: NorthEast, MidWest, SOuth, WEst
-NE = ["MA", "CT", "ME", "NH", "RI", "VT", "NJ", "NY", "PA"]
-MW = ["IL", "MI", "WI", "IN", "OH", "MO", "IA", "MN", "ND", "SD", "KS", "NE"]
-SO = [
+# Regions to differentiate fuel usage: NorthEast, MidWest, South, West. Defined by RECS/CBECS surveys
+us_northeast = ["MA", "CT", "ME", "NH", "RI", "VT", "NJ", "NY", "PA"]
+us_midwest = ["IL", "MI", "WI", "IN", "OH", "MO", "IA", "MN", "ND", "SD", "KS", "NE"]
+us_south = [
     "VA",
     "GA",
     "FL",
@@ -163,6 +163,6 @@ SO = [
     "LA",
     "OK",
 ]
-WE = ["CO", "ID", "MT", "UT", "WY", "AZ", "NM", "NV", "CA", "AK", "HI", "OR", "WA"]
+us_west = ["CO", "ID", "MT", "UT", "WY", "AZ", "NM", "NV", "CA", "AK", "HI", "OR", "WA"]
 
 fuel = ["natgas", "fok", "othergas", "elec"]
