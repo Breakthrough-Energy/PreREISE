@@ -214,8 +214,8 @@ def puma_timezone_join(timezones, pumas):
     
     return puma_timezone["TZID"]
     
-timezones_shp = gpd.GeoDataFrame(gpd.read_file("data/tz_us.shp"))
-pumas_shp = gpd.GeoDataFrame(gpd.read_file("data/pumas.shp"))
+timezones_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "tz_us.shp")))
+pumas_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "pumas.shp")))
 
 puma_timezones = pd.read_csv(
     os.path.join(data_dir, "puma_timezone.csv"), index_col="puma"
