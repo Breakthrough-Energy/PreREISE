@@ -122,10 +122,10 @@ def scale_fuel_fractions(puma_df, regions, fuel):
     :param list of lists regions: state regions used to scale fuel fractions
     :param list fuel: types of fuel
     :return: pandas.DataFrame puma_df_frac_ff: fractions of natural gas, fuel
-    oil and kerosone, propane, and electricity used for space heating, hot 
+    oil and kerosone, propane, and electricity used for space heating, hot
     water, cooking, and other in residential and commercial buildings
     """
-    
+
     for c in const.classes:
         if c == "res":
             uselist = ["dhw", "other"]
@@ -133,7 +133,7 @@ def scale_fuel_fractions(puma_df, regions, fuel):
             uselist = ["sh", "dhw", "cook"]
         for u in uselist:
             frac_area = pd.DataFrame(columns=fuel)
-    
+
             # Compute frac_area for each fuel type in each region
             for i in regions:
                 fuellist = []
@@ -148,20 +148,19 @@ def scale_fuel_fractions(puma_df, regions, fuel):
                     )
                 df_i = len(frac_area)
                 frac_area.loc[df_i] = fuellist
-    
+
             # Values calculated externally
             frac_scale = pd.read_csv(os.path.join(data_dir, f"frac_target_{u}_{c}.csv"))
-    
+
             downscalar = frac_scale / frac_area
-    
+
             upscalar = (frac_scale - frac_area) / (1 - frac_area)
-    
+
             # Scale frac_hh_fuel to frac_com_fuel
             for f in fuel:
                 scalar = 1
                 fraccom = []
                 for i in range(len(puma_df)):
-                    
                     for j in range(len(regions)):
                         if puma_df["state"][i] in regions[j]:
                             region_index = j
@@ -175,13 +174,17 @@ def scale_fuel_fractions(puma_df, regions, fuel):
                             + puma_df[f"frac_sh_res_{f}"][i]
                         )
                 puma_df[f"frac_{u}_{c}_{f}"] = fraccom
-    
-    
+
     # Sum coal, wood, solar and other fractions for frac_com_other
     puma_df["frac_sh_com_other"] = puma_df[
-        ["frac_sh_res_coal", "frac_sh_res_wood", "frac_sh_res_solar", "frac_sh_res_other"]
+        [
+            "frac_sh_res_coal",
+            "frac_sh_res_wood",
+            "frac_sh_res_solar",
+            "frac_sh_res_other",
+        ]
     ].sum(axis=1)
-    
+
     for c in const.classes:
         if c == "res":
             uselist = ["sh", "dhw", "other"]
@@ -195,9 +198,7 @@ def scale_fuel_fractions(puma_df, regions, fuel):
                     f"frac_{u}_{c}_fok",
                 ]
             ].sum(axis=1)
-            puma_df[f"frac_elec_{u}_{c}_2010"] = puma_df[
-                f"frac_{u}_{c}_elec"
-            ]
+            puma_df[f"frac_elec_{u}_{c}_2010"] = puma_df[f"frac_{u}_{c}_elec"]
     return puma_df
 
 
