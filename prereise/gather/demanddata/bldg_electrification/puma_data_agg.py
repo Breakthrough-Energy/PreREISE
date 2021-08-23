@@ -6,17 +6,6 @@ import geopandas as gpd
 
 from prereise.gather.demanddata.bldg_electrification import const
 
-data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-
-# Load ACS fuel data for 2010
-puma_fuel_2010 = pd.read_csv(
-    os.path.join(data_dir, "puma_fuel_2010.csv"), index_col="puma"
-)
-
-# Load tract_puma_mapping
-tract_puma_mapping = pd.read_csv(
-    os.path.join(data_dir, "tract_puma_mapping.csv"), index_col="tract"
-)
 
 def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
     """Scale census tract data up to puma areas
@@ -110,7 +99,6 @@ def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
 
     return puma_df
 
-puma_df = aggregate_puma_df(puma_fuel_2010, tract_puma_mapping)
 
 def scale_fuel_fractions(puma_df, regions, fuel):
     """Scale census tract data up to puma areas
@@ -196,7 +184,6 @@ def scale_fuel_fractions(puma_df, regions, fuel):
             ]
     return puma_df
 
-puma_df_frac_ff = scale_fuel_fractions(puma_df, const.regions, const.fuel)
 
 def puma_timezone_join(timezones, pumas):
     """Assign timezone to puma
@@ -213,13 +200,31 @@ def puma_timezone_join(timezones, pumas):
     puma_timezone.sort_values("GEOID10", ascending=True, inplace=True)
     
     return puma_timezone["TZID"]
-    
-timezones_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "tz_us.shp")))
-pumas_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "pumas.shp")))
 
-puma_timezones = pd.read_csv(
+
+if __name__ == "__main__":
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+    # Load ACS fuel data for 2010
+    puma_fuel_2010 = pd.read_csv(
+        os.path.join(data_dir, "puma_fuel_2010.csv"), index_col="puma"
+    )
+
+    # Load tract_puma_mapping
+    tract_puma_mapping = pd.read_csv(
+        os.path.join(data_dir, "tract_puma_mapping.csv"), index_col="tract"
+    )
+
+    puma_df = aggregate_puma_df(puma_fuel_2010, tract_puma_mapping)
+
+    puma_df_frac_ff = scale_fuel_fractions(puma_df, const.regions, const.fuel)
+
+    # Add time zone information
+    timezones_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "tz_us.shp")))
+    pumas_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "pumas.shp")))
+    puma_timezones = pd.read_csv(
     os.path.join(data_dir, "puma_timezone.csv"), index_col="puma"
-)
-puma_df_frac_ff["timezone"] = puma_timezones['timezone']
+    )
+    puma_df_frac_ff["timezone"] = puma_timezones["timezone"]
 
-puma_df_frac_ff.to_csv(os.path.join(data_dir, "puma_data.csv"))
+    puma_df_frac_ff.to_csv(os.path.join(data_dir, "puma_data.csv"))
