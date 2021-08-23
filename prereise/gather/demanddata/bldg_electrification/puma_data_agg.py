@@ -1,8 +1,8 @@
 # This script develops puma-level data directly from census and aggregated from census tract data
 import os
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 
 from prereise.gather.demanddata.bldg_electrification import const
 
