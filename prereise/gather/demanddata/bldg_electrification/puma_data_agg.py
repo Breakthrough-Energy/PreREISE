@@ -117,15 +117,15 @@ def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
 
 
 def scale_fuel_fractions(puma_df, regions, fuel):
-    """Scale census tract data up to puma areas
-    :param pandas.DataFrame puma_df: output of aggregate_puma_df()
-    :param list of lists regions: state regions used to scale fuel fractions
-    :param list fuel: types of fuel
-    :return: pandas.DataFrame puma_df_frac_ff: fractions of natural gas, fuel
-    oil and kerosone, propane, and electricity used for space heating, hot
-    water, cooking, and other in residential and commercial buildings
-    """
+    """Scale census tract data up to puma areas.
 
+    :param pandas.DataFrame puma_df: output of :func:`aggregate_puma_df`.
+    :param list of lists regions: state regions used to scale fuel fractions.
+    :param list fuel: types of fuel.
+    :return: (*pandas.DataFrame*) -- fractions of natural gas, fuel oil and kerosone,
+        propane, and electricity used for space heating, hot water, cooking, and other
+        in residential and commercial buildings.
+    """
     for c in const.classes:
         if c == "res":
             uselist = ["dhw", "other"]
