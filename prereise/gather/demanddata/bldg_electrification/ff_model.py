@@ -20,7 +20,7 @@ def calculate_r2(endogenous, residuals):
     return r2
 
 
-def calculate_state_slopes(puma_data, year):
+def calculate_state_slopes(puma_data, year=2010):
     """Estimate regression parameters per-state for residential and commercial fuel use.
 
     :param pandas.DataFrame puma_data: data frame of per-puma data.
@@ -265,7 +265,7 @@ def calculate_state_slopes(puma_data, year):
     return state_slopes_res, state_slopes_com
 
 
-def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year):
+def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010):
     """Create per-puma slopes from per-state slopes.
 
     :param pandas.DataFrame puma_data: puma data.
@@ -406,11 +406,10 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year):
 
 
 if __name__ == "__main__":
-    year = 2010
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
     # Calculate and save state slopes
-    state_slopes_res, state_slopes_com = calculate_state_slopes(const.puma_data, year)
+    state_slopes_res, state_slopes_com = calculate_state_slopes(const.puma_data)
     state_slopes_res.to_csv(
         os.path.join(data_dir, "state_slopes_ff_res.csv"), index=False
     )
@@ -420,7 +419,7 @@ if __name__ == "__main__":
 
     # Calculate and save puma slopes
     adj_slopes_res, adj_slopes_com = adjust_puma_slopes(
-        const.puma_data, state_slopes_res, state_slopes_com, year
+        const.puma_data, state_slopes_res, state_slopes_com
     )
     adj_slopes_res.to_csv(os.path.join(data_dir, "puma_slopes_ff_res.csv"))
     adj_slopes_com.to_csv(os.path.join(data_dir, "puma_slopes_ff_com.csv"))
