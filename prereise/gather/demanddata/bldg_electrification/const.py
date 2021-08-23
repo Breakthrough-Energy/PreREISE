@@ -165,4 +165,6 @@ us_south = [
 ]
 us_west = ["CO", "ID", "MT", "UT", "WY", "AZ", "NM", "NV", "CA", "AK", "HI", "OR", "WA"]
 
+regions = [us_northeast, us_midwest, us_south, us_west]
+
 fuel = ["natgas", "fok", "othergas", "elec"]
