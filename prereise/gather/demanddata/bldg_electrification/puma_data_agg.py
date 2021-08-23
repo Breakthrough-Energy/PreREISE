@@ -211,7 +211,6 @@ def puma_timezone_join(timezones, pumas):
     puma_timezone.sort_values("area", ascending=False, inplace=True)
     puma_timezone = puma_timezone.drop_duplicates(subset="GEOID10", keep="first")
     puma_timezone.sort_values("GEOID10", ascending=True, inplace=True)
-    puma_timezone["puma"] = "puma_" + puma_timezone["GEOID10"]
     
     return puma_timezone["TZID"]
     
@@ -223,4 +222,4 @@ puma_timezones = pd.read_csv(
 )
 puma_df_frac_ff["timezone"] = puma_timezones['timezone']
 
-puma_df_frac_ff.to_csv(os.path.join(data_dir, "puma_data.csv"), index=False)
+puma_df_frac_ff.to_csv(os.path.join(data_dir, "puma_data.csv"))
