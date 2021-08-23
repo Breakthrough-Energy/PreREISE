@@ -240,7 +240,7 @@ if __name__ == "__main__":
     timezones_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "tz_us.shp")))
     pumas_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "pumas.shp")))
     puma_timezones = pd.read_csv(
-    os.path.join(data_dir, "puma_timezone.csv"), index_col="puma"
+        os.path.join(data_dir, "puma_timezone.csv"), index_col="puma"
     )
     puma_df_frac_ff["timezone"] = puma_timezones["timezone"]
 
