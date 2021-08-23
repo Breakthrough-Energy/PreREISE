@@ -9,24 +9,28 @@ from prereise.gather.demanddata.bldg_electrification import const
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 # Load ACS fuel data for 2010
-puma_fuel_2010 = pd.read_csv(os.path.join(data_dir, "puma_fuel_2010.csv"))
+puma_fuel_2010 = pd.read_csv(
+    os.path.join(data_dir, "puma_fuel_2010.csv"), index_col="puma"
+)
 
 # Load tract_puma_mapping
-tract_puma_mapping = pd.read_csv(os.path.join(data_dir, "tract_puma_mapping.csv"))
+tract_puma_mapping = pd.read_csv(
+    os.path.join(data_dir, "tract_puma_mapping.csv"), index_col="tract"
+)
 
 # Set up puma_data data frame
-puma_data = puma_fuel_2010[["puma", "state"]]
+puma_data = puma_fuel_2010["state"].to_frame()
 
-# Initialize columns for the loop through states
-init_cols = [
+# Initialize columns that will be created via summing/averaging
+sum_columns = [
     "pop_2010",
     "h_units_2010",
     "res_area_gbs_m2",
     "com_area_gbs_m2",
+]
+weighted_sum_columns = [
     "hdd65_normals_2010",
     "cdd65_normals_2010",
-    "res_area_2010_m2",
-    "com_area_2010_m2",
 ]
 
 # Load RECS and CBECS area scales for res and com
@@ -41,85 +45,36 @@ comscales["2010_scalar"] = (
     comscales["CBECS2003"] + (comscales["CBECS2012"] - comscales["CBECS2003"]) * ((const.target_year-const.cbecs_date_1) / (const.cbecs_date_2-const.cbecs_date_1))
 ) / comscales["Model2010"]
 
-
-for state in const.state_list:
-    tract_data_it = pd.read_csv(
-        os.path.join(data_dir, f"tract_data/tract_data_{state}.csv")
-    )
-    # Select pumas in state
-    pumas_it = list(puma_data.query("state == @state")["puma"])
-    # Rename tract IDs to match all dataframe naming conventions
-    tract_data_it["tract"] = [
-        "tract_" + str(i) if len(str(i)) == 11 else "tract_0" + str(i)
-        for i in list(tract_data_it["id"])
+# Collect all state data into one data frame
+tract_data = pd.concat(
+    [
+        pd.read_csv(os.path.join(data_dir, f"tract_data/tract_data_{state}.csv"))
+        for state in const.state_list
     ]
-    
-    # !! to be used for groupby(). current code relies on numbered index
-    #tract_data_it.set_index('tract', inplace=True)
-    
-    # Sum population, housing units, and areas
-    for i in range(4):
-        puma_data.loc[puma_data["state"] == state, init_cols[i]] = list(
-            map(
-                lambda x: sum(
-                    tract_data_it[
-                        tract_data_it["tract"].isin(
-                            list(
-                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
-                                    "tract"
-                                ]
-                            )
-                        )
-                    ][init_cols[i].replace("_gbs", "").replace("_", ".")]
-                ),
-                pumas_it,
-            )
-        )
-    
-    # Population-weighted average hdd and cdd
-    for i in range(4, 6):
-        puma_data.loc[puma_data["state"] == state, init_cols[i]] = list(
-            map(
-                lambda x: sum(
-                    tract_data_it[
-                        tract_data_it["tract"].isin(
-                            list(
-                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
-                                    "tract"
-                                ]
-                            )
-                        )
-                    ][
-                        init_cols[i]
-                        .replace("_normals_2010", "")
-                        .replace("_res_2010", ".res")
-                    ]
-                    * tract_data_it[
-                        tract_data_it["tract"].isin(
-                            list(
-                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
-                                    "tract"
-                                ]
-                            )
-                        )
-                    ]["pop.2010"]
-                )
-                / sum(
-                    tract_data_it[
-                        tract_data_it["tract"].isin(
-                            list(
-                                tract_puma_mapping[tract_puma_mapping["puma"] == x][
-                                    "tract"
-                                ]
-                            )
-                        )
-                    ]["pop.2010"]
-                ),
-                pumas_it,
-            )
-        )
+)
 
-    # Scale puma area from gbs to 2010 RECS/CBECS
+# Rename tract IDs to match all dataframe naming conventions
+tract_data["id"] = ["tract_" + str(i).rjust(11, "0") for i in tract_data["id"]]
+tract_data["id"] = tract_data["id"].astype("str")
+tract_data.set_index("id", inplace=True)
+
+# Sum population, housing units, and areas
+grouped_tracts = tract_data.groupby(tract_puma_mapping["puma"])
+for col in sum_columns:
+    col_to_sum = col.replace("_gbs", "").replace("_", ".")
+    puma_data.loc[grouped_tracts.groups.keys(), col] = grouped_tracts[col_to_sum].sum()
+
+# Population-weighted average hdd, cdd, and acpen
+for col in weighted_sum_columns:
+    col_to_sum = col.replace("_normals_2010", "").replace("_res_2010", ".res")
+    weighted_elements = tract_data[col_to_sum] * tract_data["pop.2010"]
+    puma_data[col] = (
+        weighted_elements.groupby(tract_puma_mapping["puma"]).sum()
+        / tract_data["pop.2010"].groupby(tract_puma_mapping["puma"]).sum()
+    )
+
+# Scale puma area from gbs to 2010 RECS/CBECS
+for state in const.state_list:
     state_row_scale_res = resscales[resscales.eq(state).any(1)].reset_index()
     state_row_scale_com = comscales[comscales.eq(state).any(1)].reset_index()
     rscale = state_row_scale_res["2010_scalar"][0]
