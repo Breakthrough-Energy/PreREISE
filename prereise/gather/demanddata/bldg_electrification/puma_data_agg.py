@@ -203,14 +203,13 @@ def scale_fuel_fractions(puma_df, regions, fuel):
 
 
 def puma_timezone_join(timezones, pumas):
-    """Assign timezone to puma
-    :param geopandas.DataFrame timezones: US timezones
-    :param geopandas.DataFrame pumas: US pumas
-    :return: pandas.Series puma_timezone["TZID"]: timezone for every puma
+    """Assign timezone to each puma.
+
+    :param geopandas.DataFrame timezones: US timezones.
+    :param geopandas.DataFrame pumas: US pumas.
+    :return: (*pandas.Series*) -- timezone for every puma.
     """
-
     puma_timezone = gpd.overlay(pumas, timezones.to_crs("EPSG:4269"))
-
     puma_timezone["area"] = puma_timezone.area
     puma_timezone.sort_values("area", ascending=False, inplace=True)
     puma_timezone = puma_timezone.drop_duplicates(subset="GEOID10", keep="first")
