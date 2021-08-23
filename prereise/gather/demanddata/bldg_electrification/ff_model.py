@@ -21,6 +21,13 @@ def calculate_r2(endogenous, residuals):
 
 
 def calculate_state_slopes(puma_data, year):
+    """Estimate regression parameters per-state for residential and commercial fuel use.
+
+    :param pandas.DataFrame puma_data: data frame of per-puma data.
+    :param int/str year: year of data to use for analysis.
+    :return: (*tuple*) -- a pair of pandas.DataFrame objects for per-state residential
+        and commercial slopes, respectively.
+    """
     dti = pd.date_range(start=f"{year}-01-01", end=f"{year}-12-31 23:00:00", freq="H")
     hours_in_month = dti.month.value_counts()
 
