@@ -8,12 +8,13 @@ from prereise.gather.demanddata.bldg_electrification import const
 
 
 def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
-    """Scale census tract data up to puma areas
-    :param pandas.DataFrame puma_fuel_2010: household fuel type by puma
-    :param pandas.DataFrame tract_puma_mapping: tract to puma mapping
-    :return: pandas.DataFrame puma_df: population, residential and commercial
-    areas, heating degree days, cooling degree days, residential space heating
-    fuel usage fractions
+    """Scale census tract data up to puma areas.
+
+    :param pandas.DataFrame puma_fuel_2010: household fuel type by puma.
+    :param pandas.DataFrame tract_puma_mapping: tract to puma mapping.
+    :return: (*pandas.DataFrame*) -- population, residential and commercial areas,
+        heating degree days, cooling degree days, residential space heating fuel usage
+        fractions.
     """
     # Set up puma_df data frame
     puma_df = puma_fuel_2010["state"].to_frame()
