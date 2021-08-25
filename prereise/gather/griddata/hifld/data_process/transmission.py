@@ -179,15 +179,23 @@ def filter_by_connected_components(lines, substations):
     return remaining_lines, remaining_substations
 
 
-def augment_line_voltages(lines, substations):
+def augment_line_voltages(lines, substations, volt_class_defaults=None):
     """Fill in voltages for lines with missing voltages, using a series of heuristics.
     The ``lines`` dataframe will be modified in-place.
 
     :param pandas.DataFrame lines: data frame of lines.
     :param pandas.DataFrame substations: data frame of substations.
+    :param dict/pandas.Series volt_class_defaults: mapping of volt classes to default
+        replacement voltage values. If None, internally-defined defaults will be used.
     """
-    pass
+    # Interpret input parameters
+    if volt_class_defaults is None:
+        volt_class_defaults = const.volt_class_defaults
 
+    # Set voltages based on voltage class defaults
+    null_voltages = lines.loc[lines.VOLTAGE.isna()]
+    replacement_voltages = null_voltages.VOLT_CLASS.map(volt_class_defaults)
+    lines.loc[lines.VOLTAGE.isna(), "VOLTAGE"] = replacement_voltages
 
 def build_transmission():
     """Main user-facing entry point."""
