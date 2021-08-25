@@ -57,3 +57,10 @@ blob_paths = {
     "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
     "transmission_lines": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
 }
+
+volt_class_defaults = {
+    "UNDER 100": 69,
+    "220-287": 230,
+    "345": 345,
+    "500": 500,
+}
