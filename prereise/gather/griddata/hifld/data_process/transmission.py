@@ -179,6 +179,16 @@ def filter_by_connected_components(lines, substations):
     return remaining_lines, remaining_substations
 
 
+def augment_line_voltages(lines, substations):
+    """Fill in voltages for lines with missing voltages, using a series of heuristics.
+    The ``lines`` dataframe will be modified in-place.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    """
+    pass
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
@@ -200,5 +210,8 @@ def build_transmission():
     lines = filter_lines_with_no_matching_substations(lines, substations)
     lines = filter_lines_with_nonmatching_substation_coords(lines, substations)
     lines = filter_lines_with_identical_substation_names(lines)
+
+    # Add voltages to lines with missing data
+    augment_line_voltages(lines, substations)
 
     return lines, substations
