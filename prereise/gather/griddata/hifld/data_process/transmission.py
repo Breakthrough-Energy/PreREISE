@@ -179,7 +179,9 @@ def filter_by_connected_components(lines, substations):
     return remaining_lines, remaining_substations
 
 
-def augment_line_voltages(lines, substations, volt_class_defaults=None):
+def augment_line_voltages(
+    lines, substations, volt_class_defaults=None, state_threshold_100_161=0.95
+):
     """Fill in voltages for lines with missing voltages, using a series of heuristics.
     The ``lines`` dataframe will be modified in-place.
 
@@ -187,6 +189,9 @@ def augment_line_voltages(lines, substations, volt_class_defaults=None):
     :param pandas.DataFrame substations: data frame of substations.
     :param dict/pandas.Series volt_class_defaults: mapping of volt classes to default
         replacement voltage values. If None, internally-defined defaults will be used.
+    :param int/float state_threshold_100_161: fraction of lines in the 100-161 kV range
+        which must be the same voltage for the most common voltage to be applied to
+        missing voltage lines in this state.
     """
     # Interpret input parameters
     if volt_class_defaults is None:
@@ -196,6 +201,31 @@ def augment_line_voltages(lines, substations, volt_class_defaults=None):
     null_voltages = lines.loc[lines.VOLTAGE.isna()]
     replacement_voltages = null_voltages.VOLT_CLASS.map(volt_class_defaults)
     lines.loc[lines.VOLTAGE.isna(), "VOLTAGE"] = replacement_voltages
+
+    # Use commonly-assigned voltages by state to fill 100-161 kV range
+    # Assume state grouping on one end is representative
+    missing_mask = lines.VOLTAGE.isna()
+    class_100_161_mask = lines.VOLT_CLASS == "100-161"
+    lines["STATE_1"] = lines.SUB_1_ID.map(substations.STATE)
+    lines["STATE_2"] = lines.SUB_2_ID.map(substations.STATE)
+    lines["sorted_states"] = lines[["STATE_1", "STATE_2"]].apply(
+        lambda x: tuple(sorted(x)), axis=1
+    )
+    states_100_161_lines = {
+        states: group.query("100 <= VOLTAGE <= 161").value_counts(
+            "VOLTAGE", normalize=True
+        )
+        for states, group in lines.groupby("sorted_states")
+    }
+    most_common_100_161_voltage = {
+        states: voltages.idxmax() if voltages.max() > state_threshold_100_161 else None
+        for states, voltages in states_100_161_lines.items()
+    }
+    lines.loc[missing_mask & class_100_161_mask, "VOLTAGE"] = lines.loc[
+        missing_mask & class_100_161_mask
+    ].sorted_states.map(most_common_100_161_voltage)
+    lines.drop(["STATE_1", "STATE_2", "sorted_states"], axis=1, inplace=True)
+
 
 def build_transmission():
     """Main user-facing entry point."""
