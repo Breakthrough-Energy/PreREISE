@@ -1,5 +1,6 @@
 import os
 
+import networkx as nx
 import pandas as pd
 from powersimdata.utility.distance import haversine
 
@@ -148,6 +149,36 @@ def filter_lines_with_identical_substation_names(lines):
     return lines.query("SUB_1 != SUB_2").copy()
 
 
+def filter_by_connected_components(lines, substations):
+    """Filter substations that are not present in the largest connected component that
+    is created from interpreting the``lines`` data frame, and report how many are
+    filtered this way.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    :return: (*tuple*) -- two pandas.DataFrames:
+        lines connected to largest connected component.
+        substations connected to largest connected component.
+    """
+    graph = nx.convert_matrix.from_pandas_edgelist(lines, "SUB_1_ID", "SUB_2_ID")
+    largest_component_subs = set(max(nx.connected_components(graph), key=len))
+
+    filtered_subs = set(substations.index) - largest_component_subs
+    filtered_lines = lines.query("SUB_1_ID not in @largest_component_subs")
+    print(
+        f"dropping {len(filtered_subs)} substations not connected to largest island "
+        f"out of a starting total of {len(substations)}"
+    )
+    print(
+        f"dropping {len(filtered_lines)} lines not connected to largest island "
+        f"out of a starting total of {len(lines)}"
+    )
+
+    remaining_substations = substations.query("index in @largest_component_subs").copy()
+    remaining_lines = lines.query("SUB_1_ID in @largest_component_subs").copy()
+    return remaining_lines, remaining_substations
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
@@ -159,19 +190,14 @@ def build_transmission():
     hifld_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
     hifld_zones = get_zone(os.path.join(hifld_data_dir, "zone.csv"))  # noqa: F841
 
-    # Filter substations
-    substations_with_lines = filter_substations_with_zero_lines(hifld_substations)
-    check_for_location_conflicts(substations_with_lines)
+    # Filter substations based on their `LINES` attribute, check for location dupes
+    substations = filter_substations_with_zero_lines(hifld_substations)
+    check_for_location_conflicts(substations)
 
-    # Filter lines
-    lines_with_substations = filter_lines_with_unavailable_substations(hifld_lines)
-    lines_with_matching_substations = filter_lines_with_no_matching_substations(
-        lines_with_substations, substations_with_lines
-    )
-    lines_with_matching_substations = filter_lines_with_nonmatching_substation_coords(
-        lines_with_matching_substations, substations_with_lines
-    )
-    lines_with_matching_substations = filter_lines_with_identical_substation_names(
-        lines_with_matching_substations
-    )
-    return lines_with_matching_substations
+    # Filter lines based on substations
+    lines = filter_lines_with_unavailable_substations(hifld_lines)
+    lines = filter_lines_with_no_matching_substations(lines, substations)
+    lines = filter_lines_with_nonmatching_substation_coords(lines, substations)
+    lines = filter_lines_with_identical_substation_names(lines)
+
+    return lines, substations
