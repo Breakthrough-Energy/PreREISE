@@ -193,6 +193,41 @@ def augment_line_voltages(
         which must be the same voltage for the most common voltage to be applied to
         missing voltage lines in this state.
     """
+
+    def map_via_neighbor_voltages(lines, neighbors, func, method_name):
+        """For each line with a missing voltage, iterative find non-missing voltages of
+        neighboring lines, apply a function to these lines to determine updates, halting
+        once no more updates can be found.
+
+        :param pandas.DataFrame lines: data frame of lines.
+        :param pandas.Series neighbors: mapping of line indices to set of neighboring
+            line indices.
+        :param function func: function to apply to sets of neighboring voltages.
+        :param str method_name: method name to print once no more updates can be found.
+        """
+        while True:
+            missing = lines.query("VOLTAGE.isnull()")
+            if len(missing) == 0:
+                break
+            found_voltages = missing.apply(
+                lambda x: {
+                    v
+                    for v in set(lines.loc[neighbors.loc[x.name], "VOLTAGE"])
+                    if v == v  # this eliminates float("nan") values from the set
+                },
+                axis=1,
+            )
+            assigned_voltages = found_voltages.apply(func)
+            if assigned_voltages.isna().all():
+                print(
+                    f"{len(missing)} line voltages can't be found via neighbor "
+                    + method_name
+                )
+                break
+            lines.loc[
+                lines.VOLTAGE.isna() & ~assigned_voltages.isna(), "VOLTAGE"
+            ] = assigned_voltages.loc[~assigned_voltages.isna()]
+
     # Interpret input parameters
     if volt_class_defaults is None:
         volt_class_defaults = const.volt_class_defaults
@@ -225,6 +260,24 @@ def augment_line_voltages(
         missing_mask & class_100_161_mask
     ].sorted_states.map(most_common_100_161_voltage)
     lines.drop(["STATE_1", "STATE_2", "sorted_states"], axis=1, inplace=True)
+
+    # Create a mapping of lines to neighboring lines
+    sub_1_lines = pd.Series(lines.groupby("SUB_1_ID").groups).apply(set)
+    sub_2_lines = pd.Series(lines.groupby("SUB_2_ID").groups).apply(set)
+    sub_lines = sub_1_lines.combine(sub_2_lines, set.union, fill_value=set())
+    neighbors = lines.loc[lines.VOLTAGE.isna()].apply(
+        lambda x: sub_lines.loc[x.SUB_1_ID] | sub_lines.loc[x.SUB_2_ID], axis=1
+    )
+
+    # Update lines with missing voltage if only one voltage exists among their neighbors
+    map_via_neighbor_voltages(
+        lines, neighbors, lambda x: list(x)[0] if len(x) == 1 else None, "consensus"
+    )
+
+    # Update lines with missing voltage using lowest voltage among their neighbors
+    map_via_neighbor_voltages(
+        lines, neighbors, lambda x: min(x) if len(x) > 0 else None, "minimum"
+    )
 
 
 def build_transmission():
