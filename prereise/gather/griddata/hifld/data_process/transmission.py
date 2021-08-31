@@ -187,6 +187,7 @@ def build_transmission():
     hifld_lines = get_hifld_electric_power_transmission_lines(
         const.blob_paths["transmission_lines"]
     )
+    hifld_lines.set_index("ID", inplace=True)
     hifld_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
     hifld_zones = get_zone(os.path.join(hifld_data_dir, "zone.csv"))  # noqa: F841
 
