@@ -96,6 +96,9 @@ def get_hifld_electric_power_transmission_lines(path):
         line["geometry"]["coordinates"][0] for line in data["features"]
     ]
 
+    # Replace dummy data with explicit 'missing'
+    properties.loc[properties.VOLTAGE == -999999, "VOLTAGE"] = pd.NA
+
     return properties.query("STATUS == 'IN SERVICE'")
 
 
