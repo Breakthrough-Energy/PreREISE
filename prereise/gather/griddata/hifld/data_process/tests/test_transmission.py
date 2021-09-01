@@ -1,9 +1,10 @@
 import pandas as pd
 import pytest
-from pandas.testing import assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from prereise.gather.griddata.hifld.data_process.transmission import (
     augment_line_voltages,
+    create_buses,
 )
 
 
@@ -79,3 +80,23 @@ def test_augment_lines_voltages_neighbor_minimum():
         assert_series_equal(lines_to_augment.VOLTAGE, expected_return)
     augment_line_voltages(lines_to_augment, substations)
     assert_series_equal(lines_to_augment.VOLTAGE, expected_return)
+
+
+def test_create_buses():
+    lines = pd.DataFrame(
+        {
+            "SUB_1_ID": [1, 2, 3, 3],
+            "SUB_2_ID": [2, 3, 4, 1],
+            "VOLTAGE": [69, 115, 230, 345],
+        }
+    )
+
+    expected_return = pd.DataFrame(
+        {
+            "sub_id": [1, 1, 2, 2, 3, 3, 3, 4],
+            "baseKV": [69, 345, 69, 115, 115, 230, 345, 230],
+        },
+    )
+    expected_return["baseKV"] = expected_return["baseKV"].astype(float)
+    bus = create_buses(lines)
+    assert_frame_equal(bus, expected_return)
