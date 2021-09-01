@@ -279,6 +279,9 @@ def augment_line_voltages(
         lines, neighbors, lambda x: min(x) if len(x) > 0 else None, "minimum"
     )
 
+    # Ensure that voltages are floats
+    lines["VOLTAGE"] = lines["VOLTAGE"].astype(float)
+
 
 def build_transmission():
     """Main user-facing entry point."""
