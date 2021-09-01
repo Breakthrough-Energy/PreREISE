@@ -179,6 +179,110 @@ def filter_by_connected_components(lines, substations):
     return remaining_lines, remaining_substations
 
 
+def augment_line_voltages(
+    lines, substations, volt_class_defaults=None, state_threshold_100_161=0.95
+):
+    """Fill in voltages for lines with missing voltages, using a series of heuristics.
+    The ``lines`` dataframe will be modified in-place.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    :param dict/pandas.Series volt_class_defaults: mapping of volt classes to default
+        replacement voltage values. If None, internally-defined defaults will be used.
+    :param int/float state_threshold_100_161: fraction of lines in the 100-161 kV range
+        which must be the same voltage for the most common voltage to be applied to
+        missing voltage lines in this state.
+    """
+
+    def map_via_neighbor_voltages(lines, neighbors, func, method_name):
+        """For each line with a missing voltage, iterative find non-missing voltages of
+        neighboring lines, apply a function to these lines to determine updates, halting
+        once no more updates can be found.
+
+        :param pandas.DataFrame lines: data frame of lines.
+        :param pandas.Series neighbors: mapping of line indices to set of neighboring
+            line indices.
+        :param function func: function to apply to sets of neighboring voltages.
+        :param str method_name: method name to print once no more updates can be found.
+        """
+        while True:
+            missing = lines.query("VOLTAGE.isnull()")
+            if len(missing) == 0:
+                break
+            found_voltages = missing.apply(
+                lambda x: {
+                    v
+                    for v in set(lines.loc[neighbors.loc[x.name], "VOLTAGE"])
+                    if v == v  # this eliminates float("nan") values from the set
+                },
+                axis=1,
+            )
+            assigned_voltages = found_voltages.apply(func)
+            if assigned_voltages.isna().all():
+                print(
+                    f"{len(missing)} line voltages can't be found via neighbor "
+                    + method_name
+                )
+                break
+            lines.loc[
+                lines.VOLTAGE.isna() & ~assigned_voltages.isna(), "VOLTAGE"
+            ] = assigned_voltages.loc[~assigned_voltages.isna()]
+
+    # Interpret input parameters
+    if volt_class_defaults is None:
+        volt_class_defaults = const.volt_class_defaults
+
+    # Set voltages based on voltage class defaults
+    null_voltages = lines.loc[lines.VOLTAGE.isna()]
+    replacement_voltages = null_voltages.VOLT_CLASS.map(volt_class_defaults)
+    lines.loc[lines.VOLTAGE.isna(), "VOLTAGE"] = replacement_voltages
+
+    # Use commonly-assigned voltages by state to fill 100-161 kV range
+    # Assume state grouping on one end is representative
+    missing_mask = lines.VOLTAGE.isna()
+    class_100_161_mask = lines.VOLT_CLASS == "100-161"
+    lines["STATE_1"] = lines.SUB_1_ID.map(substations.STATE)
+    lines["STATE_2"] = lines.SUB_2_ID.map(substations.STATE)
+    lines["sorted_states"] = lines[["STATE_1", "STATE_2"]].apply(
+        lambda x: tuple(sorted(x)), axis=1
+    )
+    states_100_161_lines = {
+        states: group.query("100 <= VOLTAGE <= 161").value_counts(
+            "VOLTAGE", normalize=True
+        )
+        for states, group in lines.groupby("sorted_states")
+    }
+    most_common_100_161_voltage = {
+        states: voltages.idxmax() if voltages.max() > state_threshold_100_161 else None
+        for states, voltages in states_100_161_lines.items()
+    }
+    lines.loc[missing_mask & class_100_161_mask, "VOLTAGE"] = lines.loc[
+        missing_mask & class_100_161_mask
+    ].sorted_states.map(most_common_100_161_voltage)
+    lines.drop(["STATE_1", "STATE_2", "sorted_states"], axis=1, inplace=True)
+
+    # Create a mapping of lines to neighboring lines
+    sub_1_lines = pd.Series(lines.groupby("SUB_1_ID").groups).apply(set)
+    sub_2_lines = pd.Series(lines.groupby("SUB_2_ID").groups).apply(set)
+    sub_lines = sub_1_lines.combine(sub_2_lines, set.union, fill_value=set())
+    neighbors = lines.loc[lines.VOLTAGE.isna()].apply(
+        lambda x: sub_lines.loc[x.SUB_1_ID] | sub_lines.loc[x.SUB_2_ID], axis=1
+    )
+
+    # Update lines with missing voltage if only one voltage exists among their neighbors
+    map_via_neighbor_voltages(
+        lines, neighbors, lambda x: list(x)[0] if len(x) == 1 else None, "consensus"
+    )
+
+    # Update lines with missing voltage using lowest voltage among their neighbors
+    map_via_neighbor_voltages(
+        lines, neighbors, lambda x: min(x) if len(x) > 0 else None, "minimum"
+    )
+
+    # Ensure that voltages are floats
+    lines["VOLTAGE"] = lines["VOLTAGE"].astype(float)
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
@@ -187,6 +291,7 @@ def build_transmission():
     hifld_lines = get_hifld_electric_power_transmission_lines(
         const.blob_paths["transmission_lines"]
     )
+    hifld_lines.set_index("ID", inplace=True)
     hifld_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
     hifld_zones = get_zone(os.path.join(hifld_data_dir, "zone.csv"))  # noqa: F841
 
@@ -199,5 +304,8 @@ def build_transmission():
     lines = filter_lines_with_no_matching_substations(lines, substations)
     lines = filter_lines_with_nonmatching_substation_coords(lines, substations)
     lines = filter_lines_with_identical_substation_names(lines)
+
+    # Add voltages to lines with missing data
+    augment_line_voltages(lines, substations)
 
     return lines, substations
