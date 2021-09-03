@@ -18,16 +18,7 @@ jobs:
 
     name: Python ${{ matrix.python-version }}
     steps:
-      - name: Checkout PreREISE
-        uses: actions/checkout@v2
-        with:
-          path: PreREISE
-
-      - name: Checkout PowerSimData
-        uses: actions/checkout@v2
-        with:
-          repository: Breakthrough-Energy/PowerSimData
-          path: PowerSimData
+      - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -35,7 +26,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - run: python -m pip install --upgrade tox
-        working-directory: PreREISE
-
       - run: tox -e pytest-local
-        working-directory: PreREISE
