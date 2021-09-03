@@ -31,7 +31,7 @@ def min_dist_of_2_conn_comp(nodes1, nodes2, dist_metric):
 
 
 def find_adj_state_of_2_conn_comp(cc1, cc2, state_adj, subs):
-    """Find the adjacency states between two given connected components.
+    """Find the adjacent states between two given connected components.
 
     :param int/iterable cc1: substation ids of the first connected component
     :param int/iterable cc2: substation ids of the second connected component
@@ -44,12 +44,8 @@ def find_adj_state_of_2_conn_comp(cc1, cc2, state_adj, subs):
     """
     cc1_all_state = set(subs.loc[cc1].STATE.unique())
     cc2_all_state = set(subs.loc[cc2].STATE.unique())
-    cc1_neighbors = cc1_all_state.copy()
-    cc2_neighbors = cc2_all_state.copy()
-    for s in cc1_all_state:
-        cc1_neighbors |= set(state_adj[s])
-    for s in cc2_all_state:
-        cc2_neighbors |= set(state_adj[s])
+    cc1_neighbors = cc1_all_state.union(*[set(state_adj[s]) for s in cc1_all_state])
+    cc2_neighbors = cc2_all_state.union(*[set(state_adj[s]) for s in cc2_all_state])
     cc1_adj = cc2_neighbors & cc1_all_state
     cc2_adj = cc1_neighbors & cc2_all_state
     return cc1_adj, cc2_adj
