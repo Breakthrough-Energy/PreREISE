@@ -5,6 +5,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 from prereise.gather.griddata.hifld.data_process.transmission import (
     augment_line_voltages,
     create_buses,
+    create_transformers,
 )
 
 
@@ -100,3 +101,18 @@ def test_create_buses():
     expected_return["baseKV"] = expected_return["baseKV"].astype(float)
     bus = create_buses(lines)
     assert_frame_equal(bus, expected_return)
+
+
+def test_create_transformers():
+    bus = pd.DataFrame(
+        {
+            "sub_id": [1, 1, 2, 2, 3, 3, 3, 4],
+            "baseKV": [69, 345, 69, 115, 115, 230, 345, 230],
+        },
+        dtype="float",
+    )
+    expected_transformers = pd.DataFrame(
+        {"from_bus_id": [0, 2, 4, 5], "to_bus_id": [1, 3, 6, 6]}
+    )
+    transformers = create_transformers(bus)
+    assert_frame_equal(transformers, expected_transformers)
