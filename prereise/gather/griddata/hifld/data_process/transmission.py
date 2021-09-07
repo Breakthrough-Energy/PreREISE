@@ -303,6 +303,25 @@ def create_buses(lines):
     return buses
 
 
+def create_transformers(bus):
+    """Add transformers between buses within the same substation. The assumed topology
+    is that the highest-voltage bus in each substation is connected via a tansformer to
+    every other voltage.
+
+    :param pandas.DataFrame bus: columns 'sub_id' and 'baseKV'
+    :return: (*pandas.DataFrame*) -- each row is one transformer, columns are
+        ["from_bus_id", "to_bus_id"].
+    """
+    bus_pairs = [
+        (b, volt_series.idxmax())
+        for sub, volt_series in bus.groupby("sub_id")["baseKV"]
+        for b in volt_series.sort_values().index[:-1]
+        if len(volt_series) > 1
+    ]
+
+    return pd.DataFrame(bus_pairs, columns=["from_bus_id", "to_bus_id"])
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
