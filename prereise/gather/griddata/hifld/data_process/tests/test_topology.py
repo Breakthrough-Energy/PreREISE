@@ -132,3 +132,7 @@ def test_connect_islands_with_minimum_cost():
         ],
     )
     assert connect_islands_with_minimum_cost(lines, subs) == expected_return
+    assert (
+        connect_islands_with_minimum_cost(lines, subs, memory_efficient=True)
+        == expected_return
+    )
