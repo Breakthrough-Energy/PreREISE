@@ -434,6 +434,50 @@ def create_transformers(bus):
     return pd.DataFrame(bus_pairs, columns=["from_bus_id", "to_bus_id"])
 
 
+def estimate_branch_impedance(branch, bus_voltages):
+    """Estimate branch impedance using transformer voltages or line voltage and length.
+
+    :param pandas.Series branch: data for a single branch (line or transformer). All
+        branches require 'type' attributes, lines require 'VOLTAGE' and 'length',
+        transformers require 'from_bus_id' and 'to_bus_id'.
+    :param pandas.Series bus_voltages: mapping of buses to voltages.
+    :return: (*float*) -- impedance for that branch (per-unit).
+    """
+
+    def _euclidian(a, b):
+        return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** (1 / 2)
+
+    if branch.loc["type"] == "Transformer":
+        voltage_tuple = sorted(bus_voltages.loc[[branch.from_bus_id, branch.to_bus_id]])
+        reactance_lookup = pd.Series(const.transformer_reactance)
+        # Find the 'closest' voltage pair via Euclidian distance
+        closest_voltage_tuple = (
+            reactance_lookup.index.to_series()
+            .map(lambda x: _euclidian(x, voltage_tuple))
+            .idxmin()
+        )
+        return const.transformer_reactance[closest_voltage_tuple]
+    elif branch.loc["type"] == "Line":
+        # Calculate line length via sum of distances between adjacent coordinate pairs
+        reactance_lookup = pd.Series(const.line_reactance_per_mile)
+        closest_voltage_reactance_per_mile = reactance_lookup.iloc[
+            reactance_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
+        ]
+        return branch.loc["length"] * closest_voltage_reactance_per_mile
+    else:
+        raise ValueError(f"{branch.loc['type']} not a valid branch type")
+
+
+def calculate_branch_mileage(branch):
+    """Estimate distance of a line.
+
+    :param pandas.Series branch: data for a single line.
+    :return: (*float*) -- distance (in miles) for that line.
+    """
+    coordinates = branch.loc["COORDINATES"]
+    return sum([haversine(a, b) for a, b in zip(coordinates[:-1], coordinates[1:])])
+
+
 def build_transmission(method="sub2line", kwargs={"rounding": 3}):
     """Build transmission network
 
