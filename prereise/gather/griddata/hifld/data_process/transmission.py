@@ -478,6 +478,44 @@ def calculate_branch_mileage(branch):
     return sum([haversine(a, b) for a, b in zip(coordinates[:-1], coordinates[1:])])
 
 
+def estimate_branch_rating(branch, bus_voltages):
+    """Estimate branch rating using line voltage or constant value for transformers.
+
+    :param pandas.Series branch: data for a single branch (line or transformer). All
+        branches require 'type' attributes, lines require 'VOLTAGE' and 'length'.
+    :param pandas.Series bus_voltages: mapping of buses to voltages.
+    :return: (*float*) -- rating for that branch (MW).
+    :raises ValueError: if branch 'type' attribute not recognized.
+    """
+    if branch.loc["type"] == "Line":
+        if branch.loc["length"] <= const.line_rating_short_threshold:
+            rating_lookup = pd.Series(const.line_rating_short)
+            closest_rating = rating_lookup.iloc[
+                rating_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
+            ]
+            return closest_rating
+        else:
+            sil_lookup = pd.Series(const.line_rating_surge_impedance_loading)
+            closest_sil = sil_lookup.iloc[
+                sil_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
+            ]
+            return (
+                closest_sil
+                * const.line_rating_surge_impedance_coefficient
+                * branch.loc["length"] ** const.line_rating_surge_impedance_exponent
+            )
+    elif branch.loc["type"] == "Transformer":
+        rating = const.transformer_rating
+        max_voltage = bus_voltages.loc[[branch.from_bus_id, branch.to_bus_id]].max()
+        line_capacities = pd.Series(const.line_rating_short)
+        closest_voltage_rating = line_capacities.iloc[
+            line_capacities.index.get_loc(max_voltage, method="nearest")
+        ]
+        num_addl_transformers = int(closest_voltage_rating / rating)
+        return rating * (1 + num_addl_transformers)
+    raise ValueError(f"{branch.loc['type']} not a valid branch type")
+
+
 def build_transmission(method="sub2line", kwargs={"rounding": 3}):
     """Build transmission network
 
