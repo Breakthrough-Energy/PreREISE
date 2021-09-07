@@ -7,7 +7,7 @@ from tqdm import tqdm
 from prereise.gather.griddata.hifld.const import abv_state_neighbor
 
 
-def min_dist_of_2_conn_comp(nodes1, nodes2, dist_metric):
+def min_dist_of_2_conn_comp(nodes1, nodes2, dist_metric, memory_efficient=False):
     """Calculate the minimum distance of two connected components based on the given
     distance metric.
 
@@ -18,15 +18,25 @@ def min_dist_of_2_conn_comp(nodes1, nodes2, dist_metric):
         connected component with index being node ID and two columns being latitude
         and longitude in order.
     :param func dist_metric: a function defines the distance metric.
+    :param bool memory_efficient: run the function in a memory efficient way or not,
+        defaults to False.
     :return: (*tuple*) -- a tuple contains three elements, the minimum distance
         follows by a pair of nodes from the two connected components respectively
         in order
     """
-    min_dist = float("inf")
-    for v1, v2 in product(nodes1.index, nodes2.index):
-        tmp_dist = dist_metric(nodes1.loc[v1], nodes2.loc[v2])
-        if tmp_dist < min_dist:
-            min_dist, res_v1, res_v2 = tmp_dist, v1, v2
+    if memory_efficient:
+        min_dist = float("inf")
+        for v1, v2 in product(nodes1.index, nodes2.index):
+            tmp_dist = dist_metric(nodes1.loc[v1], nodes2.loc[v2])
+            if tmp_dist < min_dist:
+                min_dist, res_v1, res_v2 = tmp_dist, v1, v2
+    else:
+        distances = nodes1.apply(
+            lambda x: nodes2.apply(lambda y: dist_metric(x, y), axis=1), axis=1
+        )
+        res_v1 = distances.min(axis=1).idxmin()
+        res_v2 = distances.loc[res_v1].idxmin()
+        min_dist = distances.loc[res_v1, res_v2]
     return min_dist, res_v1, res_v2
 
 
@@ -52,7 +62,7 @@ def find_adj_state_of_2_conn_comp(cc1, cc2, state_adj, subs):
 
 
 def connect_islands_with_minimum_cost(
-    lines, subs, cost_metric=haversine, state_neighbor=None
+    lines, subs, cost_metric=haversine, state_neighbor=None, memory_efficient=False
 ):
     """Connect a group of islands defined by lines and substations into one big
     island with minimum cost.
@@ -68,6 +78,8 @@ def connect_islands_with_minimum_cost(
     :param dict state_neighbor: a dictionary defines the adjacency relationship among
         states, defaults to None and the constant dictionary ``abv_state_neighbor``
         defined in the ``const`` module is used.
+    :param bool memory_efficient: run the function in a memory efficient way or not,
+        defaults to False.
     :return: (*tuple*) -- a pair of lists, the first one is a list of all potential
         line candidates among given connected components; the second one is a list
         of subsequence of the first entry, representing the chosen lines to form a
@@ -104,7 +116,9 @@ def connect_islands_with_minimum_cost(
             nodes2 = subs.loc[cc2].query("STATE in @cc2_adj")[["LATITUDE", "LONGITUDE"]]
             # Run an exhaustive search on the filtered substations of both connected
             # components to find a line with minimum cost the connects the two islands
-            min_dist, sub1, sub2 = min_dist_of_2_conn_comp(nodes1, nodes2, cost_metric)
+            min_dist, sub1, sub2 = min_dist_of_2_conn_comp(
+                nodes1, nodes2, cost_metric, memory_efficient=memory_efficient
+            )
             edge_list.append(
                 (ind1, ind2, {"weight": min_dist, "start": sub1, "end": sub2})
             )
