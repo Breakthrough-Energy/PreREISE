@@ -1,4 +1,6 @@
+import hashlib
 import os
+import pickle
 
 import networkx as nx
 import numpy as np
@@ -12,6 +14,9 @@ from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_power_transmission_lines,
     get_hifld_electric_substations,
     get_zone,
+)
+from prereise.gather.griddata.hifld.data_process.topology import (
+    connect_islands_with_minimum_cost,
 )
 
 
@@ -516,6 +521,36 @@ def estimate_branch_rating(branch, bus_voltages):
     raise ValueError(f"{branch.loc['type']} not a valid branch type")
 
 
+def get_mst_edges(lines, substations):
+    """Get the set of lines which connected the connected components of the lines graph,
+    either from a cache or by generating from scratch and caching.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    :return: (*list*) -- each entry is a 3-tuple:
+        index of the first connected component (int),
+        index of the second connected component (int),
+        a dictionary with keys containing ``start``, ``end`` and ``weight``, defines
+        the ``from substation ID``, ``to substation ID`` and the distance of the line.
+    """
+    cache_dir = os.path.join(os.path.dirname(__file__), "cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_key = repr(lines[["SUB_1_ID", "SUB_2_ID"]].to_numpy().tolist()) + repr(
+        substations[["LATITUDE", "LONGITUDE"]].to_numpy().tolist()
+    )
+    cache_hash = hashlib.md5(cache_key.encode("utf-8")).hexdigest()
+    try:
+        with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "rb") as f:
+            print("Reading cached minimum spanning tree")
+            mst_edges = pickle.load(f)
+    except Exception:
+        print("No minimum spanning tree available, generating...")
+        _, mst_edges = connect_islands_with_minimum_cost(lines, substations)
+        with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "wb") as f:
+            pickle.dump(mst_edges, f)
+    return mst_edges
+
+
 def build_transmission(method="sub2line", kwargs={"rounding": 3}):
     """Build transmission network
 
@@ -563,6 +598,27 @@ def build_transmission(method="sub2line", kwargs={"rounding": 3}):
         lines, substations = map_lines_to_substations_using_coords(
             substations, hifld_lines, **kwargs
         )
+
+    # Connect all connected components
+    mst_edges = get_mst_edges(lines, substations)
+    new_lines = pd.DataFrame(
+        [{"SUB_1_ID": x[2]["start"], "SUB_2_ID": x[2]["end"]} for x in mst_edges]
+    )
+    new_lines = new_lines.assign(VOLTAGE=pd.NA, VOLT_CLASS="NOT AVAILABLE")
+    new_lines["COORDINATES"] = new_lines.apply(
+        lambda x: [
+            [
+                substations.loc[x.SUB_1_ID, "LATITUDE"],
+                substations.loc[x.SUB_1_ID, "LONGITUDE"],
+            ],
+            [
+                substations.loc[x.SUB_2_ID, "LATITUDE"],
+                substations.loc[x.SUB_2_ID, "LONGITUDE"],
+            ],
+        ],
+        axis=1,
+    )
+    lines = pd.concat([lines, new_lines])
 
     # Add voltages to lines with missing data
     augment_line_voltages(lines, substations)
