@@ -319,6 +319,7 @@ def augment_line_voltages(
         while True:
             missing = lines.query("VOLTAGE.isnull()")
             if len(missing) == 0:
+                print(f"No more missing voltages remain after neighbor {method_name}")
                 break
             found_voltages = missing.apply(
                 lambda x: {
