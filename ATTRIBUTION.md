@@ -358,6 +358,61 @@ Public use (see https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatfo
 
 
 ##### Source
+* Name: Form EIA-860
+* Author: U.S. Energy Information Administration
+* Description: The survey Form EIA-860 collects generator-level specific information about existing and planned generators and associated environmental equipment at electric power plants with 1 megawatt or greater of combined nameplate capacity.
+* Source: https://www.eia.gov/
+* Exact source location: https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602019.zip
+
+##### Destination
+* Modifications to source file(s): Conversion of sheet "Operable" to a CSV file.
+* Location: https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_1_Generator_Y2019_Operable.csv
+
+##### General Purpose
+The data are used to construct a table of generators in the contiguous U.S., for use in running scenarios.
+
+
+##### Note
+As a work of the United States government, these data are not subject to copyright.
+
+
+##### Source
+* Name: Air Markets Program Data
+* Author: U.S. Environmental Protection Agency
+* Description: The Air Markets Program Data tool allows users to search EPA data to answer scientific, general, policy, and regulatory questions about industry emissions.
+* Source: https://ampd.epa.gov/ampd/
+* Exact source location: https://gaftp.epa.gov/DMDnLoad/emissions/hourly/monthly/2019/
+
+##### Destination
+* Modifications to source file(s): None
+* Location: https://besciences.blob.core.windows.net/datasets/EPA_AMPD/ (many individual files, with naming convention the same as in the original FTP directory)
+
+##### General Purpose
+The data are used to estimate heat rate curves for generators, for use in running scenarios.
+
+##### Note
+As a work of the United States government, these data are not subject to copyright.
+
+
+##### Source
+* Name: National Electric Energy Data System
+* Author: U.S. Environmental Protection Agency
+* Description: The National Electric Energy Data System or "NEEDS" database contains the generation unit records used to construct the "model" plants that represent existing and planned/committed units in EPA modeling applications of IPM.
+* Source: https://www.epa.gov/
+* Exact source location: https://www.epa.gov/system/files/documents/2021-07/needs-v620_06-30-21-2.xlsx
+
+##### Destination
+* Modifications to source file(s): Conversion of sheet "NEEDS v620_active" to a CSV file.
+* Location: https://besciences.blob.core.windows.net/datasets/EPA_NEEDS/needs-v620_06-30-21-2_active.csv
+
+##### General Purpose
+These data are used as fall-back information for creating linear heat rate curves for generators, for use in running scenarios.
+
+##### Note
+As a work of the United States government, these data are not subject to copyright.
+
+
+##### Source
 * Name: Electric Substations
 * Author: HIFLD Open
 * Description: This dataset represents electric power substations primarily associated with electric power transmission. In this layer, substations are considered facilities and equipment that switch, transform, or regulate electric power at voltages equal to, or greater than, 69 kV.

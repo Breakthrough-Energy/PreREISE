@@ -2,12 +2,71 @@ import json
 import os
 import tempfile
 from io import BytesIO
+from urllib.parse import urlparse
 from urllib.request import urlopen
 from zipfile import ZipFile
 
 import pandas as pd
 
 from prereise.gather.griddata.hifld.const import abv2state  # noqa F401
+
+
+def get_eia_form_860(path):
+    """Read the a CSV file for EIA Form 860 and keep plants located in contiguous
+    states.
+
+    :param str path: path to file. Either local or URL.
+    :return: (*pandas.DataFrame*) -- operational power plant in contiguous states.
+    """
+    data = pd.read_csv(path)
+    return data.query("State in @abv2state")
+
+
+def get_epa_ampd(path, year=2019):
+    """Read a collection of zipped CSV files from the EPA AMPD dataset and keep readings
+    from plants located in contiguous states.
+
+    :param str path: path to folder. Either local or URL.
+    :param str year: year of data to read (will be present in filenames)
+    :return: (*pandas.DataFrame*) -- readings from operational power plant in contiguous
+        states.
+    """
+    # Determine whether paths should be joined with os separators or URL separators
+    try:
+        result = urlparse(path)
+        if result.scheme in {"http", "ftp", "s3", "file"}:
+            path_sep = "/"
+        else:
+            path_sep = os.path.sep
+    except Exception:
+        raise ValueError(f"Could not interpret path {path}")
+    # Trim trailing slashes as necessary to ensure that join works
+    path = path.rstrip("/\\")
+
+    data = pd.concat(
+        [
+            pd.read_csv(
+                path_sep.join(
+                    [path, f"{year}{state.lower()}{str(month_num).rjust(2, '0')}.zip"]
+                )
+            )
+            for state in abv2state
+            for month_num in range(1, 13)
+        ]
+    )
+
+    return data
+
+
+def get_epa_needs(path):
+    """Read the a CSV file for an EPA NEEDS dataset and keep plants located in
+    contiguous states.
+
+    :param str path: path to file. Either local or URL.
+    :return: (*pandas.DataFrame*) -- operational power plant in contiguous states.
+    """
+    data = pd.read_csv(path)
+    return data.query("`State Name` in @abv2state.values()")
 
 
 def get_hifld_power_plants(path):
