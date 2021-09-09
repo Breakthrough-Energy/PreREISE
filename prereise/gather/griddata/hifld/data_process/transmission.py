@@ -283,6 +283,26 @@ def augment_line_voltages(
     lines["VOLTAGE"] = lines["VOLTAGE"].astype(float)
 
 
+def create_buses(lines):
+    """Using line and substation information, create a bus within each substation and a
+    mapping of buses to substations.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :return: (*pandas.DataFrame*) -- columns are 'baseKV' and 'sub_id'
+    """
+    sub1_volt = lines.groupby("SUB_1_ID")["VOLTAGE"].apply(set)
+    sub2_volt = lines.groupby("SUB_2_ID")["VOLTAGE"].apply(set)
+    sub_volt = sub1_volt.combine(sub2_volt, set.union, fill_value=set()).apply(sorted)
+    # Get the set of voltages for any line(s) connected to each substation
+    buses = sub_volt.explode()
+    buses = buses.loc[~buses.isna()]
+    buses = buses.astype(float)
+    buses.index.name = "sub_id"
+    buses = buses.to_frame(name="baseKV").reset_index()
+
+    return buses
+
+
 def build_transmission():
     """Main user-facing entry point."""
     # Load input data
