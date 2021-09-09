@@ -107,9 +107,6 @@ def immediate_charging(
                     # 0 means the day trip could not be used in battery electric vehicle
                     newdata.loc[i]["BEV could be used"] = 0
 
-                # fuel consumption is 0
-                newdata.loc[i]["fuel consumption"] = 0
-
                 # data for this trip
                 trip_data = newdata.loc[i]
 
