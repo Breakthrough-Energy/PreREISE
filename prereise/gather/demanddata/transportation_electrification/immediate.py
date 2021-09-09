@@ -1,7 +1,7 @@
 # DELETED: comm_type, LOAD, vmtsc
 
-import mileage
-import charging
+import prereise/gather/demanddata/transportation_electrification/mileage
+import prereise/gather/demanddata/transportation_electrification/charging
 import numpy as np
 
 
