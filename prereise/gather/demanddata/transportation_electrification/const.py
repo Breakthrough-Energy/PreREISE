@@ -33,3 +33,6 @@ nhts_census_column_names = [
 
 # from grid to battery efficiency
 charging_efficiency = 0.9
+
+
+safety_coefficient = 1
