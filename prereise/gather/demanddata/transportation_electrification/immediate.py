@@ -39,9 +39,6 @@ def immediate_charging(
     actual_vmt = 0
     potential_vmt = 0
 
-    # from grid to battery efficiency
-    charging_efficiency = 0.9
-
     # charging when SOC less than batterstrategy
     battery_strategy = 1
 
