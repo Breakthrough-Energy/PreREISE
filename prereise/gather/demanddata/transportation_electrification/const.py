@@ -30,3 +30,6 @@ nhts_census_column_names = [
     "total vehicle trips",
     "total vehicle miles traveled",
 ]
+
+# from grid to battery efficiency
+charging_efficiency = 0.9
