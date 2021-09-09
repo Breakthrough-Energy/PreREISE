@@ -21,14 +21,14 @@ def immediate_charging(
     # load NHTS data from function
     newdata = mileage.remove_ldt(mileage.load_data(census_region))
     # add new columns to newdata to store data that is not in NHTS data
-    newdata.insert(28, "trip start battery charge", [0] * len(newdata))
-    newdata.insert(29, "trip end battery charge", [0] * len(newdata))
-    newdata.insert(30, "charging power", [0] * len(newdata))
-    newdata.insert(31, "charging time", [0] * len(newdata))
+    newdata['trip start battery charge'] = 0
+    newdata['trip end battery charge'] = 0
+    newdata['charging power'] = 0
+    newdata['charging time'] = 0
     # jx: never actually used... delete?
-    newdata.insert(32, "charging consumption", [0] * len(newdata))  # needs double check
-    newdata.insert(33, "BEV could be used", [0] * len(newdata))
-    newdata.insert(34, "trip number", [0] * len(newdata))
+    newdata['charging consumption'] = 0  # needs double check
+    newdata['BEV could be used'] = 0
+    newdata['trip number'] = 0
 
     input_day = mileage.get_input_day(mileage.get_model_year_dti(model_year))
 
