@@ -90,7 +90,7 @@ def immediate_charging(
                 ER = 1
 
                 # 1 is the safety coefficient
-                if newdata.loc[i]["total vehicle miles traveled"] < veh_range * 1:
+                if newdata.loc[i]["total vehicle miles traveled"] < veh_range * const.safety_coefficient:
                     # 1 means the day trip could be used in battery electric vehicle
                     newdata.loc[i]["BEV could be used"] = 1
                     # trip end battery charge
