@@ -1,4 +1,12 @@
-def formatted_filename(dt, product, hours_forecasted):
+from prereise.gather.winddata.hrrr.constants import (
+    DEFAULT_HOURS_FORECASTED,
+    DEFAULT_PRODUCT,
+)
+
+
+def formatted_filename(
+    dt, product=DEFAULT_PRODUCT, hours_forecasted=DEFAULT_HOURS_FORECASTED
+):
     """Deterministically returns a grib filename
 
     :param datetime.datetime dt: datetime associated with

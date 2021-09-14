@@ -145,8 +145,8 @@ def get_power(power_curves, state_power_curves, wspd, turbine, default="IEC clas
     :param pandas.DataFrame power_curves: turbine power curves data.
     :param pandas.DataFrame state_power_curves: state average power curves data.
     :param float wspd: wind speed (in m/s).
-    :param str default: default turbine name.
     :param str turbine: turbine name, IEC class, or state code for average.
+    :param str default: default turbine name.
     :return: (*float*) -- normalized power.
     """
     if turbine in state_power_curves.columns:
