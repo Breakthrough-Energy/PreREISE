@@ -154,6 +154,10 @@ def get_hifld_electric_power_transmission_lines(path):
     properties["COORDINATES"] = [
         line["geometry"]["coordinates"][0] for line in data["features"]
     ]
+    # Flip [(lon, lat), (lon, lat), ..] points to [(lat, lon), (lat, lon), ...]
+    properties["COORDINATES"] = properties["COORDINATES"].map(
+        lambda x: [y[::-1] for y in x]
+    )
 
     # Replace dummy data with explicit 'missing'
     properties.loc[properties.VOLTAGE == -999999, "VOLTAGE"] = pd.NA
