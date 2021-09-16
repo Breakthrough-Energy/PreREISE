@@ -25,32 +25,10 @@ def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
         "res_area_gbs_m2",
         "com_area_gbs_m2",
     ]
-    weighted_sum_columns = [
+    weighted_avg_columns = [
         "hdd65_normals_2010",
         "cdd65_normals_2010",
     ]
-
-    # Load RECS and CBECS area scales for res and com
-    resscales = pd.read_csv(os.path.join(data_dir, "area_scale_res.csv"))
-    comscales = pd.read_csv(os.path.join(data_dir, "area_scale_com.csv"))
-
-    # Interpolate a 2010 area to scale model area to corresponding RECS/CBECS area
-    resscales["2010_scalar"] = (
-        resscales["RECS2009"]
-        + (resscales["RECS2015"] - resscales["RECS2009"])
-        * (
-            (const.target_year - const.recs_date_1)
-            / (const.recs_date_2 - const.recs_date_1)
-        )
-    ) / resscales["Model2010"]
-    comscales["2010_scalar"] = (
-        comscales["CBECS2003"]
-        + (comscales["CBECS2012"] - comscales["CBECS2003"])
-        * (
-            (const.target_year - const.cbecs_date_1)
-            / (const.cbecs_date_2 - const.cbecs_date_1)
-        )
-    ) / comscales["Model2010"]
 
     # Collect all state data into one data frame
     tract_data = pd.concat(
@@ -74,13 +52,49 @@ def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
         ].sum()
 
     # Population-weighted average hdd, cdd, and acpen
-    for col in weighted_sum_columns:
+    for col in weighted_avg_columns:
         col_to_sum = col.replace("_normals_2010", "").replace("_res_2010", ".res")
         weighted_elements = tract_data[col_to_sum] * tract_data["pop.2010"]
         puma_df[col] = (
             weighted_elements.groupby(tract_puma_mapping["puma"]).sum()
             / tract_data["pop.2010"].groupby(tract_puma_mapping["puma"]).sum()
         )
+
+    # Load RECS and CBECS area scales for res and com
+    resscales = pd.read_csv(os.path.join(data_dir, "area_scale_res.csv"))
+    comscales = pd.read_csv(os.path.join(data_dir, "area_scale_com.csv"))
+
+    # Compute GBS areas for state groups in RECS and CBECS
+    resscales["GBS"] = [
+        tract_data.query("state in @s")["res.area.m2"].sum()
+        * const.conv_m2_to_ft2
+        * const.conv_ft2_to_bsf
+        for s in resscales.fillna(0).values.tolist()
+    ]
+    comscales["GBS"] = [
+        tract_data.query("state in @s")["com.area.m2"].sum()
+        * const.conv_m2_to_ft2
+        * const.conv_ft2_to_bsf
+        for s in comscales.fillna(0).values.tolist()
+    ]
+
+    # Interpolate a 2010 area to scale model area to corresponding RECS/CBECS area
+    resscales["2010_scalar"] = (
+        resscales["RECS2009"]
+        + (resscales["RECS2015"] - resscales["RECS2009"])
+        * (
+            (const.target_year - const.recs_date_1)
+            / (const.recs_date_2 - const.recs_date_1)
+        )
+    ) / resscales["GBS"]
+    comscales["2010_scalar"] = (
+        comscales["CBECS2003"]
+        + (comscales["CBECS2012"] - comscales["CBECS2003"])
+        * (
+            (const.target_year - const.cbecs_date_1)
+            / (const.cbecs_date_2 - const.cbecs_date_1)
+        )
+    ) / comscales["GBS"]
 
     # Scale puma area from gbs to 2010 RECS/CBECS
     for state in const.state_list:
@@ -216,7 +230,7 @@ def puma_timezone_join(timezones, pumas):
     puma_timezone = puma_timezone.drop_duplicates(subset="GEOID10", keep="first")
     puma_timezone.sort_values("GEOID10", ascending=True, inplace=True)
 
-    return puma_timezone["TZID"]
+    return puma_timezone["tzid"]
 
 
 if __name__ == "__main__":
@@ -237,8 +251,6 @@ if __name__ == "__main__":
     puma_df_frac_ff = scale_fuel_fractions(puma_df, const.regions, const.fuel)
 
     # Add time zone information
-    timezones_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "tz_us.shp")))
-    pumas_shp = gpd.GeoDataFrame(gpd.read_file(os.path.join(data_dir, "pumas.shp")))
     puma_timezones = pd.read_csv(
         os.path.join(data_dir, "puma_timezone.csv"), index_col="puma"
     )
