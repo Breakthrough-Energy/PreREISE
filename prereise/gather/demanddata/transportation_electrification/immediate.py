@@ -15,7 +15,7 @@ def immediate_charging(
     :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
     :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
     :param int power: charger power, EVSE kW.
-    :param int location_strategy: where the vehicle can charge-1, 2, or 3; 1 = home only, 2 = home and work, 3 = everywhere
+    :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, or 5; 1-home only, 2-home and work related, 3-anywhere if possibile, 4-home and school only, 5-home and work and school.
     :return: (*numpy.ndarray*) -- charging profiles.
     """
     # load NHTS data from function
@@ -38,9 +38,6 @@ def immediate_charging(
 
     actual_vmt = 0
     potential_vmt = 0
-
-    # charging when SOC less than batterstrategy
-    battery_strategy = 1
 
     # 1-anytrip number, 2-last trip
     trip_strategy = 1
@@ -113,7 +110,6 @@ def immediate_charging(
                 # charging power
                 newdata.loc[i]["charging power"] = charging.get_charging_power(
                     power,
-                    battery_strategy,
                     trip_strategy,
                     location_strategy,
                     kwh,
