@@ -24,6 +24,30 @@ def get_eia_form_860(path):
     return data.query("State in @abv2state")
 
 
+def get_eia_epa_crosswalk(path):
+    """Read a CSV file mapping EIA plants IDs to EPA plant IDs, keep non-retired plants.
+
+    :param str path: path to file. Either local or URL.
+    :return: (*pandas.DataFrame*) -- filtered data frame.
+    """
+    crosswalk_match_exclude = {"CAMD Unmatched", "Manual CAMD Excluded"}  # noqa: F841
+    data = (
+        pd.read_csv(path)
+        .query(
+            "MATCH_TYPE_GEN not in @crosswalk_match_exclude and CAMD_STATUS != 'RET'"
+        )
+        .astype(
+            {
+                "MOD_EIA_PLANT_ID": int,
+                "MOD_CAMD_UNIT_ID": "string",
+                "MOD_CAMD_GENERATOR_ID": "string",
+                "MOD_EIA_GENERATOR_ID_GEN": "string",
+            }
+        )
+    )
+    return data
+
+
 def get_epa_ampd(path, years={2019}, cache=False):
     """Read a collection of zipped CSV files from the EPA AMPD dataset and keep readings
     from plants located in contiguous states.
