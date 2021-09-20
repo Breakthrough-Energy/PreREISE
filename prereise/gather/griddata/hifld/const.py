@@ -112,6 +112,7 @@ blob_paths = {
     "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
     "transmission_lines": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
 }
+eia_epa_crosswalk_path = "https://raw.githubusercontent.com/Breakthrough-Energy/camd-eia-crosswalk/master/epa_eia_crosswalk.csv"
 
 volt_class_defaults = {
     "UNDER 100": 69,
