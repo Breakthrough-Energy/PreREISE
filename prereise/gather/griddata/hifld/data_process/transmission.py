@@ -1,8 +1,11 @@
 import os
 
 import networkx as nx
+import numpy as np
 import pandas as pd
-from powersimdata.utility.distance import haversine
+from powersimdata.utility.distance import haversine, ll2uv
+from scipy.spatial import KDTree
+from tqdm import tqdm
 
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_access.load import (
@@ -25,6 +28,114 @@ def check_for_location_conflicts(substations):
         raise ValueError(
             f"There are {num_collisions} substations with duplicate lat/lon values"
         )
+
+
+def map_lines_to_substations_using_coords(substations, lines, **kwargs):
+    """Map lines to substations using coordinates.
+
+    :param pandas.DataFrame substations: data frame of substations.
+    :param pandas.DataFrame lines: data frame of all lines.
+    :param \\*\\*kwargs: optional arguments.
+    :return: (*tuple*) -- lines and substations data frame.
+    """
+    # Optional parameters
+    rounding = 3 if "rounding" not in kwargs else kwargs["rounding"]
+    drop_zero_distance_line = (
+        True
+        if "drop_zero_distance_line" not in kwargs
+        else kwargs["drop_zero_distance_line"]
+    )
+
+    # Round coordinates of substations and lines' endpoints
+    print(
+        "assigning substations to lines' endpoints by mapping their rounded "
+        f"({rounding} digits) coordinates"
+    )
+    subcoord2subid = (
+        substations.round(rounding).groupby(["LATITUDE", "LONGITUDE"]).groups
+    )
+    lines_coord = lines["COORDINATES"].map(
+        lambda x: list(np.round([x[0], x[-1]], rounding))
+    )
+    line2sub = pd.DataFrame(
+        lines_coord.to_list(), columns=["FROM", "TO"], index=lines_coord.index
+    ).applymap(tuple)
+
+    # Map coordinates of lines' endpoints to coordinates of substations and add id of
+    # matched substations to data frame. Values can be single id, a list of id or NaN
+    # (no match)
+    end_sub = {"FROM": "SUB_1", "TO": "SUB_2"}
+    for e, e_sub in end_sub.items():
+        line2sub[e_sub] = line2sub[e].apply(
+            lambda x: list(subcoord2subid[x]) if x in subcoord2subid else np.NaN
+        )
+
+    # Remove zero-distance lines
+    if drop_zero_distance_line:
+        idx = line2sub["FROM"].compare(line2sub["TO"]).index
+        print(
+            f"dropping {lines.shape[0] - len(idx)} lines having same endpoints "
+            "coordinates after rounding"
+        )
+        line2sub = line2sub.loc[idx]
+
+    # Find closest neighbor(s) of unmapped lines' endpoints
+    print("finding closest substation to unmapped lines' endpoint(s)")
+    subcoord = list(subcoord2subid)
+    missing_points = set().union(
+        *[
+            set(line2sub.loc[line2sub[e_sub].isna(), e].apply(lambda x: (x[1], x[0])))
+            for e, e_sub in end_sub.items()
+        ]
+    )
+    tree = KDTree([ll2uv(p[0], p[1]) for p in subcoord])
+    endpoint2neighbor = {
+        (p[1], p[0]): subcoord2subid[subcoord[tree.query(ll2uv(p[0], p[1]))[1]]]
+        for p in tqdm(missing_points, total=len(missing_points))
+    }
+    filled_subs = [
+        line2sub.loc[line2sub[e_sub].isna(), e].map(endpoint2neighbor).map(list)
+        for e, e_sub in end_sub.items()
+    ]
+    line2sub.update(pd.concat(filled_subs, axis=1).rename(columns=end_sub))
+
+    # pick unique substation at each end. Order of preference:
+    # SUBSTATION --> TAP --> RISER --> DEAD END
+    all2one = {
+        tuple(i): None for j in end_sub.values() for i in line2sub[j] if len(i) > 1
+    }
+    for a in all2one:
+        type2id = substations.loc[list(a)].reset_index().groupby("TYPE").first()["ID"]
+        for t in ["SUBSTATION", "TAP", "RISER", "DEAD END"]:
+            try:
+                all2one[a] = type2id.loc[t]
+                break
+            except KeyError:
+                continue
+    one2all = {v: k for k, v in all2one.items()}
+
+    # Build substations data frame
+    new_substations = substations.copy()
+    new_substations = substations.loc[
+        set(pd.concat([line2sub[e] for e in end_sub.values()]).explode())
+    ]
+    new_substations["OTHER_SUB"] = (
+        new_substations.reset_index()["ID"]
+        .apply(lambda x: list(set(one2all[x]) - {x}) if x in one2all else None)
+        .values
+    )
+
+    # Build lines data frame
+    new_lines = lines.copy()
+    new_lines = new_lines.loc[line2sub.index]
+    for e_sub in end_sub.values():
+        primary_sub = line2sub[e_sub].apply(
+            lambda x: all2one[tuple(x)] if len(x) > 1 else x[0]
+        )
+        new_lines[e_sub] = substations.loc[primary_sub.values, "NAME"].values
+        new_lines[f"{e_sub}_ID"] = primary_sub.values
+
+    return new_lines, new_substations
 
 
 def filter_substations_with_zero_lines(substations):
@@ -322,8 +433,26 @@ def create_transformers(bus):
     return pd.DataFrame(bus_pairs, columns=["from_bus_id", "to_bus_id"])
 
 
-def build_transmission():
-    """Main user-facing entry point."""
+def build_transmission(method="sub2line", kwargs={"rounding": 3}):
+    """Build transmission network
+
+    :param str method: method used to build network. Default method is *sub2line*
+        where all substations are considered and lines are filtered accordingly. Other
+        method is *line2sub* where all lines are considered and a list of substations
+        is compiled.
+    :param dict kwargs: keyword arguments to be passed to functions.
+    :raises TypeError:
+        if ``method`` is not a str.
+        if ``kwargs`` is not a dict.
+    :raises ValueError: if ``method`` is unknown.
+    """
+    if not isinstance(method, str):
+        raise TypeError("method must be a str")
+    if not isinstance(kwargs, dict):
+        raise TypeError("kwargs must be a dict")
+    if method not in ["sub2line", "line2sub"]:
+        raise ValueError("Unknown method to build transmission network")
+
     # Load input data
     hifld_substations = get_hifld_electric_substations(const.blob_paths["substations"])
     hifld_substations.set_index("ID", inplace=True)
@@ -338,11 +467,19 @@ def build_transmission():
     substations = filter_substations_with_zero_lines(hifld_substations)
     check_for_location_conflicts(substations)
 
-    # Filter lines based on substations
-    lines = filter_lines_with_unavailable_substations(hifld_lines)
-    lines = filter_lines_with_no_matching_substations(lines, substations)
-    lines = filter_lines_with_nonmatching_substation_coords(lines, substations)
-    lines = filter_lines_with_identical_substation_names(lines)
+    if method == "sub2line":
+        print("filter lines based on substations")
+        print("---------------------------------")
+        lines = filter_lines_with_unavailable_substations(hifld_lines)
+        lines = filter_lines_with_no_matching_substations(lines, substations)
+        lines = filter_lines_with_nonmatching_substation_coords(lines, substations)
+        lines = filter_lines_with_identical_substation_names(lines)
+    elif method == "line2sub":
+        print("filter substations based on lines")
+        print("---------------------------------")
+        lines, substations = map_lines_to_substations_using_coords(
+            substations, hifld_lines, **kwargs
+        )
 
     # Add voltages to lines with missing data
     augment_line_voltages(lines, substations)
