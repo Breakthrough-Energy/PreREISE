@@ -322,3 +322,10 @@ state_county_splits = {
         "Western": {"EL PASO", "HUDSPETH"},
     },
 }
+
+heat_rate_estimation_columns = [
+    "ORISPL_CODE",
+    "UNITID",
+    "GLOAD (MW)",
+    "HEAT_INPUT (mmBtu)",
+]
