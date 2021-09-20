@@ -9,7 +9,8 @@ from zipfile import ZipFile
 import pandas as pd
 from tqdm import tqdm
 
-from prereise.gather.griddata.hifld.const import abv2state  # noqa F401
+from prereise.gather.griddata.hifld.const import abv2state  # noqa: F401
+from prereise.gather.griddata.hifld.const import heat_rate_estimation_columns
 
 
 def get_eia_form_860(path):
@@ -75,7 +76,8 @@ def get_epa_ampd(path, year=2019, cache=False):
                     )
             else:
                 df = pd.read_csv(
-                    path_sep.join([path, filename]), usecols=heat_rate_estimation_columns,
+                    path_sep.join([path, filename]),
+                    usecols=heat_rate_estimation_columns,
                 )
             data[state][month_num] = df
     joined = pd.concat(
