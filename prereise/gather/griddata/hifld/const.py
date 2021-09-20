@@ -105,7 +105,8 @@ abv_state_neighbor = {
 }
 
 blob_paths = {
-    "eia_form860_2019": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_1_Generator_Y2019_Operable.csv",
+    "eia_form860_2019_generator": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_1_Generator_Y2019_Operable.csv",
+    "eia_form860_2019_plant": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/2___Plant_Y2019.csv",
     "epa_ampd": "https://besciences.blob.core.windows.net/datasets/EPA_AMPD/",
     "epa_needs": "https://besciences.blob.core.windows.net/datasets/EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
     "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
@@ -182,3 +183,19 @@ transformer_reactance = {  # per-unit
     (500, 765): 0.00436,
 }
 transformer_rating = 800  # MVA
+
+eia_storage_gen_types = {
+    "Batteries",
+    "Flywheels",
+}
+
+nercregion2interconnect = {
+    "ASCC": "Alaska",  # Not currently used
+    "HICC": "Hawaii",  # Not currently used
+    "MRO": "Eastern",
+    "NPCC": "Eastern",
+    "RFC": "Eastern",
+    "SERC": "Eastern",
+    "TRE": "ERCOT",
+    "WECC": "Western",
+}
