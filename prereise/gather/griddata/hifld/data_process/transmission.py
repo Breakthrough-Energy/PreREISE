@@ -1,4 +1,6 @@
+import hashlib
 import os
+import pickle
 
 import networkx as nx
 import numpy as np
@@ -12,6 +14,9 @@ from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_power_transmission_lines,
     get_hifld_electric_substations,
     get_zone,
+)
+from prereise.gather.griddata.hifld.data_process.topology import (
+    connect_islands_with_minimum_cost,
 )
 
 
@@ -319,6 +324,7 @@ def augment_line_voltages(
         while True:
             missing = lines.query("VOLTAGE.isnull()")
             if len(missing) == 0:
+                print(f"No more missing voltages remain after neighbor {method_name}")
                 break
             found_voltages = missing.apply(
                 lambda x: {
@@ -433,6 +439,118 @@ def create_transformers(bus):
     return pd.DataFrame(bus_pairs, columns=["from_bus_id", "to_bus_id"])
 
 
+def estimate_branch_impedance(branch, bus_voltages):
+    """Estimate branch impedance using transformer voltages or line voltage and length.
+
+    :param pandas.Series branch: data for a single branch (line or transformer). All
+        branches require 'type' attributes, lines require 'VOLTAGE' and 'length',
+        transformers require 'from_bus_id' and 'to_bus_id'.
+    :param pandas.Series bus_voltages: mapping of buses to voltages.
+    :return: (*float*) -- impedance for that branch (per-unit).
+    """
+
+    def _euclidian(a, b):
+        return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** (1 / 2)
+
+    if branch.loc["type"] == "Transformer":
+        voltage_tuple = sorted(bus_voltages.loc[[branch.from_bus_id, branch.to_bus_id]])
+        reactance_lookup = pd.Series(const.transformer_reactance)
+        # Find the 'closest' voltage pair via Euclidian distance
+        closest_voltage_tuple = (
+            reactance_lookup.index.to_series()
+            .map(lambda x: _euclidian(x, voltage_tuple))
+            .idxmin()
+        )
+        return const.transformer_reactance[closest_voltage_tuple]
+    elif branch.loc["type"] == "Line":
+        # Calculate line length via sum of distances between adjacent coordinate pairs
+        reactance_lookup = pd.Series(const.line_reactance_per_mile)
+        closest_voltage_reactance_per_mile = reactance_lookup.iloc[
+            reactance_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
+        ]
+        return branch.loc["length"] * closest_voltage_reactance_per_mile
+    else:
+        raise ValueError(f"{branch.loc['type']} not a valid branch type")
+
+
+def calculate_branch_mileage(branch):
+    """Estimate distance of a line.
+
+    :param pandas.Series branch: data for a single line.
+    :return: (*float*) -- distance (in miles) for that line.
+    """
+    coordinates = branch.loc["COORDINATES"]
+    return sum([haversine(a, b) for a, b in zip(coordinates[:-1], coordinates[1:])])
+
+
+def estimate_branch_rating(branch, bus_voltages):
+    """Estimate branch rating using line voltage or constant value for transformers.
+
+    :param pandas.Series branch: data for a single branch (line or transformer). All
+        branches require 'type' attributes, lines require 'VOLTAGE' and 'length'.
+    :param pandas.Series bus_voltages: mapping of buses to voltages.
+    :return: (*float*) -- rating for that branch (MW).
+    :raises ValueError: if branch 'type' attribute not recognized.
+    """
+    if branch.loc["type"] == "Line":
+        if branch.loc["length"] <= const.line_rating_short_threshold:
+            rating_lookup = pd.Series(const.line_rating_short)
+            closest_rating = rating_lookup.iloc[
+                rating_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
+            ]
+            return closest_rating
+        else:
+            sil_lookup = pd.Series(const.line_rating_surge_impedance_loading)
+            closest_sil = sil_lookup.iloc[
+                sil_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
+            ]
+            return (
+                closest_sil
+                * const.line_rating_surge_impedance_coefficient
+                * branch.loc["length"] ** const.line_rating_surge_impedance_exponent
+            )
+    elif branch.loc["type"] == "Transformer":
+        rating = const.transformer_rating
+        max_voltage = bus_voltages.loc[[branch.from_bus_id, branch.to_bus_id]].max()
+        line_capacities = pd.Series(const.line_rating_short)
+        closest_voltage_rating = line_capacities.iloc[
+            line_capacities.index.get_loc(max_voltage, method="nearest")
+        ]
+        num_addl_transformers = int(closest_voltage_rating / rating)
+        return rating * (1 + num_addl_transformers)
+    raise ValueError(f"{branch.loc['type']} not a valid branch type")
+
+
+def get_mst_edges(lines, substations):
+    """Get the set of lines which connected the connected components of the lines graph,
+    either from a cache or by generating from scratch and caching.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    :return: (*list*) -- each entry is a 3-tuple:
+        index of the first connected component (int),
+        index of the second connected component (int),
+        a dictionary with keys containing ``start``, ``end`` and ``weight``, defines
+        the ``from substation ID``, ``to substation ID`` and the distance of the line.
+    """
+    cache_dir = os.path.join(os.path.dirname(__file__), "cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_key = repr(lines[["SUB_1_ID", "SUB_2_ID"]].to_numpy().tolist()) + repr(
+        substations[["LATITUDE", "LONGITUDE"]].to_numpy().tolist()
+    )
+    cache_hash = hashlib.md5(cache_key.encode("utf-8")).hexdigest()
+    try:
+        with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "rb") as f:
+            print("Reading cached minimum spanning tree")
+            mst_edges = pickle.load(f)
+    except Exception:
+        print("No minimum spanning tree available, generating...")
+        _, mst_edges = connect_islands_with_minimum_cost(lines, substations)
+        with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "wb") as f:
+            pickle.dump(mst_edges, f)
+    return mst_edges
+
+
 def build_transmission(method="sub2line", kwargs={"rounding": 3}):
     """Build transmission network
 
@@ -480,6 +598,27 @@ def build_transmission(method="sub2line", kwargs={"rounding": 3}):
         lines, substations = map_lines_to_substations_using_coords(
             substations, hifld_lines, **kwargs
         )
+
+    # Connect all connected components
+    mst_edges = get_mst_edges(lines, substations)
+    new_lines = pd.DataFrame(
+        [{"SUB_1_ID": x[2]["start"], "SUB_2_ID": x[2]["end"]} for x in mst_edges]
+    )
+    new_lines = new_lines.assign(VOLTAGE=pd.NA, VOLT_CLASS="NOT AVAILABLE")
+    new_lines["COORDINATES"] = new_lines.apply(
+        lambda x: [
+            [
+                substations.loc[x.SUB_1_ID, "LATITUDE"],
+                substations.loc[x.SUB_1_ID, "LONGITUDE"],
+            ],
+            [
+                substations.loc[x.SUB_2_ID, "LATITUDE"],
+                substations.loc[x.SUB_2_ID, "LONGITUDE"],
+            ],
+        ],
+        axis=1,
+    )
+    lines = pd.concat([lines, new_lines])
 
     # Add voltages to lines with missing data
     augment_line_voltages(lines, substations)
