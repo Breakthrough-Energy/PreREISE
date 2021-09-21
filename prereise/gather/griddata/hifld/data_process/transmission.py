@@ -15,6 +15,9 @@ from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_substations,
     get_zone,
 )
+from prereise.gather.griddata.hifld.data_process.helpers import (
+    map_state_and_county_to_interconnect,
+)
 from prereise.gather.griddata.hifld.data_process.topology import (
     connect_islands_with_minimum_cost,
 )
@@ -622,5 +625,10 @@ def build_transmission(method="sub2line", kwargs={"rounding": 3}):
 
     # Add voltages to lines with missing data
     augment_line_voltages(lines, substations)
+
+    # Add additional information to substations
+    substations["interconnect"] = substations.apply(
+        lambda x: map_state_and_county_to_interconnect(x.STATE, x.COUNTY), axis=1
+    )
 
     return lines, substations
