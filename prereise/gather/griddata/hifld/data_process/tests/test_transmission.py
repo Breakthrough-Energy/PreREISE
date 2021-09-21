@@ -2,10 +2,12 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
+from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
     augment_line_voltages,
     create_buses,
     create_transformers,
+    estimate_branch_impedance,
 )
 
 
@@ -116,3 +118,28 @@ def test_create_transformers():
     )
     transformers = create_transformers(bus)
     assert_frame_equal(transformers, expected_transformers)
+
+
+def test_estimate_branch_impedance_lines():
+    branch = pd.DataFrame(
+        {"VOLTAGE": [69, 70, 345], "type": ["Line"] * 3, "length": [10, 15, 20]}
+    )
+    x = estimate_branch_impedance(branch.iloc[0], pd.Series())
+    assert x == const.line_reactance_per_mile[69] * 10
+    x = estimate_branch_impedance(branch.iloc[1], pd.Series())
+    assert x == const.line_reactance_per_mile[69] * 15
+    x = estimate_branch_impedance(branch.iloc[2], pd.Series())
+    assert x == const.line_reactance_per_mile[345] * 20
+
+
+def test_estimate_branch_impedance_transformers():
+    transformers = pd.DataFrame(
+        {"from_bus_id": [0, 1, 2], "to_bus_id": [1, 2, 3], "type": ["Transformer"] * 3}
+    )
+    bus_voltages = pd.Series([69, 230, 350, 500])
+    x = estimate_branch_impedance(transformers.iloc[0], bus_voltages)
+    assert x == const.transformer_reactance[(69, 230)]
+    x = estimate_branch_impedance(transformers.iloc[1], bus_voltages)
+    assert x == const.transformer_reactance[(230, 345)]
+    x = estimate_branch_impedance(transformers.iloc[2], bus_voltages)
+    assert x == const.transformer_reactance[(345, 500)]
