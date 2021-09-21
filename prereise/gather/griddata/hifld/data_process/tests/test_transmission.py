@@ -8,6 +8,7 @@ from prereise.gather.griddata.hifld.data_process.transmission import (
     create_buses,
     create_transformers,
     estimate_branch_impedance,
+    estimate_branch_rating,
 )
 
 
@@ -143,3 +144,43 @@ def test_estimate_branch_impedance_transformers():
     assert x == const.transformer_reactance[(230, 345)]
     x = estimate_branch_impedance(transformers.iloc[2], bus_voltages)
     assert x == const.transformer_reactance[(345, 500)]
+
+
+def test_estimate_branch_rating_lines():
+    branch = pd.DataFrame(
+        {
+            "VOLTAGE": [69, 140, 345, 499],
+            "type": ["Line"] * 4,
+            "length": [10, 50, 100, 150],
+        }
+    )
+    rating = estimate_branch_rating(branch.iloc[0], pd.Series())
+    assert rating == const.line_rating_short[69]
+    rating = estimate_branch_rating(branch.iloc[1], pd.Series())
+    assert rating == const.line_rating_short[138]
+    rating = estimate_branch_rating(branch.iloc[2], pd.Series())
+    assert rating == (
+        const.line_rating_surge_impedance_loading[345]
+        * const.line_rating_surge_impedance_coefficient
+        * 100 ** const.line_rating_surge_impedance_exponent
+    )
+    rating = estimate_branch_rating(branch.iloc[3], pd.Series())
+    assert rating == (
+        const.line_rating_surge_impedance_loading[500]
+        * const.line_rating_surge_impedance_coefficient
+        * 150 ** const.line_rating_surge_impedance_exponent
+    )
+
+
+def test_estimate_branch_rating_transformers():
+    transformers = pd.DataFrame(
+        {"from_bus_id": [0, 1, 2], "to_bus_id": [1, 2, 3], "type": ["Transformer"] * 3}
+    )
+    bus_voltages = pd.Series([69, 230, 350, 500])
+
+    rating = estimate_branch_rating(transformers.iloc[0], bus_voltages)
+    assert rating == const.transformer_rating
+    rating = estimate_branch_rating(transformers.iloc[1], bus_voltages)
+    assert rating == const.transformer_rating * 3
+    rating = estimate_branch_rating(transformers.iloc[2], bus_voltages)
+    assert rating == const.transformer_rating * 4
