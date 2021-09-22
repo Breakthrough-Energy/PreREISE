@@ -15,7 +15,7 @@ def get_input_day(model_year_dti: pd.DatetimeIndex) -> np.ndarray:
     """Determine whether each day of the model year is a weekend (1) or weekday (2)
 
     :param pd.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
-    :return: (*np.ndarray*) array of 1s and 2s indicating weekend/weekday designations for the model year.
+    :return: (*np.ndarray*) -- array of 1s and 2s indicating weekend/weekday designations for the model year.
 
     """
     return model_year_dti.dayofweek.isin(range(5)).astype(int) + 1
