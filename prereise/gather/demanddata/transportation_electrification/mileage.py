@@ -73,8 +73,8 @@ def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataF
 def remove_ldt(data: pd.DataFrame) -> pd.DataFrame:
     """Remove light duty trucks from data loaded from nths_census.mat.
 
-    :param pd.DataFrame data: the data returned from load_data.
-    :return: (*pd.DataFrame*) -- the data loaded from load_data with all rows
+    :param pd.DataFrame data: the data returned from :func:`load_data`.
+    :return: (*pd.DataFrame*) -- the data loaded from :func:`load_data` with all rows
         involving LDT removed.
     """
 
