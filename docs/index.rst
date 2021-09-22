@@ -84,6 +84,9 @@ Wind
    renewables/wind/rap.rst
 
 .. include::
+   renewables/wind/hrrr.rst
+
+.. include::
    renewables/wind/method.rst
 
 Resources

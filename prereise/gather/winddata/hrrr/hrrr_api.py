@@ -1,6 +1,8 @@
 import requests
 from pandas import date_range
+from tqdm import tqdm
 
+from prereise.gather.winddata.hrrr.constants import DEFAULT_PRODUCT
 from prereise.gather.winddata.hrrr.grib import GribRecordInfo
 from prereise.gather.winddata.hrrr.helpers import (
     formatted_filename,
@@ -42,7 +44,7 @@ class HrrrApi:
         """
         for dt in date_range(start=start_dt, end=end_dt, freq="H").to_pydatetime():
             url = self.base_url.format(dt=dt, product=product, hours_forecasted=0)
-            yield formatted_filename(dt, product, hours_forecasted=0), url
+            yield formatted_filename(dt, product), url
 
     def download_meteorological_data(
         self, start_dt, end_dt, directory, product, selectors=None
@@ -63,7 +65,7 @@ class HrrrApi:
         :param list selectors: list of strings that can be used to narrow down
             the amount of data downloaded from a specific GRIB file.
         """
-        for filename, url in self._filename_url_iter(start_dt, end_dt, product):
+        for filename, url in tqdm(self._filename_url_iter(start_dt, end_dt, product)):
             grib_record_information_list = [GribRecordInfo.full_file()]
             # first grab index file and figure out which bytes to download
             if selectors:
@@ -110,6 +112,6 @@ class HrrrApi:
             start_dt,
             end_dt,
             directory,
-            product="sfc",
+            product=DEFAULT_PRODUCT,
             selectors=[self.U_COMPONENT_FILTER, self.V_COMPONENT_FILTER],
         )
