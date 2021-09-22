@@ -96,7 +96,7 @@ def total_daily_vmt(
     :param list locationstrategy: strategy for each location
     :param list input_day: day of the week for each day in the year derived from
         first_func
-    :return: (*list*) -- daily_vmt_total each row is a year of entries for each vehicle
+    :return: (*np.array*) -- an array where each element is a year of entries for each vehicle
         type
     """
     # get the data
