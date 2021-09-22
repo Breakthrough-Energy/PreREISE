@@ -1,5 +1,4 @@
-# DELETED: comm_type, LOAD, vmtsc
-
+import prereise/gather/demanddata/transportation_electrification/const
 import prereise/gather/demanddata/transportation_electrification/mileage
 import prereise/gather/demanddata/transportation_electrification/charging
 import numpy as np
@@ -82,10 +81,6 @@ def immediate_charging(
                     # trip number
                     newdata.loc[i]["trip number"] = trip_num
 
-                # battery electric vehicle
-                # pure electric
-                ER = 1
-
                 # 1 is the safety coefficient
                 if newdata.loc[i]["total vehicle miles traveled"] < veh_range * const.safety_coefficient:
                     # 1 means the day trip could be used in battery electric vehicle
@@ -93,7 +88,7 @@ def immediate_charging(
                     # trip end battery charge
                     newdata.loc[i]["trip end battery charge"] = (
                         newdata.loc[i]["trip start battery charge"]
-                        - newdata[i]["Miles traveled"] * kwhmi * ER
+                        - newdata[i]["Miles traveled"] * kwhmi * const.ER
                     )
                     # period when battery is discharging. depleting time
                     newdata.loc[i]["depleting time"] = newdata.loc[i][
@@ -120,7 +115,7 @@ def immediate_charging(
                     newdata.loc[i]["charging power"],
                     kwh,
                     newdata.loc[i]["trip end battery charge"],
-                    charging_efficiency,
+                    const.charging_efficiency,
                 )
                 # charging consumption
                 newdata.loc[i][
@@ -128,7 +123,7 @@ def immediate_charging(
                 ] = charging.get_charging_consumption(
                     newdata.loc[i]["charging power"],
                     newdata.loc[i]["charging time"],
-                    charging_efficiency,
+                    const.charging_efficiency,
                 )
 
                 # charging start point
