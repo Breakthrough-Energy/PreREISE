@@ -1,7 +1,8 @@
 from itertools import combinations, product
 
 import networkx as nx
-from powersimdata.utility.distance import haversine
+from powersimdata.utility.distance import haversine, ll2uv
+from scipy.spatial import KDTree
 from tqdm import tqdm
 
 from prereise.gather.griddata.hifld.const import abv_state_neighbor
@@ -40,6 +41,40 @@ def min_dist_of_2_conn_comp(nodes1, nodes2, dist_metric, memory_efficient=False)
     return min_dist, res_v1, res_v2
 
 
+def min_dist_of_2_conn_comp_kdtree(nodes1, nodes2, **kwargs):
+    """Calculate the minimum distance of two connected components using KDTree.
+
+    :param pandas.DataFrame nodes1: a data frame contains all the nodes of the first
+        connected component with index being node ID and two columns being latitude
+        and longitude in order.
+    :param pandas.DataFrame nodes2: a data frame contains all the nodes of the second
+        connected component with index being node ID and two columns being latitude
+        and longitude in order.
+    :param \\*\\*kwargs: optional arguments for KDTree query.
+    :return: (*tuple*) -- a tuple contains three elements, the minimum distance
+        follows by a pair of nodes from the two connected components respectively
+        in order
+
+    .. note:: The minimum distance returned by this function depends on the
+        configuration of KDTree by the user specified keyword arguments, Euclidean
+        distance is used by default. See
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.query.html#scipy.spatial.KDTree.query
+        for more information.
+    """
+    swap = False
+    if len(nodes1) < len(nodes2):
+        nodes1, nodes2 = nodes2, nodes1
+        swap = True
+    tree = KDTree([ll2uv(p[1], p[0]) for p in nodes1.values])
+    shortest_link = nodes2.apply(
+        lambda x: tree.query(ll2uv(*x[::-1]), **kwargs), axis=1
+    )
+    min_dist, sub1_ind = shortest_link.min()
+    sub1 = nodes1.index[sub1_ind]
+    sub2 = shortest_link.loc[shortest_link == (min_dist, sub1_ind)].index[0]
+    return (min_dist, sub2, sub1) if swap else (min_dist, sub1, sub2)
+
+
 def find_adj_state_of_2_conn_comp(cc1, cc2, state_adj, subs):
     """Find the adjacent states between two given connected components.
 
@@ -62,7 +97,13 @@ def find_adj_state_of_2_conn_comp(cc1, cc2, state_adj, subs):
 
 
 def connect_islands_with_minimum_cost(
-    lines, subs, cost_metric=haversine, state_neighbor=None, memory_efficient=False
+    lines,
+    subs,
+    state_neighbor=None,
+    min_dist_method="naive",
+    cost_metric=haversine,
+    memory_efficient=False,
+    kdtree_kwargs=None,
 ):
     """Connect a group of islands defined by lines and substations into one big
     island with minimum cost.
@@ -73,13 +114,19 @@ def connect_islands_with_minimum_cost(
     :param pandas.DataFrame subs: substation data frame indexed by ``ID`` with two
         columns ``LATITUDE`` and ``LONGITUDE`` representing the geographical
         coordination of each entry.
-    :param function cost_metric: a function defines the cost metric to calculate the
-        weight of lines, defaults to :py:func:`haversine`.
     :param dict state_neighbor: a dictionary defines the adjacency relationship among
         states, defaults to None and the constant dictionary ``abv_state_neighbor``
         defined in the ``const`` module is used.
+    :param func min_dist_method: the function used to calculate minimum distance
+        between two connected components, defaults to *naive* which uses
+        :py:func:`min_dist_of_2_conn_comp` or *kdtree" which uses
+        :py:func:`min_dist_of_2_conn_comp_kdtree`.
+    :param function cost_metric: a function defines the cost metric to calculate the
+        weight of lines, defaults to :py:func:`haversine`.
     :param bool memory_efficient: run the function in a memory efficient way or not,
         defaults to False.
+    :param dict kdtree_kwargs: keyword arguments to pass to
+        :py:func:`min_dist_of_2_conn_comp_kdtree` if specified by ``min_dist_method``.
     :return: (*tuple*) -- a pair of lists, the first one is a list of all potential
         line candidates among given connected components; the second one is a list
         of subsequence of the first entry, representing the chosen lines to form a
@@ -87,7 +134,9 @@ def connect_islands_with_minimum_cost(
         first connected component, index of the second connected component,
         a dictionary with keys containing ``start``, ``end`` and ``weight``, defines
         the ``from substation ID``, ``to substation ID`` and the weight of the line
-        calculated by the ``cost_metric``.
+        calculated by either ``cost_metric`` or KDTree based on ``kdtree_kwargs``.
+    :raises TypeError: if ``kdtree_kwargs`` is specified but not a dict.
+    :raises ValueError: if ``min_dist_method`` is unknown.
 
         .. note:: the indexes of connected components are defined by the size,
             i.e. number of nodes, of the connected components in ascending order.
@@ -116,9 +165,20 @@ def connect_islands_with_minimum_cost(
             nodes2 = subs.loc[cc2].query("STATE in @cc2_adj")[["LATITUDE", "LONGITUDE"]]
             # Run an exhaustive search on the filtered substations of both connected
             # components to find a line with minimum cost the connects the two islands
-            min_dist, sub1, sub2 = min_dist_of_2_conn_comp(
-                nodes1, nodes2, cost_metric, memory_efficient=memory_efficient
-            )
+            if min_dist_method == "kdtree":
+                if kdtree_kwargs is None:
+                    kdtree_kwargs = {}
+                if kdtree_kwargs is not None and not isinstance(kdtree_kwargs, dict):
+                    raise TypeError("kdtree_kwargs must be a dictionary")
+                min_dist, sub1, sub2 = min_dist_of_2_conn_comp_kdtree(
+                    nodes1, nodes2, **kdtree_kwargs
+                )
+            elif min_dist_method == "naive":
+                min_dist, sub1, sub2 = min_dist_of_2_conn_comp(
+                    nodes1, nodes2, cost_metric, memory_efficient=memory_efficient
+                )
+            else:
+                raise ValueError("min_dist_method must be either `naive` or `kdtree`")
             edge_list.append(
                 (ind1, ind2, {"weight": min_dist, "start": sub1, "end": sub2})
             )
