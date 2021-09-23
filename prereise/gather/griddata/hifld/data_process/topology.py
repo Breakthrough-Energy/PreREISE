@@ -125,7 +125,7 @@ def connect_islands_with_minimum_cost(
         defined in the ``const`` module is used.
     :param func min_dist_method: the function used to calculate minimum distance
         between two connected components, defaults to *naive* which uses
-        :py:func:`min_dist_of_2_conn_comp` or *kdtree" which uses
+        :py:func:`min_dist_of_2_conn_comp` or *kdtree* which uses
         :py:func:`min_dist_of_2_conn_comp_kdtree`.
     :param function cost_metric: a function defines the cost metric to calculate the
         weight of lines, defaults to :py:func:`haversine`.
@@ -161,7 +161,7 @@ def connect_islands_with_minimum_cost(
         raise TypeError("island_size_upper_bound must be an integer")
     if island_size_lower_bound >= island_size_upper_bound:
         raise ValueError(
-            "island_size_lower_bound must be smaller than " "island_size_upper_bound"
+            "island_size_lower_bound must be smaller than island_size_upper_bound"
         )
     if state_neighbor is None:
         state_neighbor = abv_state_neighbor
@@ -196,8 +196,8 @@ def connect_islands_with_minimum_cost(
             # components to find a line with minimum cost the connects the two islands
             if min_dist_method == "kdtree":
                 if kdtree_kwargs is None:
-                    kdtree_kwargs = {}
-                if kdtree_kwargs is not None and not isinstance(kdtree_kwargs, dict):
+                    kdtree_kwargs = dict()
+                if not isinstance(kdtree_kwargs, dict):
                     raise TypeError("kdtree_kwargs must be a dictionary")
                 min_dist, sub1, sub2 = min_dist_of_2_conn_comp_kdtree(
                     nodes1, nodes2, **kdtree_kwargs
