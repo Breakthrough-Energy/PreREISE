@@ -82,7 +82,7 @@ def get_epa_ampd(path, year=2019, cache=False):
         [data[state][month_num] for state in abv2state for month_num in range(1, 13)]
     )
 
-    return joined
+    return joined.astype({"UNITID": "string"})
 
 
 def get_epa_needs(path):
