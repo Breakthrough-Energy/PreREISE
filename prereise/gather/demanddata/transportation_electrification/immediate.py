@@ -120,11 +120,7 @@ def immediate_charging(
                 # charging consumption
                 newdata.loc[i][
                     "charging consumption"
-                ] = charging.get_charging_consumption(
-                    newdata.loc[i]["charging power"],
-                    newdata.loc[i]["charging time"],
-                    const.charging_efficiency,
-                )
+                ] = newdata.loc[i]["charging power"]  * newdata.loc[i]["charging time"] * const.charging_efficiency
 
                 # charging start point
                 start_point = round(newdata.loc[i]["End time (hour decimal)"] * 100)
