@@ -38,19 +38,6 @@ def get_charging_time(charging_power, kwh, battery_SOC, charging_efficiency):
     return charging_time
 
 
-def get_charging_consumption(charging_power, charging_time, charging_efficiency):
-    '''Calculates power consumption of the charging session
-
-    :param float charging_power: charging power.
-    :param float charging_time: charging time in decimal format
-    :param float charging_efficiency: grid to battery efficiency.
-    :return: (*float*) -- power consumption of the charging session.
-    '''
-    #charging_charge to the battery
-    return charging_power * charging_time * charging_efficiency
-
-
-
 #charge according to location
 def get_location(location_strategy, dwell_location):
     '''Determines if the vehicle can be charged given location strategy and dwelling location
