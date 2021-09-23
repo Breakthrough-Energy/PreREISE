@@ -85,7 +85,7 @@ def get_location(location_strategy, dwell_location):
             return 0
     #home and work and school
     elif location_strategy == 5:
-        if dwell_location == 1 or dwell_location == 11 or dwell_location == 12 or dwell_location == 21:
+        if dwell_location in {1, 11, 12, 21}:
             return 1
         else:
             return 0
