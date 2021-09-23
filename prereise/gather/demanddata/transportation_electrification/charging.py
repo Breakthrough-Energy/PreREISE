@@ -11,11 +11,11 @@ def get_charging_power(power, trip_strategy, location_strategy, kwh, trip_data):
     charging_power = power
 
     dwelling = int(trip_data['Dwell time (hour decimal)'] > 0.2)
-    location = get_location(location_strategy, trip_data['why to'])
+    location = int(get_location(location_strategy, trip_data['why to']))
 
-    trip = consider_trip_number(trip_strategy, trip_data['total vehicle trips'], trip_data['trip number'])
+    trip = int(consider_trip_number(trip_strategy, trip_data['total vehicle trips'], trip_data['trip number']))
     
-    battery = get_battery_SOC(trip_data['trip end battery charge'], kwh) 
+    battery = int(get_battery_SOC(trip_data['trip end battery charge'], kwh)) 
     if dwelling * location * trip * battery != 1 and not (dwelling * location == 1 or trip_data['total vehicle trips'] == trip_data['trip number']):
         charging_power = 0
     
@@ -57,38 +57,33 @@ def get_location(location_strategy, dwell_location):
 
     :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, or 5; 1-home only, 2-home and work related, 3-anywhere if possibile, 4-home and school only, 5-home and work and school.
     :param int dwell_location: location the vehicle dwells
-    :return: (*int*) -- a flag that determines whether or not the vehicle can charge (0: no, 1: yes)
+    :return: (*bool*) -- a boolean that represents whether or not the vehicle can charge
     '''
     #only home
     if location_strategy == 1:
-        if dwell_location == 1:
-            return 1
-        else:
-            return 0
+        return dwell_location == 1
+    
     #home and go to work related
     elif location_strategy == 2:
         #13 is to 'attend business meeting', 14 is 'other work related'. 
         #here only consider the regular work, which are 11 and 12, 'go to work' and 'return to work'
-        if dwell_location >= 13:
-            return 0
-        else:
-            return 1
+        return dwell_location < 13
+   
     #anywhere if possible
     elif location_strategy == 3:
-        return 1
+        return True
+    
     #home and school only
     elif location_strategy == 4:
         #21 is 'go to school as student'
-        if dwell_location == 1 or dwell_location == 21:
-            return 1
-        else:
-            return 0
+        return dwell_location in {1, 21}
+
     #home and work and school
     elif location_strategy == 5:
         if dwell_location in {1, 11, 12, 21}:
-            return 1
+            return True
         else:
-            return 0
+            return False
 
 
 #consider trip number
@@ -98,16 +93,14 @@ def consider_trip_number(trip_strategy, total_trips, trip_num):
     :param int trip_strategy: a toggle that determines if should charge on any trip or only after last trip (1-anytrip number, 2-last trip)
     :param int total_trips: total trips that the vehicle makes
     :param int trip_num: the trip number of the current trip
-    :return: (*int*) -- returns a flag that determines if the vehicle should charge (1 yes, 2 no)
+    :return: (*bool*) -- boolean that represents if the vehicle should charge
     '''
     if trip_strategy == 1:
-        return 1
+        return True
+    
     elif trip_strategy == 2:
-        if total_trips == trip_num:
-            return 1
-        else:
-            return 0
-
+        return total_trips == trip_num:
+         
 
 #consider battery SOC
 def get_battery_SOC(battery_SOC, kwh):
@@ -115,7 +108,7 @@ def get_battery_SOC(battery_SOC, kwh):
 
     :param float battery_SOC: vehicle battery at end of trip
     :param float kwh: kwhmi * veh_range, amount of energy needed to charge vehicle.
-    :return: (int) -- a flag that determines if battery needs to be charged (1 yes, 0 no)
+    :return: (*bool*) -- boolean that represents if battery needs to be charged 
     '''
-    return int(battery_SOC<kwh)
+    return battery_SOC<kwh
 
