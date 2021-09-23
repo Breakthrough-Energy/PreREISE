@@ -1,10 +1,11 @@
 import pandas as pd
-from powersimdata.utility.distance import haversine
+from powersimdata.utility.distance import haversine, ll2uv
 
 from prereise.gather.griddata.hifld.data_process.topology import (
     connect_islands_with_minimum_cost,
     find_adj_state_of_2_conn_comp,
     min_dist_of_2_conn_comp,
+    min_dist_of_2_conn_comp_kdtree,
 )
 
 cc1 = pd.DataFrame(
@@ -50,6 +51,42 @@ def test_min_dist_of_2_conn_comp():
         haversine((48.214966, -122.0283320), (47.838214, -117.410093)),
         209798,
         209809,
+    ]
+    assert [d, r1, r2] == expected_return
+
+
+def test_min_dist_of_2_conn_comp_kdtree():
+    inputs = [cc1[["LATITUDE", "LONGITUDE"]], cc2[["LATITUDE", "LONGITUDE"]]]
+    d, r1, r2 = min_dist_of_2_conn_comp_kdtree(*inputs, p=1)
+    expected_return = [
+        sum(
+            [
+                abs(e1 - e2)
+                for e1, e2 in zip(
+                    ll2uv(-122.0283320, 48.214966), ll2uv(-117.410093, 47.838214)
+                )
+            ]
+        ),
+        209798,
+        209809,
+    ]
+    assert [d, r1, r2] == expected_return
+
+
+def test_min_dist_of_2_conn_comp_kdtree_swap():
+    inputs = [cc2[["LATITUDE", "LONGITUDE"]].head(1), cc1[["LATITUDE", "LONGITUDE"]]]
+    d, r1, r2 = min_dist_of_2_conn_comp_kdtree(*inputs, p=1)
+    expected_return = [
+        sum(
+            [
+                abs(e1 - e2)
+                for e1, e2 in zip(
+                    ll2uv(-122.0283320, 48.214966), ll2uv(-117.410093, 47.838214)
+                )
+            ]
+        ),
+        209809,
+        209798,
     ]
     assert [d, r1, r2] == expected_return
 
@@ -131,8 +168,60 @@ def test_connect_islands_with_minimum_cost():
             ),
         ],
     )
+    expected_return_kdtree = (
+        [
+            (
+                0,
+                1,
+                {
+                    "start": 209798,
+                    "end": 209809,
+                },
+            ),
+            (
+                0,
+                2,
+                {
+                    "start": 200352,
+                    "end": 202058,
+                },
+            ),
+            (
+                1,
+                2,
+                {
+                    "start": 209809,
+                    "end": 202058,
+                },
+            ),
+        ],
+        [
+            (
+                0,
+                1,
+                {
+                    "start": 209798,
+                    "end": 209809,
+                },
+            ),
+            (
+                0,
+                2,
+                {
+                    "start": 200352,
+                    "end": 202058,
+                },
+            ),
+        ],
+    )
     assert connect_islands_with_minimum_cost(lines, subs) == expected_return
     assert (
         connect_islands_with_minimum_cost(lines, subs, memory_efficient=True)
         == expected_return
     )
+    all_edges, mst_edges = connect_islands_with_minimum_cost(
+        lines, subs, min_dist_method="kdtree"
+    )
+    for e in all_edges + mst_edges:
+        e[2].pop("weight")
+    assert (all_edges, mst_edges) == expected_return_kdtree
