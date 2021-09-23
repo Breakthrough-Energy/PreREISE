@@ -34,7 +34,7 @@ def get_charging_time(charging_power, kwh, battery_SOC, charging_efficiency):
     if charging_power == 0:
         charging_time = 0
     else:
-        charging_time = (kwh - battery_SOC)/charging_power/charging_efficiency
+        charging_time = (kwh - battery_SOC)/(charging_power * charging_efficiency)
     return charging_time
 
 
