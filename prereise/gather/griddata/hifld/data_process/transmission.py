@@ -524,12 +524,14 @@ def estimate_branch_rating(branch, bus_voltages):
     raise ValueError(f"{branch.loc['type']} not a valid branch type")
 
 
-def get_mst_edges(lines, substations):
+def get_mst_edges(lines, substations, **kwargs):
     """Get the set of lines which connected the connected components of the lines graph,
     either from a cache or by generating from scratch and caching.
 
     :param pandas.DataFrame lines: data frame of lines.
     :param pandas.DataFrame substations: data frame of substations.
+    :param \\*\\*kwargs: optional arguments for
+        :py:func:`connect_islands_with_minimum_cost`.
     :return: (*list*) -- each entry is a 3-tuple:
         index of the first connected component (int),
         index of the second connected component (int),
@@ -538,8 +540,10 @@ def get_mst_edges(lines, substations):
     """
     cache_dir = os.path.join(os.path.dirname(__file__), "cache")
     os.makedirs(cache_dir, exist_ok=True)
-    cache_key = repr(lines[["SUB_1_ID", "SUB_2_ID"]].to_numpy().tolist()) + repr(
-        substations[["LATITUDE", "LONGITUDE"]].to_numpy().tolist()
+    cache_key = (
+        repr(lines[["SUB_1_ID", "SUB_2_ID"]].to_numpy().tolist())
+        + repr(substations[["LATITUDE", "LONGITUDE"]].to_numpy().tolist())
+        + repr(kwargs)
     )
     cache_hash = hashlib.md5(cache_key.encode("utf-8")).hexdigest()
     try:
@@ -548,7 +552,7 @@ def get_mst_edges(lines, substations):
             mst_edges = pickle.load(f)
     except Exception:
         print("No minimum spanning tree available, generating...")
-        _, mst_edges = connect_islands_with_minimum_cost(lines, substations)
+        _, mst_edges = connect_islands_with_minimum_cost(lines, substations, **kwargs)
         with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "wb") as f:
             pickle.dump(mst_edges, f)
     return mst_edges
@@ -588,6 +592,28 @@ def build_transmission(method="sub2line", kwargs={"rounding": 3}):
     substations = filter_substations_with_zero_lines(hifld_substations)
     check_for_location_conflicts(substations)
 
+    # Filter out keyword arguments for get_mst_edges function
+    get_mst_kwargs = dict()
+    for keyword in {
+        "island_size_lower_bound",
+        "island_size_upper_bound",
+        "state_neighbor",
+        "min_dist_method",
+        "cost_metric",
+        "memory_efficient",
+        "kdtree_kwargs",
+    }:
+        if keyword in kwargs:
+            get_mst_kwargs[keyword] = kwargs.pop(keyword)
+        if "island_size_lower_bound" in get_mst_kwargs:
+            island_size_lower_bound = get_mst_kwargs["island_size_lower_bound"]
+        else:
+            island_size_lower_bound = 0
+        if "island_size_upper_bound" in get_mst_kwargs:
+            island_size_upper_bound = get_mst_kwargs["island_size_upper_bound"]
+        else:
+            island_size_upper_bound = len(substations) + 1
+
     if method == "sub2line":
         print("filter lines based on substations")
         print("---------------------------------")
@@ -602,8 +628,28 @@ def build_transmission(method="sub2line", kwargs={"rounding": 3}):
             substations, hifld_lines, **kwargs
         )
 
-    # Connect all connected components
-    mst_edges = get_mst_edges(lines, substations)
+    # Connect selected connected components
+    mst_edges = get_mst_edges(lines, substations, **get_mst_kwargs)
+
+    # Filter lines and substations based on island sizes
+    graph = nx.convert_matrix.from_pandas_edgelist(lines, "SUB_1_ID", "SUB_2_ID")
+    sub_to_drop = set().union(
+        *[
+            cc
+            for cc in list(nx.connected_components(graph))
+            if len(cc) <= island_size_lower_bound or len(cc) >= island_size_upper_bound
+        ]
+    )
+    len_lines_before = len(lines)
+    lines = lines.loc[~lines["SUB_1_ID"].isin(sub_to_drop)]
+    print(f"dropping {len_lines_before-len(lines)} lines due to island size filtering")
+    len_substations_before = len(substations)
+    substations.drop(sub_to_drop, inplace=True)
+    print(
+        f"dropping {len_substations_before-len(substations)} substations due to "
+        f"island size filtering"
+    )
+
     new_lines = pd.DataFrame(
         [{"SUB_1_ID": x[2]["start"], "SUB_2_ID": x[2]["end"]} for x in mst_edges]
     )
