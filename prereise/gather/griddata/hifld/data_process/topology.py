@@ -99,6 +99,8 @@ def find_adj_state_of_2_conn_comp(cc1, cc2, state_adj, subs):
 def connect_islands_with_minimum_cost(
     lines,
     subs,
+    island_size_lower_bound=0,
+    island_size_upper_bound=None,
     state_neighbor=None,
     min_dist_method="naive",
     cost_metric=haversine,
@@ -114,6 +116,10 @@ def connect_islands_with_minimum_cost(
     :param pandas.DataFrame subs: substation data frame indexed by ``ID`` with two
         columns ``LATITUDE`` and ``LONGITUDE`` representing the geographical
         coordination of each entry.
+    :param int island_size_lower_bound: smallest island the function should consider
+        exclusively, defaults to 0.
+    :param int island_size_upper_bound: largest island the function should consider
+        exclusively, defaults to None.
     :param dict state_neighbor: a dictionary defines the adjacency relationship among
         states, defaults to None and the constant dictionary ``abv_state_neighbor``
         defined in the ``const`` module is used.
@@ -135,12 +141,28 @@ def connect_islands_with_minimum_cost(
         a dictionary with keys containing ``start``, ``end`` and ``weight``, defines
         the ``from substation ID``, ``to substation ID`` and the weight of the line
         calculated by either ``cost_metric`` or KDTree based on ``kdtree_kwargs``.
-    :raises TypeError: if ``kdtree_kwargs`` is specified but not a dict.
-    :raises ValueError: if ``min_dist_method`` is unknown.
+    :raises TypeError:
+        if ``island_size_lower_bound`` is not int, and/or
+        if ``island_size_upper_bound`` is not int, and/or
+        if ``kdtree_kwargs`` is specified but not a dict.
+    :raises ValueError:
+        if ``island_size_lower_bound`` is greater or equal to
+        ``island_size_upper_bound``, and/or
+        if ``min_dist_method`` is unknown.
 
         .. note:: the indexes of connected components are defined by the size,
             i.e. number of nodes, of the connected components in ascending order.
     """
+    if island_size_upper_bound is None:
+        island_size_upper_bound = len(subs) + 1
+    if not isinstance(island_size_lower_bound, int):
+        raise TypeError("island_size_lower_bound must be an integer")
+    if not isinstance(island_size_upper_bound, int):
+        raise TypeError("island_size_upper_bound must be an integer")
+    if island_size_lower_bound >= island_size_upper_bound:
+        raise ValueError(
+            "island_size_lower_bound must be smaller than " "island_size_upper_bound"
+        )
     if state_neighbor is None:
         state_neighbor = abv_state_neighbor
 
@@ -149,7 +171,14 @@ def connect_islands_with_minimum_cost(
 
     # Get the full list of connected components of the resultant graph sored by size in
     # ascending order
-    all_cc = sorted(list(nx.connected_components(graph)), key=len)
+    all_cc = sorted(
+        [
+            cc
+            for cc in list(nx.connected_components(graph))
+            if island_size_lower_bound < len(cc) < island_size_upper_bound
+        ],
+        key=len,
+    )
 
     # Loop through all the combinations of connected components to identify potential
     # edges filtered by the adjacency relationship specified by the user
