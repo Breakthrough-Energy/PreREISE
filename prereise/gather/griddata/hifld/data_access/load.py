@@ -24,12 +24,12 @@ def get_eia_form_860(path):
     return data.query("State in @abv2state")
 
 
-def get_epa_ampd(path, year=2019, cache=False):
+def get_epa_ampd(path, years={2019}, cache=False):
     """Read a collection of zipped CSV files from the EPA AMPD dataset and keep readings
     from plants located in contiguous states.
 
     :param str path: path to folder. Either local or URL.
-    :param str year: year of data to read (will be present in filenames)
+    :param iterable years: years of data to read (will be present in filenames).
     :param bool cache: Whether to locally cache the EPA AMPD data, and read from the
         cache when it's available.
     :return: (*pandas.DataFrame*) -- readings from operational power plant in contiguous
@@ -52,36 +52,42 @@ def get_epa_ampd(path, year=2019, cache=False):
         cache_dir = os.path.join(os.path.dirname(__file__), "cache")
         os.makedirs(cache_dir, exist_ok=True)
 
-    data = {state: {} for state in abv2state}
-    for state in tqdm(abv2state):
-        for month_num in range(1, 13):
-            filename = f"{year}{state.lower()}{str(month_num).rjust(2, '0')}.zip"
-            if cache:
-                try:
-                    df = pd.read_csv(
-                        os.path.join(cache_dir, filename),
-                        usecols=heat_rate_estimation_columns,
-                    )
-                except Exception:
+    data = {year: {state: {} for state in abv2state} for year in years}
+    for year in sorted(years):
+        for state in tqdm(abv2state):
+            for month_num in range(1, 13):
+                filename = f"{year}{state.lower()}{str(month_num).rjust(2, '0')}.zip"
+                if cache:
+                    try:
+                        df = pd.read_csv(
+                            os.path.join(cache_dir, filename),
+                            usecols=heat_rate_estimation_columns,
+                        )
+                    except Exception:
+                        df = pd.read_csv(
+                            path_sep.join([path, filename]),
+                            usecols=heat_rate_estimation_columns,
+                        )
+                        df.to_csv(
+                            os.path.join(cache_dir, filename),
+                            compression={
+                                "method": "zip",
+                                "archive_name": filename.replace(".zip", ".csv"),
+                            },
+                        )
+                else:
                     df = pd.read_csv(
                         path_sep.join([path, filename]),
                         usecols=heat_rate_estimation_columns,
                     )
-                    df.to_csv(
-                        os.path.join(cache_dir, filename),
-                        compression={
-                            "method": "zip",
-                            "archive_name": filename.replace(".zip", ".csv"),
-                        },
-                    )
-            else:
-                df = pd.read_csv(
-                    path_sep.join([path, filename]),
-                    usecols=heat_rate_estimation_columns,
-                )
-            data[state][month_num] = df
+                data[year][state][month_num] = df
     joined = pd.concat(
-        [data[state][month_num] for state in abv2state for month_num in range(1, 13)]
+        [
+            data[year][state][month_num]
+            for year in sorted(years)
+            for state in abv2state
+            for month_num in range(1, 13)
+        ]
     )
 
     return joined.astype({"UNITID": "string"})
