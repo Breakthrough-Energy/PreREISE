@@ -7,58 +7,59 @@ import pandas as pd
 from prereise.gather.demanddata.bldg_electrification import const
 
 
-def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
+def aggregate_puma_df(
+    puma_fuel_2010, tract_puma_mapping, tract_gbs_area, tract_degday_normals, tract_pop
+):
     """Scale census tract data up to puma areas.
 
     :param pandas.DataFrame puma_fuel_2010: household fuel type by puma.
     :param pandas.DataFrame tract_puma_mapping: tract to puma mapping.
-    :return: (*pandas.DataFrame*) -- population, residential and commercial areas,
-        heating degree days, cooling degree days, residential space heating fuel usage
+    :param pandas.DataFrame tract_gbs_area: General Building Stock area for residential, commercial, industrial areas by tract
+    :param pandas.DataFrame tract_degday_normals: heating and cooling degree day normals by tract
+    :param pandas.DataFrame tract_pop: population by tract
+    :return: (*pandas.DataFrame*) -- population; residential, commercial, industrial areas;
+        heating degree days; cooling degree days; residential space heating household fuel
         fractions.
     """
     # Set up puma_df data frame
     puma_df = puma_fuel_2010["state"].to_frame()
 
-    # Initialize columns that will be created via summing/averaging
-    sum_columns = [
-        "pop_2010",
-        "res_area_gbs_m2",
-        "com_area_gbs_m2",
-    ]
-    weighted_avg_columns = [
-        "hdd65_normals_2010",
-        "cdd65_normals_2010",
-    ]
-
-    # Collect all state data into one data frame
+    # Combine tract-level data into single data frame with only census tracts with building area data
     tract_data = pd.concat(
-        [
-            pd.read_csv(os.path.join(data_dir, f"tract_data/tract_data_{state}.csv"))
-            for state in const.state_list
-        ]
+        [tract_gbs_area, tract_degday_normals, tract_pop], axis=1, join="inner"
     )
+    tract_data = tract_data.loc[:, ~tract_data.columns.duplicated()]
 
-    # Rename tract IDs to match all dataframe naming conventions
-    tract_data["id"] = ["tract_" + str(i).rjust(11, "0") for i in tract_data["id"]]
-    tract_data["id"] = tract_data["id"].astype("str")
-    tract_data.set_index("id", inplace=True)
-
-    # Sum population, housing units, and areas
+    # Group tracts by PUMA for aggregration
     grouped_tracts = tract_data.groupby(tract_puma_mapping["puma"])
-    for col in sum_columns:
-        col_to_sum = col.replace("_gbs", "").replace("_", ".")
-        puma_df.loc[grouped_tracts.groups.keys(), col] = grouped_tracts[
-            col_to_sum
-        ].sum()
-
+    # Sum population and GBS areas; store in data frame
+    puma_df.loc[grouped_tracts.groups.keys(), "pop_2010"] = grouped_tracts[
+        "pop_2010"
+    ].sum()
+    puma_df.loc[grouped_tracts.groups.keys(), "res_area_gbs_m2"] = grouped_tracts[
+        "res_area_gbs_m2"
+    ].sum()
+    puma_df.loc[grouped_tracts.groups.keys(), "com_area_gbs_m2"] = grouped_tracts[
+        "com_area_gbs_m2"
+    ].sum()
+    puma_df.loc[grouped_tracts.groups.keys(), "ind_area_gbs_m2"] = grouped_tracts[
+        "ind_area_gbs_m2"
+    ].sum()
     # Population-weighted average hdd, cdd, and acpen
-    for col in weighted_avg_columns:
-        col_to_sum = col.replace("_normals_2010", "").replace("_res_2010", ".res")
-        weighted_elements = tract_data[col_to_sum] * tract_data["pop.2010"]
-        puma_df[col] = (
-            weighted_elements.groupby(tract_puma_mapping["puma"]).sum()
-            / tract_data["pop.2010"].groupby(tract_puma_mapping["puma"]).sum()
-        )
+    tract_data["pop_hdd65_normals_2010"] = (
+        tract_data["pop_2010"] * tract_data["hdd65_normals_2010"]
+    )
+    tract_data["pop_cdd65_normals_2010"] = (
+        tract_data["pop_2010"] * tract_data["cdd65_normals_2010"]
+    )
+    puma_df.loc[grouped_tracts.groups.keys(), "hdd65_normals_2010"] = (
+        grouped_tracts["pop_hdd65_normals_2010"].sum()
+        / grouped_tracts["pop_2010"].sum()
+    )
+    puma_df.loc[grouped_tracts.groups.keys(), "cdd65_normals_2010"] = (
+        grouped_tracts["pop_cdd65_normals_2010"].sum()
+        / grouped_tracts["pop_2010"].sum()
+    )
 
     # Load RECS and CBECS area scales for res and com
     resscales = pd.read_csv(os.path.join(data_dir, "area_scale_res.csv"))
@@ -66,13 +67,13 @@ def aggregate_puma_df(puma_fuel_2010, tract_puma_mapping):
 
     # Compute GBS areas for state groups in RECS and CBECS
     resscales["GBS"] = [
-        tract_data.query("state in @s")["res.area.m2"].sum()
+        puma_df.query("state in @s")["res_area_gbs_m2"].sum()
         * const.conv_m2_to_ft2
         * const.conv_ft2_to_bsf
         for s in resscales.fillna(0).values.tolist()
     ]
     comscales["GBS"] = [
-        tract_data.query("state in @s")["com.area.m2"].sum()
+        puma_df.query("state in @s")["com_area_gbs_m2"].sum()
         * const.conv_m2_to_ft2
         * const.conv_ft2_to_bsf
         for s in comscales.fillna(0).values.tolist()
@@ -246,14 +247,33 @@ if __name__ == "__main__":
         os.path.join(data_dir, "tract_puma_mapping.csv"), index_col="tract"
     )
 
-    puma_df = aggregate_puma_df(puma_fuel_2010, tract_puma_mapping)
+    # Load tract-level data for General Building Stock area for residential, commercial and industral classes
+    tract_gbs_area = pd.read_csv(
+        os.path.join(data_dir, "tract_gbs_area.csv"), index_col="tract"
+    )
 
-    puma_df_frac_ff = scale_fuel_fractions(puma_df, const.regions, const.fuel)
+    # Load tract-level data for heating and cooling degree day normals
+    tract_degday_normals = pd.read_csv(
+        os.path.join(data_dir, "tract_degday_normals.csv"), index_col="tract"
+    )
+
+    # Load tract-level data for population
+    tract_pop = pd.read_csv(os.path.join(data_dir, "tract_pop.csv"), index_col="tract")
+
+    puma_data_unscaled = aggregate_puma_df(
+        puma_fuel_2010,
+        tract_puma_mapping,
+        tract_gbs_area,
+        tract_degday_normals,
+        tract_pop,
+    )
+
+    puma_data = scale_fuel_fractions(puma_data_unscaled, const.regions, const.fuel)
 
     # Add time zone information
     puma_timezones = pd.read_csv(
         os.path.join(data_dir, "puma_timezone.csv"), index_col="puma"
     )
-    puma_df_frac_ff["timezone"] = puma_timezones["timezone"]
+    puma_data["timezone"] = puma_timezones["timezone"]
 
-    puma_df_frac_ff.to_csv(os.path.join(data_dir, "puma_data.csv"))
+    puma_data.to_csv(os.path.join(data_dir, "puma_data.csv"))
