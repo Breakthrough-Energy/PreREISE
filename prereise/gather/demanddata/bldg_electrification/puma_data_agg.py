@@ -132,12 +132,13 @@ def aggregate_puma_df(
     return puma_df
 
 
-def scale_fuel_fractions(puma_df, regions, fuel):
+def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
     """Scale census tract data up to puma areas.
 
     :param pandas.DataFrame puma_df: output of :func:`aggregate_puma_df`.
     :param list of lists regions: state regions used to scale fuel fractions.
     :param list fuel: types of fuel.
+    :param int/str year: year to use within label when creating columns.
     :return: (*pandas.DataFrame*) -- fractions of natural gas, fuel oil and kerosone,
         propane, and electricity used for space heating, hot water, cooking, and other
         in residential and commercial buildings.
@@ -158,9 +159,9 @@ def scale_fuel_fractions(puma_df, regions, fuel):
                     fuellist.append(
                         sum(
                             region_df[f"frac_sh_res_{j}"]
-                            * region_df[f"{c}_area_2010_m2"]
+                            * region_df[f"{c}_area_{year}_m2"]
                         )
-                        / sum(region_df[f"{c}_area_2010_m2"])
+                        / sum(region_df[f"{c}_area_{year}_m2"])
                     )
                 df_i = len(frac_area)
                 frac_area.loc[df_i] = fuellist
@@ -202,14 +203,14 @@ def scale_fuel_fractions(puma_df, regions, fuel):
         else:
             uselist = ["sh", "dhw", "cook"]
         for u in uselist:
-            puma_df[f"frac_ff_{u}_{c}_2010"] = puma_df[
+            puma_df[f"frac_ff_{u}_{c}_{year}"] = puma_df[
                 [
                     f"frac_{u}_{c}_natgas",
                     f"frac_{u}_{c}_othergas",
                     f"frac_{u}_{c}_fok",
                 ]
             ].sum(axis=1)
-            puma_df[f"frac_elec_{u}_{c}_2010"] = puma_df[f"frac_{u}_{c}_elec"]
+            puma_df[f"frac_elec_{u}_{c}_{year}"] = puma_df[f"frac_{u}_{c}_elec"]
     return puma_df
 
 
