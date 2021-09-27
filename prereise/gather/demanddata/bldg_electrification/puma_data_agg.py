@@ -143,35 +143,33 @@ def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
         propane, and electricity used for space heating, hot water, cooking, and other
         in residential and commercial buildings.
     """
+    region_map = {state: r for r, states in regions.items() for state in states}
+    puma_region_groups = puma_df.groupby(puma_df["state"].map(region_map))
     for c in const.classes:
+        # Compute area fraction for each fuel type (column) in each region (index)
+        fuel_area_fractions = puma_region_groups.apply(
+            lambda x: pd.Series(
+                {
+                    f: (
+                        (x[f"frac_sh_res_{f}"] * x[f"{c}_area_2010_m2"]).sum()
+                        / x[f"{c}_area_2010_m2"].sum()
+                    )
+                    for f in fuel
+                }
+            )
+        )
         if c == "res":
             uselist = ["dhw", "other"]
         else:
             uselist = ["sh", "dhw", "cook"]
         for u in uselist:
-            frac_area = pd.DataFrame(columns=fuel)
-
-            # Compute frac_area for each fuel type in each region
-            for i in regions:
-                fuellist = []
-                for j in fuel:
-                    region_df = puma_df[puma_df["state"].isin(i)].reset_index()
-                    fuellist.append(
-                        sum(
-                            region_df[f"frac_sh_res_{j}"]
-                            * region_df[f"{c}_area_{year}_m2"]
-                        )
-                        / sum(region_df[f"{c}_area_{year}_m2"])
-                    )
-                df_i = len(frac_area)
-                frac_area.loc[df_i] = fuellist
 
             # Values calculated externally
             frac_scale = pd.read_csv(os.path.join(data_dir, f"frac_target_{u}_{c}.csv"))
 
-            downscalar = frac_scale / frac_area
+            downscalar = frac_scale / fuel_area_fractions
 
-            upscalar = (frac_scale - frac_area) / (1 - frac_area)
+            upscalar = (frac_scale - fuel_area_fractions) / (1 - fuel_area_fractions)
 
             # Scale frac_hh_fuel to frac_com_fuel
             for f in fuel:
