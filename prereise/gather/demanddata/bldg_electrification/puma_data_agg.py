@@ -147,7 +147,7 @@ def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
     puma_region_groups = puma_df.groupby(puma_df["state"].map(region_map))
     for c in const.classes:
         # Compute area fraction for each fuel type (column) in each region (index)
-        fuel_area_fractions = puma_region_groups.apply(
+        area_fractions = puma_region_groups.apply(
             lambda x: pd.Series(
                 {
                     f: (
@@ -158,34 +158,23 @@ def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
                 }
             )
         )
+        # Scale per-PUMA values to match target regional values (calculated externally)
         uselist = ["dhw", "other"] if c == "res" else ["sh", "dhw", "cook"]
         for u in uselist:
-
-            # Values calculated externally
-            frac_scale = pd.read_csv(os.path.join(data_dir, f"frac_target_{u}_{c}.csv"))
-
-            downscalar = frac_scale / fuel_area_fractions
-
-            upscalar = (frac_scale - fuel_area_fractions) / (1 - fuel_area_fractions)
-
-            # Scale frac_hh_fuel to frac_com_fuel
-            for f in fuel:
-                scalar = 1
-                fraccom = []
-                for i in range(len(puma_df)):
-                    for j in range(len(regions)):
-                        if puma_df["state"][i] in regions[j]:
-                            region_index = j
-                    if downscalar[f][region_index] <= 1:
-                        scalar = downscalar[f][region_index]
-                        fraccom.append(puma_df[f"frac_sh_res_{f}"][i] * scalar)
+            area_fraction_targets = pd.read_csv(
+                os.path.join(data_dir, f"frac_target_{u}_{c}.csv"),
+                index_col=0,
+            )
+            down_scale = area_fraction_targets / area_fractions
+            up_scale = (area_fraction_targets - area_fractions) / (1 - area_fractions)
+            for r in regions:
+                for f in fuel:
+                    pre_scaling = puma_region_groups.get_group(r)[f"frac_sh_res_{f}"]
+                    if down_scale.loc[r, f] <= 1:
+                        scaled = pre_scaling * down_scale.loc[r, f]
                     else:
-                        scalar = upscalar[f][region_index]
-                        fraccom.append(
-                            (1 - puma_df[f"frac_sh_res_{f}"][i]) * scalar
-                            + puma_df[f"frac_sh_res_{f}"][i]
-                        )
-                puma_df[f"frac_{f}_{u}_{c}_{year}"] = fraccom
+                        scaled = pre_scaling + up_scale.loc[r, f] * (1 - pre_scaling)
+                    puma_df.loc[pre_scaling.index, f"frac_{f}_{u}_{c}_{year}"] = scaled
 
     # Sum coal, wood, solar and other fractions for frac_com_other
     named_sh_com_fuels = {"elec", "fok", "natgas", "othergas"}
