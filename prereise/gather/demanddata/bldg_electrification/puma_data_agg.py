@@ -158,10 +158,7 @@ def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
                 }
             )
         )
-        if c == "res":
-            uselist = ["dhw", "other"]
-        else:
-            uselist = ["sh", "dhw", "cook"]
+        uselist = ["dhw", "other"] if c == "res" else ["sh", "dhw", "cook"]
         for u in uselist:
 
             # Values calculated externally
@@ -201,10 +198,7 @@ def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
     )
     fossil_fuels = {"natgas", "othergas", "fok"}
     for c in const.classes:
-        if c == "res":
-            uselist = ["sh", "dhw", "other"]
-        else:
-            uselist = ["sh", "dhw", "cook"]
+        uselist = ["sh", "dhw", "other"] if c == "res" else ["sh", "dhw", "cook"]
         for u in uselist:
             fossil_cols = [f"frac_{f}_{u}_{c}_{year}" for f in fossil_fuels]
             puma_df[f"frac_ff_{u}_{c}_{year}"] = puma_df[fossil_cols].sum(axis=1)
