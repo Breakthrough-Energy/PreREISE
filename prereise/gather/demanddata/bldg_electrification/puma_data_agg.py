@@ -8,11 +8,11 @@ from prereise.gather.demanddata.bldg_electrification import const
 
 
 def aggregate_puma_df(
-    puma_fuel_2010, tract_puma_mapping, tract_gbs_area, tract_degday_normals, tract_pop
+    puma_states, tract_puma_mapping, tract_gbs_area, tract_degday_normals, tract_pop
 ):
     """Scale census tract data up to puma areas.
 
-    :param pandas.DataFrame puma_fuel_2010: household fuel type by puma.
+    :param pandas.DataFrame puma_states: mapping of puma to state.
     :param pandas.DataFrame tract_puma_mapping: tract to puma mapping.
     :param pandas.DataFrame tract_gbs_area: General Building Stock area for residential, commercial, industrial areas by tract
     :param pandas.DataFrame tract_degday_normals: heating and cooling degree day normals by tract
@@ -22,7 +22,7 @@ def aggregate_puma_df(
         fractions.
     """
     # Set up puma_df data frame
-    puma_df = puma_fuel_2010["state"].to_frame()
+    puma_df = puma_states.to_frame()
 
     # Combine tract-level data into single data frame with only census tracts with building area data
     tract_data = pd.concat(
@@ -110,31 +110,13 @@ def aggregate_puma_df(
             puma_df[puma_df["state"] == state]["com_area_gbs_m2"] * com_scalar
         )
 
-    # Calculate res fractions of fuel usage based off puma_fuel_2010 household data
-    puma_df["frac_sh_res_natgas"] = (
-        puma_fuel_2010["hh_utilgas"] / puma_fuel_2010["hh_total"]
-    )
-    puma_df["frac_sh_res_fok"] = puma_fuel_2010["hh_fok"] / puma_fuel_2010["hh_total"]
-    puma_df["frac_sh_res_othergas"] = (
-        puma_fuel_2010["hh_othergas"] / puma_fuel_2010["hh_total"]
-    )
-    puma_df["frac_sh_res_coal"] = puma_fuel_2010["hh_coal"] / puma_fuel_2010["hh_total"]
-    puma_df["frac_sh_res_wood"] = puma_fuel_2010["hh_wood"] / puma_fuel_2010["hh_total"]
-    puma_df["frac_sh_res_solar"] = (
-        puma_fuel_2010["hh_solar"] / puma_fuel_2010["hh_total"]
-    )
-    puma_df["frac_sh_res_elec"] = puma_fuel_2010["hh_elec"] / puma_fuel_2010["hh_total"]
-    puma_df["frac_sh_res_other"] = (
-        puma_fuel_2010["hh_other"] / puma_fuel_2010["hh_total"]
-    )
-    puma_df["frac_sh_res_none"] = puma_fuel_2010["hh_none"] / puma_fuel_2010["hh_total"]
-
     return puma_df
 
 
-def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
+def scale_fuel_fractions(hh_fuels, puma_df, regions, fuel, year=2010):
     """Scale census tract data up to puma areas.
 
+    :param pandas.DataFrame hh_fuels: household fuel type by puma.
     :param pandas.DataFrame puma_df: output of :func:`aggregate_puma_df`.
     :param list of lists regions: state regions used to scale fuel fractions.
     :param list fuel: types of fuel.
@@ -143,6 +125,11 @@ def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
         propane, and electricity used for space heating, hot water, cooking, and other
         in residential and commercial buildings.
     """
+    # Calculate res fractions of fuel usage based off puma_fuel_2010 household data
+    puma_df["frac_sh_res_natgas"] = hh_fuels["hh_utilgas"] / hh_fuels["hh_total"]
+    for f in ["fok", "othergas", "coal", "wood", "solar", "elec", "other", "none"]:
+        puma_df[f"frac_sh_res_{f}"] = hh_fuels[f"hh_{f}"] / hh_fuels["hh_total"]
+
     region_map = {state: r for r, states in regions.items() for state in states}
     puma_region_groups = puma_df.groupby(puma_df["state"].map(region_map))
     for c in const.classes:
@@ -237,14 +224,19 @@ if __name__ == "__main__":
     tract_pop = pd.read_csv(os.path.join(data_dir, "tract_pop.csv"), index_col="tract")
 
     puma_data_unscaled = aggregate_puma_df(
-        puma_fuel_2010,
+        puma_fuel_2010["state"],
         tract_puma_mapping,
         tract_gbs_area,
         tract_degday_normals,
         tract_pop,
     )
 
-    puma_data = scale_fuel_fractions(puma_data_unscaled, const.regions, const.fuel)
+    puma_data = scale_fuel_fractions(
+        puma_fuel_2010,
+        puma_data_unscaled,
+        const.regions,
+        const.fuel,
+    )
 
     # Add time zone information
     puma_timezones = pd.read_csv(
