@@ -190,27 +190,26 @@ def scale_fuel_fractions(puma_df, regions, fuel, year=2010):
                             (1 - puma_df[f"frac_sh_res_{f}"][i]) * scalar
                             + puma_df[f"frac_sh_res_{f}"][i]
                         )
-                puma_df[f"frac_{u}_{c}_{f}"] = fraccom
+                puma_df[f"frac_{f}_{u}_{c}_{year}"] = fraccom
 
     # Sum coal, wood, solar and other fractions for frac_com_other
     named_sh_com_fuels = {"elec", "fok", "natgas", "othergas"}
-    named_sh_com_cols = [f"frac_sh_com_{f}" for f in named_sh_com_fuels]
-    puma_df[f"frac_sh_com_other"] = 1 - puma_df[named_sh_com_cols].sum(axis=1)
+    named_sh_com_cols = [f"frac_{f}_sh_com_{year}" for f in named_sh_com_fuels]
+    puma_df[f"frac_other_sh_com_{year}"] = 1 - puma_df[named_sh_com_cols].sum(axis=1)
 
+    # Copy residential space heating columns to match new column naming convention
+    puma_df = puma_df.assign(
+        **{f"frac_{f}_sh_res_{year}": puma_df[f"frac_sh_res_{f}"] for f in fuel}
+    )
+    fossil_fuels = {"natgas", "othergas", "fok"}
     for c in const.classes:
         if c == "res":
             uselist = ["sh", "dhw", "other"]
         else:
             uselist = ["sh", "dhw", "cook"]
         for u in uselist:
-            puma_df[f"frac_ff_{u}_{c}_{year}"] = puma_df[
-                [
-                    f"frac_{u}_{c}_natgas",
-                    f"frac_{u}_{c}_othergas",
-                    f"frac_{u}_{c}_fok",
-                ]
-            ].sum(axis=1)
-            puma_df[f"frac_elec_{u}_{c}_{year}"] = puma_df[f"frac_{u}_{c}_elec"]
+            fossil_cols = [f"frac_{f}_{u}_{c}_{year}" for f in fossil_fuels]
+            puma_df[f"frac_ff_{u}_{c}_{year}"] = puma_df[fossil_cols].sum(axis=1)
     return puma_df
 
 
