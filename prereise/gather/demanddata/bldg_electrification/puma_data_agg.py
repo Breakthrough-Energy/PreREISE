@@ -192,14 +192,9 @@ def scale_fuel_fractions(puma_df, regions, fuel):
                 puma_df[f"frac_{u}_{c}_{f}"] = fraccom
 
     # Sum coal, wood, solar and other fractions for frac_com_other
-    puma_df["frac_sh_com_other"] = puma_df[
-        [
-            "frac_sh_res_coal",
-            "frac_sh_res_wood",
-            "frac_sh_res_solar",
-            "frac_sh_res_other",
-        ]
-    ].sum(axis=1)
+    named_sh_com_fuels = {"elec", "fok", "natgas", "othergas"}
+    named_sh_com_cols = [f"frac_sh_com_{f}" for f in named_sh_com_fuels]
+    puma_df[f"frac_sh_com_other"] = 1 - puma_df[named_sh_com_cols].sum(axis=1)
 
     for c in const.classes:
         if c == "res":
