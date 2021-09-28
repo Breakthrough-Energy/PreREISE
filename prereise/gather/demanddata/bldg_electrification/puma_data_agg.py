@@ -113,13 +113,11 @@ def aggregate_puma_df(
     return puma_df
 
 
-def scale_fuel_fractions(hh_fuels, puma_df, regions, fuel, year=2010):
+def scale_fuel_fractions(hh_fuels, puma_df, year=2010):
     """Scale census tract data up to puma areas.
 
     :param pandas.DataFrame hh_fuels: household fuel type by puma.
     :param pandas.DataFrame puma_df: output of :func:`aggregate_puma_df`.
-    :param list of lists regions: state regions used to scale fuel fractions.
-    :param list fuel: types of fuel.
     :param int/str year: year to use within label when creating columns.
     :return: (*pandas.DataFrame*) -- fractions of natural gas, fuel oil and kerosone,
         propane, and electricity used for space heating, hot water, cooking, and other
@@ -130,7 +128,7 @@ def scale_fuel_fractions(hh_fuels, puma_df, regions, fuel, year=2010):
     for f in ["fok", "othergas", "coal", "wood", "solar", "elec", "other", "none"]:
         puma_df[f"frac_sh_res_{f}"] = hh_fuels[f"hh_{f}"] / hh_fuels["hh_total"]
 
-    region_map = {state: r for r, states in regions.items() for state in states}
+    region_map = {state: r for r, states in const.regions.items() for state in states}
     puma_region_groups = puma_df.groupby(puma_df["state"].map(region_map))
     for c in const.classes:
         # Compute area fraction for each fuel type (column) in each region (index)
@@ -141,7 +139,7 @@ def scale_fuel_fractions(hh_fuels, puma_df, regions, fuel, year=2010):
                         (x[f"frac_sh_res_{f}"] * x[f"{c}_area_2010_m2"]).sum()
                         / x[f"{c}_area_2010_m2"].sum()
                     )
-                    for f in fuel
+                    for f in const.fuel
                 }
             )
         )
@@ -154,8 +152,8 @@ def scale_fuel_fractions(hh_fuels, puma_df, regions, fuel, year=2010):
             )
             down_scale = area_fraction_targets / area_fractions
             up_scale = (area_fraction_targets - area_fractions) / (1 - area_fractions)
-            for r in regions:
-                for f in fuel:
+            for r in const.regions:
+                for f in const.fuel:
                     pre_scaling = puma_region_groups.get_group(r)[f"frac_sh_res_{f}"]
                     if down_scale.loc[r, f] <= 1:
                         scaled = pre_scaling * down_scale.loc[r, f]
@@ -170,7 +168,7 @@ def scale_fuel_fractions(hh_fuels, puma_df, regions, fuel, year=2010):
 
     # Copy residential space heating columns to match new column naming convention
     puma_df = puma_df.assign(
-        **{f"frac_{f}_sh_res_{year}": puma_df[f"frac_sh_res_{f}"] for f in fuel}
+        **{f"frac_{f}_sh_res_{year}": puma_df[f"frac_sh_res_{f}"] for f in const.fuel}
     )
     fossil_fuels = {"natgas", "othergas", "fok"}
     for c in const.classes:
@@ -231,12 +229,7 @@ if __name__ == "__main__":
         tract_pop,
     )
 
-    puma_data = scale_fuel_fractions(
-        puma_fuel_2010,
-        puma_data_unscaled,
-        const.regions,
-        const.fuel,
-    )
+    puma_data = scale_fuel_fractions(puma_fuel_2010, puma_data_unscaled)
 
     # Add time zone information
     puma_timezones = pd.read_csv(
