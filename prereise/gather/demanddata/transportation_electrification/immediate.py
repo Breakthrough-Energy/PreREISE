@@ -74,36 +74,36 @@ def immediate_charging(
                     )
                     # trip number
                     trip_num += 1
-                    newdata.loc[i]["trip number"] = trip_num
+                    newdata.loc[i, "trip number"] = trip_num
                 else:
-                    newdata.loc[i]["trip start battery charge"] = kwh
+                    newdata.loc[i, "trip start battery charge"] = kwh
                     trip_num = 1
                     # trip number
-                    newdata.loc[i]["trip number"] = trip_num
+                    newdata.loc[i, "trip number"] = trip_num
 
                 # 1 is the safety coefficient
                 if newdata.loc[i]["total vehicle miles traveled"] < veh_range * const.safety_coefficient:
                     # 1 means the day trip could be used in battery electric vehicle
-                    newdata.loc[i]["BEV could be used"] = 1
+                    newdata.loc[i, "BEV could be used"] = 1
                     # trip end battery charge
-                    newdata.loc[i]["trip end battery charge"] = (
+                    newdata.loc[i, "trip end battery charge"] = (
                         newdata.loc[i]["trip start battery charge"]
                         - newdata[i]["Miles traveled"] * kwhmi * const.ER
                     )
                     # period when battery is discharging. depleting time
-                    newdata.loc[i]["depleting time"] = newdata.loc[i][
+                    newdata.loc[i, "depleting time"] = newdata.loc[i][
                         "Travel time (hour decimal)"
                     ]
 
                 else:
                     # 0 means the day trip could not be used in battery electric vehicle
-                    newdata.loc[i]["BEV could be used"] = 0
+                    newdata.loc[i, "BEV could be used"] = 0
 
                 # data for this trip
                 trip_data = newdata.loc[i]
 
                 # charging power
-                newdata.loc[i]["charging power"] = charging.get_charging_power(
+                newdata.loc[i, "charging power"] = charging.get_charging_power(
                     power,
                     trip_strategy,
                     location_strategy,
@@ -111,14 +111,14 @@ def immediate_charging(
                     trip_data,
                 )
                 # charging time
-                newdata.loc[i]["charging time"] = charging.get_charging_time(
+                newdata.loc[i, "charging time"] = charging.get_charging_time(
                     newdata.loc[i]["charging power"],
                     kwh,
                     newdata.loc[i]["trip end battery charge"],
                     const.charging_efficiency,
                 )
                 # charging consumption
-                newdata.loc[i][
+                newdata.loc[i, 
                     "charging consumption"
                 ] = newdata.loc[i]["charging power"]  * newdata.loc[i]["charging time"] * const.charging_efficiency
 
