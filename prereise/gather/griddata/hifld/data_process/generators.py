@@ -130,6 +130,55 @@ def estimate_heat_rate_curve(
         return default_return
 
 
+def filter_suspicious_heat_rates(generators):
+    """Identify linearized heat rates which violate assumptions of 'reasonable' bounds,
+    and replace them with NaN values.
+
+    :param pandas.DataFrame generators: data frame of generators with fitted heat rates
+        (modified inplace).
+    """
+
+    def get_heat_rate_bounds(generator):
+        """Lookup heat rate bounds for a generator, by either type or type and capacity.
+
+        :param pandas.Series generator: single generator attributes.
+        :return: (*pandas.Series*) -- heat rate bounds ('lower', 'upper').
+        """
+        gen_type = tuple(generator[["Technology", "Prime Mover"]])
+        if gen_type in const.reasonable_heat_rates_by_type:
+            data = const.reasonable_heat_rates_by_type[gen_type]
+        key = (
+            gen_type + ("small",)
+            if generator["Pmax"]
+            < const.reasonable_heat_rates_size_cutoffs.get(gen_type, 0)
+            else gen_type + ("large",)
+        )
+        data = const.reasonable_heat_rates_by_type_and_size.get(key, (0, float("inf")))
+        return pd.Series(data, index=("lower", "upper"))
+
+    heat_rate_bound_types = set(const.reasonable_heat_rates_size_cutoffs.keys()) | set(
+        const.reasonable_heat_rates_by_type.keys()
+    )
+    generator_types = generators[["Technology", "Prime Mover"]].apply(tuple, axis=1)
+    gens_with_coefficients = generators.loc[
+        generator_types.isin(heat_rate_bound_types) & ~generators["h0"].isna()
+    ]
+    # Simplified calculation for rise/run for quadratic curve evaluated at Pmin and Pmax
+    single_segment_slope = (
+        gens_with_coefficients["h2"]
+        * (gens_with_coefficients["Pmax"] + gens_with_coefficients["Pmin"])
+        + gens_with_coefficients["h1"]
+    )
+    heat_rate_bounds = gens_with_coefficients.apply(get_heat_rate_bounds, axis=1)
+    good_heat_rates = single_segment_slope.loc[
+        (heat_rate_bounds["lower"] <= single_segment_slope)
+        & (single_segment_slope <= heat_rate_bounds["upper"])
+    ]
+    generators.loc[
+        ~generators.index.isin(good_heat_rates.index), ["h0", "h1", "h2"]
+    ] = float("nan")
+
+
 def build_plant(bus, substations, kwargs={}):
     """Use source data on generating units from EIA/EPA, along with transmission network
     data, to produce a plant data frame.
@@ -203,5 +252,6 @@ def build_plant(bus, substations, kwargs={}):
         axis=1,
     )
     generators = generators.join(heat_rate_curve_estimates)
+    filter_suspicious_heat_rates(generators)
 
     return generators
