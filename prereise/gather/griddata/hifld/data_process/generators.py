@@ -1,6 +1,7 @@
 import pandas as pd
 from powersimdata.utility.distance import haversine
 from scipy.optimize import curve_fit
+from scipy.stats import linregress
 
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_access import load
@@ -98,7 +99,7 @@ def estimate_heat_rate_curve(
     :param int min_unique_x: minimum number of unique x points needed to fit a curve to.
     :param int min_points: minimum number points needed to fit a curve to.
     :return: (*tuple*) -- if possible, quadratic coefficients:
-        c0 (constant), c1 (linear), and c2 (quadratic); respectively. Otherwise, return
+        h0 (constant), h1 (linear), and h2 (quadratic); respectively. Otherwise, return
         NA values for each
     """
 
@@ -179,6 +180,70 @@ def filter_suspicious_heat_rates(generators):
     ] = float("nan")
 
 
+def augment_missing_heat_rates(generators):
+    """Identify generators with NaN heat rate coefficients, replace with quadratic
+    coefficients from a linear regression against other generators of that type (for
+    fossil generators) or with assumed linear coefficients for non-fossil generators.
+
+    :param pandas.DataFrame generators: data frame of generators with fitted heat rates
+        (modified inplace).
+    """
+
+    def estimate_coefficients(generator, regressions):
+        """Estimate heat rate coefficients for a generator, by type and capacity.
+
+        :param pandas.Series generator: single generator attributes.
+        :param dict regressions: nested dictionary of fitted regressions:
+            first level is ('Technology', 'Prime Mover') attributes,
+            second level is {'h0', 'h1', 'h2'}, values are regressions against Pmax.
+        :return: (*pandas.Series*) -- heat rate parameters: (h0, h1, h2).
+        """
+        regression_key = tuple(generator[["Technology", "Prime Mover"]])
+        if regression_key not in regressions:
+            return pd.Series([float("nan")] * 3, index=["h0", "h1", "h2"])
+        type_regressions = regressions[regression_key]
+        estimates = pd.Series(
+            {
+                coef: (regression.intercept + regression.slope * generator["Pmax"])
+                for coef, regression in type_regressions.items()
+            },
+        )
+        return estimates
+
+    output_index = ["h0", "h1", "h2"]
+
+    # Augment heat rate for fossil generators
+    gens_with_coefficients = generators.loc[~generators["h0"].isnull()]
+    gen_groups = gens_with_coefficients.groupby(["Technology", "Prime Mover"])
+    regressions = {
+        technology: {
+            coef: linregress(group["Pmax"], group[coef]) for coef in output_index
+        }
+        for technology, group in gen_groups
+    }
+    gens_without_coefficients = generators.loc[generators["h0"].isnull()]
+    filled_coefficients = gens_without_coefficients.apply(
+        lambda x: (estimate_coefficients(x, regressions)), axis=1
+    )
+    generators.update(filled_coefficients)
+
+    # Augment heat rates for non-fossil generators
+    linear_heat_rate_assumptions = (
+        generators["Technology"]
+        .map(const.heat_rate_assumptions)
+        .to_frame(name="h1")
+        .apply(
+            lambda x: (
+                pd.Series([float("nan")] * 3, index=output_index)
+                if pd.isna(x["h1"])
+                else pd.Series([0, x["h1"], 0], index=output_index)
+            ),
+            axis=1,
+        )
+    )
+    generators.update(linear_heat_rate_assumptions)
+
+
 def build_plant(bus, substations, kwargs={}):
     """Use source data on generating units from EIA/EPA, along with transmission network
     data, to produce a plant data frame.
@@ -253,5 +318,6 @@ def build_plant(bus, substations, kwargs={}):
     )
     generators = generators.join(heat_rate_curve_estimates)
     filter_suspicious_heat_rates(generators)
+    augment_missing_heat_rates(generators)
 
     return generators
