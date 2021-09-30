@@ -330,3 +330,19 @@ heat_rate_estimation_columns = [
     "GLOAD (MW)",
     "HEAT_INPUT (mmBtu)",
 ]
+
+fuel_prices = {  # EIA Annual Energy Outlook, values for 2022, $/MMBTu (2020 USD)
+    "BIT": 2.02,  # BITuminous coal
+    "DFO": 17.85,  # Distillate Fuel Oil
+    "JF": 11.41,  # Jet Fuel
+    "KER": 11.41,  # KERosene
+    "LIG": 2.02,  # LIGnite coal
+    "NG": 3.60,  # Natural Gas
+    "NUC": 0.69,  # NUClear (uranium)
+    "PC": 2.02,  # Petroleum Coke
+    "PG": 15.43,  # Propane (Gaseous)
+    "RC": 2.02,  # Residual Coal
+    "RFO": 9.75,  # Residual Fuel Oil
+    "SUB": 2.02,  # SUB-bituminous coal
+    "WC": 2.02,  # Waste Coal
+}
