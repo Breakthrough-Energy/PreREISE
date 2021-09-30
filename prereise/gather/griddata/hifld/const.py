@@ -373,3 +373,15 @@ reasonable_heat_rates_by_type_and_size = {
     ("Petroleum Liquids", "IC", "small"): (8.7, 42.5),
     ("Petroleum Liquids", "IC", "large"): (8.7, 20.5),
 }
+
+heat_rate_assumptions = {
+    "Conventional Hydroelectric": 0,
+    "Geothermal": 0,
+    "Hydroelectric Pumped Storage": 0,
+    "Nuclear": 10.5,  # From EIA's Electric Power Annual 2019, Table 8.1
+    "Offshore Wind Turbine": 0,
+    "Onshore Wind Turbine": 0,
+    "Solar Photovoltaic": 0,
+    "Solar Thermal with Energy Storage": 0,
+    "Solar Thermal without Energy Storage": 0,
+}
