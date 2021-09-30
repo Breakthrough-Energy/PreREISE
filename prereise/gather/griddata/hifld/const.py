@@ -346,3 +346,30 @@ fuel_prices = {  # EIA Annual Energy Outlook, values for 2022, $/MMBTu (2020 USD
     "SUB": 2.02,  # SUB-bituminous coal
     "WC": 2.02,  # Waste Coal
 }
+
+# Values from EPA's Power Sector Modeling Platform v6 - Summer 2021 Reference Case
+reasonable_heat_rates_size_cutoffs = {
+    ("Natural Gas Fired Combustion Turbine", "GT"): 80,
+    ("Petroleum Liquids", "GT"): 80,
+    ("Petroleum Liquids", "IC"): 5,
+}
+reasonable_heat_rates_by_type = {
+    ("Conventional Steam Coal", "ST"): (8.3, 14.5),
+    ("Natural Gas Fired Combined Cycle", "CA"): (5.5, 15.0),
+    ("Natural Gas Fired Combined Cycle", "CS"): (5.5, 15.0),
+    ("Natural Gas Fired Combined Cycle", "CT"): (5.5, 15.0),
+    ("Natural Gas Internal Combustion Engine", "IC"): (8.7, 18.0),
+    ("Natural Gas Steam Turbine", "ST"): (8.3, 14.5),
+    ("Petroleum Coke", "ST"): (8.3, 14.5),
+    ("Petroleum Liquids", "CA"): (6.0, 15.0),
+    ("Petroleum Liquids", "CT"): (6.0, 15.0),
+    ("Petroleum Liquids", "ST"): (8.3, 14.5),
+}
+reasonable_heat_rates_by_type_and_size = {
+    ("Natural Gas Fired Combustion Turbine", "GT", "small"): (8.7, 36.8),
+    ("Natural Gas Fired Combustion Turbine", "GT", "large"): (8.7, 18.7),
+    ("Petroleum Liquids", "GT", "small"): (6.0, 36.8),
+    ("Petroleum Liquids", "GT", "large"): (6.0, 25.0),
+    ("Petroleum Liquids", "IC", "small"): (8.7, 42.5),
+    ("Petroleum Liquids", "IC", "large"): (8.7, 20.5),
+}
