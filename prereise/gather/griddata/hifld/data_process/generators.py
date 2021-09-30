@@ -329,5 +329,9 @@ def build_plant(bus, substations, kwargs={}):
     )
     print(to_be_dropped.groupby(["Technology", "Prime Mover"])["Pmax"].sum())
     generators.drop(to_be_dropped.index, inplace=True)
+    # Add fuel costs, calculate cost curves from heat rate curves
+    generators["GenFuelCost"] = generators["Energy Source 1"].map(const.fuel_prices)
+    for i in range(3):
+        generators[f"c{i}"] = generators[f"h{i}"] * generators["GenFuelCost"].fillna(0)
 
     return generators
