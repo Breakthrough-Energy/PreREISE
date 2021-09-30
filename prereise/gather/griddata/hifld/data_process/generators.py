@@ -309,6 +309,7 @@ def build_plant(bus, substations, kwargs={}):
     # Drop generators with no capacity listed
     generators = generators.loc[~generators["Pmax"].isnull()]
     generators.rename({"Minimum Load (MW)": "Pmin"}, inplace=True, axis=1)
+    generators["Pmin"] = generators["Pmin"].fillna(0)
     print("Fitting heat rate curves to EPA data... (this may take several minutes)")
     heat_rate_curve_estimates = generators.apply(
         lambda x: estimate_heat_rate_curve(
