@@ -320,5 +320,14 @@ def build_plant(bus, substations, kwargs={}):
     generators = generators.join(heat_rate_curve_estimates)
     filter_suspicious_heat_rates(generators)
     augment_missing_heat_rates(generators)
+    # Drop generators whose heat rates can't be estimated
+    to_be_dropped = generators.query("h1.isnull()")
+    print(
+        f"Dropping generators whose heat rates can't be estimated: {len(to_be_dropped)}"
+        f" out of {len(generators)}, {round(to_be_dropped['Pmax'].sum(), 0)} MW out of "
+        f"{round(generators['Pmax'].sum(), 0)} total MW"
+    )
+    print(to_be_dropped.groupby(["Technology", "Prime Mover"])["Pmax"].sum())
+    generators.drop(to_be_dropped.index, inplace=True)
 
     return generators
