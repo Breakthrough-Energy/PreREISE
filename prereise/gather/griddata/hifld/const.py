@@ -112,6 +112,7 @@ blob_paths = {
     "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
     "transmission_lines": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
 }
+eia_epa_crosswalk_path = "https://raw.githubusercontent.com/Breakthrough-Energy/camd-eia-crosswalk/master/epa_eia_crosswalk.csv"
 
 volt_class_defaults = {
     "UNDER 100": 69,
@@ -321,4 +322,66 @@ state_county_splits = {
         },
         "Western": {"EL PASO", "HUDSPETH"},
     },
+}
+
+heat_rate_estimation_columns = [
+    "ORISPL_CODE",
+    "UNITID",
+    "GLOAD (MW)",
+    "HEAT_INPUT (mmBtu)",
+]
+
+fuel_prices = {  # EIA Annual Energy Outlook, values for 2022, $/MMBTu (2020 USD)
+    "BIT": 2.02,  # BITuminous coal
+    "DFO": 17.85,  # Distillate Fuel Oil
+    "JF": 11.41,  # Jet Fuel
+    "KER": 11.41,  # KERosene
+    "LIG": 2.02,  # LIGnite coal
+    "NG": 3.60,  # Natural Gas
+    "NUC": 0.69,  # NUClear (uranium)
+    "PC": 2.02,  # Petroleum Coke
+    "PG": 15.43,  # Propane (Gaseous)
+    "RC": 2.02,  # Residual Coal
+    "RFO": 9.75,  # Residual Fuel Oil
+    "SUB": 2.02,  # SUB-bituminous coal
+    "WC": 2.02,  # Waste Coal
+}
+
+# Values from EPA's Power Sector Modeling Platform v6 - Summer 2021 Reference Case
+reasonable_heat_rates_size_cutoffs = {
+    ("Natural Gas Fired Combustion Turbine", "GT"): 80,
+    ("Petroleum Liquids", "GT"): 80,
+    ("Petroleum Liquids", "IC"): 5,
+}
+reasonable_heat_rates_by_type = {
+    ("Conventional Steam Coal", "ST"): (8.3, 14.5),
+    ("Natural Gas Fired Combined Cycle", "CA"): (5.5, 15.0),
+    ("Natural Gas Fired Combined Cycle", "CS"): (5.5, 15.0),
+    ("Natural Gas Fired Combined Cycle", "CT"): (5.5, 15.0),
+    ("Natural Gas Internal Combustion Engine", "IC"): (8.7, 18.0),
+    ("Natural Gas Steam Turbine", "ST"): (8.3, 14.5),
+    ("Petroleum Coke", "ST"): (8.3, 14.5),
+    ("Petroleum Liquids", "CA"): (6.0, 15.0),
+    ("Petroleum Liquids", "CT"): (6.0, 15.0),
+    ("Petroleum Liquids", "ST"): (8.3, 14.5),
+}
+reasonable_heat_rates_by_type_and_size = {
+    ("Natural Gas Fired Combustion Turbine", "GT", "small"): (8.7, 36.8),
+    ("Natural Gas Fired Combustion Turbine", "GT", "large"): (8.7, 18.7),
+    ("Petroleum Liquids", "GT", "small"): (6.0, 36.8),
+    ("Petroleum Liquids", "GT", "large"): (6.0, 25.0),
+    ("Petroleum Liquids", "IC", "small"): (8.7, 42.5),
+    ("Petroleum Liquids", "IC", "large"): (8.7, 20.5),
+}
+
+heat_rate_assumptions = {
+    "Conventional Hydroelectric": 0,
+    "Geothermal": 0,
+    "Hydroelectric Pumped Storage": 0,
+    "Nuclear": 10.5,  # From EIA's Electric Power Annual 2019, Table 8.1
+    "Offshore Wind Turbine": 0,
+    "Onshore Wind Turbine": 0,
+    "Solar Photovoltaic": 0,
+    "Solar Thermal with Energy Storage": 0,
+    "Solar Thermal without Energy Storage": 0,
 }
