@@ -7,8 +7,10 @@ from urllib.request import urlopen
 from zipfile import ZipFile
 
 import pandas as pd
+from tqdm import tqdm
 
-from prereise.gather.griddata.hifld.const import abv2state  # noqa F401
+from prereise.gather.griddata.hifld.const import abv2state  # noqa: F401
+from prereise.gather.griddata.hifld.const import heat_rate_estimation_columns
 
 
 def get_eia_form_860(path):
@@ -22,12 +24,38 @@ def get_eia_form_860(path):
     return data.query("State in @abv2state")
 
 
-def get_epa_ampd(path, year=2019):
+def get_eia_epa_crosswalk(path):
+    """Read a CSV file mapping EIA plants IDs to EPA plant IDs, keep non-retired plants.
+
+    :param str path: path to file. Either local or URL.
+    :return: (*pandas.DataFrame*) -- filtered data frame.
+    """
+    crosswalk_match_exclude = {"CAMD Unmatched", "Manual CAMD Excluded"}  # noqa: F841
+    data = (
+        pd.read_csv(path)
+        .query(
+            "MATCH_TYPE_GEN not in @crosswalk_match_exclude and CAMD_STATUS != 'RET'"
+        )
+        .astype(
+            {
+                "MOD_EIA_PLANT_ID": int,
+                "MOD_CAMD_UNIT_ID": "string",
+                "MOD_CAMD_GENERATOR_ID": "string",
+                "MOD_EIA_GENERATOR_ID_GEN": "string",
+            }
+        )
+    )
+    return data
+
+
+def get_epa_ampd(path, years={2019}, cache=False):
     """Read a collection of zipped CSV files from the EPA AMPD dataset and keep readings
     from plants located in contiguous states.
 
     :param str path: path to folder. Either local or URL.
-    :param str year: year of data to read (will be present in filenames)
+    :param iterable years: years of data to read (will be present in filenames).
+    :param bool cache: Whether to locally cache the EPA AMPD data, and read from the
+        cache when it's available.
     :return: (*pandas.DataFrame*) -- readings from operational power plant in contiguous
         states.
     """
@@ -43,19 +71,50 @@ def get_epa_ampd(path, year=2019):
     # Trim trailing slashes as necessary to ensure that join works
     path = path.rstrip("/\\")
 
-    data = pd.concat(
+    # Build cache path if necessary
+    if cache:
+        cache_dir = os.path.join(os.path.dirname(__file__), "cache")
+        os.makedirs(cache_dir, exist_ok=True)
+
+    data = {year: {state: {} for state in abv2state} for year in years}
+    for year in sorted(years):
+        for state in tqdm(abv2state):
+            for month_num in range(1, 13):
+                filename = f"{year}{state.lower()}{str(month_num).rjust(2, '0')}.zip"
+                if cache:
+                    try:
+                        df = pd.read_csv(
+                            os.path.join(cache_dir, filename),
+                            usecols=heat_rate_estimation_columns,
+                        )
+                    except Exception:
+                        df = pd.read_csv(
+                            path_sep.join([path, filename]),
+                            usecols=heat_rate_estimation_columns,
+                        )
+                        df.to_csv(
+                            os.path.join(cache_dir, filename),
+                            compression={
+                                "method": "zip",
+                                "archive_name": filename.replace(".zip", ".csv"),
+                            },
+                        )
+                else:
+                    df = pd.read_csv(
+                        path_sep.join([path, filename]),
+                        usecols=heat_rate_estimation_columns,
+                    )
+                data[year][state][month_num] = df
+    joined = pd.concat(
         [
-            pd.read_csv(
-                path_sep.join(
-                    [path, f"{year}{state.lower()}{str(month_num).rjust(2, '0')}.zip"]
-                )
-            )
+            data[year][state][month_num]
+            for year in sorted(years)
             for state in abv2state
             for month_num in range(1, 13)
         ]
     )
 
-    return data
+    return joined.astype({"UNITID": "string"})
 
 
 def get_epa_needs(path):
