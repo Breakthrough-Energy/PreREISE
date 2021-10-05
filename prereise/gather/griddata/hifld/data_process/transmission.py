@@ -1,6 +1,4 @@
-import hashlib
 import os
-import pickle
 
 import networkx as nx
 import numpy as np
@@ -18,9 +16,7 @@ from prereise.gather.griddata.hifld.data_access.load import (
 from prereise.gather.griddata.hifld.data_process.helpers import (
     map_state_and_county_to_interconnect,
 )
-from prereise.gather.griddata.hifld.data_process.topology import (
-    connect_islands_with_minimum_cost,
-)
+from prereise.gather.griddata.hifld.data_process.topology import get_mst_edges
 
 
 def check_for_location_conflicts(substations):
@@ -38,21 +34,21 @@ def check_for_location_conflicts(substations):
         )
 
 
-def map_lines_to_substations_using_coords(substations, lines, **kwargs):
+def map_lines_to_substations_using_coords(
+    substations, lines, rounding=3, drop_zero_distance_line=True
+):
     """Map lines to substations using coordinates.
 
     :param pandas.DataFrame substations: data frame of substations.
     :param pandas.DataFrame lines: data frame of all lines.
-    :param \\*\\*kwargs: optional arguments.
+    :param int rounding: number of digits in coordinates rounded up to.
+    :param bool drop_zero_distance_line: drop zero distance line or not, defaults to
+        True.
     :return: (*tuple*) -- lines and substations data frame.
+    :raises TypeError: if rounding is not an integer.
     """
-    # Optional parameters
-    rounding = 3 if "rounding" not in kwargs else kwargs["rounding"]
-    drop_zero_distance_line = (
-        True
-        if "drop_zero_distance_line" not in kwargs
-        else kwargs["drop_zero_distance_line"]
-    )
+    if not isinstance(rounding, int):
+        raise TypeError("rounding must be an integer")
 
     # Round coordinates of substations and lines' endpoints
     print(
@@ -298,6 +294,90 @@ def filter_by_connected_components(lines, substations):
     return remaining_lines, remaining_substations
 
 
+def filter_islands_and_connect_with_mst(
+    lines,
+    substations,
+    island_size_lower_bound=0,
+    island_size_upper_bound=None,
+    **kwargs,
+):
+    """Filter islands by user specific sizes and connect all islands with a minimum
+    spanning tree.
+
+    :param pandas.DataFrame lines: data frame of lines.
+    :param pandas.DataFrame substations: data frame of substations.
+    :param int island_size_lower_bound: smallest island the function should consider
+        exclusively, defaults to 0.
+    :param int island_size_upper_bound: largest island the function should consider
+        exclusively, defaults to None, which includes all islands up to the largest one.
+    :param \\*\\*kwargs: optional arguments for :py:func:`get_mst_edges`.
+    :return: (*tuple*) -- modified lines and substations data frames, lines and
+        substations in filtered islands are dropped and new lines from the minimum
+        spanning tree among islands are added.
+    :raises TypeError:
+        if ``island_size_lower_bound`` is not int, and/or
+        if ``island_size_upper_bound`` is not int.
+    :raises ValueError:
+        if ``island_size_lower_bound`` is greater or equal to
+        ``island_size_upper_bound``.
+    """
+    if island_size_upper_bound is None:
+        island_size_upper_bound = len(substations) + 1
+    if not isinstance(island_size_lower_bound, int):
+        raise TypeError("island_size_lower_bound must be an integer")
+    if not isinstance(island_size_upper_bound, int):
+        raise TypeError("island_size_upper_bound must be an integer")
+    if island_size_lower_bound >= island_size_upper_bound:
+        raise ValueError(
+            "island_size_lower_bound must be smaller than island_size_upper_bound"
+        )
+
+    # Filter lines and substations based on island sizes
+    graph = nx.convert_matrix.from_pandas_edgelist(lines, "SUB_1_ID", "SUB_2_ID")
+    sub_to_drop = set().union(
+        *[
+            cc
+            for cc in list(nx.connected_components(graph))
+            if len(cc) <= island_size_lower_bound or len(cc) >= island_size_upper_bound
+        ]
+    )
+    len_lines_before = len(lines)
+    lines = lines.loc[~lines["SUB_1_ID"].isin(sub_to_drop)]
+    print(
+        f"dropping {len_lines_before - len(lines)} lines due to island size filtering"
+    )
+    len_substations_before = len(substations)
+    substations.drop(sub_to_drop, inplace=True)
+    print(
+        f"dropping {len_substations_before - len(substations)} substations due to "
+        f"island size filtering"
+    )
+
+    # Connect selected connected components
+    mst_edges = get_mst_edges(lines, substations, **kwargs)
+
+    new_lines = pd.DataFrame(
+        [{"SUB_1_ID": x[2]["start"], "SUB_2_ID": x[2]["end"]} for x in mst_edges]
+    )
+    new_lines = new_lines.assign(VOLTAGE=pd.NA, VOLT_CLASS="NOT AVAILABLE")
+    new_lines["COORDINATES"] = new_lines.apply(
+        lambda x: [
+            [
+                substations.loc[x.SUB_1_ID, "LATITUDE"],
+                substations.loc[x.SUB_1_ID, "LONGITUDE"],
+            ],
+            [
+                substations.loc[x.SUB_2_ID, "LATITUDE"],
+                substations.loc[x.SUB_2_ID, "LONGITUDE"],
+            ],
+        ],
+        axis=1,
+    )
+    lines = pd.concat([lines, new_lines])
+
+    return lines, substations
+
+
 def augment_line_voltages(
     lines, substations, volt_class_defaults=None, state_threshold_100_161=0.95
 ):
@@ -524,53 +604,21 @@ def estimate_branch_rating(branch, bus_voltages):
     raise ValueError(f"{branch.loc['type']} not a valid branch type")
 
 
-def get_mst_edges(lines, substations):
-    """Get the set of lines which connected the connected components of the lines graph,
-    either from a cache or by generating from scratch and caching.
-
-    :param pandas.DataFrame lines: data frame of lines.
-    :param pandas.DataFrame substations: data frame of substations.
-    :return: (*list*) -- each entry is a 3-tuple:
-        index of the first connected component (int),
-        index of the second connected component (int),
-        a dictionary with keys containing ``start``, ``end`` and ``weight``, defines
-        the ``from substation ID``, ``to substation ID`` and the distance of the line.
-    """
-    cache_dir = os.path.join(os.path.dirname(__file__), "cache")
-    os.makedirs(cache_dir, exist_ok=True)
-    cache_key = repr(lines[["SUB_1_ID", "SUB_2_ID"]].to_numpy().tolist()) + repr(
-        substations[["LATITUDE", "LONGITUDE"]].to_numpy().tolist()
-    )
-    cache_hash = hashlib.md5(cache_key.encode("utf-8")).hexdigest()
-    try:
-        with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "rb") as f:
-            print("Reading cached minimum spanning tree")
-            mst_edges = pickle.load(f)
-    except Exception:
-        print("No minimum spanning tree available, generating...")
-        _, mst_edges = connect_islands_with_minimum_cost(lines, substations)
-        with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "wb") as f:
-            pickle.dump(mst_edges, f)
-    return mst_edges
-
-
-def build_transmission(method="sub2line", kwargs={"rounding": 3}):
+def build_transmission(method="sub2line", **kwargs):
     """Build transmission network
 
     :param str method: method used to build network. Default method is *sub2line*
         where all substations are considered and lines are filtered accordingly. Other
         method is *line2sub* where all lines are considered and a list of substations
         is compiled.
-    :param dict kwargs: keyword arguments to be passed to functions.
-    :raises TypeError:
-        if ``method`` is not a str.
-        if ``kwargs`` is not a dict.
+    :param \\*\\*kwargs: keyword arguments to be passed to lower level functions,
+        including :py:func:`map_lines_to_substations_using_coords` and
+        :py:func:`get_mst_edges`.
+    :raises TypeError: if ``method`` is not a str.
     :raises ValueError: if ``method`` is unknown.
     """
     if not isinstance(method, str):
         raise TypeError("method must be a str")
-    if not isinstance(kwargs, dict):
-        raise TypeError("kwargs must be a dict")
     if method not in ["sub2line", "line2sub"]:
         raise ValueError("Unknown method to build transmission network")
 
@@ -588,6 +636,20 @@ def build_transmission(method="sub2line", kwargs={"rounding": 3}):
     substations = filter_substations_with_zero_lines(hifld_substations)
     check_for_location_conflicts(substations)
 
+    # Filter out keyword arguments for filter_islands_and_connect_with_mst function
+    island_kwargs = dict()
+    for keyword in {
+        "island_size_lower_bound",
+        "island_size_upper_bound",
+        "state_neighbor",
+        "min_dist_method",
+        "cost_metric",
+        "memory_efficient",
+        "kdtree_kwargs",
+    }:
+        if keyword in kwargs:
+            island_kwargs[keyword] = kwargs.pop(keyword)
+
     if method == "sub2line":
         print("filter lines based on substations")
         print("---------------------------------")
@@ -602,26 +664,9 @@ def build_transmission(method="sub2line", kwargs={"rounding": 3}):
             substations, hifld_lines, **kwargs
         )
 
-    # Connect all connected components
-    mst_edges = get_mst_edges(lines, substations)
-    new_lines = pd.DataFrame(
-        [{"SUB_1_ID": x[2]["start"], "SUB_2_ID": x[2]["end"]} for x in mst_edges]
+    lines, substations = filter_islands_and_connect_with_mst(
+        lines, substations, **island_kwargs
     )
-    new_lines = new_lines.assign(VOLTAGE=pd.NA, VOLT_CLASS="NOT AVAILABLE")
-    new_lines["COORDINATES"] = new_lines.apply(
-        lambda x: [
-            [
-                substations.loc[x.SUB_1_ID, "LATITUDE"],
-                substations.loc[x.SUB_1_ID, "LONGITUDE"],
-            ],
-            [
-                substations.loc[x.SUB_2_ID, "LATITUDE"],
-                substations.loc[x.SUB_2_ID, "LONGITUDE"],
-            ],
-        ],
-        axis=1,
-    )
-    lines = pd.concat([lines, new_lines])
 
     # Add voltages to lines with missing data
     augment_line_voltages(lines, substations)
