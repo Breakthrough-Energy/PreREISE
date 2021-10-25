@@ -5,13 +5,13 @@ from scipy.io import loadmat
 from prereise.gather.demanddata.transportation_electrification import const
 
 
-def get_model_year_dti(model_year: int) -> pd.DatetimeIndex:
+def get_model_year_dti(model_year: int):
     return pd.date_range(
         start=f"{model_year}-01-01", end=f"{model_year}-12-31", freq="D"
     )
 
 
-def get_input_day(model_year_dti: pd.DatetimeIndex) -> np.ndarray:
+def get_input_day(model_year_dti: pd.DatetimeIndex):
     """Determine whether each day of the model year is a weekend (1) or weekday (2)
 
     :param pd.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
@@ -21,7 +21,7 @@ def get_input_day(model_year_dti: pd.DatetimeIndex) -> np.ndarray:
     return model_year_dti.dayofweek.isin(range(5)).astype(int) + 1
 
 
-def get_input_month(model_year_dti: pd.DatetimeIndex) -> np.ndarray(int):
+def get_input_month(model_year_dti: pd.DatetimeIndex):
     """Determine month of each day
 
     :param pd.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
@@ -30,7 +30,7 @@ def get_input_month(model_year_dti: pd.DatetimeIndex) -> np.ndarray(int):
     return model_year_dti.month
 
 
-def get_data_month(data: pd.DataFrame) -> pd.Series:
+def get_data_month(data: pd.DataFrame):
     """Get month value from data.
 
     :param pd.DataFrame data: the data to get months from.
@@ -39,7 +39,7 @@ def get_data_month(data: pd.DataFrame) -> pd.Series:
     return data["Date"].dt.month
 
 
-def get_data_day(data: pd.DataFrame) -> np.array(int):
+def get_data_day(data: pd.DataFrame):
     """Get weekday/weekend designation value from data.
 
     :param pd.DataFrame data: the data to get day of week from.
@@ -48,7 +48,7 @@ def get_data_day(data: pd.DataFrame) -> np.array(int):
     return data["If Weekend"]
 
 
-def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataFrame:
+def load_data(census_region: int, filepath: str = "nhts_census.mat"):
     """Load the data at nhts_census.mat.
 
     :param int census_region: the census region to load data from.
@@ -70,7 +70,7 @@ def load_data(census_region: int, filepath: str = "nhts_census.mat") -> pd.DataF
     return df
 
 
-def remove_ldt(data: pd.DataFrame) -> pd.DataFrame:
+def remove_ldt(data: pd.DataFrame):
     """Remove light duty trucks from data loaded from nths_census.mat.
 
     :param pd.DataFrame data: the data returned from :func:`load_data`.
@@ -88,7 +88,7 @@ def total_daily_vmt(
     comm_type: int,
     locationstrategy: list[int],
     input_day: list[int],
-) -> np.array[float]:
+):
     """load data and use the parameters to calculate total_daily_vmt.
 
     :param int census_region: the type of census
