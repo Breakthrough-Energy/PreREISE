@@ -86,7 +86,7 @@ def consider_trip_number(trip_strategy, total_trips, trip_num):
         return True
     
     elif trip_strategy == 2:
-        return total_trips == trip_num:
+        return total_trips == trip_num
          
 
 #consider battery SOC
