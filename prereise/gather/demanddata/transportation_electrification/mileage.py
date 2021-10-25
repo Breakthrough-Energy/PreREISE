@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
-from scipy.io import loadmat
-
 from prereise.gather.demanddata.transportation_electrification import const
-
+from scipy.io import loadmat
+from typing import List
 
 def get_model_year_dti(model_year: int):
     return pd.date_range(
@@ -86,8 +85,8 @@ def remove_ldt(data: pd.DataFrame):
 def total_daily_vmt(
     census_region: int,
     comm_type: int,
-    locationstrategy: list[int],
-    input_day: list[int],
+    locationstrategy: List[int],
+    input_day: List[int],
 ):
     """load data and use the parameters to calculate total_daily_vmt.
 
