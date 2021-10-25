@@ -1,6 +1,6 @@
-import prereise.gather.demanddata.transportation_electrification.const
-import prereise.gather.demanddata.transportation_electrification.mileage
-import prereise.gather.demanddata.transportation_electrification.charging
+from prereise.gather.demanddata.transportation_electrification import const
+from prereise.gather.demanddata.transportation_electrification import mileage
+from prereise.gather.demanddata.transportation_electrification import charging
 import numpy as np
 
 
