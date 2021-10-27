@@ -16,7 +16,7 @@ from prereise.gather.demanddata.bldg_electrification import const
 def era5_download(years, directory, variable="temp"):
     """Download ERA5 data
 
-    :param iterable integer: year(s) for which data to be downloaded given as single 
+    :param iterable integer: year(s) for which data to be downloaded given as single
         value or iterable list
     :param string directory: path to root directory for ERA5 downloads
     :param string: variable to be downloaded, chosen from:
@@ -51,7 +51,7 @@ def era5_download(years, directory, variable="temp"):
 
     import cdsapi
 
-    """ Requires `cdsapi` to be installed per: 
+    """ Requires `cdsapi` to be installed per:
         https://cds.climate.copernicus.eu/api-how-to
         """
     c = cdsapi.Client()
@@ -164,16 +164,16 @@ def create_era5_pumas(
         def lon_lat_to_cartesian(lon, lat):
 
             # WGS 84 reference coordinate system parameters
-            A = 6378.137  # major axis [km]
-            E2 = 6.69437999014e-3  # eccentricity squared
+            a = 6378.137  # major axis [km]
+            e2 = 6.69437999014e-3  # eccentricity squared
 
             lon_rad = np.radians(lon)
             lat_rad = np.radians(lat)
             # convert to cartesian coordinates
-            r_n = A / (np.sqrt(1 - E2 * (np.sin(lat_rad) ** 2)))
+            r_n = a / (np.sqrt(1 - e2 * (np.sin(lat_rad) ** 2)))
             x = r_n * np.cos(lat_rad) * np.cos(lon_rad)
             y = r_n * np.cos(lat_rad) * np.sin(lon_rad)
-            z = r_n * (1 - E2) * np.sin(lat_rad)
+            z = r_n * (1 - e2) * np.sin(lat_rad)
             return x, y, z
 
         x_era5, y_era5, z_era5 = lon_lat_to_cartesian(
