@@ -447,4 +447,36 @@ The data are used to populate the power generation profile of U.S. transmission 
 ##### Note
 Public use (see https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::power-plants/about). Users are advised to read the data set's metadata thoroughly to understand appropriate use and data limitations.
 
+
+##### Source
+* Name: U.S. Zips
+* Author: Pareto Software, LLC
+* Description: Data on United States ZIP codes
+* Source: https://simplemaps.com
+* Exact source location: https://simplemaps.com/data/us-zips
+* Note: version 1.78, accessed 2021-10-27.
+
+##### Destination
+* Modifications to source file(s): None
+* Location: https://besciences.blob.core.windows.net/datasets/geo_data/uszips.csv
+
+##### General Purpose
+The data are used to estimate population served by each substation, to distribute demand.
+
+
+##### Source
+* Name: U.S. Counties
+* Author: Pareto Software, LLC
+* Description: Data on United States counties
+* Source: https://simplemaps.com
+* Exact source location: https://simplemaps.com/data/us-counties
+* Note: version 1.71, accessed 2021-10-27.
+
+##### Destination
+* Modifications to source file(s): None
+* Location: https://besciences.blob.core.windows.net/datasets/geo_data/uscounties.csv
+
+##### General Purpose
+The data are used to estimate population served by each substation, to distribute demand.
+
 ---
