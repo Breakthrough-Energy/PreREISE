@@ -111,6 +111,8 @@ blob_paths = {
     "epa_needs": "https://besciences.blob.core.windows.net/datasets/EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
     "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
     "transmission_lines": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
+    "us_counties": "https://besciences.blob.core.windows.net/datasets/geo_data/uscounties.csv",
+    "us_zips": "https://besciences.blob.core.windows.net/datasets/geo_data/uszips.csv",
 }
 eia_epa_crosswalk_path = "https://raw.githubusercontent.com/Breakthrough-Energy/camd-eia-crosswalk/master/epa_eia_crosswalk.csv"
 
@@ -386,6 +388,7 @@ heat_rate_assumptions = {
     "Solar Thermal without Energy Storage": 0,
 }
 
+
 # These lines were manually identified based on a combination of: their 'TYPE'
 # classification, their substation names, and their geographical paths. The capacities
 # for each line were compiled from a variety of public sources.
@@ -402,3 +405,6 @@ dc_line_ratings = {  # MW
     310053: 400,  # Trans-Bay Cable
     311958: 5,  # Alamogordo Solar Energy Center
 }
+
+substation_load_share = 0.5
+demand_per_person = 2.01e-3
