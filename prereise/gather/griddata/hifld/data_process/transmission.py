@@ -604,7 +604,7 @@ def estimate_branch_rating(branch, bus_voltages):
     raise ValueError(f"{branch.loc['type']} not a valid branch type")
 
 
-def build_transmission(method="sub2line", **kwargs):
+def build_transmission(method="line2sub", **kwargs):
     """Build transmission network
 
     :param str method: method used to build network. Default method is *sub2line*
