@@ -671,9 +671,25 @@ def build_transmission(method="line2sub", **kwargs):
     # Add voltages to lines with missing data
     augment_line_voltages(lines, substations)
 
+    # Create buses from lines
+    bus = create_buses(lines)
+
+    # Add transformers, and calculate rating and impedance for all branches
+    transformers = create_transformers(bus)
+    transformers["type"] = "Transformer"
+    lines["type"] = "Line"
+    lines["length"] = lines.apply(calculate_branch_mileage, axis=1)
+    branch = pd.concat([lines, transformers])
+    branch["x"] = branch.apply(
+        lambda x: estimate_branch_impedance(x, bus["baseKV"]), axis=1
+    )
+    branch["rateA"] = branch.apply(
+        lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
+    )
+
     # Add additional information to substations
     substations["interconnect"] = substations.apply(
         lambda x: map_state_and_county_to_interconnect(x.STATE, x.COUNTY), axis=1
     )
 
-    return lines, substations
+    return branch, substations
