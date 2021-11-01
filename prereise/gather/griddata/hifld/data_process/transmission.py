@@ -604,6 +604,22 @@ def estimate_branch_rating(branch, bus_voltages):
     raise ValueError(f"{branch.loc['type']} not a valid branch type")
 
 
+def split_lines_to_ac_and_dc(lines, dc_override_indices=None):
+    """Given a data frame of mixed AC & DC lines, where some DC lines are not
+    appropriately labeled, split into an AC data frame and a DC data frame.
+
+    :param pandas.DataFrame lines: combined data frame of AC & DC lines.
+    :param iterable dc_override_indices: indices to coerce to DC classification.
+    :return: (*tuple*) -- two data frames, of AC & DC lines, respectively.
+    """
+    if dc_override_indices is None:
+        dc_override_indices = {}
+    dc_types = {"DC; OVERHEAD", "DC; UNDERGROUND"}  # noqa: F841
+    dc_lines = lines.query("TYPE in @dc_types or index in @dc_override_indices")
+    ac_lines = lines.query("index not in @dc_lines.index")
+    return ac_lines.copy(), dc_lines.copy()
+
+
 def build_transmission(method="line2sub", **kwargs):
     """Build transmission network
 
