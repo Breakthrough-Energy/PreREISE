@@ -632,6 +632,8 @@ def build_transmission(method="line2sub", **kwargs):
         :py:func:`get_mst_edges`.
     :raises TypeError: if ``method`` is not a str.
     :raises ValueError: if ``method`` is unknown.
+    :return: (*tuple*) -- four data frames:
+        AC branches, buses, substations, and DC lines, respectively.
     """
     if not isinstance(method, str):
         raise TypeError("method must be a str")
@@ -684,18 +686,23 @@ def build_transmission(method="line2sub", **kwargs):
         lines, substations, **island_kwargs
     )
 
+    # Separate DC lines from AC line processing, add ratings
+    ac_lines, dc_lines = split_lines_to_ac_and_dc(lines, const.dc_line_ratings.keys())
+    dc_lines["Pmax"] = dc_lines.index.to_series().map(const.dc_line_ratings)
+    dc_lines["Pmin"] = -1 * dc_lines["Pmax"]
+
     # Add voltages to lines with missing data
-    augment_line_voltages(lines, substations)
+    augment_line_voltages(ac_lines, substations)
 
     # Create buses from lines
-    bus = create_buses(lines)
+    bus = create_buses(ac_lines)
 
     # Add transformers, and calculate rating and impedance for all branches
     transformers = create_transformers(bus)
     transformers["type"] = "Transformer"
-    lines["type"] = "Line"
-    lines["length"] = lines.apply(calculate_branch_mileage, axis=1)
-    branch = pd.concat([lines, transformers])
+    ac_lines["type"] = "Line"
+    ac_lines["length"] = ac_lines.apply(calculate_branch_mileage, axis=1)
+    branch = pd.concat([ac_lines, transformers])
     branch["x"] = branch.apply(
         lambda x: estimate_branch_impedance(x, bus["baseKV"]), axis=1
     )
@@ -708,4 +715,4 @@ def build_transmission(method="line2sub", **kwargs):
         lambda x: map_state_and_county_to_interconnect(x.STATE, x.COUNTY), axis=1
     )
 
-    return branch, substations
+    return branch, bus, substations, dc_lines
