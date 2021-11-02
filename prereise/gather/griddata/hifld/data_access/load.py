@@ -231,3 +231,21 @@ def get_zone(path):
     :return: (*pandas.DataFrame*) -- information related to load zone
     """
     return pd.read_csv(path, index_col="zone_id")
+
+
+def get_us_counties(path):
+    """Read the file containing county data.
+
+    :param str path: path to file. Either local or URL.
+    :return: (*pandas.DataFrame*) -- information related to counties
+    """
+    return pd.read_csv(path).set_index("county_fips")
+
+
+def get_us_zips(path):
+    """Read the file containing ZIP code data.
+
+    :param str path: path to file. Either local or URL.
+    :return: (*pandas.DataFrame*) -- information related to ZIP codes
+    """
+    return pd.read_csv(path, dtype={"zip": "string"}).set_index("zip")
