@@ -385,3 +385,20 @@ heat_rate_assumptions = {
     "Solar Thermal with Energy Storage": 0,
     "Solar Thermal without Energy Storage": 0,
 }
+
+# These lines were manually identified based on a combination of: their 'TYPE'
+# classification, their substation names, and their geographical paths. The capacities
+# for each line were compiled from a variety of public sources.
+dc_line_ratings = {  # MW
+    108354: 500,  # Square Butte
+    113313: 660,  # Neptune Cable
+    131914: 2000,  # Quebec – New England Transmission (Ayer to Monroe)
+    150123: 1000,  # CU
+    157627: 330,  # Cross-Sound Cable
+    157629: 660,  # Hudson Project
+    158515: 2000,  # Quebec – New England Transmission (Quebec to Monroe)
+    200823: 3100,  # Pacific DC Intertie (Path 65)
+    308464: 2400,  # Intermountain Power Project (Path 27)
+    310053: 400,  # Trans-Bay Cable
+    311958: 5,  # Alamogordo Solar Energy Center
+}
