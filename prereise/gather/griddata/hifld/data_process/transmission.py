@@ -88,13 +88,13 @@ def map_lines_to_substations_using_coords(
     subcoord = list(subcoord2subid)
     missing_points = set().union(
         *[
-            set(line2sub.loc[line2sub[e_sub].isna(), e].apply(lambda x: (x[1], x[0])))
+            set(line2sub.loc[line2sub[e_sub].isna(), e].map(tuple))
             for e, e_sub in end_sub.items()
         ]
     )
-    tree = KDTree([ll2uv(p[0], p[1]) for p in subcoord])
+    tree = KDTree([ll2uv(p[1], p[0]) for p in subcoord])
     endpoint2neighbor = {
-        (p[1], p[0]): subcoord2subid[subcoord[tree.query(ll2uv(p[0], p[1]))[1]]]
+        p: subcoord2subid[subcoord[tree.query(ll2uv(p[1], p[0]))[1]]]
         for p in tqdm(missing_points, total=len(missing_points))
     }
     filled_subs = [
