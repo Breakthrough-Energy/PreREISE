@@ -221,7 +221,7 @@ def get_hifld_electric_power_transmission_lines(path):
     # Replace dummy data with explicit 'missing'
     properties.loc[properties.VOLTAGE == -999999, "VOLTAGE"] = pd.NA
 
-    return properties.query("STATUS == 'IN SERVICE'")
+    return properties.query("STATUS == 'IN SERVICE' or STATUS == 'NOT AVAILABLE'")
 
 
 def get_zone(path):
