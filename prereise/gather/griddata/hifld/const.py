@@ -408,3 +408,10 @@ dc_line_ratings = {  # MW
 
 substation_load_share = 0.5
 demand_per_person = 2.01e-3
+
+contiguous_us_bounds = {
+    "east": -66,
+    "north": 50,
+    "south": 25,
+    "west": -125,
+}
