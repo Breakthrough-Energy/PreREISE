@@ -160,12 +160,10 @@ def immediate_charging(
 
         if day_iter == len(input_day) - 1:
             # MW
-            TRANS_charge[day_iter:][0] += outputelectricload[:24] / (info1[0] * 1000)
-            TRANS_charge[:24][0] += outputelectricload[24:48] / (info1[0] * 1000)
+            TRANS_charge[day_iter * 24:] += outputelectricload[:24] / (info1[0] * 1000)
+            TRANS_charge[:24] += outputelectricload[24:48] / (info1[0] * 1000)
         else:
-            TRANS_charge[day_iter * 24 : day_iter * 24 + 48][
-                0
-            ] += outputelectricload / (info1[0] * 1000)
+            TRANS_charge[day_iter * 24 : day_iter * 24 + 48] += outputelectricload / (info1[0] * 1000)
 
     return TRANS_charge
 
