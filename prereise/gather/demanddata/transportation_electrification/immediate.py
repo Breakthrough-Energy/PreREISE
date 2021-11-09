@@ -65,8 +65,8 @@ def immediate_charging(
             if data_day[i] == input_day[day_iter]:
                 if (
                     i > 0
-                    and newdata.loc[i]["sample vehicle number"]
-                    == newdata.loc[i - 1]["sample vehicle number"]
+                    and newdata.iloc[i]["sample vehicle number"]
+                    == newdata.iloc[i - 1]["sample vehicle number"]
                 ):
                     newdata.loc[i]["trip start battery charge"] = (
                         newdata.loc[i - 1]["trip end battery charge"]
@@ -140,7 +140,7 @@ def immediate_charging(
             potential_vmt += newdata.loc[i]["Miles traveled"]
 
         # change resolution to 1 hour using midpoint average
-        outputelectricload = np.zeros(4800)
+        outputelectricload = np.zeros(48)
 
         for k in range(48):
             if k == 0:
