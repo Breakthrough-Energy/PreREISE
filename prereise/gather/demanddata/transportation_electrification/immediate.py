@@ -65,45 +65,46 @@ def immediate_charging(
             if data_day[i] == input_day[day_iter]:
                 if (
                     i > 0
-                    and newdata.iloc[i]["sample vehicle number"]
-                    == newdata.iloc[i - 1]["sample vehicle number"]
+                    and newdata.iloc[i, newdata.columns.get_loc("sample vehicle number")]
+                    == newdata.iloc[i, newdata.columns.get_loc("sample vehicle number")]
                 ):
-                    newdata.loc[i]["trip start battery charge"] = (
-                        newdata.loc[i - 1]["trip end battery charge"]
-                        + newdata.loc[i - 1]["depleting time"]
+                    newdata.iloc[i, newdata.columns.get_loc("trip start battery charge")] = (
+                        newdata.iloc[i - 1, newdata.columns.get_loc("trip end battery charge")]
+                        + newdata.iloc[i - 1, newdata.columns.get_loc("charging consumption")] 
                     )
                     # trip number
                     trip_num += 1
-                    newdata.loc[i, "trip number"] = trip_num
+                    newdata.iloc[i, newdata.columns.get_loc("trip number")] = trip_num
                 else:
-                    newdata.loc[i, "trip start battery charge"] = kwh
+                    newdata.iloc[i, newdata.columns.get_loc("trip start battery charge")] = kwh
                     trip_num = 1
                     # trip number
-                    newdata.loc[i, "trip number"] = trip_num
+                    newdata.iloc[i, newdata.columns.get_loc("trip number")] = trip_num
 
                 # 1 is the safety coefficient
-                if newdata.loc[i]["total vehicle miles traveled"] < veh_range * const.safety_coefficient:
+                if newdata.iloc[i, newdata.columns.get_loc("total vehicle miles traveled")] < veh_range * const.safety_coefficient:
                     # 1 means the day trip could be used in battery electric vehicle
-                    newdata.loc[i, "BEV could be used"] = 1
+                    newdata.iloc[i, newdata.columns.get_loc("BEV could be used")] = 1
                     # trip end battery charge
-                    newdata.loc[i, "trip end battery charge"] = (
-                        newdata.loc[i]["trip start battery charge"]
-                        - newdata[i]["Miles traveled"] * kwhmi * const.ER
+                    newdata.iloc[i, newdata.columns.get_loc("trip end battery charge")] = (
+                        newdata.iloc[i, newdata.columns.get_loc("trip start battery charge")]
+                        - newdata.iloc[i, newdata.columns.get_loc("Miles traveled")] * kwhmi * const.ER
                     )
+                    """maybe unnecesesarry
                     # period when battery is discharging. depleting time
-                    newdata.loc[i, "depleting time"] = newdata.loc[i][
-                        "Travel time (hour decimal)"
-                    ]
+                    newdata.iloc[i, newdata.columns.get_loc("depleting time")] = newdata.iloc[i, 
+                        newdata.columns.get_loc("Travel time (hour decimal)")
+                    ]"""
 
                 else:
                     # 0 means the day trip could not be used in battery electric vehicle
-                    newdata.loc[i, "BEV could be used"] = 0
+                    newdata.iloc[i, newdata.columns.get_loc("BEV could be used")] = 0
 
                 # data for this trip
-                trip_data = newdata.loc[i]
+                trip_data = newdata.iloc[i]
 
                 # charging power
-                newdata.loc[i, "charging power"] = charging.get_charging_power(
+                newdata.iloc[i, newdata.columns.get_loc("charging power")] = charging.get_charging_power(
                     power,
                     trip_strategy,
                     location_strategy,
@@ -111,33 +112,32 @@ def immediate_charging(
                     trip_data,
                 )
                 # charging time
-                newdata.loc[i, "charging time"] = charging.get_charging_time(
-                    newdata.loc[i]["charging power"],
+                newdata.iloc[i, newdata.columns.get_loc("charging time")] = charging.get_charging_time(
+                    newdata.iloc[i, newdata.columns.get_loc("charging power")],
                     kwh,
-                    newdata.loc[i]["trip end battery charge"],
+                    newdata.iloc[i, newdata.columns.get_loc("trip end battery charge")],
                     const.charging_efficiency,
                 )
                 # charging consumption
-                newdata.loc[i, 
-                    "charging consumption"
-                ] = newdata.loc[i]["charging power"]  * newdata.loc[i]["charging time"] * const.charging_efficiency
+                newdata.iloc[i, newdata.columns.get_loc("charging consumption")] = newdata.iloc[i, newdata.columns.get_loc("charging power")]  * newdata.iloc[i, newdata.columns.get_loc("charging time")] * const.charging_efficiency
 
                 # charging start point
-                start_point = round(newdata.loc[i]["End time (hour decimal)"] * 100)
+                start_point = round(newdata.iloc[i, newdata.columns.get_loc("End time (hour decimal)")] * 100)
                 # charging end point
-                end_point = start_point + round(newdata.loc[i]["charging time"] * 100)
-                electricload[start_point:end_point] += newdata.loc[i]["charging power"]
+                end_point = start_point + round(newdata.iloc[i, newdata.columns.get_loc("charging time")] * 100)
+                electricload[start_point:end_point] += newdata.iloc[i, newdata.columns.get_loc("charging power")]
 
-                info1[0] += newdata.loc[i]["Miles traveled"]
+                info1[0] += newdata.iloc[i, newdata.columns.get_loc("Miles traveled")]
                 info1[1] += 1
 
                 if firstrip != 0:
                     info1[2] += 1
 
-            if newdata[i]["BEV could be used"] == 1:
-                actual_vmt += newdata.loc[i]["Miles traveled"]
+            if newdata.iloc[i, newdata.columns.get_loc("BEV could be used")] == 1:
+                actual_vmt += newdata.iloc[i, newdata.columns.get_loc("Miles traveled")]
 
-            potential_vmt += newdata.loc[i]["Miles traveled"]
+            potential_vmt += newdata.iloc[i, newdata.columns.get_loc("Miles traveled")]
+
 
         # change resolution to 1 hour using midpoint average
         outputelectricload = np.zeros(48)
