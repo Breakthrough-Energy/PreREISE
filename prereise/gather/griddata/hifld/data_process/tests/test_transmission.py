@@ -9,6 +9,7 @@ from prereise.gather.griddata.hifld.data_process.transmission import (
     create_transformers,
     estimate_branch_impedance,
     estimate_branch_rating,
+    map_lines_to_substations_using_coords,
 )
 
 
@@ -184,3 +185,43 @@ def test_estimate_branch_rating_transformers():
     assert rating == const.transformer_rating * 3
     rating = estimate_branch_rating(transformers.iloc[2], bus_voltages)
     assert rating == const.transformer_rating * 4
+
+
+def test_map_lines_to_substations_using_coords():
+    substations = pd.DataFrame(
+        {
+            # Los Angeles, Miami, Boston, Seattle x2 (slightly different locations)
+            "LATITUDE": [34.05, 25.7752, 42.3581, 47.6097, 47.6099],
+            "LONGITUDE": [-118.25, -80.2086, -71.0636, -122.3331, -122.3333],
+            "TYPE": ["SUBSTATION"] * 5,
+            "NAME": ["Los Angeles", "Miami", "Boston", "Seattle", "Seattle B"],
+        },
+        index=pd.Index([3, 4, 5, 6, 7], name="ID"),
+    )
+    # One line approximately connects Seattle and Miami
+    lines = pd.DataFrame({"COORDINATES": [[(47.61, -122.4), (25.7, -80.3)]]})
+
+    # With default rounding (three decimal places)
+    new_lines, new_substations = map_lines_to_substations_using_coords(
+        substations, lines
+    )
+    # Only one line, mapping to two substations, one of which has a secondary substation
+    assert len(new_lines) == 1
+    assert new_lines.iloc[0]["SUB_1_ID"] == 6  # Seattle
+    assert new_lines.iloc[0]["SUB_2_ID"] == 4  # Miami
+
+    assert len(new_substations) == 3
+    assert new_substations.loc[6, "OTHER_SUB"] == [7]
+    assert all(o is None for i, o in new_substations["OTHER_SUB"].items() if i != 6)
+
+    # With tighter rounding rounding (four decimal places)
+    new_lines, new_substations = map_lines_to_substations_using_coords(
+        substations, lines, rounding=4
+    )
+    # Only one line, mapping to two substations
+    assert len(new_lines) == 1
+    assert new_lines.iloc[0]["SUB_1_ID"] == 7  # Seattle B
+    assert new_lines.iloc[0]["SUB_2_ID"] == 4  # Miami
+
+    assert len(new_substations) == 2
+    assert all(o is None for o in new_substations["OTHER_SUB"])
