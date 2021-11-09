@@ -88,13 +88,13 @@ def map_lines_to_substations_using_coords(
     subcoord = list(subcoord2subid)
     missing_points = set().union(
         *[
-            set(line2sub.loc[line2sub[e_sub].isna(), e].apply(lambda x: (x[1], x[0])))
+            set(line2sub.loc[line2sub[e_sub].isna(), e].map(tuple))
             for e, e_sub in end_sub.items()
         ]
     )
-    tree = KDTree([ll2uv(p[0], p[1]) for p in subcoord])
+    tree = KDTree([ll2uv(p[1], p[0]) for p in subcoord])
     endpoint2neighbor = {
-        (p[1], p[0]): subcoord2subid[subcoord[tree.query(ll2uv(p[0], p[1]))[1]]]
+        p: subcoord2subid[subcoord[tree.query(ll2uv(p[1], p[0]))[1]]]
         for p in tqdm(missing_points, total=len(missing_points))
     }
     filled_subs = [
@@ -356,8 +356,10 @@ def filter_islands_and_connect_with_mst(
     # Connect selected connected components
     mst_edges = get_mst_edges(lines, substations, **kwargs)
 
+    first_new_id = lines.index.max() + 1
     new_lines = pd.DataFrame(
-        [{"SUB_1_ID": x[2]["start"], "SUB_2_ID": x[2]["end"]} for x in mst_edges]
+        [{"SUB_1_ID": x[2]["start"], "SUB_2_ID": x[2]["end"]} for x in mst_edges],
+        index=pd.RangeIndex(first_new_id, first_new_id + len(mst_edges)),
     )
     new_lines = new_lines.assign(VOLTAGE=pd.NA, VOLT_CLASS="NOT AVAILABLE")
     new_lines["COORDINATES"] = new_lines.apply(
@@ -700,6 +702,8 @@ def build_transmission(method="line2sub", **kwargs):
     # Add transformers, and calculate rating and impedance for all branches
     transformers = create_transformers(bus)
     transformers["type"] = "Transformer"
+    first_new_id = ac_lines.index.max() + 1
+    transformers.index = pd.RangeIndex(first_new_id, first_new_id + len(transformers))
     ac_lines["type"] = "Line"
     ac_lines["length"] = ac_lines.apply(calculate_branch_mileage, axis=1)
     branch = pd.concat([ac_lines, transformers])

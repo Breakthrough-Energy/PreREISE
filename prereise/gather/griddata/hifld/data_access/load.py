@@ -10,7 +10,10 @@ import pandas as pd
 from tqdm import tqdm
 
 from prereise.gather.griddata.hifld.const import abv2state  # noqa: F401
-from prereise.gather.griddata.hifld.const import heat_rate_estimation_columns
+from prereise.gather.griddata.hifld.const import (
+    contiguous_us_bounds,
+    heat_rate_estimation_columns,
+)
 
 
 def get_eia_form_860(path):
@@ -218,10 +221,20 @@ def get_hifld_electric_power_transmission_lines(path):
         lambda x: [y[::-1] for y in x]
     )
 
+    within_bounding_box = properties["COORDINATES"].apply(
+        lambda x: (
+            (contiguous_us_bounds["south"] < x[0][0] < contiguous_us_bounds["north"])
+            & (contiguous_us_bounds["west"] < x[0][1] < contiguous_us_bounds["east"])
+            & (contiguous_us_bounds["south"] < x[-1][0] < contiguous_us_bounds["north"])
+            & (contiguous_us_bounds["west"] < x[-1][1] < contiguous_us_bounds["east"])
+        )
+    )
+    properties = properties.loc[within_bounding_box]
+
     # Replace dummy data with explicit 'missing'
     properties.loc[properties.VOLTAGE == -999999, "VOLTAGE"] = pd.NA
 
-    return properties.query("STATUS == 'IN SERVICE'")
+    return properties.query("STATUS == 'IN SERVICE' or STATUS == 'NOT AVAILABLE'")
 
 
 def get_zone(path):
