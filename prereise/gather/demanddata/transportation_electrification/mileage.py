@@ -44,7 +44,7 @@ def get_data_day(data: pd.DataFrame):
     :param pd.DataFrame data: the data to get day of week from.
     :return: (*np.array*) -- indicates weekend or weekday for every day.
     """
-    return data["If Weekend"]
+    return np.array(data["If Weekend"])
 
 
 def load_data(census_region: int, filepath: str = "nhts_census.mat"):
