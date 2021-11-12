@@ -110,7 +110,7 @@ def map_lines_to_substations_using_coords(
     }
     for a in all2one:
         type2id = substations.loc[list(a)].reset_index().groupby("TYPE").first()["ID"]
-        for t in ["SUBSTATION", "TAP", "RISER", "DEAD END"]:
+        for t in ["SUBSTATION", "TAP", "RISER", "DEAD END", "NOT AVAILABLE"]:
             try:
                 all2one[a] = type2id.loc[t]
                 break

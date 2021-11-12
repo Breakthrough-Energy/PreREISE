@@ -181,7 +181,9 @@ def get_hifld_electric_substations(path):
         .round({"MAX_VOLT": 3, "MIN_VOLT": 3})
     )
 
-    return data.query("STATUS == 'IN SERVICE' and STATE in @abv2state")
+    return data.query(
+        "(STATUS == 'IN SERVICE' or STATUS == 'NOT AVAILABLE') and STATE in @abv2state"
+    )
 
 
 def get_hifld_electric_power_transmission_lines(path):
