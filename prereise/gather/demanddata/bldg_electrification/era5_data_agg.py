@@ -17,7 +17,7 @@ from prereise.gather.demanddata.bldg_electrification import const
 def era5_download(years, directory, variable="temp"):
     """Download ERA5 data
 
-    :param iterable integer: year(s) for which data to be downloaded given as single
+    :param iterable year: year(s) for which data to be downloaded given as single
         value or iterable list
     :param str directory: path to root directory for ERA5 downloads
     :param str: variable to be downloaded, chosen from:
@@ -92,7 +92,7 @@ def create_era5_pumas(
     """Create {variable}s_pumas_{state}_{year}.csv or dewpt_pumas_{state}_{year} for all
         CONUS states and input year(s)
 
-    :param iterable integer: year(s) for which data files to be produced
+    :param iterable year: year(s) for which data files to be produced
     :param pandas.DataFrame tract_puma_mapping: tract to puma mapping.
     :param pandas.DataFrame tract_pop: population by tract
     :param pandas.DataFrame tract_lat_lon: latitutde and longitude of tract
