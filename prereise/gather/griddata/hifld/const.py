@@ -468,3 +468,57 @@ seams_substations = {
         310879,  # Huntsville, TX
     },
 }
+
+substation_interconnect_assumptions = {
+    "Eastern": {
+        131171,
+        131172,
+        131853,
+        161925,
+        167678,
+        167679,
+        167681,
+        167682,
+        167684,
+        307364,
+    },
+    "Western": {
+        201396,
+        202172,
+        205667,
+        205889,
+        205890,
+    },
+    "ERCOT": {
+        301181,
+        301291,
+        302826,
+        303024,  # Substations between East/ERCOT AC connector and Oklaunion B2B station
+        303394,
+        303406,
+        303433,
+        304994,  # Welsh B2B
+        309433,
+        309658,
+    },
+}
+
+line_interconnect_assumptions = {
+    "Eastern": {
+        128641,
+        132264,
+        135527,
+        141367,
+        300170,
+        301858,
+        303906,
+        305887,
+        306332,
+        306885,
+        310668,
+        311279,
+        311520,
+    },
+    "Western": {123525, 141873},
+    "ERCOT": {305330, 309428, 310121},
+}
