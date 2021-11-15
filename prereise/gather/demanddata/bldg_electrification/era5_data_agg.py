@@ -58,8 +58,7 @@ def era5_download(years, directory, variable="temp"):
     c = cdsapi.Client()
 
     # Create folder to store data for given variable if it doesn't yet exist
-    if not os.path.isdir(os.path.join(directory, variable)):
-        os.makedirs(os.path.join(directory, variable))
+    os.makedirs(os.path.join(directory, variable), exist_ok=True)
 
     for year in years:
 
@@ -135,8 +134,7 @@ def create_era5_pumas(
         print("Confirmed: All required ERA5 input files present")
 
     # Create folder to store data for given variable if it doesn't yet exist
-    if not os.path.isdir(os.path.join(directory, "pumas")):
-        os.makedirs(os.path.join(directory, "pumas"))
+    os.makedirs(os.path.join(directory, "pumas"), exist_ok=True)
 
     # Combine tract-level data into single data frame with only census tracts with building area data in included states
     tract_data = pd.concat([tract_lat_lon, tract_pop], axis=1, join="inner")
