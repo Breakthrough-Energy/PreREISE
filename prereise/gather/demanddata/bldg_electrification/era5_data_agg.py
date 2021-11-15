@@ -221,9 +221,7 @@ def create_era5_pumas(
                 )
 
             # Convert units if needed
-            if variable == "temp":
-                vals_pumas_it = vals_pumas_it - 273.15
-            elif variable == "dewpt":
+            if variable in {"temp", "dewpt"}:
                 vals_pumas_it = vals_pumas_it - 273.15
 
             # Save file for variable/state/year
