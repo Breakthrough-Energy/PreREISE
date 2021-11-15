@@ -415,3 +415,56 @@ contiguous_us_bounds = {
     "south": 25,
     "west": -125,
 }
+
+seams_substations = {
+    "east_west": {
+        202364,  # 'LAMAR HVDC TIE'
+        202159,  # 'UNKNOWN202159', NE (effecitvely Sidney/Virginia Smith)
+        202160,  # 'VIRGINIA SMITH CONVERTER STATION'
+        202177,  # Sidney-adjacent
+        202178,  # 'STEGAL', NE
+        131797,  # Stegal-adjacent
+        203572,  # 'MILES CITY', MT (the substation that appears more likely to be the real one)
+        203590,  # 'RICHARDSON COULEE' (near MALTA, shouldn't be necessary?)
+        303738,  # 'BLACKWATER TIE', NM
+        304165,  # 'EDDY AC-DC-AC TIE', NM
+        # Rapid City Disconnections
+        131171,  # North of Rapid City
+        131176,  # North of Rapid City
+        202567,  # East of Rapid City
+        # Highline NE/CO border
+        205884,  # Julesburg, CO
+        205888,  # Holyoke, CO
+        203719,  # 'ALVIN' substation
+    },
+    "east_ercot": {
+        161924,  # Logansport, TX
+        300490,  # Vernon, TX
+        301314,  # Valley Lake, TX connection to OK
+        301729,  # Hawkins, TX
+        302012,  # Vernon, TX
+        302274,  # 'COTTONWOOD', Glenn, TX
+        303004,  # Crowell, TX
+        303646,  # San Augustine, TX
+        303719,  # Big Sandy, TX
+        304100,  # Matador, TX
+        304328,  # Midland, TX
+        304477,  # Oklaunion substation (B2B)
+        304825,  # Dennison, TX connection to OK
+        304391,  # Long Branch, TX
+        304994,  # Welsh substation (B2B)
+        306058,  # Munday, TX
+        306638,  # Pittsburg, TX
+        306738,  # Henderson, TX
+        307121,  # Kirkland, TX
+        307363,  # Navasota, TX
+        307539,  # Mt. Pleasant, TX
+        307735,  # Shiro, TX
+        308062,  # Lufkin, TX
+        308951,  # Beckville, TX
+        308976,  # Dayton, TX
+        309403,  # Kilgore, TX
+        310861,  # Overton, TX
+        310879,  # Huntsville, TX
+    },
+}
