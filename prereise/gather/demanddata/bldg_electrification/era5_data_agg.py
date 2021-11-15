@@ -19,8 +19,8 @@ def era5_download(years, directory, variable="temp"):
 
     :param iterable integer: year(s) for which data to be downloaded given as single
         value or iterable list
-    :param string directory: path to root directory for ERA5 downloads
-    :param string: variable to be downloaded, chosen from:
+    :param str directory: path to root directory for ERA5 downloads
+    :param str: variable to be downloaded, chosen from:
         temp {Default} -- dry bulb temperataure, corresponds to ERA5 variable "2m_temperature"
         dewpt -- dew point temperature, corresponds to ERA5 variable "2m_dewpoint_temperature"
         pres -- surface pressure, corresponds to ERA5 variable "surface_pressure"
@@ -97,8 +97,8 @@ def create_era5_pumas(
     :param pandas.DataFrame tract_puma_mapping: tract to puma mapping.
     :param pandas.DataFrame tract_pop: population by tract
     :param pandas.DataFrame tract_lat_lon: latitutde and longitude of tract
-    :param string directory: path to root directory for ERA5 downloads (not including variable name)
-    :param string: variable to produce
+    :param str directory: path to root directory for ERA5 downloads (not including variable name)
+    :param str: variable to produce
         temp {Default} -- dry bulb temperataure, corresponds to ERA5 variable "2m_temperature"
         dewpt -- dew point temperature, corresponds to ERA5 variable "2m_dewpoint_temperature"
         pres -- surface pressure, corresponds to ERA5 variable "surface_pressure"
