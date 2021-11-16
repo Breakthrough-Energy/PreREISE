@@ -534,3 +534,5 @@ b2b_ratings = {  # MW
     "UNKNOWN304994": 600,  # Welsh (Eastern/ERCOT)
     "VIRGINIA SMITH CONVERTER STATION": 200,  # a.k.a. 'Sidney' (Eastern/Western)
 }
+
+interconnect_size_rank = ["Eastern", "Western", "ERCOT"]
