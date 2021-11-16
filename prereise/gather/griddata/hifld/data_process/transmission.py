@@ -13,10 +13,10 @@ from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_substations,
     get_zone,
 )
-from prereise.gather.griddata.hifld.data_process.helpers import (
-    map_state_and_county_to_interconnect,
+from prereise.gather.griddata.hifld.data_process.topology import (
+    add_interconnects_by_connected_components,
+    get_mst_edges,
 )
-from prereise.gather.griddata.hifld.data_process.topology import get_mst_edges
 
 
 def check_for_location_conflicts(substations):
@@ -693,6 +693,16 @@ def build_transmission(method="line2sub", **kwargs):
     dc_lines["Pmax"] = dc_lines.index.to_series().map(const.dc_line_ratings)
     dc_lines["Pmin"] = -1 * dc_lines["Pmax"]
 
+    # Add interconnect information to lines and substations via topology analysis
+    add_interconnects_by_connected_components(
+        ac_lines,
+        substations,
+        set().union(*const.seams_substations.values()),
+        const.substation_interconnect_assumptions,
+        const.line_interconnect_assumptions,
+        const.interconnect_size_rank,
+    )
+
     # Add voltages to lines with missing data
     augment_line_voltages(ac_lines, substations)
 
@@ -712,11 +722,6 @@ def build_transmission(method="line2sub", **kwargs):
     )
     branch["rateA"] = branch.apply(
         lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
-    )
-
-    # Add additional information to substations
-    substations["interconnect"] = substations.apply(
-        lambda x: map_state_and_county_to_interconnect(x.STATE, x.COUNTY), axis=1
     )
 
     return branch, bus, substations, dc_lines
