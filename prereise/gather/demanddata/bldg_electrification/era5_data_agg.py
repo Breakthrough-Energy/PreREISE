@@ -6,6 +6,7 @@
 
 import os
 
+import cdsapi
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -55,12 +56,12 @@ def era5_download(years, directory, variable="temp"):
             "Data for years 1950-1979 are a preliminary version of reanalysis back extension"
         )
 
-    import cdsapi
-
-    """ Requires `cdsapi` to be installed per:
-        https://cds.climate.copernicus.eu/api-how-to
-        """
-    c = cdsapi.Client()
+    try:
+        c = cdsapi.Client()
+    except Exception:
+        raise Exception(
+            "cdsapi is not configured properly, see https://cds.climate.copernicus.eu/api-how-to"
+        )
 
     # Create folder to store data for given variable if it doesn't yet exist
     os.makedirs(os.path.join(directory, variable), exist_ok=True)
