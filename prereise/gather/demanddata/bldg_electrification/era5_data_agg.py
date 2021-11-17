@@ -193,31 +193,19 @@ def create_era5_pumas(
         ).T
         vals_tracts.columns = tract_data.index
 
+        state_pumas = const.puma_data.groupby("state")
+
+        weighted_values = tract_data.groupby("puma").apply(
+            lambda x: (vals_tracts[x.index] * x["pop_2010"]).sum(axis=1)
+            / x["pop_2010"].sum()
+        )
+        # Convert units if needed (Kelvin to Celsius)
+        if variable in {"temp", "dewpt"}:
+            weighted_values -= 273.15
         # Loop through states
         for state in const.state_list:
-
-            # Initiate vals_pumas data frame
-            vals_pumas_it = pd.DataFrame(
-                columns=const.puma_data.query("state == @state").index
-            )
-            # Loop through and compute population-weighted temperature time series
-            for p in vals_pumas_it.columns:
-                vals_tracts_p = vals_tracts[tract_data.index[tract_data["puma"] == p]]
-                pop_weights_p = tract_data["pop_2010"][
-                    tract_data.index.isin(tract_data.index[tract_data["puma"] == p])
-                ]
-                pop_weights_p.index = vals_tracts_p.columns
-                vals_pumas_it[p] = (
-                    vals_tracts_p.mul(pop_weights_p, axis=1).sum(axis=1)
-                    / pop_weights_p.sum()
-                )
-
-            # Convert units if needed
-            if variable in {"temp", "dewpt"}:
-                vals_pumas_it = vals_pumas_it - 273.15
-
-            # Save file for variable/state/year
-            vals_pumas_it.to_csv(
+            state_values = weighted_values.loc[state_pumas.get_group(state).index]
+            state_values.T.to_csv(
                 os.path.join(
                     directory,
                     "pumas",
