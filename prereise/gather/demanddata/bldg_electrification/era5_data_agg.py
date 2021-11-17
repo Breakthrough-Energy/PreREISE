@@ -13,6 +13,12 @@ from scipy.spatial import cKDTree
 
 from prereise.gather.demanddata.bldg_electrification import const
 
+variable_names = {
+    "temp": {"era5": "2m_temperature", "nc": "t2m"},
+    "dewpt": {"era5": "2m_dewpoint_temperature", "nc": "d2m"},
+    "pres": {"era5": "surface_pressure", "nc": "sp"},
+}
+
 
 def era5_download(years, directory, variable="temp"):
     """Download ERA5 data
@@ -24,17 +30,16 @@ def era5_download(years, directory, variable="temp"):
         temp {Default} -- dry bulb temperataure, corresponds to ERA5 variable "2m_temperature"
         dewpt -- dew point temperature, corresponds to ERA5 variable "2m_dewpoint_temperature"
         pres -- surface pressure, corresponds to ERA5 variable "surface_pressure"
+    :raises ValueError: if the ``variable`` name is invalid or if any values in
+        ``years`` are outside of the valid range.
+    :raises Exception: if the cdsapi package is not configured properly.
     """
 
     # Check variable input and get associated ERA5 variable name
-    if variable == "temp":
-        variable_era5 = "2m_temperature"
-    elif variable == "dewpt":
-        variable_era5 = "2m_dewpoint_temperature"
-    elif variable == "pres":
-        variable_era5 = "surface_pressure"
-    else:
-        raise ValueError("Invalid variable name")
+    try:
+        variable_era5 = variable_names[variable]["era5"]
+    except KeyError:
+        raise ValueError(f"Invalid variable name: {variable}")
 
     # Make single year input iterable
     if not hasattr(years, "__iter__"):
@@ -102,20 +107,16 @@ def create_era5_pumas(
         temp {Default} -- dry bulb temperataure, corresponds to ERA5 variable "2m_temperature"
         dewpt -- dew point temperature, corresponds to ERA5 variable "2m_dewpoint_temperature"
         pres -- surface pressure, corresponds to ERA5 variable "surface_pressure"
+    :raises ValueError: if the ``variable`` name is invalid.
+    :raises FileNotFoundError: if not all required files are present.
     """
 
     # Check variable input and get associated ERA5 variable name
-    if variable == "temp":
-        variable_era5 = "2m_temperature"
-        variable_nc = "t2m"
-    elif variable == "dewpt":
-        variable_era5 = "2m_dewpoint_temperature"
-        variable_nc = "d2m"
-    elif variable == "pres":
-        variable_era5 = "surface_pressure"
-        variable_nc = "sp"
-    else:
-        raise ValueError("Variable name input is not supported")
+    try:
+        variable_era5 = variable_names[variable]["era5"]
+        variable_nc = variable_names[variable]["nc"]
+    except KeyError:
+        raise ValueError(f"Invalid variable name: {variable}")
 
     # Make single year input iterable
     if not hasattr(years, "__iter__"):
