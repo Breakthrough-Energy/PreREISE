@@ -111,6 +111,21 @@ def create_era5_pumas(
     :raises ValueError: if the ``variable`` name is invalid.
     :raises FileNotFoundError: if not all required files are present.
     """
+    # Function to convert latitude and longitude to cartesian coordinates
+    def lon_lat_to_cartesian(lon, lat):
+
+        # WGS 84 reference coordinate system parameters
+        a = 6378.137  # major axis [km]
+        e2 = 6.69437999014e-3  # eccentricity squared
+
+        lon_rad = np.radians(lon)
+        lat_rad = np.radians(lat)
+        # convert to cartesian coordinates
+        r_n = a / (np.sqrt(1 - e2 * (np.sin(lat_rad) ** 2)))
+        x = r_n * np.cos(lat_rad) * np.cos(lon_rad)
+        y = r_n * np.cos(lat_rad) * np.sin(lon_rad)
+        z = r_n * (1 - e2) * np.sin(lat_rad)
+        return x, y, z
 
     # Check variable input and get associated ERA5 variable name
     try:
@@ -156,22 +171,6 @@ def create_era5_pumas(
         lats_era5 = ds_era5.variables["latitude"][:]
         lons_era5 = ds_era5.variables["longitude"][:]
         lons_era5_2d, lats_era5_2d = np.meshgrid(lons_era5, lats_era5)
-
-        # Function to convert latitude and longitude to cartesian coordinates
-        def lon_lat_to_cartesian(lon, lat):
-
-            # WGS 84 reference coordinate system parameters
-            a = 6378.137  # major axis [km]
-            e2 = 6.69437999014e-3  # eccentricity squared
-
-            lon_rad = np.radians(lon)
-            lat_rad = np.radians(lat)
-            # convert to cartesian coordinates
-            r_n = a / (np.sqrt(1 - e2 * (np.sin(lat_rad) ** 2)))
-            x = r_n * np.cos(lat_rad) * np.cos(lon_rad)
-            y = r_n * np.cos(lat_rad) * np.sin(lon_rad)
-            z = r_n * (1 - e2) * np.sin(lat_rad)
-            return x, y, z
 
         x_era5, y_era5, z_era5 = lon_lat_to_cartesian(
             lons_era5_2d.flatten(), lats_era5_2d.flatten()
