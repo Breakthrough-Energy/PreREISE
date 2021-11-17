@@ -93,9 +93,10 @@ def create_era5_pumas(
         CONUS states and input year(s)
 
     :param iterable year: year(s) for which data files to be produced
-    :param pandas.DataFrame tract_puma_mapping: tract to puma mapping.
-    :param pandas.DataFrame tract_pop: population by tract
-    :param pandas.DataFrame tract_lat_lon: latitutde and longitude of tract
+    :param pandas.Series tract_puma_mapping: tract to puma mapping.
+    :param pandas.Series tract_pop: population, indexed by tract.
+    :param pandas.DataFrame tract_lat_lon: data frame, indexed by tract, with columns
+        'state', 'lat', and 'lon'.
     :param str directory: path to root directory for ERA5 downloads (not including variable name)
     :param str: variable to produce
         temp {Default} -- dry bulb temperataure, corresponds to ERA5 variable "2m_temperature"
@@ -136,15 +137,10 @@ def create_era5_pumas(
     # Create folder to store data for given variable if it doesn't yet exist
     os.makedirs(os.path.join(directory, "pumas"), exist_ok=True)
 
-    # Combine tract-level data into single data frame with only census tracts with building area data in included states
-    tract_data = pd.concat([tract_lat_lon, tract_pop], axis=1, join="inner")
-    tract_data = tract_data.loc[:, ~tract_data.columns.duplicated()]
+    # Combine tract-level data into single data frame
+    tract_data = tract_lat_lon.assign(pop_2010=tract_pop, puma=tract_puma_mapping)
+    # Filter to census tracts with building area data in included states
     tract_data = tract_data[tract_data["state"].isin(const.state_list)]
-
-    # Include tract_puma_mapping only for tracts in tract_data
-    tract_puma_mapping = tract_puma_mapping[
-        tract_puma_mapping["tract"].isin(tract_data["tract"])
-    ]
 
     # Loop through input years
     for year in years:
@@ -195,7 +191,7 @@ def create_era5_pumas(
         vals_tracts = pd.DataFrame.from_dict(
             dict(zip(vals_tracts_series.index, vals_tracts_series.values))
         ).T
-        vals_tracts.columns = tract_data.tract
+        vals_tracts.columns = tract_data.index
 
         # Loop through states
         for state in const.state_list:
@@ -206,13 +202,9 @@ def create_era5_pumas(
             )
             # Loop through and compute population-weighted temperature time series
             for p in vals_pumas_it.columns:
-                vals_tracts_p = vals_tracts[
-                    tract_puma_mapping["tract"][p == (tract_puma_mapping["puma"])]
-                ]
+                vals_tracts_p = vals_tracts[tract_data.index[tract_data["puma"] == p]]
                 pop_weights_p = tract_data["pop_2010"][
-                    tract_data["tract"].isin(
-                        tract_puma_mapping["tract"][p == (tract_puma_mapping["puma"])]
-                    )
+                    tract_data.index.isin(tract_data.index[tract_data["puma"] == p])
                 ]
                 pop_weights_p.index = vals_tracts_p.columns
                 vals_pumas_it[p] = (
