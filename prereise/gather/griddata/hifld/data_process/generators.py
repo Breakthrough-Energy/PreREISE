@@ -66,7 +66,7 @@ def map_generator_to_sub_by_location(generator, substation_groupby):
             # If no matching subs within the given interconnection and ZIPs, give up
             return pd.NA
     distance_to_subs = matching_subs.apply(
-        lambda x: haversine((x.LATITUDE, x.LONGITUDE), (generator.lat, generator.lon)),
+        lambda x: haversine((x.lat, x.lon), (generator.lat, generator.lon)),
         axis=1,
     )
     return distance_to_subs.idxmin()
