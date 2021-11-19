@@ -683,6 +683,26 @@ def assign_buses_to_lines(ac_lines, dc_lines, bus):
     dc_lines["to_bus_id"] = dc_lines["SUB_2_ID"].map(highest_voltage)
 
 
+def add_substation_info_to_buses(bus, substations, zones):
+    """Using information looked up from substations and defined zones, add 'zone_id' and
+    'interconnect' columns to the ``bus`` table (modified in-place).
+
+    :param pandas.DataFrame bus: table of bus data, including 'sub_id' column.
+    :param pandas.DataFrame substations: table of substation data, including 'STATE' and
+        'interconnect' columns.
+    :param pandas.DataFrame zones: table of zone data, including 'state' and
+        'interconnect' columns, with an index named 'zone_id'.
+    """
+    zone_lookup = zones.reset_index().set_index(["state", "interconnect"])["zone_id"]
+    zone_lookup.sort_index(inplace=True)  # unsorted MultiIndices have poor performance
+    states = bus["sub_id"].map(substations["STATE"]).map(const.abv2state)
+    bus["interconnect"] = bus["sub_id"].map(substations["interconnect"])
+    bus["zone_id"] = bus.apply(
+        lambda x: zone_lookup.loc[(states.loc[x.name], x.interconnect)],
+        axis=1,
+    )
+
+
 def build_transmission(method="line2sub", **kwargs):
     """Build transmission network
 
@@ -772,6 +792,7 @@ def build_transmission(method="line2sub", **kwargs):
     # Create buses from lines
     bus = create_buses(ac_lines)
     assign_buses_to_lines(ac_lines, dc_lines, bus)
+    add_substation_info_to_buses(bus, substations, hifld_zones)
 
     # Add transformers, and calculate rating and impedance for all branches
     transformers = create_transformers(bus)
