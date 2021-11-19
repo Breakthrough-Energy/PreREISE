@@ -502,6 +502,7 @@ def create_buses(lines):
     buses = buses.astype(float)
     buses.index.name = "sub_id"
     buses = buses.to_frame(name="baseKV").reset_index()
+    buses.index.name = "bus_id"
 
     return buses
 
@@ -654,6 +655,34 @@ def add_b2bs_to_dc_lines(dc_lines, substations, b2b_ratings):
         dc_lines.loc[first_new_id + i] = pd.Series(info)
 
 
+def assign_buses_to_lines(ac_lines, dc_lines, bus):
+    """Map substation IDs to bus IDs for AC & DC lines. Within the ``bus`` table, each
+    unique 'sub_id' should have one bus per connected voltage level; AC lines map
+    uniquely based on their 'VOLTAGE' attribute, while DC lines are mapped to the
+    highest-voltage bus within each substation. Both are modified inplace.
+
+    :param pandas.DataFrame ac_lines: data frame containing at least
+        'SUB_1_ID' and 'SUB_2_ID' columns.
+    :param pandas.DataFrame dc_lines: data frame containing at least
+        'SUB_1_ID' and 'SUB_2_ID' columns.
+    :param pandas.DataFrame bus: data frame containing at least 'sub_id' and 'baseKV'
+        columns, with an index named 'bus_id'.
+    """
+    # Create pandas Series that can be used for quick lookups
+    reindexed = bus.reset_index()
+    sub_and_voltage_to_bus = reindexed.set_index(["sub_id", "baseKV"])["bus_id"]
+    highest_voltage = reindexed.sort_values("baseKV").groupby("sub_id").last()["bus_id"]
+    # Use mappings to fill bus IDs
+    ac_lines["from_bus_id"] = ac_lines.apply(
+        lambda x: sub_and_voltage_to_bus.loc[(x["SUB_1_ID"], x["VOLTAGE"])], axis=1
+    )
+    ac_lines["to_bus_id"] = ac_lines.apply(
+        lambda x: sub_and_voltage_to_bus.loc[(x["SUB_2_ID"], x["VOLTAGE"])], axis=1
+    )
+    dc_lines["from_bus_id"] = dc_lines["SUB_1_ID"].map(highest_voltage)
+    dc_lines["to_bus_id"] = dc_lines["SUB_2_ID"].map(highest_voltage)
+
+
 def build_transmission(method="line2sub", **kwargs):
     """Build transmission network
 
@@ -742,6 +771,7 @@ def build_transmission(method="line2sub", **kwargs):
 
     # Create buses from lines
     bus = create_buses(ac_lines)
+    assign_buses_to_lines(ac_lines, dc_lines, bus)
 
     # Add transformers, and calculate rating and impedance for all branches
     transformers = create_transformers(bus)

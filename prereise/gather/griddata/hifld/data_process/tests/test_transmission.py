@@ -4,6 +4,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
+    assign_buses_to_lines,
     augment_line_voltages,
     create_buses,
     create_transformers,
@@ -102,6 +103,7 @@ def test_create_buses():
             "baseKV": [69, 345, 69, 115, 115, 230, 345, 230],
         },
     )
+    expected_return.index.name = "bus_id"
     expected_return["baseKV"] = expected_return["baseKV"].astype(float)
     bus = create_buses(lines)
     assert_frame_equal(bus, expected_return)
@@ -225,3 +227,26 @@ def test_map_lines_to_substations_using_coords():
 
     assert len(new_substations) == 2
     assert all(o is None for o in new_substations["OTHER_SUB"])
+
+
+def test_assign_buses_to_lines():
+    bus = pd.DataFrame(
+        {
+            "baseKV": [115, 115, 230, 230, 345, 345],
+            "sub_id": [30, 31, 31, 32, 40, 41],
+        },
+        index=pd.Index([300, 310, 311, 320, 400, 410], name="bus_id"),
+    )
+    ac_lines = pd.DataFrame(
+        {
+            "SUB_1_ID": [30, 32, 40],
+            "SUB_2_ID": [31, 31, 41],
+            "VOLTAGE": [115, 230, 345],
+        }
+    )
+    dc_lines = pd.DataFrame({"SUB_1_ID": [31], "SUB_2_ID": [40]})
+    assign_buses_to_lines(ac_lines, dc_lines, bus)
+    assert ac_lines["from_bus_id"].equals(pd.Series([300, 320, 400]))
+    assert ac_lines["to_bus_id"].equals(pd.Series([310, 311, 410]))
+    assert dc_lines["from_bus_id"].equals(pd.Series([311]))
+    assert dc_lines["to_bus_id"].equals(pd.Series([400]))
