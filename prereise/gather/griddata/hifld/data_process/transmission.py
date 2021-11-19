@@ -815,5 +815,10 @@ def build_transmission(method="line2sub", **kwargs):
 
     # Rename columns to match PowerSimData expectations
     branch.rename({"type": "branch_device_type"}, axis=1, inplace=True)
+    substations.rename(
+        {"NAME": "name", "LATITUDE": "lat", "LONGITUDE": "lon"}, axis=1, inplace=True
+    )
+    substations["interconnect_sub_id"] = substations.groupby("interconnect").cumcount()
+    substations.index.name = "sub_id"
 
     return branch, bus, substations, dc_lines
