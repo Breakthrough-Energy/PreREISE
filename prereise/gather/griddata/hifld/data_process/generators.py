@@ -334,4 +334,5 @@ def build_plant(bus, substations, kwargs={}):
     for i in range(3):
         generators[f"c{i}"] = generators[f"h{i}"] * generators["GenFuelCost"].fillna(0)
 
+    generators = generators.loc[~generators["bus_id"].isna()]
     return generators
