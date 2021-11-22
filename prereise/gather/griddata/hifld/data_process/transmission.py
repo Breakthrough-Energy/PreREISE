@@ -1,3 +1,4 @@
+import math
 import os
 
 import networkx as nx
@@ -622,6 +623,37 @@ def split_lines_to_ac_and_dc(lines, dc_override_indices=None):
     return ac_lines.copy(), dc_lines.copy()
 
 
+def add_b2bs_to_dc_lines(dc_lines, substations, b2b_ratings):
+    """Given back-to-back (B2B) converter station ratings, add entries to the DC lines
+    table (modified inplace) representing the HVDC links between interconnections.
+
+    :param pandas.DataFrame dc_lines: table of HVDC line information.
+    :param pandas.DataFrame substations: table of substation information.
+    :param dict/pandas.Series b2b_capacities: capacities of B2B HVDC facilties. Keys are
+        strings which are containined within exactly two substation 'NAME' properties
+        (one on either 'side' of an interconnection seam), values are B2B facilitiy
+        capacity in MW.
+    :raises ValueError: if a given B2B capacity name does not identify exactly two
+        substations.
+    """
+    # Check all lines and build dict of lines to be added (if validation passes)
+    to_add = []
+    for name, rating in b2b_ratings.items():
+        sub_ids = substations.loc[substations["NAME"].str.contains(f"{name}_")].index
+        if len(sub_ids) != 2:
+            raise ValueError(f"Could not identify two substations for B2B: {name}")
+        to_add.append({"SUB_1_ID": sub_ids[0], "SUB_2_ID": sub_ids[1], "Pmax": rating})
+
+    # Now that we know all are good, loop through and append to extend DC lines inplace
+    # The first new ID is calculated to not share a leading digit with existing DC lines
+    prev_max = dc_lines.index.max()
+    order_of_magnitude = 10 ** (int(math.log10(prev_max)))
+    first_new_id = order_of_magnitude * int(prev_max / order_of_magnitude + 1)
+    # We need to loop through and add one-by-one to be able to append inplace
+    for i, info in enumerate(to_add):
+        dc_lines.loc[first_new_id + i] = pd.Series(info)
+
+
 def build_transmission(method="line2sub", **kwargs):
     """Build transmission network
 
@@ -702,6 +734,8 @@ def build_transmission(method="line2sub", **kwargs):
         const.line_interconnect_assumptions,
         const.interconnect_size_rank,
     )
+    # Now that substations are split across interconnects, we can add B2B facilities
+    add_b2bs_to_dc_lines(dc_lines, substations, const.b2b_ratings)
 
     # Add voltages to lines with missing data
     augment_line_voltages(ac_lines, substations)
