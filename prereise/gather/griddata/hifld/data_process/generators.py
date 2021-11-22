@@ -334,5 +334,13 @@ def build_plant(bus, substations, kwargs={}):
     for i in range(3):
         generators[f"c{i}"] = generators[f"h{i}"] * generators["GenFuelCost"].fillna(0)
 
-    generators = generators.loc[~generators["bus_id"].isna()]
+    generators = generators.loc[~generators["bus_id"].isna()].copy()
+    # Rename columns (or add as necessary) to match PowerSimData expectations
+    generators.rename(
+        {"Energy Source 1": "type", "h1": "GenIOB", "h2": "GenIOC"},
+        axis=1,
+        inplace=True,
+    )
+    generators["GenIOD"] = 0
+
     return generators
