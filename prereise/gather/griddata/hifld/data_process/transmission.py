@@ -783,6 +783,9 @@ def build_transmission(method="line2sub", **kwargs):
         const.line_interconnect_assumptions,
         const.interconnect_size_rank,
     )
+    # use substation interconnects to label DC lines
+    dc_lines["from_interconnect"] = dc_lines.SUB_1_ID.map(substations.interconnect)
+    dc_lines["to_interconnect"] = dc_lines.SUB_2_ID.map(substations.interconnect)
     # Now that substations are split across interconnects, we can add B2B facilities
     add_b2bs_to_dc_lines(dc_lines, substations, const.b2b_ratings)
 
@@ -797,6 +800,7 @@ def build_transmission(method="line2sub", **kwargs):
     # Add transformers, and calculate rating and impedance for all branches
     transformers = create_transformers(bus)
     transformers["type"] = "Transformer"
+    transformers["interconnect"] = transformers["from_bus_id"].map(bus["interconnect"])
     first_new_id = ac_lines.index.max() + 1
     transformers.index = pd.RangeIndex(first_new_id, first_new_id + len(transformers))
     ac_lines["type"] = "Line"
