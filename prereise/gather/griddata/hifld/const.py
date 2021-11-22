@@ -522,3 +522,15 @@ line_interconnect_assumptions = {
     "Western": {123525, 141873},
     "ERCOT": {305330, 309428, 310121},
 }
+
+b2b_ratings = {  # MW
+    "BLACKWATER TIE": 200,  # a.k.a. 'Clovis'/'Roosevelt County' (Eastern/Western)
+    "EDDY AC-DC-AC TIE": 200,  # a.k.a. 'Artesia' (Eastern/Western)
+    "LAMAR HVDC TIE": 210,  # (Eastern/Western)
+    "MILES CITY": 200,  # (Eastern/Western)
+    "NEW UNDERWOOD": 200,  # representative of the Rapid City DC Tie (Eastern/Western)
+    "STEGALL": 110,  # (Eastern/Western)
+    "UNKNOWN304477": 220,  # Oklaunion (Eastern/ERCOT)
+    "UNKNOWN304994": 600,  # Welsh (Eastern/ERCOT)
+    "VIRGINIA SMITH CONVERTER STATION": 200,  # a.k.a. 'Sidney' (Eastern/Western)
+}
