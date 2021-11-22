@@ -758,4 +758,7 @@ def build_transmission(method="line2sub", **kwargs):
         lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
     )
 
+    # Rename columns to match PowerSimData expectations
+    branch.rename({"type": "branch_device_type"}, axis=1, inplace=True)
+
     return branch, bus, substations, dc_lines
