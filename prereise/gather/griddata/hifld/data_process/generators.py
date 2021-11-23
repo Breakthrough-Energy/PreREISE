@@ -341,6 +341,7 @@ def build_plant(bus, substations, kwargs={}):
         axis=1,
         inplace=True,
     )
+    generators["type"] = generators["type"].replace(const.fuel_translations)
     generators["GenIOD"] = 0
 
     return generators
