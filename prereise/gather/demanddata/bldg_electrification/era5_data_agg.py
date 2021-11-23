@@ -152,7 +152,7 @@ def create_era5_pumas(
         print("Confirmed: All required ERA5 input files present")
 
     # Create folder to store data for given variable if it doesn't yet exist
-    os.makedirs(os.path.join(directory, "pumas"), exist_ok=True)
+    os.makedirs(os.path.join(directory, "pumas", f"{variable}s"), exist_ok=True)
 
     # Combine tract-level data into single data frame
     tract_data = tract_lat_lon.assign(pop_2010=tract_pop, puma=tract_puma_mapping)
