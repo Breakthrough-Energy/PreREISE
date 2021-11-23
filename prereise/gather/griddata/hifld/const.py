@@ -349,6 +349,26 @@ fuel_prices = {  # EIA Annual Energy Outlook, values for 2022, $/MMBTu (2020 USD
     "WC": 2.02,  # Waste Coal
 }
 
+fuel_translations = {
+    "BIT": "coal",
+    "DFO": "dfo",
+    "GEO": "geothermal",
+    "JF": "dfo",
+    "KER": "dfo",
+    "LIG": "coal",
+    "NG": "ng",
+    "NUC": "nuclear",
+    "PC": "coal",
+    "PG": "ng",
+    "RC": "coal",
+    "RFO": "dfo",
+    "SUB": "coal",
+    "SUN": "solar",
+    "WAT": "hydro",
+    "WC": "coal",
+    "WND": "wind",
+}
+
 # Values from EPA's Power Sector Modeling Platform v6 - Summer 2021 Reference Case
 reasonable_heat_rates_size_cutoffs = {
     ("Natural Gas Fired Combustion Turbine", "GT"): 80,
