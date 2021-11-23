@@ -4,6 +4,7 @@ import pickle
 from itertools import combinations, product
 
 import networkx as nx
+import pandas as pd
 from powersimdata.utility.distance import haversine, ll2uv
 from scipy.spatial import KDTree
 from tqdm import tqdm
@@ -217,3 +218,100 @@ def get_mst_edges(lines, substations, **kwargs):
         with open(os.path.join(cache_dir, f"mst_{cache_hash}.pkl"), "wb") as f:
             pickle.dump(mst_edges, f)
     return mst_edges
+
+
+def add_interconnects_by_connected_components(
+    lines,
+    substations,
+    seams_substations,
+    substation_assumptions,
+    line_assumptions,
+    interconnect_size_rank,
+):
+    """Disconnect a large connected component using a set of connecting substations,
+    label the resulting connected components, then reconnect dropped lines and
+    substations, using explicit assumptions plus inference from neighboring lines. The
+    ``lines`` and ``substations`` data frames are modified inplace with a new
+    'interconnect' column.
+
+    :param pandas.DataFrame lines: data frame of line information.
+    :param pandas.DataFrame substations: data frame of substation information.
+    :param iterable seams_substations: IDs of substations to drop.
+    :param dict substation_assumptions: labeling assumptions for substations.
+    :param dict line_assumptions: labeling assumptions for lines.
+    :param iterable interconnect_size_rank: ordered iterable of interconnection names.
+    :raises ValueError: if at least one dropped line's interconnection isn't specified
+        and can't be inferred from its neighbors, or if the final number of connected
+        components don't match the length of the ``interconnect_size_rank``.
+    """
+    # Create a graph of the network, and drop lines based on substations
+    dropped_lines = lines.loc[
+        lines["SUB_1_ID"].isin(seams_substations)
+        | lines["SUB_2_ID"].isin(seams_substations)
+    ]
+    g = nx.convert_matrix.from_pandas_edgelist(lines, "SUB_1_ID", "SUB_2_ID")
+    g.remove_nodes_from(seams_substations)
+    # Label interconnections based on their sizes
+    sorted_interconnects = sorted(nx.connected_components(g), key=len)[::-1]
+    labels = pd.Series("unknown", index=lines.index, dtype="string")
+    for i, name in enumerate(interconnect_size_rank):
+        labels.loc[lines.SUB_1_ID.isin(sorted_interconnects[i])] = name
+    labels.loc[dropped_lines.index] = "dropped"
+    # Label some dropped lines and unknown interconnection lines (small islands)
+    for interconnect, sub_ids in substation_assumptions.items():
+        labels.loc[
+            lines["SUB_1_ID"].isin(sub_ids) | lines["SUB_2_ID"].isin(sub_ids),
+        ] = interconnect
+    for interconnect, line_ids in line_assumptions.items():
+        labels.loc[line_ids] = interconnect
+    # Use neighboring lines at non-dropped substations to infer line interconnections
+    dropped_lines = lines.loc[labels == "dropped"]
+    non_dropped_lines = lines.loc[labels != "dropped"]
+    for id, line in dropped_lines.iterrows():
+        non_dropped_sub = (  # noqa: F841
+            line.SUB_1_ID if line.SUB_2_ID in seams_substations else line.SUB_2_ID
+        )
+        other_lines = non_dropped_lines.query(
+            "SUB_1_ID == @non_dropped_sub or SUB_2_ID == @non_dropped_sub"
+        )
+        other_line_interconnects = labels.loc[other_lines.index].unique()
+        if len(other_line_interconnects) != 1:
+            raise ValueError(f"Couldn't infer interconnection for line {id}")
+        labels.loc[id] = other_line_interconnects[0]
+    lines["interconnect"] = labels
+
+    # When lines of multiple interconnections meet at a substation, split it
+    for sub_id in sorted(seams_substations):
+        # Find all lines disconnected by removing this substation
+        sub_dropped_lines = lines.query("SUB_1_ID == @sub_id or SUB_2_ID == @sub_id")
+        # Find interconnects for dropped lines which have been successfully labeled
+        new_sub_interconnects = sub_dropped_lines["interconnect"].unique()
+        # Build new substations to replace the old one
+        first_new_sub_id = substations.index.max() + 1
+        new_substations = pd.concat(
+            [substations.loc[sub_id]] * len(new_sub_interconnects), axis=1
+        ).T
+        new_substations.index = pd.RangeIndex(
+            first_new_sub_id, first_new_sub_id + len(new_sub_interconnects)
+        )
+        new_substations["NAME"] = [
+            substations.loc[sub_id, "NAME"] + f"_{i}" for i in new_sub_interconnects
+        ]
+        # Add these new substations to the existing ones
+        for new_id, new_substation in new_substations.iterrows():
+            substations.loc[new_id] = new_substation
+        # Re-map the labelled lines to the new substations
+        for line_id, line in sub_dropped_lines.iterrows():
+            for new_sub_id, sub in new_substations.iterrows():
+                if line["interconnect"] == sub["NAME"].split("_")[1]:
+                    if line["SUB_1_ID"] == sub_id:
+                        lines.loc[line_id, "SUB_1_ID"] = new_sub_id
+                    if line["SUB_2_ID"] == sub_id:
+                        lines.loc[line_id, "SUB_2_ID"] = new_sub_id
+    revised_g = nx.convert_matrix.from_pandas_edgelist(lines, "SUB_1_ID", "SUB_2_ID")
+    sorted_interconnects = sorted(nx.connected_components(revised_g), key=len)[::-1]
+    if len(sorted_interconnects) != len(interconnect_size_rank):
+        raise ValueError("Interconnections were not separated successfully")
+    for i, name in enumerate(interconnect_size_rank):
+        substations.loc[sorted_interconnects[i], "interconnect"] = name
+    substations.drop(seams_substations, inplace=True)
