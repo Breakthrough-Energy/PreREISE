@@ -1,3 +1,4 @@
+import math
 import os
 
 import networkx as nx
@@ -13,10 +14,10 @@ from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_substations,
     get_zone,
 )
-from prereise.gather.griddata.hifld.data_process.helpers import (
-    map_state_and_county_to_interconnect,
+from prereise.gather.griddata.hifld.data_process.topology import (
+    add_interconnects_by_connected_components,
+    get_mst_edges,
 )
-from prereise.gather.griddata.hifld.data_process.topology import get_mst_edges
 
 
 def check_for_location_conflicts(substations):
@@ -110,7 +111,7 @@ def map_lines_to_substations_using_coords(
     }
     for a in all2one:
         type2id = substations.loc[list(a)].reset_index().groupby("TYPE").first()["ID"]
-        for t in ["SUBSTATION", "TAP", "RISER", "DEAD END"]:
+        for t in ["SUBSTATION", "TAP", "RISER", "DEAD END", "NOT AVAILABLE"]:
             try:
                 all2one[a] = type2id.loc[t]
                 break
@@ -622,6 +623,37 @@ def split_lines_to_ac_and_dc(lines, dc_override_indices=None):
     return ac_lines.copy(), dc_lines.copy()
 
 
+def add_b2bs_to_dc_lines(dc_lines, substations, b2b_ratings):
+    """Given back-to-back (B2B) converter station ratings, add entries to the DC lines
+    table (modified inplace) representing the HVDC links between interconnections.
+
+    :param pandas.DataFrame dc_lines: table of HVDC line information.
+    :param pandas.DataFrame substations: table of substation information.
+    :param dict/pandas.Series b2b_capacities: capacities of B2B HVDC facilties. Keys are
+        strings which are containined within exactly two substation 'NAME' properties
+        (one on either 'side' of an interconnection seam), values are B2B facilitiy
+        capacity in MW.
+    :raises ValueError: if a given B2B capacity name does not identify exactly two
+        substations.
+    """
+    # Check all lines and build dict of lines to be added (if validation passes)
+    to_add = []
+    for name, rating in b2b_ratings.items():
+        sub_ids = substations.loc[substations["NAME"].str.contains(f"{name}_")].index
+        if len(sub_ids) != 2:
+            raise ValueError(f"Could not identify two substations for B2B: {name}")
+        to_add.append({"SUB_1_ID": sub_ids[0], "SUB_2_ID": sub_ids[1], "Pmax": rating})
+
+    # Now that we know all are good, loop through and append to extend DC lines inplace
+    # The first new ID is calculated to not share a leading digit with existing DC lines
+    prev_max = dc_lines.index.max()
+    order_of_magnitude = 10 ** (int(math.log10(prev_max)))
+    first_new_id = order_of_magnitude * int(prev_max / order_of_magnitude + 1)
+    # We need to loop through and add one-by-one to be able to append inplace
+    for i, info in enumerate(to_add):
+        dc_lines.loc[first_new_id + i] = pd.Series(info)
+
+
 def build_transmission(method="line2sub", **kwargs):
     """Build transmission network
 
@@ -693,6 +725,18 @@ def build_transmission(method="line2sub", **kwargs):
     dc_lines["Pmax"] = dc_lines.index.to_series().map(const.dc_line_ratings)
     dc_lines["Pmin"] = -1 * dc_lines["Pmax"]
 
+    # Add interconnect information to lines and substations via topology analysis
+    add_interconnects_by_connected_components(
+        ac_lines,
+        substations,
+        set().union(*const.seams_substations.values()),
+        const.substation_interconnect_assumptions,
+        const.line_interconnect_assumptions,
+        const.interconnect_size_rank,
+    )
+    # Now that substations are split across interconnects, we can add B2B facilities
+    add_b2bs_to_dc_lines(dc_lines, substations, const.b2b_ratings)
+
     # Add voltages to lines with missing data
     augment_line_voltages(ac_lines, substations)
 
@@ -712,11 +756,6 @@ def build_transmission(method="line2sub", **kwargs):
     )
     branch["rateA"] = branch.apply(
         lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
-    )
-
-    # Add additional information to substations
-    substations["interconnect"] = substations.apply(
-        lambda x: map_state_and_county_to_interconnect(x.STATE, x.COUNTY), axis=1
     )
 
     return branch, bus, substations, dc_lines
