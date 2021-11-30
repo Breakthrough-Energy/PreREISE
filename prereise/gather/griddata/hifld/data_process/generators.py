@@ -66,7 +66,7 @@ def map_generator_to_sub_by_location(generator, substation_groupby):
             # If no matching subs within the given interconnection and ZIPs, give up
             return pd.NA
     distance_to_subs = matching_subs.apply(
-        lambda x: haversine((x.LATITUDE, x.LONGITUDE), (generator.lat, generator.lon)),
+        lambda x: haversine((x.lat, x.lon), (generator.lat, generator.lon)),
         axis=1,
     )
     return distance_to_subs.idxmin()
@@ -333,5 +333,15 @@ def build_plant(bus, substations, kwargs={}):
     generators["GenFuelCost"] = generators["Energy Source 1"].map(const.fuel_prices)
     for i in range(3):
         generators[f"c{i}"] = generators[f"h{i}"] * generators["GenFuelCost"].fillna(0)
+
+    generators = generators.loc[~generators["bus_id"].isna()].copy()
+    # Rename columns (or add as necessary) to match PowerSimData expectations
+    generators.rename(
+        {"Energy Source 1": "type", "h1": "GenIOB", "h2": "GenIOC"},
+        axis=1,
+        inplace=True,
+    )
+    generators["type"] = generators["type"].replace(const.fuel_translations)
+    generators["GenIOD"] = 0
 
     return generators
