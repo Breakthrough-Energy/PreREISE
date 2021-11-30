@@ -502,6 +502,7 @@ def create_buses(lines):
     buses = buses.astype(float)
     buses.index.name = "sub_id"
     buses = buses.to_frame(name="baseKV").reset_index()
+    buses.index.name = "bus_id"
 
     return buses
 
@@ -654,6 +655,54 @@ def add_b2bs_to_dc_lines(dc_lines, substations, b2b_ratings):
         dc_lines.loc[first_new_id + i] = pd.Series(info)
 
 
+def assign_buses_to_lines(ac_lines, dc_lines, bus):
+    """Map substation IDs to bus IDs for AC & DC lines. Within the ``bus`` table, each
+    unique 'sub_id' should have one bus per connected voltage level; AC lines map
+    uniquely based on their 'VOLTAGE' attribute, while DC lines are mapped to the
+    highest-voltage bus within each substation. Both are modified inplace.
+
+    :param pandas.DataFrame ac_lines: data frame containing at least
+        'SUB_1_ID' and 'SUB_2_ID' columns.
+    :param pandas.DataFrame dc_lines: data frame containing at least
+        'SUB_1_ID' and 'SUB_2_ID' columns.
+    :param pandas.DataFrame bus: data frame containing at least 'sub_id' and 'baseKV'
+        columns, with an index named 'bus_id'.
+    """
+    # Create pandas Series that can be used for quick lookups
+    reindexed = bus.reset_index()
+    sub_and_voltage_to_bus = reindexed.set_index(["sub_id", "baseKV"])["bus_id"]
+    highest_voltage = reindexed.sort_values("baseKV").groupby("sub_id").last()["bus_id"]
+    # Use mappings to fill bus IDs
+    ac_lines["from_bus_id"] = ac_lines.apply(
+        lambda x: sub_and_voltage_to_bus.loc[(x["SUB_1_ID"], x["VOLTAGE"])], axis=1
+    )
+    ac_lines["to_bus_id"] = ac_lines.apply(
+        lambda x: sub_and_voltage_to_bus.loc[(x["SUB_2_ID"], x["VOLTAGE"])], axis=1
+    )
+    dc_lines["from_bus_id"] = dc_lines["SUB_1_ID"].map(highest_voltage)
+    dc_lines["to_bus_id"] = dc_lines["SUB_2_ID"].map(highest_voltage)
+
+
+def add_substation_info_to_buses(bus, substations, zones):
+    """Using information looked up from substations and defined zones, add 'zone_id' and
+    'interconnect' columns to the ``bus`` table (modified in-place).
+
+    :param pandas.DataFrame bus: table of bus data, including 'sub_id' column.
+    :param pandas.DataFrame substations: table of substation data, including 'STATE' and
+        'interconnect' columns.
+    :param pandas.DataFrame zones: table of zone data, including 'state' and
+        'interconnect' columns, with an index named 'zone_id'.
+    """
+    zone_lookup = zones.reset_index().set_index(["state", "interconnect"])["zone_id"]
+    zone_lookup.sort_index(inplace=True)  # unsorted MultiIndices have poor performance
+    states = bus["sub_id"].map(substations["STATE"]).map(const.abv2state)
+    bus["interconnect"] = bus["sub_id"].map(substations["interconnect"])
+    bus["zone_id"] = bus.apply(
+        lambda x: zone_lookup.loc[(states.loc[x.name], x.interconnect)],
+        axis=1,
+    )
+
+
 def build_transmission(method="line2sub", **kwargs):
     """Build transmission network
 
@@ -734,6 +783,9 @@ def build_transmission(method="line2sub", **kwargs):
         const.line_interconnect_assumptions,
         const.interconnect_size_rank,
     )
+    # use substation interconnects to label DC lines
+    dc_lines["from_interconnect"] = dc_lines.SUB_1_ID.map(substations.interconnect)
+    dc_lines["to_interconnect"] = dc_lines.SUB_2_ID.map(substations.interconnect)
     # Now that substations are split across interconnects, we can add B2B facilities
     add_b2bs_to_dc_lines(dc_lines, substations, const.b2b_ratings)
 
@@ -742,10 +794,13 @@ def build_transmission(method="line2sub", **kwargs):
 
     # Create buses from lines
     bus = create_buses(ac_lines)
+    assign_buses_to_lines(ac_lines, dc_lines, bus)
+    add_substation_info_to_buses(bus, substations, hifld_zones)
 
     # Add transformers, and calculate rating and impedance for all branches
     transformers = create_transformers(bus)
     transformers["type"] = "Transformer"
+    transformers["interconnect"] = transformers["from_bus_id"].map(bus["interconnect"])
     first_new_id = ac_lines.index.max() + 1
     transformers.index = pd.RangeIndex(first_new_id, first_new_id + len(transformers))
     ac_lines["type"] = "Line"
@@ -757,5 +812,13 @@ def build_transmission(method="line2sub", **kwargs):
     branch["rateA"] = branch.apply(
         lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
     )
+
+    # Rename columns to match PowerSimData expectations
+    branch.rename({"type": "branch_device_type"}, axis=1, inplace=True)
+    substations.rename(
+        {"NAME": "name", "LATITUDE": "lat", "LONGITUDE": "lon"}, axis=1, inplace=True
+    )
+    substations["interconnect_sub_id"] = substations.groupby("interconnect").cumcount()
+    substations.index.name = "sub_id"
 
     return branch, bus, substations, dc_lines
