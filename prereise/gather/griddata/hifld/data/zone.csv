@@ -45,13 +45,12 @@ zone_id,zone_name,state,interconnect,time_zone
 44,South Dakota Western,South Dakota,Western,ETC/GMT+6
 45,Tennessee,Tennessee,Eastern,ETC/GMT+6
 46,Texas Eastern,Texas,Eastern,ETC/GMT+6
-47,Texas Panhandle,Texas,Eastern,ETC/GMT+6
-48,ERCOT,Texas,Texas,ETC/GMT+6
-49,El Paso,Texas,Western,ETC/GMT+7
-50,Utah,Utah,Western,ETC/GMT+7
-51,Virginia,Virginia,Eastern,ETC/GMT+5
-52,Vermont,Vermont,Eastern,ETC/GMT+5
-53,Washington,Washington,Western,ETC/GMT+8
-54,Wisconsin,Wisconsin,Eastern,ETC/GMT+6
-55,West Virginia,West Virginia,Eastern,ETC/GMT+5
-56,Wyoming,Wyoming,Western,ETC/GMT+7
+47,ERCOT,Texas,ERCOT,ETC/GMT+6
+48,El Paso,Texas,Western,ETC/GMT+7
+49,Utah,Utah,Western,ETC/GMT+7
+50,Virginia,Virginia,Eastern,ETC/GMT+5
+51,Vermont,Vermont,Eastern,ETC/GMT+5
+52,Washington,Washington,Western,ETC/GMT+8
+53,Wisconsin,Wisconsin,Eastern,ETC/GMT+6
+54,West Virginia,West Virginia,Eastern,ETC/GMT+5
+55,Wyoming,Wyoming,Western,ETC/GMT+7
