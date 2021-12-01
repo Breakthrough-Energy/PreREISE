@@ -53,8 +53,10 @@ def test_calculate_pout(
     )
     pygrib.open.return_value = grib_mock
     wind_farms = MagicMock()
+    wind_farms.columns = ["type", "state_abv"]
     wind_farms.index = [0, 1]
     wind_farms.loc.__getitem__.return_value.type = "wind_offshore"
+    wind_farms.loc.__getitem__.return_value.state_abv = "MA"
     wind_farms.__len__.return_value = 2
     df = calculate_pout(
         wind_farms,
