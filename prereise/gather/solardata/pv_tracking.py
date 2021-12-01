@@ -1,7 +1,8 @@
 import os
 
 import pandas as pd
-from powersimdata.network.usa_tamu.constants.zones import abv
+
+from prereise.gather.const import abv2state
 
 
 def get_pv_tracking_data():
@@ -46,7 +47,7 @@ def get_pv_tracking_ratio_state(pv_info, state):
         raise TypeError("state must be a list")
 
     for s in state:
-        if s not in abv:
+        if s not in abv2state.keys():
             raise ValueError("Invalid State: %s" % s)
 
     pv_info_state = pv_info[pv_info["State"].isin(state)].copy()
