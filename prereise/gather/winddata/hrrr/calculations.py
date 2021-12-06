@@ -7,6 +7,7 @@ from scipy.spatial import KDTree
 from tqdm import tqdm
 
 from prereise.gather.winddata.hrrr.helpers import formatted_filename
+from prereise.gather.winddata.impute import linear
 from prereise.gather.winddata.rap.power_curves import (
     get_power,
     get_state_power_curves,
@@ -80,14 +81,10 @@ def calculate_pout(wind_farms, start_dt, end_dt, directory):
         dt2    POUT        POUT
     """
 
-    wind_farm_ids = wind_farms.index
-    turbine_types = [
-        "Offshore"
-        if wind_farms.loc[i].type == "wind_offshore"
-        else id2abv[wind_farms.loc[i].zone_id]
-        for i in wind_farm_ids
-    ]
-    wind_farm_ct = len(wind_farms)
+    turbine_types = wind_farms.apply(
+        lambda x: "Offshore" if x["type"] == "wind_offshore" else id2abv[x["zone_id"]],
+        axis=1,
+    )
 
     turbine_power_curves = get_turbine_power_curves()
     state_power_curves = get_state_power_curves()
@@ -95,37 +92,43 @@ def calculate_pout(wind_farms, start_dt, end_dt, directory):
     wind_farm_to_closest_wind_grid_indices = find_closest_wind_grids(
         wind_farms, wind_data_lat_long
     )
-    dts = [
-        dt for dt in pd.date_range(start=start_dt, end=end_dt, freq="H").to_pydatetime()
-    ]
-    data = np.empty((len(dts), len(wind_farm_to_closest_wind_grid_indices)))
-    for i, dt in tqdm(enumerate(dts)):
+    dts = pd.date_range(start=start_dt, end=end_dt, freq="H").to_pydatetime()
+    # Fetch wind speed data for each wind farm (or store NaN as applicable)
+    wind_speed_data = pd.DataFrame(index=dts, columns=wind_farms.index, dtype=float)
+    for dt in tqdm(dts):
         gribs = pygrib.open(formatted_filename(dt))
-        u_component = gribs.select(name=U_COMPONENT_SELECTOR)[0].values.flatten()
-        v_component = gribs.select(name=V_COMPONENT_SELECTOR)[0].values.flatten()
-        wind_farm_specific_u_component = u_component[
-            wind_farm_to_closest_wind_grid_indices
-        ]
-        wind_farm_specific_v_component = v_component[
-            wind_farm_to_closest_wind_grid_indices
-        ]
-        wind_farm_specific_magnitude = np.sqrt(
-            pow(wind_farm_specific_u_component, 2)
-            + pow(wind_farm_specific_v_component, 2)
-        )
-        power = np.array(
-            [
-                get_power(
-                    turbine_power_curves,
-                    state_power_curves,
-                    wind_farm_specific_magnitude[j],
-                    turbine_types[j],
-                )
-                for j in range(wind_farm_ct)
+        try:
+            u_component = gribs.select(name=U_COMPONENT_SELECTOR)[0].values.flatten()
+            v_component = gribs.select(name=V_COMPONENT_SELECTOR)[0].values.flatten()
+            wind_farm_specific_u_component = u_component[
+                wind_farm_to_closest_wind_grid_indices
             ]
-        )
-        data[i] = power
+            wind_farm_specific_v_component = v_component[
+                wind_farm_to_closest_wind_grid_indices
+            ]
+            wind_speed_data.loc[dt] = np.sqrt(
+                pow(wind_farm_specific_u_component, 2)
+                + pow(wind_farm_specific_v_component, 2)
+            )
+        except ValueError:
+            # If the GRIB file is empty, no wind speed values can be selected
+            wind_speed_data.loc[dt] = np.nan
 
-    df = pd.DataFrame(data=data, index=dts, columns=wind_farms.index)
+    # For each column, linearly interpolate any NaN values
+    linear(wind_speed_data)
+    # Then calculate wind power based on wind speed
+    wind_power_data = [
+        [
+            get_power(
+                turbine_power_curves,
+                state_power_curves,
+                wind_speed_data.loc[dt, w],
+                turbine_types.loc[w],
+            )
+            for w in wind_farms.index
+        ]
+        for dt in tqdm(dts)
+    ]
+    df = pd.DataFrame(data=wind_power_data, index=dts, columns=wind_farms.index)
 
     return df
