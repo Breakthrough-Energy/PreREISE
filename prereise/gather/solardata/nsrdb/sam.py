@@ -2,11 +2,7 @@ import numpy as np
 import pandas as pd
 import PySAM.Pvwattsv7 as PVWatts
 import PySAM.PySSC as pssc  # noqa: N813
-from powersimdata.network.usa_tamu.constants.zones import (
-    abv2interconnect,
-    id2abv,
-    interconnect2abv,
-)
+from powersimdata.network.model import ModelImmutables
 from tqdm import tqdm
 
 from prereise.gather.solardata.helpers import get_plant_id_unique_location
@@ -17,18 +13,40 @@ from prereise.gather.solardata.pv_tracking import (
 )
 
 
-def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
+def retrieve_data(
+    email,
+    api_key,
+    grid=None,
+    solar_plant=None,
+    grid_model=None,
+    year="2016",
+    rate_limit=0.5,
+):
     """Retrieves irradiance data from NSRDB and calculate the power output using
-    the System Adviser Model (SAM).
+    the System Adviser Model (SAM). Either a Grid object needs to be passed to ``grid``,
+    or (a data frame needs to be passed to ``solar_plant`` and a string needs to be
+    passed to ``grid_model``.
 
-    :param pandas.DataFrame solar_plant: plant data frame.
     :param str email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
+    :param powersimdata.input.grid.Grid: grid instance.
+    :param pandas.DataFrame solar_plant: plant data frame.
+    :param str grid_model: string used to populate grid model lookup tables.
     :param str year: year.
     :param int/float rate_limit: minimum seconds to wait between requests to NREL
     :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
         *'ts'* and *'ts_id'* as columns. Values are power output for a 1MW generator.
     """
+    xor_err_msg = "Either grid xor (solar_plant and grid_model) must be defined"
+    if grid is None:
+        if solar_plant is None or grid_model is None:
+            raise TypeError(xor_err_msg)
+        mi = ModelImmutables(grid_model)
+    else:
+        if solar_plant is not None or grid_model is not None:
+            raise TypeError(xor_err_msg)
+        solar_plant = grid.plant.query("type == 'solar'").copy()
+        mi = grid.model_immutables
 
     # SAM only takes 365 days.
     try:
@@ -53,11 +71,12 @@ def retrieve_data(solar_plant, email, api_key, year="2016", rate_limit=0.5):
     zone_id = solar_plant.zone_id.unique()
     frac = {}
     for i in zone_id:
-        state = id2abv[i]
+        state = mi.zones["id2abv"][i]
         frac[i] = get_pv_tracking_ratio_state(pv_info, [state])
         if frac[i] is None:
             frac[i] = get_pv_tracking_ratio_state(
-                pv_info, list(interconnect2abv[abv2interconnect[state]])
+                pv_info,
+                list(mi.zones["interconnect2abv"][mi.zones["abv2interconnect"][state]]),
             )
 
     # Inverter Loading Ratio
