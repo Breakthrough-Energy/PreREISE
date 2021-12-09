@@ -6,7 +6,6 @@ def to_reise(data):
 
     :param pandas.DataFrame data: data frame as returned by
         :func:`prereise.gather.solardata.nsrdb.naive.retrieve_data`,
-        :func:`prereise.gather.solardata.nsrdb.sam.retrieve_data` or
         :func:`prereise.gather.solardata.ga_wind.ga_wind.retrieve_data`
     :return: (*pandas.DataFrame*) -- data frame formatted for REISE.
     :raises TypeError: if *'data'* is not a data frame.
