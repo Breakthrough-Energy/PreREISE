@@ -4,6 +4,7 @@ from io import BytesIO
 
 import pandas as pd
 import requests
+from requests.exceptions import ConnectionError
 
 from prereise.gather.request_util import TransientError, retry
 
@@ -131,7 +132,9 @@ class NrelApi:
         Psm3Data.check_attrs(attributes)
         url = self._build_url(lat, lon, attributes, year, leap_day)
 
-        @retry(interval=self.interval, allowed_exceptions=(TransientError))
+        @retry(
+            interval=self.interval, allowed_exceptions=(TransientError, ConnectionError)
+        )
         def download(url):
             resp = requests.get(url)
             if resp.status_code == 429:
