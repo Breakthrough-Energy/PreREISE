@@ -1,3 +1,5 @@
+import os
+import pickle
 from dataclasses import dataclass
 from datetime import timedelta
 from io import BytesIO
@@ -117,7 +119,20 @@ class NrelApi:
         query = "&".join([f"{key}={value}" for key, value in payload.items()])
         return f"{base_url}?{query}"
 
-    def get_psm3_at(self, lat, lon, attributes, year, leap_day, dates=None):
+    @staticmethod
+    def _build_filename(lat, lon, attributes, year="2016", leap_day=False):
+        parameters = {
+            "wkt": f"POINT({lon}%20{lat})",
+            "attributes": attributes,
+            "names": year,
+            "leap_day": str(leap_day).lower(),
+        }
+        filename = "&".join([f"{key}={value}" for key, value in parameters.items()])
+        return f"{filename}.pkl"
+
+    def get_psm3_at(
+        self, lat, lon, attributes, year, leap_day, dates=None, cache_dir=None
+    ):
         """Get PSM3 data at a given point for the specified year.
 
         :param str lat: latitude of the plant
@@ -126,11 +141,10 @@ class NrelApi:
         :param str year: the year
         :param bool leap_day: whether to use a leap day
         :param pd.DatetimeIndex dates: if provided, use to index the downloaded data frame
+        :param str cache_dir: directory to cache downloaded data. If None, don't cache.
 
         :return: (*prereise.gather.solardata.nsrdb.nrel_api.Psm3Data*) -- a data class containing metadata and time series for the given year and location
         """
-        Psm3Data.check_attrs(attributes)
-        url = self._build_url(lat, lon, attributes, year, leap_day)
 
         @retry(
             interval=self.interval, allowed_exceptions=(TransientError, ConnectionError)
@@ -145,17 +159,35 @@ class NrelApi:
                 raise Exception(f"Request failed: status_code={resp.status_code}")
             return resp
 
-        resp = download(url)
+        def format_to_psm3data(resp):
+            info = pd.read_csv(BytesIO(resp.content), nrows=1)
+            data_resource = pd.read_csv(BytesIO(resp.content), dtype=float, skiprows=2)
 
-        info = pd.read_csv(BytesIO(resp.content), nrows=1)
-        data_resource = pd.read_csv(BytesIO(resp.content), dtype=float, skiprows=2)
+            tz, elevation = info["Local Time Zone"], info["Elevation"]
 
-        tz, elevation = info["Local Time Zone"], info["Elevation"]
-
-        if dates is not None:
-            data_resource.set_index(
-                dates + timedelta(hours=int(tz.values[0])), inplace=True
+            if dates is not None:
+                data_resource.set_index(
+                    dates + timedelta(hours=int(tz.values[0])), inplace=True
+                )
+            return Psm3Data(
+                float(lat), float(lon), float(tz), float(elevation), data_resource
             )
-        return Psm3Data(
-            float(lat), float(lon), float(tz), float(elevation), data_resource
-        )
+
+        Psm3Data.check_attrs(attributes)
+        if cache_dir is not None:
+            os.makedirs(cache_dir, exist_ok=True)
+            filename = self._build_filename(lat, lon, attributes, year, leap_day)
+            filepath = os.path.join(cache_dir, filename)
+            try:
+                with open(filepath, "rb") as f:
+                    psm3_data = pickle.load(f)
+                    return psm3_data
+            except FileNotFoundError:
+                pass
+        url = self._build_url(lat, lon, attributes, year, leap_day)
+        resp = download(url)
+        psm3_data = format_to_psm3data(resp)
+        if cache_dir is not None:
+            with open(filepath, "wb") as f:
+                pickle.dump(psm3_data, f)
+        return psm3_data
