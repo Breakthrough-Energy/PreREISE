@@ -5,6 +5,7 @@ import pandas as pd
 def data_filtering(census_division, filepath: str = "trippub.csv"):
     """Filter raw NHTS data to be used in mileage.py
     
+    :param int census_division: any of the 9 census regions defined by the US census bureau
     :param str filepath: filepath for the "trippub.csv" file in downloaded NHTS data
     :return: (*pd.DataFrame*) -- filtered and sorted trip data
     """
