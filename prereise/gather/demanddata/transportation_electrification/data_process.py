@@ -126,6 +126,4 @@ def data_filtering(census_division, filepath: str = "trippub.csv"):
 
         i += 1
 
-    sorted_data.to_excel("output.xlsx")
-
     return sorted_data
