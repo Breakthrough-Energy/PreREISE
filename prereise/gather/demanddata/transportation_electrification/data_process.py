@@ -40,30 +40,30 @@ def data_filtering(census_division):
     # get correct census division
     nhts = nhts[nhts.CENSUS_D == census_division]
 
-    # dataframe for use built here
-    # columns taken directly from original csv:
-    sorted_data = pd.DataFrame(
-        {
-            "Household": nhts["HOUSEID"],
-            "Vehicle ID": nhts["VEHID"],
-            "Person ID": nhts["PERSONID"],
-            "Scaling Factor Applied": nhts["WTTRDFIN"],
-            "Trip Number": nhts["TDTRPNUM"],
-            "Date": nhts["TDAYDATE"],
-            "Day of Week": nhts["TRAVDAY"],
-            "If Weekend": nhts["TDWKND"],
-            "Trip start time (HHMM)": nhts["STRTTIME"],
-            "Trip end time (HHMM)": nhts["ENDTIME"],
-            "Travel Minutes": nhts["TRVLCMIN"],
-            "Dwell time": nhts["DWELTIME"],
-            "Miles traveled": nhts["VMT_MILE"],
-            "Vehicle miles travelled": nhts["TRPMILES"],
-            "why from": nhts["WHYFROM"],
-            "why to": nhts["WHYTO"],
-            "Vehicle type": nhts["TRPTRANS"],
-            "Household vehicle count": nhts["HHVEHCNT"],
-            "Household size": nhts["HHSIZE"],
-        }
+    column_translations = {
+        "HOUSEID": "Household",
+        "VEHID": "Vehicle ID",
+        "PERSONID": "Person ID",
+        "WTTRDFIN": "Scaling Factor Applied",
+        "TDTRPNUM": "Trip Number",
+        "TDAYDATE": "Date",
+        "TRAVDAY": "Day of Week",
+        "TDWKND": "If Weekend",
+        "STRTTIME": "Trip start time (HHMM)",
+        "ENDTIME": "Trip end time (HHMM)",
+        "TRVLCMIN": "Travel Minutes",
+        "DWELTIME": "Dwell time",
+        "VMT_MILE": "Miles traveled",
+        "TRPMILES": "Vehicle miles traveled",
+        "WHYFROM": "why from",
+        "WHYTO": "why to",
+        "TRPTRANS": "Vehicle type",
+        "HHVEHCNT": "Household vehicle count",
+        "HHSIZE": "Household size",
+    }
+
+    sorted_data = nhts[column_translations.keys()].rename(
+        column_translations, axis="columns"
     )
 
     # columns that require calculations: 21-28
