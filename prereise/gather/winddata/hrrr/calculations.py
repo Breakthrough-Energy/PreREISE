@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pandas as pd
 import pygrib
@@ -27,7 +29,7 @@ def get_wind_data_lat_long(dt, directory):
     :return: (*tuple*) -- A tuple of 2 same lengthed numpy arrays, first one being
         latitude and second one being longitude.
     """
-    gribs = pygrib.open(directory + formatted_filename(dt))
+    gribs = pygrib.open(os.path.join(directory, formatted_filename(dt)))
     grib = next(gribs)
     return grib.latlons()
 
@@ -84,7 +86,7 @@ def extract_wind_speed(wind_farms, start_dt, end_dt, directory):
     # Fetch wind speed data for each wind farm (or store NaN as applicable)
     wind_speed_data = pd.DataFrame(index=dts, columns=wind_farms.index, dtype=float)
     for dt in tqdm(dts):
-        gribs = pygrib.open(formatted_filename(dt))
+        gribs = pygrib.open(os.path.join(directory, formatted_filename(dt)))
         try:
             u_component = gribs.select(name=U_COMPONENT_SELECTOR)[0].values.flatten()
             v_component = gribs.select(name=V_COMPONENT_SELECTOR)[0].values.flatten()
