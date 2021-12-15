@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from prereise.gather.winddata.hrrr.calculations import (
-    calculate_pout,
+    calculate_pout_blended,
     find_closest_wind_grids,
 )
 
@@ -30,7 +30,7 @@ def test_find_closest_wind_grids():
 @patch("prereise.gather.winddata.hrrr.calculations.get_wind_data_lat_long")
 @patch("prereise.gather.winddata.hrrr.calculations.find_closest_wind_grids")
 @patch("prereise.gather.winddata.hrrr.calculations.pygrib")
-def test_calculate_pout(
+def test_calculate_pout_blended(
     pygrib, find_closest_wind_grids, get_wind_data_lat_long, get_power
 ):
     # we assume get_power is well tested and simply return the magnitude value passed in
@@ -58,7 +58,7 @@ def test_calculate_pout(
     wind_farms.loc.__getitem__.return_value.type = "wind_offshore"
     wind_farms.loc.__getitem__.return_value.state_abv = "MA"
     wind_farms.__len__.return_value = 2
-    df = calculate_pout(
+    df = calculate_pout_blended(
         wind_farms,
         datetime.fromisoformat("2016-01-01"),
         datetime.fromisoformat("2016-01-01"),

@@ -1,3 +1,4 @@
+import functools
 import os
 
 import numpy as np
@@ -7,12 +8,14 @@ from powersimdata.utility.distance import ll2uv
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
+from prereise.gather.winddata import const
 from prereise.gather.winddata.hrrr.helpers import formatted_filename
 from prereise.gather.winddata.impute import linear
 from prereise.gather.winddata.power_curves import (
     get_power,
     get_state_power_curves,
     get_turbine_power_curves,
+    shift_turbine_curve,
 )
 
 U_COMPONENT_SELECTOR = "U component of wind"
@@ -110,17 +113,19 @@ def extract_wind_speed(wind_farms, start_dt, end_dt, directory):
     return wind_speed_data
 
 
-def calculate_pout(wind_farms, start_dt, end_dt, directory):
-    """Calculate power output for wind farms based on hrrr data.
+def calculate_pout_blended(wind_farms, start_dt, end_dt, directory):
+    """Calculate power output for wind farms based on hrrr data. Each wind farm's power
+    curve is based on the average power curve for that state, based on EIA data on the
+    state's turbines.
     Function assumes that user has already called
     :meth:`prereise.gather.winddata.hrrr.hrrr.retrieve_data` with the same
-    start_dt, end_dt, and directory.
+    ``start_dt``, ``end_dt``, and ``directory``.
 
     :param pandas.DataFrame wind_farms: plant data frame, plus 'state_abv' column.
     :param str start_dt: start date.
     :param str end_dt: end date (inclusive).
     :param str directory: directory where hrrr data is contained.
-    :return: (*pandas.Dataframe*) -- Pandas containing power out per wind farm
+    :return: (*pandas.Dataframe*) -- data frame containing power out per wind farm
         on a per hourly basis between start_dt and end_dt inclusive. Structure of
         dataframe is:
             wind_farm1  wind_farm2
@@ -155,6 +160,92 @@ def calculate_pout(wind_farms, start_dt, end_dt, directory):
         ]
         for dt in tqdm(dts)
     ]
+    df = pd.DataFrame(data=wind_power_data, index=dts, columns=wind_farms.index)
+
+    return df
+
+
+def calculate_pout_individual(wind_farms, start_dt, end_dt, directory):
+    """Calculate power output for wind farms based on hrrr data. Each wind farm's power
+    curve is based on farm-specific attributes.
+    Function assumes that user has already called
+    :meth:`prereise.gather.winddata.hrrr.hrrr.retrieve_data` with the same
+    ``start_dt``, ``end_dt``, and ``directory``.
+
+    :param pandas.DataFrame wind_farms: plant data frame, plus additional columns:
+        'Predominant Turbine Manufacturer', 'Predominant Turbine Model Number', and
+        'Turbine Hub Height (Feet)'.
+    :param str start_dt: start date.
+    :param str end_dt: end date (inclusive).
+    :param str directory: directory where hrrr data is contained.
+    :return: (*pandas.Dataframe*) -- data frame containing power out per wind
+        farm on a per hourly basis between start_dt and end_dt inclusive. Structure of
+        dataframe is:
+            wind_farm1  wind_farm2
+        dt1    POUT        POUT
+        dt2    POUT        POUT
+    :raises ValueError: if ``wind_farms`` is missing the 'state_abv' column.
+    """
+
+    def get_starting_curve_name(series, valid_names):
+        """Given a wind farm series, build a single string used to look up a wind farm
+        power curve. If the specific make and model aren't found, return a default.
+
+        :param pandas.Series series: single row of wind farm table.
+        :param iterable valid_names: set of valid names.
+        :return: (*str*) -- valid lookup name.
+        """
+        full_name = " ".join([series[const.mfg_col], series[const.model_col]])
+        return full_name if full_name in valid_names else "IEC class 2"
+
+    def get_shifted_curve(lookup_name, hub_height, reference_curves):
+        """Get the power curve for the given turbine type, shifted to hub height.
+
+        :param str lookup_name: make and model of turbine (or IEC class).
+        :param int/float hub_height: turbine hub height.
+        :param dict/pandas.DataFrame reference_curves: turbine power curves.
+        :return: (*pandas.Series*) -- index is wind speed at 80m, values are normalized
+        power output.
+        """
+        return shift_turbine_curve(
+            reference_curves[lookup_name],
+            hub_height,
+            const.max_wind_speed,
+            const.new_curve_res,
+        )
+
+    def interpolate(wspd, curve):
+        return np.interp(wspd, curve.index.values, curve.values, left=0, right=0)
+
+    req_cols = {const.mfg_col, const.model_col, const.hub_height_col}
+    if not req_cols <= set(wind_farms.columns):
+        raise ValueError(f"wind_farms requires columns: {req_cols}")
+
+    # Create cached, curried function for use with apply
+    turbine_power_curves = get_turbine_power_curves()
+    cached_func = functools.lru_cache(maxsize=None)(
+        functools.partial(get_shifted_curve, reference_curves=turbine_power_curves)
+    )
+    # Create dataframe of lookup values
+    lookup_names = wind_farms.apply(
+        lambda x: get_starting_curve_name(x, turbine_power_curves.columns), axis=1
+    )
+    lookup_values = pd.concat([lookup_names, wind_farms[const.hub_height_col]], axis=1)
+    # Use lookup values with cached, curried function
+    shifted_power_curves = lookup_values.apply(lambda x: cached_func(*x), axis=1)
+
+    # Read wind speed from previously-downloaded files, and impute as necessary
+    wind_speed_data = extract_wind_speed(wind_farms, start_dt, end_dt, directory)
+    dts = wind_speed_data.index
+
+    wind_power_data = [
+        [
+            interpolate(wind_speed_data.loc[dt, w], shifted_power_curves.loc[w])
+            for w in wind_farms.index
+        ]
+        for dt in tqdm(dts)
+    ]
+
     df = pd.DataFrame(data=wind_power_data, index=dts, columns=wind_farms.index)
 
     return df
