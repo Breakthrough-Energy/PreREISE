@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from prereise.gather.winddata.hrrr.helpers import formatted_filename
 from prereise.gather.winddata.impute import linear
-from prereise.gather.winddata.rap.power_curves import (
+from prereise.gather.winddata.power_curves import (
     get_power,
     get_state_power_curves,
     get_turbine_power_curves,

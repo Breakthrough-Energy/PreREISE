@@ -6,10 +6,12 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
-data_dir = path.abspath(path.join(path.dirname(__file__), "..", "data"))
+from prereise.gather.winddata import const
+
+data_dir = path.abspath(path.join(path.dirname(__file__), "data"))
 
 
-def _shift_turbine_curve(turbine_curve, hub_height, maxspd, new_curve_res):
+def shift_turbine_curve(turbine_curve, hub_height, maxspd, new_curve_res):
     """Shift a turbine curve based on a given hub height.
 
     :param pandas.Series turbine_curve: power curve data, wind speed index.
@@ -17,10 +19,8 @@ def _shift_turbine_curve(turbine_curve, hub_height, maxspd, new_curve_res):
     :param float maxspd: Extent of new curve (m/s).
     :param float new_curve_res: Resolution of new curve (m/s).
     """
-    wspd_height_base = 262.467  # 80m in feet
-    wspd_exp = 0.15  # wspd(h) = wspd_0 * (h / h0)**wspd_exp
     curve_x = np.arange(0, maxspd + new_curve_res, new_curve_res)
-    wspd_scale_factor = (wspd_height_base / hub_height) ** wspd_exp
+    wspd_scale_factor = (const.wspd_height_base / hub_height) ** const.wspd_exp
     shifted_x = turbine_curve.index * wspd_scale_factor
     shifted_curve = np.interp(curve_x, shifted_x, turbine_curve, left=0, right=0)
     shifted_curve = pd.Series(data=shifted_curve, index=curve_x)
@@ -39,14 +39,9 @@ def build_state_curves(form_860, power_curves, maxspd=30, default="IEC class 2",
     :return: (*pandas.DataFrame*) - DataFrame of state curves.
     """
     print("building state_power_curves")
-    mfg_col = "Predominant Turbine Manufacturer"
-    model_col = "Predominant Turbine Model Number"
-    capacity_col = "Nameplate Capacity (MW)"
-    hubheight_col = "Turbine Hub Height (Feet)"
-    new_curve_res = 0.01  # resolution: m/s
 
     states = form_860["State"].unique()
-    curve_x = np.arange(0, maxspd + new_curve_res, new_curve_res)
+    curve_x = np.arange(0, maxspd + const.new_curve_res, const.new_curve_res)
     state_curves = pd.DataFrame(curve_x, columns=["Speed bin (m/s)"])
     for s in states:
         cumulative_curve = np.zeros_like(curve_x)
@@ -54,18 +49,18 @@ def build_state_curves(form_860, power_curves, maxspd=30, default="IEC class 2",
         state_wind_farms = form_860[form_860["State"] == s]
         for i, f in enumerate(state_wind_farms.index):
             # Look up attributes from Form 860
-            farm_capacity = state_wind_farms[capacity_col].iloc[i]
-            hub_height = state_wind_farms[hubheight_col].iloc[i]
-            turbine_mfg = state_wind_farms[mfg_col].iloc[i]
-            turbine_model = state_wind_farms[model_col].iloc[i]
+            farm_capacity = state_wind_farms[const.capacity_col].iloc[i]
+            hub_height = state_wind_farms[const.hub_height_col].iloc[i]
+            turbine_mfg = state_wind_farms[const.mfg_col].iloc[i]
+            turbine_model = state_wind_farms[const.model_col].iloc[i]
             # Look up turbine-specific power curve (or default)
             turbine_name = " ".join([turbine_mfg, turbine_model])
             if turbine_name not in power_curves.columns:
                 turbine_name = default
             turbine_curve = power_curves[turbine_name]
             # Shift based on farm-specific hub height
-            shifted_curve = _shift_turbine_curve(
-                turbine_curve, hub_height, maxspd, new_curve_res
+            shifted_curve = shift_turbine_curve(
+                turbine_curve, hub_height, maxspd, const.new_curve_res
             )
             # Add to cumulative totals
             cumulative_curve += shifted_curve.to_numpy() * farm_capacity
@@ -75,10 +70,10 @@ def build_state_curves(form_860, power_curves, maxspd=30, default="IEC class 2",
     state_curves.set_index("Speed bin (m/s)", inplace=True)
 
     # Add an 'Offshore' state with a representative curve
-    hub_height = 393.701  # 120 meters, in feet to match Form860 data
+    hub_height = const.offshore_hub_height
     turbine_curve = power_curves["Vestas V164-8.0"]
-    shifted_curve = _shift_turbine_curve(
-        turbine_curve, hub_height, maxspd, new_curve_res
+    shifted_curve = shift_turbine_curve(
+        turbine_curve, hub_height, maxspd, const.new_curve_res
     )
     state_curves["Offshore"] = shifted_curve.to_numpy()
     offshore_rsd = 0.25
