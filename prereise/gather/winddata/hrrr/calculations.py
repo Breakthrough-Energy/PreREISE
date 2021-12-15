@@ -62,33 +62,20 @@ def find_closest_wind_grids(wind_farms, wind_data_lat_long):
     return indices
 
 
-def calculate_pout(wind_farms, start_dt, end_dt, directory):
-    """Calculate power output for wind farms based on hrrr data.
-    Function assumes that user has already called
-    :meth:`prereise.gather.winddata.hrrr.hrrr.retrieve_data` with the same
-    start_dt, end_dt, and directory.
+def extract_wind_speed(wind_farms, start_dt, end_dt, directory):
+    """Read wind speed from previously-downloaded files, and interpolate any gaps.
 
-    :param pandas.DataFrame wind_farms: plant data frame, plus 'state_abv' column.
+    :param pandas.DataFrame wind_farms: plant data frame.
     :param str start_dt: start date.
     :param str end_dt: end date (inclusive).
     :param str directory: directory where hrrr data is contained.
-    :return: (*pandas.Dataframe*) -- Pandas containing power out per wind farm
+    :return: (*pandas.Dataframe*) -- data frame containing wind speed per wind farm
         on a per hourly basis between start_dt and end_dt inclusive. Structure of
         dataframe is:
             wind_farm1  wind_farm2
-        dt1    POUT        POUT
-        dt2    POUT        POUT
-    :raises ValueError: if ``wind_farms`` is missing the 'state_abv' column.
+        dt1   speed       speed
+        dt2   speed       speed
     """
-
-    if "state_abv" not in wind_farms.columns:
-        raise ValueError("The wind_farms data frame must have a 'state_abv' column")
-    turbine_types = wind_farms.apply(
-        lambda x: "Offshore" if x["type"] == "wind_offshore" else x["state_abv"], axis=1
-    )
-
-    turbine_power_curves = get_turbine_power_curves()
-    state_power_curves = get_state_power_curves()
     wind_data_lat_long = get_wind_data_lat_long(start_dt, directory)
     wind_farm_to_closest_wind_grid_indices = find_closest_wind_grids(
         wind_farms, wind_data_lat_long
@@ -117,6 +104,42 @@ def calculate_pout(wind_farms, start_dt, end_dt, directory):
 
     # For each column, linearly interpolate any NaN values
     linear(wind_speed_data)
+
+    return wind_speed_data
+
+
+def calculate_pout(wind_farms, start_dt, end_dt, directory):
+    """Calculate power output for wind farms based on hrrr data.
+    Function assumes that user has already called
+    :meth:`prereise.gather.winddata.hrrr.hrrr.retrieve_data` with the same
+    start_dt, end_dt, and directory.
+
+    :param pandas.DataFrame wind_farms: plant data frame, plus 'state_abv' column.
+    :param str start_dt: start date.
+    :param str end_dt: end date (inclusive).
+    :param str directory: directory where hrrr data is contained.
+    :return: (*pandas.Dataframe*) -- Pandas containing power out per wind farm
+        on a per hourly basis between start_dt and end_dt inclusive. Structure of
+        dataframe is:
+            wind_farm1  wind_farm2
+        dt1    POUT        POUT
+        dt2    POUT        POUT
+    :raises ValueError: if ``wind_farms`` is missing the 'state_abv' column.
+    """
+
+    if "state_abv" not in wind_farms.columns:
+        raise ValueError("The wind_farms data frame must have a 'state_abv' column")
+    turbine_types = wind_farms.apply(
+        lambda x: "Offshore" if x["type"] == "wind_offshore" else x["state_abv"], axis=1
+    )
+
+    turbine_power_curves = get_turbine_power_curves()
+    state_power_curves = get_state_power_curves()
+
+    # Read wind speed from previously-downloaded files, and interpolate
+    wind_speed_data = extract_wind_speed(wind_farms, start_dt, end_dt, directory)
+    dts = wind_speed_data.index
+
     # Then calculate wind power based on wind speed
     wind_power_data = [
         [
