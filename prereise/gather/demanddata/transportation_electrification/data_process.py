@@ -66,6 +66,21 @@ def data_filtering(census_division):
         column_translations, axis="columns"
     )
 
+    sorted_data = sorted_data.reindex(
+        list(sorted_data.columns)
+        + [
+            "Start time (hour decimal)",
+            "End time (hour decimal)",
+            "Dwell time (hour decimal)",
+            "Travel time (hour decimal)",
+            "Vehicle speed (mi/hour)",
+            "sample vehicle number",
+            "total vehicle trips",
+            "total vehicle miles traveled",
+        ],
+        axis="columns",
+    )
+
     # columns that require calculations: 21-28
     sorted_data["Start time (hour decimal)"] = [
         row // 100 + row % 100 / 60 for row in sorted_data["Trip start time (HHMM)"]
@@ -73,18 +88,14 @@ def data_filtering(census_division):
     sorted_data["End time (hour decimal)"] = [
         row // 100 + row % 100 / 60 for row in sorted_data["Trip end time (HHMM)"]
     ]
-    sorted_data["Dwell time (hour decimal)"] = ""
     sorted_data["Travel time (hour decimal)"] = (
         sorted_data["End time (hour decimal)"]
         - sorted_data["Start time (hour decimal)"]
     )
     sorted_data["Vehicle speed (mi/hour)"] = (
-        sorted_data["Vehicle miles travelled"]
+        sorted_data["Vehicle miles traveled"]
         / sorted_data["Travel time (hour decimal)"]
     )
-    sorted_data["sample vehicle number"] = ""
-    sorted_data["total vehicle trips"] = ""
-    sorted_data["total vehicle miles travelled"] = ""
 
     i = 0
     l = len(sorted_data)
@@ -104,7 +115,7 @@ def data_filtering(census_division):
 
             total_trips += 1
             total_miles += sorted_data.iloc[
-                i, sorted_data.columns.get_loc("Vehicle miles travelled")
+                i, sorted_data.columns.get_loc("Vehicle miles traveled")
             ]
 
             if total_trips > 1:
@@ -132,7 +143,7 @@ def data_filtering(census_division):
                 ] = total_trips
                 sorted_data.iloc[
                     i - total_trips + 1 :,
-                    sorted_data.columns.get_loc("total vehicle miles travelled"),
+                    sorted_data.columns.get_loc("total vehicle miles traveled"),
                 ] = total_miles
 
                 if total_trips == 1:
@@ -173,7 +184,7 @@ def data_filtering(census_division):
             ] = total_trips
             sorted_data.iloc[
                 i - total_trips : i,
-                sorted_data.columns.get_loc("total vehicle miles travelled"),
+                sorted_data.columns.get_loc("total vehicle miles traveled"),
             ] = total_miles
 
             sample_veh_num += 1
@@ -205,7 +216,7 @@ def data_filtering(census_division):
 
             total_trips = 1
             total_miles = sorted_data.iloc[
-                i, sorted_data.columns.get_loc("Vehicle miles travelled")
+                i, sorted_data.columns.get_loc("Vehicle miles traveled")
             ]
 
             curr_vehicle_id = sorted_data.iloc[
@@ -222,7 +233,7 @@ def data_filtering(census_division):
                     i, sorted_data.columns.get_loc("total vehicle trips")
                 ] = total_trips
                 sorted_data.iloc[
-                    i, sorted_data.columns.get_loc("total vehicle miles travelled")
+                    i, sorted_data.columns.get_loc("total vehicle miles traveled")
                 ] = total_miles
                 sorted_data.iloc[
                     i, sorted_data.columns.get_loc("sample vehicle number")
