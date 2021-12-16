@@ -21,6 +21,25 @@ def load_data(census_division: int, filepath: str = "trippub.csv"):
     return df
 
 
+def calculate_dwell_time(data: pd.DataFrame):
+    """Calculates the dwell time, how long a vehicle has been charging
+
+    :param pd.DataFrame data: the data to calculate the dwell time from
+    :return: (*pd.Series*) -- list of dwell times
+    """
+    dwells = (
+        data["Start time (hour decimal)"].iloc[1:].values
+        - data["End time (hour decimal)"].iloc[:-1]
+    )
+    dwells.loc[data.index[-1]] = (
+        24
+        - data["End time (hour decimal)"].iloc[-1]
+        + data["Start time (hour decimal)"].iloc[0]
+    )
+
+    return dwells
+
+
 def data_filtering(census_division):
     """Filter raw NHTS data to be used in mileage.py
 
@@ -97,176 +116,18 @@ def data_filtering(census_division):
         / sorted_data["Travel time (hour decimal)"]
     )
 
-    i = 0
-    l = len(sorted_data)
-    curr_household = sorted_data.iloc[0, sorted_data.columns.get_loc("Household")]
-    curr_vehicle_id = sorted_data.iloc[0, sorted_data.columns.get_loc("Vehicle ID")]
-    sample_veh_num = 1
-    total_trips = 0
-    total_miles = 0
+    grouping = sorted_data.groupby(["Household", "Vehicle ID"])
+    sorted_data["sample vehicle number"] = grouping.ngroup() + 1
+    sorted_data["total vehicle trips"] = grouping["Vehicle miles traveled"].transform(
+        len
+    )
+    sorted_data["total vehicle miles traveled"] = grouping[
+        "Vehicle miles traveled"
+    ].transform(sum)
 
-    while i < l:
-        if (
-            curr_vehicle_id
-            == sorted_data.iloc[i, sorted_data.columns.get_loc("Vehicle ID")]
-            and curr_household
-            == sorted_data.iloc[i, sorted_data.columns.get_loc("Household")]
-        ):
-
-            total_trips += 1
-            total_miles += sorted_data.iloc[
-                i, sorted_data.columns.get_loc("Vehicle miles traveled")
-            ]
-
-            if total_trips > 1:
-                sorted_data.iloc[
-                    i - 1, sorted_data.columns.get_loc("Dwell time (hour decimal)")
-                ] = (
-                    sorted_data.iloc[
-                        i, sorted_data.columns.get_loc("Start time (hour decimal)")
-                    ]
-                    - sorted_data.iloc[
-                        i - 1, sorted_data.columns.get_loc("End time (hour decimal)")
-                    ]
-                )
-
-            # if the last entry is == the prev few entries, this makes sure they get added in;
-            # otherwise, it would break out of loop w/o adding
-            if i == (l - 1):
-                sorted_data.iloc[
-                    i - total_trips + 1 :,
-                    sorted_data.columns.get_loc("sample vehicle number"),
-                ] = sample_veh_num
-                sorted_data.iloc[
-                    i - total_trips + 1 :,
-                    sorted_data.columns.get_loc("total vehicle trips"),
-                ] = total_trips
-                sorted_data.iloc[
-                    i - total_trips + 1 :,
-                    sorted_data.columns.get_loc("total vehicle miles traveled"),
-                ] = total_miles
-
-                if total_trips == 1:
-                    sorted_data.iloc[
-                        i, sorted_data.columns.get_loc("Dwell time (hour decimal)")
-                    ] = 24 - (
-                        sorted_data.iloc[
-                            i - 1,
-                            sorted_data.columns.get_loc("Start time (hour decimal)"),
-                        ]
-                        - sorted_data.iloc[
-                            i - 1,
-                            sorted_data.columns.get_loc("End time (hour decimal)"),
-                        ]
-                    )
-                else:
-                    sorted_data.iloc[
-                        i, sorted_data.columns.get_loc("Dwell time (hour decimal)")
-                    ] = (
-                        24
-                        - sorted_data.iloc[
-                            i - 1,
-                            sorted_data.columns.get_loc("End time (hour decimal)"),
-                        ]
-                        + sorted_data.iloc[
-                            i - total_trips - 1,
-                            sorted_data.columns.get_loc("Start time (hour decimal)"),
-                        ]
-                    )
-
-        else:
-            sorted_data.iloc[
-                i - total_trips : i,
-                sorted_data.columns.get_loc("sample vehicle number"),
-            ] = sample_veh_num
-            sorted_data.iloc[
-                i - total_trips : i, sorted_data.columns.get_loc("total vehicle trips")
-            ] = total_trips
-            sorted_data.iloc[
-                i - total_trips : i,
-                sorted_data.columns.get_loc("total vehicle miles traveled"),
-            ] = total_miles
-
-            sample_veh_num += 1
-
-            if total_trips == 1:
-                sorted_data.iloc[
-                    i - 1, sorted_data.columns.get_loc("Dwell time (hour decimal)")
-                ] = 24 - (
-                    sorted_data.iloc[
-                        i - 1, sorted_data.columns.get_loc("Start time (hour decimal)")
-                    ]
-                    - sorted_data.iloc[
-                        i - 1, sorted_data.columns.get_loc("End time (hour decimal)")
-                    ]
-                )
-            else:
-                sorted_data.iloc[
-                    i - 1, sorted_data.columns.get_loc("Dwell time (hour decimal)")
-                ] = (
-                    24
-                    - sorted_data.iloc[
-                        i - 1, sorted_data.columns.get_loc("End time (hour decimal)")
-                    ]
-                    + sorted_data.iloc[
-                        i - total_trips - 1,
-                        sorted_data.columns.get_loc("Start time (hour decimal)"),
-                    ]
-                )
-
-            total_trips = 1
-            total_miles = sorted_data.iloc[
-                i, sorted_data.columns.get_loc("Vehicle miles traveled")
-            ]
-
-            curr_vehicle_id = sorted_data.iloc[
-                i, sorted_data.columns.get_loc("Vehicle ID")
-            ]
-            curr_household = sorted_data.iloc[
-                i, sorted_data.columns.get_loc("Household")
-            ]
-
-            # this makes sure the last entry gets included;
-            # otherwise, it would break out of loop w/o adding
-            if i == (l - 1):
-                sorted_data.iloc[
-                    i, sorted_data.columns.get_loc("total vehicle trips")
-                ] = total_trips
-                sorted_data.iloc[
-                    i, sorted_data.columns.get_loc("total vehicle miles traveled")
-                ] = total_miles
-                sorted_data.iloc[
-                    i, sorted_data.columns.get_loc("sample vehicle number")
-                ] = sample_veh_num
-
-                if total_trips == 1:
-                    sorted_data.iloc[
-                        i, sorted_data.columns.get_loc("Dwell time (hour decimal)")
-                    ] = 24 - (
-                        sorted_data.iloc[
-                            i - 1,
-                            sorted_data.columns.get_loc("Start time (hour decimal)"),
-                        ]
-                        - sorted_data.iloc[
-                            i - 1,
-                            sorted_data.columns.get_loc("End time (hour decimal)"),
-                        ]
-                    )
-                else:
-                    sorted_data.iloc[
-                        i, sorted_data.columns.get_loc("Dwell time (hour decimal)")
-                    ] = (
-                        24
-                        - sorted_data.iloc[
-                            i - 1,
-                            sorted_data.columns.get_loc("End time (hour decimal)"),
-                        ]
-                        + sorted_data.iloc[
-                            i - total_trips - 1,
-                            sorted_data.columns.get_loc("Start time (hour decimal)"),
-                        ]
-                    )
-
-        i += 1
+    # drop the 'household' and 'vehicle id' index
+    sorted_data["Dwell time (hour decimal)"] = grouping.apply(
+        calculate_dwell_time
+    ).droplevel([0, 1])
 
     return sorted_data
