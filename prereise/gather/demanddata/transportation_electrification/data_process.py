@@ -35,7 +35,7 @@ def data_filtering(census_division):
     nhts = nhts_raw[nhts_raw.TRPTRANS.isin(range(1, 7))]
 
     # filter out repeated trips (VMT = -1)
-    nhts = nhts[nhts.TRPMILES != -1]
+    nhts = nhts[nhts.VMT_MILE != -1]
 
     # get correct census division
     nhts = nhts[nhts.CENSUS_D == census_division]
@@ -53,8 +53,8 @@ def data_filtering(census_division):
         "ENDTIME": "Trip end time (HHMM)",
         "TRVLCMIN": "Travel Minutes",
         "DWELTIME": "Dwell time",
-        "VMT_MILE": "Miles traveled",
-        "TRPMILES": "Vehicle miles traveled",
+        "TRPMILES": "Miles traveled",
+        "VMT_MILE": "Vehicle miles traveled",
         "WHYFROM": "why from",
         "WHYTO": "why to",
         "TRPTRANS": "Vehicle type",
