@@ -129,12 +129,9 @@ def access_non_efs_demand(dem_paths):
     sect_dem = []
     for i in dem_paths:
         # Try loading the locally-stored sectoral demand
-        temp_dem = pd.read_csv(i)
-
-        # Set the index
-        if "Local Time" in temp_dem.columns:
-            temp_dem.set_index("Local Time", inplace=True)
-        else:
+        try:
+            temp_dem = pd.read_csv(i, parse_dates=True, index_col="Local Time")
+        except ValueError:
             raise ValueError("This data does not provide the timestamps correctly.")
 
         # Check the DataFrame dimensions and headers
