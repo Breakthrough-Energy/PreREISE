@@ -6,7 +6,8 @@ import zipfile
 
 import pandas as pd
 import requests
-from powersimdata.network.usa_tamu.constants.zones import abv2state
+
+from prereise.gather.const import abv2state
 
 
 def download_demand_data(

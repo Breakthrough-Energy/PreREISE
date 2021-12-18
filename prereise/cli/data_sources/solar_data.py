@@ -200,7 +200,9 @@ class SolarDataNationalSolarRadiationDatabase(DataSource):
         if method == NAIVE_STRING:
             data = naive.retrieve_data(solar_plants, email, key, year)
         elif method == SAM_STRING:
-            data = sam.retrieve_data(solar_plants, email, key, year)
+            data = sam.retrieve_data_blended(
+                email, key, solar_plants=solar_plants, year=year
+            )
         else:
             raise ValueError(f"Unexpected method {method}")
         data.to_pickle(file_path)

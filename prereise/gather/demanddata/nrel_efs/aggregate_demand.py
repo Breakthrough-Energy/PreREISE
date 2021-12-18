@@ -1,5 +1,6 @@
 import pandas as pd
-from powersimdata.network.usa_tamu.constants.zones import abv2state
+
+from prereise.gather.const import abv2state
 
 
 def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
