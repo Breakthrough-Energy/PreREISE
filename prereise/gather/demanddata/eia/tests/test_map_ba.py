@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 from pandas.testing import assert_series_equal
 
 from prereise.gather.demanddata.eia.map_ba import (
@@ -67,6 +68,7 @@ def create_ba_to_region_dataframe():
     return initial_df
 
 
+@pytest.mark.skip(reason="Currently failing due to issues with the geo.fcc.gov API")
 def test_map_buses_to_county():
     bus_df = pd.DataFrame(
         {
@@ -81,6 +83,7 @@ def test_map_buses_to_county():
     assert bus_no_county_match == []
 
 
+@pytest.mark.skip(reason="Currently failing due to issues with the geo.fcc.gov API")
 def test_map_buses_to_ba():
     bus_df = pd.DataFrame(
         {
