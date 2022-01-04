@@ -9,7 +9,7 @@ def load_data(census_division: int, filepath: str = "trippub.csv"):
     :param int census_division: any of the 9 census regions defined by the US census bureau
     :param str filepath: filepath for the "trippub.csv" file in downloaded NHTS data
     :raises ValueError: if the census division is not between 1 and 9, inclusive.
-    :return: (*pd.DataFrame*) -- the data loaded from trippub.csv.
+    :return: (*pandas.DataFrame*) -- the data loaded from trippub.csv.
     """
     if not (1 <= census_division <= 9):
         raise ValueError("census_region must be between 1 and 9 (inclusive).")
@@ -24,8 +24,8 @@ def load_data(census_division: int, filepath: str = "trippub.csv"):
 def calculate_dwell_time(data: pd.DataFrame):
     """Calculates the dwell time, how long a vehicle has been charging
 
-    :param pd.DataFrame data: the data to calculate the dwell time from
-    :return: (*pd.Series*) -- list of dwell times
+    :param pandas.DataFrame data: the data to calculate the dwell time from
+    :return: (*pandas.Series*) -- list of dwell times
     """
     dwells = (
         data["Start time (hour decimal)"].iloc[1:].values
@@ -44,8 +44,7 @@ def data_filtering(census_division):
     """Filter raw NHTS data to be used in mileage.py
 
     :param int census_division: any of the 9 census regions defined by the US census bureau
-    :param str filepath: filepath for the "trippub.csv" file in downloaded NHTS data
-    :return: (*pd.DataFrame*) -- filtered and sorted trip data
+    :return: (*pandas.DataFrame*) -- filtered and sorted trip data
     """
 
     nhts_raw = load_data(census_division)
