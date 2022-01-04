@@ -81,12 +81,12 @@ def data_filtering(census_division):
         "HHSIZE": "Household size",
     }
 
-    sorted_data = nhts[column_translations.keys()].rename(
+    filtered_data = nhts[column_translations.keys()].rename(
         column_translations, axis="columns"
     )
 
-    sorted_data = sorted_data.reindex(
-        list(sorted_data.columns)
+    filtered_data = filtered_data.reindex(
+        list(filtered_data.columns)
         + [
             "Start time (hour decimal)",
             "End time (hour decimal)",
@@ -101,33 +101,33 @@ def data_filtering(census_division):
     )
 
     # columns that require calculations: 21-28
-    sorted_data["Start time (hour decimal)"] = [
-        row // 100 + row % 100 / 60 for row in sorted_data["Trip start time (HHMM)"]
+    filtered_data["Start time (hour decimal)"] = [
+        row // 100 + row % 100 / 60 for row in filtered_data["Trip start time (HHMM)"]
     ]
-    sorted_data["End time (hour decimal)"] = [
-        row // 100 + row % 100 / 60 for row in sorted_data["Trip end time (HHMM)"]
+    filtered_data["End time (hour decimal)"] = [
+        row // 100 + row % 100 / 60 for row in filtered_data["Trip end time (HHMM)"]
     ]
-    sorted_data["Travel time (hour decimal)"] = (
-        sorted_data["End time (hour decimal)"]
-        - sorted_data["Start time (hour decimal)"]
+    filtered_data["Travel time (hour decimal)"] = (
+        filtered_data["End time (hour decimal)"]
+        - filtered_data["Start time (hour decimal)"]
     )
-    sorted_data["Vehicle speed (mi/hour)"] = (
-        sorted_data["Vehicle miles traveled"]
-        / sorted_data["Travel time (hour decimal)"]
+    filtered_data["Vehicle speed (mi/hour)"] = (
+        filtered_data["Vehicle miles traveled"]
+        / filtered_data["Travel time (hour decimal)"]
     )
 
-    grouping = sorted_data.groupby(["Household", "Vehicle ID"])
-    sorted_data["sample vehicle number"] = grouping.ngroup() + 1
-    sorted_data["total vehicle trips"] = grouping["Vehicle miles traveled"].transform(
+    grouping = filtered_data.groupby(["Household", "Vehicle ID"])
+    filtered_data["sample vehicle number"] = grouping.ngroup() + 1
+    filtered_data["total vehicle trips"] = grouping["Vehicle miles traveled"].transform(
         len
     )
-    sorted_data["total vehicle miles traveled"] = grouping[
+    filtered_data["total vehicle miles traveled"] = grouping[
         "Vehicle miles traveled"
     ].transform(sum)
 
     # drop the 'household' and 'vehicle id' index
-    sorted_data["Dwell time (hour decimal)"] = grouping.apply(
+    filtered_data["Dwell time (hour decimal)"] = grouping.apply(
         calculate_dwell_time
     ).droplevel([0, 1])
 
-    return sorted_data
+    return filtered_data
