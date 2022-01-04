@@ -51,13 +51,13 @@ def data_filtering(census_division):
     nhts_raw = load_data(census_division)
 
     # filter to be only vehicle trips (TRPTRANS values 1-6)
-    nhts = nhts_raw[nhts_raw.TRPTRANS.isin(range(1, 7))]
-
     # filter out repeated trips (VMT = -1)
-    nhts = nhts[nhts.VMT_MILE != -1]
-
     # get correct census division
-    nhts = nhts[nhts.CENSUS_D == census_division]
+    nhts = nhts_raw.loc[
+        nhts_raw.TRPTRANS.isin(range(1, 7))
+        & (nhts_raw.VMT_MILE != -1)
+        & (nhts_raw.CENSUS_D == census_division)
+    ]
 
     column_translations = {
         "HOUSEID": "Household",
