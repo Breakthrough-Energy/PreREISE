@@ -80,8 +80,9 @@ def retrieve_data_blended(
     :param int/str year: year.
     :param int/float rate_limit: minimum seconds to wait between requests to NREL
     :param str cache_dir: directory to cache downloaded data. If None, don't cache.
-    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
-        *'ts'* and *'ts_id'* as columns. Values are power output for a 1MW generator.
+    :return: (*pandas.DataFrame*) -- data frame of normalized power profiles. The index
+        is hourly timestamps for the profile year, the columns are plant IDs, the values
+        are floats.
     """
     xor_err_msg = (
         "Either grid xor (solar_plant and interconnect_to_state_abvs) must be defined"
@@ -178,9 +179,7 @@ def retrieve_data_individual(
     email, api_key, solar_plant, year="2016", rate_limit=0.5, cache_dir=None
 ):
     """Retrieves irradiance data from NSRDB and calculate the power output using
-    the System Adviser Model (SAM). Either a Grid object needs to be passed to ``grid``,
-    or (a data frame needs to be passed to ``solar_plant`` and a string needs to be
-    passed to ``grid_model``.
+    the System Adviser Model (SAM).
 
     :param str email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
@@ -190,8 +189,9 @@ def retrieve_data_individual(
     :param int/str year: year.
     :param int/float rate_limit: minimum seconds to wait between requests to NREL
     :param str cache_dir: directory to cache downloaded data. If None, don't cache.
-    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
-        *'ts'* and *'ts_id'* as columns. Values are power output for a 1MW generator.
+    :return: (*pandas.DataFrame*) -- data frame of normalized power profiles. The index
+        is hourly timestamps for the profile year, the columns are plant IDs, the values
+        are floats.
     """
     # Verify that each solar plant has exactly one tracking type equal to True
     array_type_mapping = {
