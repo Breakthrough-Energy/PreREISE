@@ -3,24 +3,6 @@ import pandas as pd
 # Download CSV of NHTS 2017 from https://nhts.ornl.gov/
 
 
-def load_data(census_division: int, filepath: str = "trippub.csv"):
-    """Load the data at trippub.csv.
-
-    :param int census_division: any of the 9 census regions defined by the US census bureau
-    :param str filepath: filepath for the "trippub.csv" file in downloaded NHTS data
-    :raises ValueError: if the census division is not between 1 and 9, inclusive.
-    :return: (*pandas.DataFrame*) -- the data loaded from trippub.csv.
-    """
-    if not (1 <= census_division <= 9):
-        raise ValueError("census_region must be between 1 and 9 (inclusive).")
-
-    nhts_census = pd.read_csv(filepath)
-
-    df = pd.DataFrame(nhts_census)
-
-    return df
-
-
 def calculate_dwell_time(data: pd.DataFrame):
     """Calculates the dwell time, how long a vehicle has been charging
 
@@ -40,22 +22,21 @@ def calculate_dwell_time(data: pd.DataFrame):
     return dwells
 
 
-def data_filtering(census_division):
+def data_filtering(raw_nhts, census_division):
     """Filter raw NHTS data to be used in mileage.py
 
+    :param: (*pandas.DataFrame*) raw_nhts: raw NHTS dataframe
     :param int census_division: any of the 9 census regions defined by the US census bureau
     :return: (*pandas.DataFrame*) -- filtered and sorted trip data
     """
 
-    nhts_raw = load_data(census_division)
-
     # filter to be only vehicle trips (TRPTRANS values 1-6)
     # filter out repeated trips (VMT = -1)
     # get correct census division
-    nhts = nhts_raw.loc[
-        nhts_raw.TRPTRANS.isin(range(1, 7))
-        & (nhts_raw.VMT_MILE != -1)
-        & (nhts_raw.CENSUS_D == census_division)
+    nhts = raw_nhts.loc[
+        raw_nhts.TRPTRANS.isin(range(1, 7))
+        & (raw_nhts.VMT_MILE != -1)
+        & (raw_nhts.CENSUS_D == census_division)
     ]
 
     column_translations = {
