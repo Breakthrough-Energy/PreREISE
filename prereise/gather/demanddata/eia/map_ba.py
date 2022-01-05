@@ -1,6 +1,13 @@
+import inspect
+import json
+import os
+
 import pandas as pd
 import requests
+from powersimdata.utility.distance import find_closest_neighbor
 from tqdm import tqdm
+
+import prereise
 
 
 def aggregate_ba_demand(demand, mapping):
@@ -95,3 +102,56 @@ def map_buses_to_county(bus_county_map):
         except TypeError:
             bus_no_county_match.append(index)
     return bus_county_map, bus_no_county_match
+
+
+def map_buses_to_ba(bus_df):
+    """Find the Balancing Authority in the U.S. territory that each query bus belongs to
+    based on GIS information.
+
+    :param (*pandas.DataFrame*) bus_df: data frame contains a list of entries with
+        lat and long of buses.
+    :return: (*tuple*) -- the first entry is the input data frame with two columns,
+        "County" and "BA", added for each bus and the second entry is the list of bus
+        indices that no county matches based on Census API (counties of such buses are
+        assigned based on its nearest neighbour).
+    """
+
+    bus_ba_map, bus_no_county_match = map_buses_to_county(bus_df)
+    # hard coded fix for county name mismatch between the returns from census API and
+    # BA_County_map.json
+    bus_ba_map.County.replace(
+        {
+            "Danville City__VA": "Danville__VA",
+            "Harrisonburg City__VA": "Harrisonburg__VA",
+            "Franklin City__VA": "Franklin__VA",
+        },
+        inplace=True,
+    )
+
+    # read json file for BA_County Map
+    filepath = os.path.join(
+        os.path.dirname(inspect.getfile(prereise)),
+        "gather",
+        "data",
+        "BA_County_map.json",
+    )
+    with open(filepath) as f:
+        ba_county_map = json.load(f)
+
+    county_ba_map = {
+        value: key for key in ba_county_map for value in ba_county_map[key]
+    }
+
+    bus_ba_map["BA"] = bus_ba_map["County"].map(county_ba_map)
+    # assign BA to buses without county assigned based on the nearest neighbor
+    neighbor = bus_ba_map.query("~County.isna()")
+    for bus_id in bus_no_county_match:
+        if neighbor.empty:
+            print("No reference bus has BA assigned!")
+            break
+        ind = find_closest_neighbor(
+            (bus_ba_map.loc[bus_id, "lon"], bus_ba_map.loc[bus_id, "lat"]),
+            neighbor[["lon", "lat"]].values.tolist(),
+        )
+        bus_ba_map.loc[bus_id, "BA"] = neighbor.iloc[ind]["BA"]
+    return bus_ba_map, bus_no_county_match

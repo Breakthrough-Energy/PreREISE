@@ -2,6 +2,7 @@ import os
 import zipfile
 
 import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
 from powersimdata.network.usa_tamu.constants.zones import abv2state
 
@@ -50,6 +51,7 @@ def test_check_path():
     assert test_fpath == exp_fpath
 
 
+@pytest.mark.integration
 def test_download_data():
     try:
         # Download a file using _download_data

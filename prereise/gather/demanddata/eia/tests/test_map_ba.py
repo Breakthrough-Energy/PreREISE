@@ -1,9 +1,12 @@
 import pandas as pd
+import pytest
 from pandas.testing import assert_series_equal
 
 from prereise.gather.demanddata.eia.map_ba import (
     aggregate_ba_demand,
     get_demand_in_loadzone,
+    map_buses_to_ba,
+    map_buses_to_county,
 )
 
 
@@ -63,3 +66,33 @@ def create_ba_to_region_dataframe():
     }
     initial_df = pd.DataFrame.from_dict(start_data)
     return initial_df
+
+
+@pytest.mark.skip(reason="Currently failing due to issues with the geo.fcc.gov API")
+def test_map_buses_to_county():
+    bus_df = pd.DataFrame(
+        {
+            "lat": [34.0522, 29.7604, 40.7128],
+            "lon": [-118.2437, -95.3698, -74.0060],
+        },
+        index=["CA", "Texas", "NY"],
+    )
+    expected_res = ["Los Angeles__CA", "Harris__TX", "New York__NY"]
+    bus_county, bus_no_county_match = map_buses_to_county(bus_df)
+    assert bus_county["County"].tolist() == expected_res
+    assert bus_no_county_match == []
+
+
+@pytest.mark.skip(reason="Currently failing due to issues with the geo.fcc.gov API")
+def test_map_buses_to_ba():
+    bus_df = pd.DataFrame(
+        {
+            "lat": [34.0522, 29.7604, 39.9042],
+            "lon": [-118.2437, -95.3698, 116.4074],
+        },
+        index=["CA", "Texas", "Beijing"],
+    )
+    expected_res = ["LDWP", "ERCOT", "LDWP"]
+    bus_ba, bus_no_county_match = map_buses_to_ba(bus_df)
+    assert bus_ba["BA"].tolist() == expected_res
+    assert bus_no_county_match == ["Beijing"]

@@ -192,15 +192,15 @@ def replace_with_shifted_demand(demand, start, end):
     # Attempt to shift demand data,
     # getting progressively more aggressive if necessary
     filled_demand = pd.DataFrame(index=demand.index)
-    for baName in demand.columns:
-        shifted_demand_ba = shifted_demand.loc[:, [baName, "dayofweek"]]
-        shifted_demand_ba.columns = [baName] + column_names
-        shifted_demand_ba[baName] = fill_ba_demand(shifted_demand_ba, baName, day_map)
-        shifted_demand_ba[baName] = fill_ba_demand(
-            shifted_demand_ba, baName, more_days_map
+    for ba_name in demand.columns:
+        shifted_demand_ba = shifted_demand.loc[:, [ba_name, "dayofweek"]]
+        shifted_demand_ba.columns = [ba_name] + column_names
+        shifted_demand_ba[ba_name] = fill_ba_demand(shifted_demand_ba, ba_name, day_map)
+        shifted_demand_ba[ba_name] = fill_ba_demand(
+            shifted_demand_ba, ba_name, more_days_map
         )
-        filled_demand[baName] = fill_ba_demand(
-            shifted_demand_ba, baName, more_more_days_map
+        filled_demand[ba_name] = fill_ba_demand(
+            shifted_demand_ba, ba_name, more_more_days_map
         )
     return filled_demand
 

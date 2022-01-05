@@ -8,22 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PreREISE
-        uses: actions/checkout@v2
-        with:
-          path: PreREISE
-
-      - name: Checkout PowerSimData
-        uses: actions/checkout@v2
-        with:
-          repository: Breakthrough-Energy/PowerSimData
-          path: PowerSimData
+      - uses: actions/checkout@v2
 
       - name: Pipenv lock
         id: pipenv_lock
         uses: Breakthrough-Energy/actions/update-packages@main
-        with:
-          repo-dir: PreREISE
 
       - name: Parse JSON
         id: parse_json
@@ -46,6 +35,7 @@ jobs:
           token: ${{ secrets.CI_TOKEN_CLONE_REPO }}
           commit-message: Update dependencies
           title: Update dependencies
+          labels: dependencies
           delete-branch: true
           body: |
             ### Summary of changes
@@ -67,4 +57,3 @@ jobs:
 
             [1]: https://github.com/peter-evans/create-pull-request
           branch: update-dependencies
-          path: PreREISE
