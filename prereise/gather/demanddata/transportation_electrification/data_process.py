@@ -25,7 +25,7 @@ def calculate_dwell_time(data: pd.DataFrame):
 def data_filtering(raw_nhts, census_division):
     """Filter raw NHTS data to be used in mileage.py
 
-    :param: (*pandas.DataFrame*) raw_nhts: raw NHTS dataframe
+    :param pandas.DataFrame raw_nhts: raw NHTS dataframe
     :param int census_division: any of the 9 census regions defined by the US census bureau
     :return: (*pandas.DataFrame*) -- filtered and sorted trip data
     """
