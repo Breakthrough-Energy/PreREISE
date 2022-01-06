@@ -1,7 +1,12 @@
+import csv
+import os
+import tempfile
+
 import numpy as np
 import pandas as pd
 import PySAM.Pvwattsv8 as PVWatts
 import PySAM.PySSC as pssc  # noqa: N813
+from PySAM import TcsgenericSolar
 from tqdm import tqdm
 
 from prereise.gather.solardata.helpers import get_plant_id_unique_location
@@ -18,6 +23,7 @@ default_pv_parameters = {
     "inv_eff": 94,
     "losses": 14,
     "tilt": 30,
+    "ilr": 1.25,  # Inverter Loading Ratio
 }
 
 
@@ -41,8 +47,8 @@ def generate_timestamps_without_leap_day(year):
     return sam_dates, leap_day
 
 
-def calculate_power(solar_data, pv_dict):
-    """Use PVWatts to translate weather data into power.
+def calculate_power_pv(solar_data, pv_dict):
+    """Use PVWatts to translate weather data into power using a photovoltaic (PV) model.
 
     :param dict solar_data: weather data as returned by :meth:`Psm3Data.to_dict`.
     :param dict pv_dict: solar plant attributes.
@@ -53,6 +59,28 @@ def calculate_power(solar_data, pv_dict):
     pv.SolarResource.assign({"solar_resource_data": solar_data})
     pv.execute()
     return np.array(pv.Outputs.gen)
+
+
+def calculate_power_csp(solar_data):
+    """Use the System Adviser Model (SAM) to translate weather data into power using a
+    concentrating solar power (CSP) model.
+
+    :param list solar_data: weather data as returned by
+        :meth:`Psm3Data.to_sam_weather_file_format`.
+    :param dict csp_dict: solar plant attributes.
+    :return: (*numpy.array*) hourly power output.
+    """
+    csp = TcsgenericSolar.default("GenericCSPSystemCommercial")
+    csp.Type260.assign({"w_des": 1e-3})  # Capacity is in MW, but outputs are in kW
+    # The solar module expects weather data as a local file, so let's create one
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filename = os.path.join(tmpdirname, "weather_data.csv")
+        with open(filename, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(solar_data)
+        csp.Weather.assign({"file_name": filename})
+        csp.execute()
+    return np.clip(np.array(csp.Outputs.gen), 0, 1)  # clip outside the [0, 1] interval
 
 
 def retrieve_data_blended(
@@ -131,8 +159,6 @@ def retrieve_data_blended(
             states_in_interconnect = list(interconnect_to_state_abvs[interconnect])
             frac[zone] = get_pv_tracking_ratio_state(pv_info, states_in_interconnect)
 
-    # Inverter Loading Ratio
-    ilr = 1.25
     api = NrelApi(email, api_key, rate_limit)
 
     # Identify unique location
@@ -149,7 +175,7 @@ def retrieve_data_blended(
             leap_day=False,
             dates=sam_dates,
             cache_dir=cache_dir,
-        ).to_dict()
+        )
 
         for i, plant_id in enumerate(plants):
             if i == 0:
@@ -159,12 +185,14 @@ def retrieve_data_blended(
                 power = 0
                 for j, axis in enumerate([0, 2, 4]):
                     plant_pv_dict = {
-                        "system_capacity": ilr,
-                        "dc_ac_ratio": ilr,
+                        "system_capacity": default_pv_parameters["ilr"],
+                        "dc_ac_ratio": default_pv_parameters["ilr"],
                         "array_type": axis,
                     }
                     pv_dict = {**default_pv_parameters, **plant_pv_dict}
-                    power += tracking_ratios[j] * calculate_power(solar_data, pv_dict)
+                    power += tracking_ratios[j] * calculate_power_pv(
+                        solar_data.to_dict(), pv_dict
+                    )
                 if leap_day is not None:
                     power = np.insert(power, leap_day, power[leap_day - 24 : leap_day])
             else:
@@ -228,23 +256,30 @@ def retrieve_data_individual(
             leap_day=False,
             dates=sam_dates,
             cache_dir=cache_dir,
-        ).to_dict()
+        )
 
         for plant_id in plants:
             series = solar_plant.loc[plant_id]
-            ilr = series["DC Net Capacity (MW)"] / series["Nameplate Capacity (MW)"]
-            plant_pv_dict = {
-                "system_capacity": ilr,
-                "dc_ac_ratio": ilr,
-                "array_type": plant_array_types.loc[plant_id],
-            }
-            if plant_pv_dict["array_type"] == 0:
-                plant_pv_dict["tilt"] = series["Tilt Angle"]
-            pv_dict = {**default_pv_parameters, **plant_pv_dict}
-            power = calculate_power(solar_data, pv_dict)
+            # EIA codes: PV = Photovoltaic, CP = Concentrating solar, ST = steam turbine
+            if series["Prime Mover"] == "PV":
+                ilr = series["DC Net Capacity (MW)"] / series["Nameplate Capacity (MW)"]
+            else:
+                # Besides PV, other types don't seem to have DC capacity defined
+                ilr = default_pv_parameters["ilr"]
+            if series["Prime Mover"] in {"CP", "PV"}:
+                plant_pv_dict = {
+                    "system_capacity": ilr,
+                    "dc_ac_ratio": ilr,
+                    "array_type": plant_array_types.loc[plant_id],
+                }
+                if plant_pv_dict["array_type"] == 0:
+                    plant_pv_dict["tilt"] = series["Tilt Angle"]
+                pv_dict = {**default_pv_parameters, **plant_pv_dict}
+                power = calculate_power_pv(solar_data.to_dict(), pv_dict)
+            elif series["Prime Mover"] == "ST":
+                power = calculate_power_csp(solar_data.to_sam_weather_file_format())
             if leap_day is not None:
                 power = np.insert(power, leap_day, power[leap_day - 24 : leap_day])
-
             data[plant_id] = power
 
     return pd.DataFrame(data, index=real_dates).sort_index(axis="columns")
