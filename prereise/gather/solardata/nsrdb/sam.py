@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import PySAM.Pvwattsv7 as PVWatts
+import PySAM.Pvwattsv8 as PVWatts
 import PySAM.PySSC as pssc  # noqa: N813
 from tqdm import tqdm
 
@@ -48,7 +48,7 @@ def calculate_power(solar_data, pv_dict):
     :param dict pv_dict: solar plant attributes.
     :return: (*numpy.array*) hourly power output.
     """
-    pv_dat = pssc.dict_to_ssc_table(pv_dict, "pvwattsv7")
+    pv_dat = pssc.dict_to_ssc_table(pv_dict, "pvwattsv8")
     pv = PVWatts.wrap(pv_dat)
     pv.SolarResource.assign({"solar_resource_data": solar_data})
     pv.execute()
