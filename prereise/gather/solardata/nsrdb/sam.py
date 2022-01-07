@@ -25,26 +25,7 @@ default_pv_parameters = {
     "tilt": 30,
     "ilr": 1.25,  # Inverter Loading Ratio
 }
-
-
-def generate_timestamps_without_leap_day(year):
-    """For a given year, return timestamps for each non-leap-day hour, and the timestamp
-    of the beginning of the leap day (if there is one).
-
-    :param int/str year: year to generate timestamps for.
-    :return: (*tuple*) --
-        pandas.DatetimeIndex: for each non-leap-day-hour of the given year.
-        pandas.Timestamp/None: timestamp for the first hour of the leap day (if any).
-    """
-    # SAM only takes 365 days, so for a leap year: leave out the leap day.
-    try:
-        leap_day = (pd.Timestamp(f"{year}-02-29-00").dayofyear - 1) * 24
-        sam_dates = pd.date_range(start=f"{year}-01-01-00", freq="H", periods=365 * 24)
-        sam_dates = sam_dates.map(lambda t: t.replace(year=int(year)))
-    except ValueError:
-        leap_day = None
-        sam_dates = pd.date_range(start=f"{year}-01-01-00", freq="H", periods=365 * 24)
-    return sam_dates, leap_day
+leap_hour_idx = 59 * 24  # 59 days have passed already (31 in January, 28 in February)
 
 
 def calculate_power_pv(solar_data, pv_dict):
@@ -141,10 +122,8 @@ def retrieve_data_blended(
             for z in solar_plant["zone_id"].unique()
         }
 
-    real_dates = pd.date_range(
-        start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H"
-    )
-    sam_dates, leap_day = generate_timestamps_without_leap_day(year)
+    dates = pd.date_range(start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H")
+    leap_day = f"{year}-02-29" in dates
 
     # PV tracking ratios
     # By state and by interconnect when EIA data do not have any solar PV in the state
@@ -172,8 +151,8 @@ def retrieve_data_blended(
             lon,
             attributes="dhi,dni,wind_speed,air_temperature",
             year=year,
-            leap_day=False,
-            dates=sam_dates,
+            leap_day=leap_day,
+            dates=dates,
             cache_dir=cache_dir,
         )
 
@@ -193,14 +172,18 @@ def retrieve_data_blended(
                     power += tracking_ratios[j] * calculate_power_pv(
                         solar_data.to_dict(), pv_dict
                     )
-                if leap_day is not None:
-                    power = np.insert(power, leap_day, power[leap_day - 24 : leap_day])
+                if leap_day:
+                    power = np.insert(
+                        power,
+                        leap_hour_idx,
+                        power[leap_hour_idx - 24 : leap_hour_idx],
+                    )
             else:
                 # For every other plant, look up power from first plant at the location
                 power = data[first_plant_id]
             data[plant_id] = power
 
-    return pd.DataFrame(data, index=real_dates).sort_index(axis="columns")
+    return pd.DataFrame(data, index=dates).sort_index(axis="columns")
 
 
 def retrieve_data_individual(
@@ -236,10 +219,8 @@ def retrieve_data_individual(
         .apply(lambda x: array_type_mapping[x.idxmax()], axis=1)
     )
 
-    real_dates = pd.date_range(
-        start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H"
-    )
-    sam_dates, leap_day = generate_timestamps_without_leap_day(year)
+    dates = pd.date_range(start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H")
+    leap_day = f"{year}-02-29" in dates
 
     api = NrelApi(email, api_key, rate_limit)
 
@@ -253,8 +234,8 @@ def retrieve_data_individual(
             lon,
             attributes="dhi,dni,wind_speed,air_temperature",
             year=year,
-            leap_day=False,
-            dates=sam_dates,
+            leap_day=leap_day,
+            dates=dates,
             cache_dir=cache_dir,
         )
 
@@ -278,8 +259,12 @@ def retrieve_data_individual(
                 power = calculate_power_pv(solar_data.to_dict(), pv_dict)
             elif series["Prime Mover"] == "ST":
                 power = calculate_power_csp(solar_data.to_sam_weather_file_format())
-            if leap_day is not None:
-                power = np.insert(power, leap_day, power[leap_day - 24 : leap_day])
+            if leap_day:
+                power = np.insert(
+                    power,
+                    leap_hour_idx,
+                    power[leap_hour_idx - 24 : leap_hour_idx],
+                )
             data[plant_id] = power
 
-    return pd.DataFrame(data, index=real_dates).sort_index(axis="columns")
+    return pd.DataFrame(data, index=dates).sort_index(axis="columns")
