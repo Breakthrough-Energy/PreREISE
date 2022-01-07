@@ -164,6 +164,10 @@ class NrelApi:
         )
         def download(url):
             resp = requests.get(url)
+            if resp.status_code // 100 == 5:  # all 5xx errors, server side
+                raise TransientError(
+                    f"Server side error, retry_count={download.retry_count}"
+                )
             if resp.status_code == 429:
                 raise TransientError(
                     f"Too many requests, retry_count={download.retry_count}"
