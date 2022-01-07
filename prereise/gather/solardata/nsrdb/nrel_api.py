@@ -71,6 +71,19 @@ class Psm3Data:
         )
         return result
 
+    def to_sam_weather_file_format(self):
+        """Convert the data to the format expected by nrel-pysam for local files. See
+        https://developer.nrel.gov/docs/solar/nsrdb/psm3-download/.
+
+        :return: (*list*) -- a list of lists which can be passed to
+        :meth:`csv.writer.writerows` and then loaded from disk.
+        """
+        metadata_names = ["lat", "lon", "tz", "elevation"]
+        metadata_values = self.lat, self.lon, self.tz, self.elevation
+        data_headers = self.data_resource.columns.tolist()
+        data_rows = self.data_resource.to_numpy().tolist()
+        return [metadata_names, metadata_values, data_headers] + data_rows
+
 
 class NrelApi:
     """Provides an interface to the NREL API for PSM3 data. It supports
