@@ -8,12 +8,12 @@ from powersimdata.network.usa_tamu.constants.zones import id2abv
 from powersimdata.utility.distance import angular_distance, ll2uv
 from tqdm import tqdm
 
-from prereise.gather.winddata.rap.noaa_api import NoaaApi
-from prereise.gather.winddata.rap.power_curves import (
+from prereise.gather.winddata.power_curves import (
     get_power,
     get_state_power_curves,
     get_turbine_power_curves,
 )
+from prereise.gather.winddata.rap.noaa_api import NoaaApi
 
 
 def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
