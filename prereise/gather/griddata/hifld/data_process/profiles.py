@@ -1,6 +1,10 @@
+import datetime as dt
+
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_access.load import get_eia_form_860
 from prereise.gather.solardata.nsrdb.sam import retrieve_data_individual
+from prereise.gather.winddata.hrrr.calculations import calculate_pout_individual
+from prereise.gather.winddata.hrrr.hrrr import retrieve_data
 
 
 def floatify(x):
@@ -55,5 +59,44 @@ def build_solar(nrel_email, nrel_api_key, solar_plants, **solar_kwargs):
         nrel_api_key,
         solar_plant=full_data,
         **solar_kwargs,
+    )
+    return profiles
+
+
+def build_wind(wind_plants, download_directory, year):
+    """Use plant-level data to build wind profiles.
+
+    :param pandas.DataFrame wind_plants: data frame of wind farms.
+    :param str download_directory: location to download wind speed data to.
+    :param int/str year: year of weather data to use for generating profiles.
+    :return: (*pandas.DataFrame*) -- data frame of normalized power profiles. The index
+        is hourly timestamps for the profile year, the columns are plant IDs, the values
+        are floats.
+    """
+    default_hub_height = 262.467  # (262.467 ft = 80m)
+    # Load raw 'extra' table data, join on plant & generating unit, re-establish index
+    extra_wind_data = get_eia_form_860(const.blob_paths["eia_form860_2019_wind"])
+    full_data = wind_plants.merge(
+        extra_wind_data, on=["Plant Code", "Generator ID"], suffixes=(None, "_extra")
+    )
+    full_data.index = wind_plants.index
+    # Process data to expected types for profile generation
+    full_data["Turbine Hub Height (Feet)"] = (
+        full_data["Turbine Hub Height (Feet)"].map(floatify).fillna(default_hub_height)
+    )
+    full_data["Predominant Turbine Manufacturer"] = (
+        full_data["Predominant Turbine Manufacturer"].astype("string").fillna("")
+    )
+    full_data["Predominant Turbine Model Number"] = (
+        full_data["Predominant Turbine Model Number"].astype("string").fillna("")
+    )
+    start_dt = dt.datetime.fromisoformat(f"{year}-01-01-00")
+    end_dt = dt.datetime.fromisoformat(f"{year}-12-31-23")
+    retrieve_data(start_dt=start_dt, end_dt=end_dt, directory=download_directory)
+    profiles = calculate_pout_individual(
+        wind_farms=full_data,
+        start_dt=start_dt,
+        end_dt=end_dt,
+        directory=download_directory,
     )
     return profiles
