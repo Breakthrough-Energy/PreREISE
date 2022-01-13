@@ -16,14 +16,14 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
         demand data for each state and time step. This input is intended to be the
         output of :py:func:`access_non_efs_demand`, which is not associated with NREL's
         EFS. Defaults to None.
-    :param str save: Saves a .csv if a str representing a valid file path and file
+    :param str save: Saves a .csv if a string representing a valid file path and file
         name is provided. Defaults to None, indicating that a .csv file should not be
         saved.
     :return: (*pandas.DataFrame*) -- Aggregate demand data for all sectors (both EFS and
         non-EFS).
     :raises TypeError: if efs_dem is not input as a dict, if non_efs_dem is not input as
         a list, if the components of efs_dem and non_efs_dem are not pandas.DataFrames,
-        or if save is not input as a str.
+        or if save is not input as a string.
     :raises ValueError: if both efs_dem and non_efs_dem are entered as None or if the
         components of efs_dem and non_efs_dem do not have the proper timestamps or the
         correct number of states.
@@ -105,14 +105,14 @@ def access_non_efs_demand(dem_paths):
     to NREL's EFS studies. This function also ensures that each data set is formatted
     appropriately, so as to allow easy aggregation with the NREL EFS sectoral demand.
 
-    :param set/list dem_paths: The paths that point to the .csv files of sectoral demand
-        data that is not associated with NREL's EFS. Ordering within the set/list does
+    :param iterable dem_paths: The paths that point to the .csv files of sectoral demand
+        data that is not associated with NREL's EFS. Ordering within the iterable does
         not need to match that in local_sects.
     :return: (*list*) -- A list of pandas.DataFrame objects that contain sectoral demand
         data for each state and time step. This sectoral demand is not a part of NREL's
         EFS.
-    :raises TypeError: if dem_paths are not input as a set or list or if the components
-        of dem_paths are not input as str.
+    :raises TypeError: if dem_paths are not input as an iterable or if the components of
+        dem_paths are not input as strings.
     :raises ValueError: if the data located in each path in dem_path does not have the
         proper timestamps or the correct number of states.
     """
@@ -129,12 +129,9 @@ def access_non_efs_demand(dem_paths):
     sect_dem = []
     for i in dem_paths:
         # Try loading the locally-stored sectoral demand
-        temp_dem = pd.read_csv(i)
-
-        # Set the index
-        if "Local Time" in temp_dem.columns:
-            temp_dem.set_index("Local Time", inplace=True)
-        else:
+        try:
+            temp_dem = pd.read_csv(i, parse_dates=True, index_col="Local Time")
+        except ValueError:
             raise ValueError("This data does not provide the timestamps correctly.")
 
         # Check the DataFrame dimensions and headers
