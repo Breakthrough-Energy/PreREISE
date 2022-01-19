@@ -64,8 +64,8 @@ def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
 
         # Area * frac_ff * efficiency * cook_const * unit conv
         cook_elec = (
-            puma_data_it[f"{bldg_class}_area_2010_m2"]
-            * puma_data_it[f"frac_ff_{cook_other}_{bldg_class}_2010"]
+            puma_data_it[f"{bldg_class}_area_{const.base_year}_m2"]
+            * puma_data_it[f"frac_ff_{cook_other}_{bldg_class}_{const.base_year}"]
             * (const.conv_mmbtu_to_kwh / 1000)
             * cook_const_mmbtu_m2
             * const.cooking_multiplier[(bldg_class, efficiency)]

@@ -20,7 +20,7 @@ def calculate_r2(endogenous, residuals):
     return r2
 
 
-def calculate_state_slopes(puma_data, year=2010):
+def calculate_state_slopes(puma_data, year=const.base_year):
     """Estimate regression parameters per-state for residential and commercial fuel use.
 
     :param pandas.DataFrame puma_data: data frame of per-puma data.
@@ -31,19 +31,19 @@ def calculate_state_slopes(puma_data, year=2010):
     dti = pd.date_range(start=f"{year}-01-01", end=f"{year}-12-31 23:00:00", freq="H")
     hours_in_month = dti.month.value_counts()
 
-    # Load in historical 2010 fossil fuel usage data
+    # Load in historical fossil fuel usage data for input/base year
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
     ng_usage_data = {
         clas: pd.read_csv(
-            os.path.join(data_dir, f"ng_monthly_mmbtu_2010_{clas}.csv"), index_col=0
+            os.path.join(data_dir, f"ng_monthly_mmbtu_{year}_{clas}.csv"), index_col=0
         )
         for clas in {"res", "com"}
     }
     fok_usage_data = pd.read_csv(
-        os.path.join(data_dir, "fok_data_bystate_2010.csv"), index_col="state"
+        os.path.join(data_dir, f"fok_data_bystate_{year}.csv"), index_col="state"
     )
     othergas_usage_data = pd.read_csv(
-        os.path.join(data_dir, "propane_data_bystate_2010.csv"), index_col="state"
+        os.path.join(data_dir, f"propane_data_bystate_{year}.csv"), index_col="state"
     )
 
     # Initialize dataframes to store state heating slopes
@@ -66,37 +66,37 @@ def calculate_state_slopes(puma_data, year=2010):
 
     for state in const.state_list:
         # Load puma data
-        puma_data_it = const.puma_data.query("state == @state")
+        puma_data_it = puma_data.query("state == @state")
 
         # Load puma temperatures
         temps_pumas = temps_pumas = pd.read_csv(
-            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{year}.csv"
+            f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/temps/temps_pumas_{state}_{year}.csv"
         )
         temps_pumas_transpose = temps_pumas.T
 
         for clas in const.classes:
             # puma area * percentage of puma area that uses fossil fuel
             areas_ff_sh_it = (
-                puma_data_it[f"{clas}_area_2010_m2"]
-                * puma_data_it[f"frac_ff_sh_{clas}_2010"]
+                puma_data_it[f"{clas}_area_{year}_m2"]
+                * puma_data_it[f"frac_ff_sh_{clas}_{year}"]
             )
             areas_ff_dhw_it = (
-                puma_data_it[f"{clas}_area_2010_m2"]
-                * puma_data_it[f"frac_ff_dhw_{clas}_2010"]
+                puma_data_it[f"{clas}_area_{year}_m2"]
+                * puma_data_it[f"frac_ff_dhw_{clas}_{year}"]
             )
             areas_ff_cook_it = (
-                puma_data_it[f"{clas}_area_2010_m2"]
-                * puma_data_it["frac_ff_cook_com_2010"]
+                puma_data_it[f"{clas}_area_{year}_m2"]
+                * puma_data_it[f"frac_ff_cook_com_{year}"]
             )
             if clas == "res":
                 areas_ff_other_it = (
-                    puma_data_it[f"{clas}_area_2010_m2"]
-                    * puma_data_it["frac_ff_other_res_2010"]
+                    puma_data_it[f"{clas}_area_{year}_m2"]
+                    * puma_data_it[f"frac_ff_other_res_{year}"]
                 )
             else:
                 areas_ff_other_it = (
-                    puma_data_it[f"{clas}_area_2010_m2"]
-                    * puma_data_it["frac_ff_sh_com_2010"]
+                    puma_data_it[f"{clas}_area_{year}_m2"]
+                    * puma_data_it[f"frac_ff_sh_com_{year}"]
                 )
 
             # sum of previous areas to be used in fitting
@@ -265,7 +265,9 @@ def calculate_state_slopes(puma_data, year=2010):
     return state_slopes_res, state_slopes_com
 
 
-def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010):
+def adjust_puma_slopes(
+    puma_data, state_slopes_res, state_slopes_com, year=const.base_year
+):
     """Create per-puma slopes from per-state slopes.
 
     :param pandas.DataFrame puma_data: puma data.
@@ -289,7 +291,7 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010)
         return (a + b * (1 - np.exp(-c * (x / 1000))) / (x / 1000)) * 1e-6
 
     classes = ["res", "com"]
-    hd_col_names = {"res": "hd_183C_2010", "com": "hd_167C_2010"}
+    hd_col_names = {"res": f"hd_183C_{year}", "com": f"hd_167C_{year}"}
     state_slopes = {
         "res": state_slopes_res.set_index("state"),
         "com": state_slopes_com.set_index("state"),
@@ -301,7 +303,7 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010)
     for state in const.state_list:
         # Load puma temperatures
         temps_pumas = pd.read_csv(
-            f"https://besciences.blob.core.windows.net/datasets/pumas/temps_pumas_{state}_{year}.csv"
+            f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/temps/temps_pumas_{state}_{year}.csv"
         )
         # Hourly temperature difference below const.temp_ref_res/com for each puma
         for clas in classes:
@@ -317,14 +319,28 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010)
         for clas in classes
     }
 
-    # Interpolating 2010 areas from the two survey years provided
-    area_scale["res"]["2010"] = (
-        area_scale["res"]["RECS2009"]
-        + (area_scale["res"]["RECS2015"] - area_scale["res"]["RECS2009"]) / 6
+    # Compute target year areas from the two survey years provided
+    area_scale["res"][f"{year}"] = area_scale["res"][f"RECS{const.recs_date_1}"] * (
+        (
+            area_scale["res"][f"RECS{const.recs_date_2}"]
+            / area_scale["res"][f"RECS{const.recs_date_1}"]
+        )
+        ** (
+            (const.base_year - const.recs_date_1)
+            / (const.recs_date_2 - const.recs_date_1)
+        )
     )
-    area_scale["com"]["2010"] = area_scale["com"]["CBECS2012"] - (
-        area_scale["com"]["CBECS2012"] - area_scale["com"]["CBECS2003"]
-    ) * (2 / 9)
+
+    area_scale["com"][f"{year}"] = area_scale["com"][f"CBECS{const.cbecs_date_1}"] * (
+        (
+            area_scale["com"][f"CBECS{const.cbecs_date_2}"]
+            / area_scale["com"][f"CBECS{const.cbecs_date_1}"]
+        )
+        ** (
+            (const.base_year - const.cbecs_date_1)
+            / (const.cbecs_date_2 - const.cbecs_date_1)
+        )
+    )
 
     for clas in classes:
         puma_slopes[clas]["htg_slope_mmbtu_m2_degC"] = puma_data["state"].map(
@@ -344,26 +360,23 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010)
         state_puma_slope_groupby = puma_slopes[clas].groupby(
             puma_data["state"].map(state_to_group)
         )
-        area_scale[clas]["hdd_normals_2010_popwtd"] = [
-            (
-                sum(data["hdd65_normals_2010"] * data["pop_2010"])
-                / data["pop_2010"].sum()
-            )
+        area_scale[clas]["hdd_normals_popwtd"] = [
+            (sum(data["hdd65_normals"] * data["pop"]) / data["pop"].sum())
             for group, data in state_puma_groupby
         ]
         area_scale[clas]["htg_slope_mmbtu_m2_degC_pophddwtd"] = [
             sum(
                 state_puma_slope_groupby.get_group(group)["htg_slope_mmbtu_m2_degC"]
-                * data["hdd65_normals_2010"]
-                * data["pop_2010"]
+                * data["hdd65_normals"]
+                * data["pop"]
             )
-            / sum(data["hdd65_normals_2010"] * data["pop_2010"])
+            / sum(data["hdd65_normals"] * data["pop"])
             for group, data in state_puma_groupby
         ]
 
         ls_args = (
             # Divide by 1000 for robust solver
-            np.array(area_scale[clas]["hdd_normals_2010_popwtd"]) / 1000,
+            np.array(area_scale[clas]["hdd_normals_popwtd"]) / 1000,
             np.array(area_scale[clas]["htg_slope_mmbtu_m2_degC_pophddwtd"]) * 10 ** 6,
         )
         ls = least_squares(
@@ -378,19 +391,19 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010)
 
         slope_scalar = state_slopes[clas]["sh_slope"] / (
             (
-                puma_data["hdd65_normals_2010"].apply(
+                puma_data["hdd65_normals"].apply(
                     func_slope_exp, args=(ls.x[0], ls.x[1], ls.x[2])
                 )
                 * puma_data[hd_col_names[clas]]
-                * puma_data[f"{clas}_area_2010_m2"]
-                * puma_data[f"frac_ff_sh_{clas}_2010"]
+                * puma_data[f"{clas}_area_{year}_m2"]
+                * puma_data[f"frac_ff_sh_{clas}_{year}"]
             )
             .groupby(puma_data["state"])
             .sum()
             / (
                 puma_data[hd_col_names[clas]]
-                * puma_data[f"{clas}_area_2010_m2"]
-                * puma_data[f"frac_ff_sh_{clas}_2010"]
+                * puma_data[f"{clas}_area_{year}_m2"]
+                * puma_data[f"frac_ff_sh_{clas}_{year}"]
             )
             .groupby(puma_data["state"])
             .sum()
@@ -398,7 +411,7 @@ def adjust_puma_slopes(puma_data, state_slopes_res, state_slopes_com, year=2010)
 
         adj_slopes[clas][f"htg_slope_{clas}_mmbtu_m2_degC"] = puma_data["state"].map(
             slope_scalar
-        ) * puma_data["hdd65_normals_2010"].apply(
+        ) * puma_data["hdd65_normals"].apply(
             func_slope_exp, args=(ls.x[0], ls.x[1], ls.x[2])
         )
 

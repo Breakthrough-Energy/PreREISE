@@ -58,7 +58,7 @@ state_list = [
 classes = ["res", "com"]
 
 # Years with temperature data
-yr_temps_all = list(range(2008, 2018))
+yr_temps_all = list(range(1950, 2021))
 yr_temps_first, yr_temps_last = yr_temps_all[0], yr_temps_all[-1]
 
 # COP and capacity ratio models based on:
@@ -138,10 +138,10 @@ other_high_bound_com = 0.00000228
 recs_date_1 = 2009
 recs_date_2 = 2015
 
-cbecs_date_1 = 2003
-cbecs_date_2 = 2012
+cbecs_date_1 = 2012
+cbecs_date_2 = 2018
 
-target_year = 2010
+base_year = 2019
 
 # Regions to differentiate fuel usage: NorthEast, MidWest, South, West. Defined by RECS/CBECS surveys
 regions = {
