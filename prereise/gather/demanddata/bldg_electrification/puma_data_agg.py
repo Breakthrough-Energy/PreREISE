@@ -2,6 +2,7 @@
 import os
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 
 from prereise.gather.demanddata.bldg_electrification import const
@@ -187,12 +188,14 @@ def scale_fuel_fractions(hh_fuels, puma_df, year=const.base_year):
     return puma_df
 
 
-def puma_timezone_join(timezones, pumas):
-    """Assign timezone to each puma.
+def puma_timezone_latlong(timezones, pumas):
+    """Assign timezone and lat/long to each puma.
 
     :param geopandas.DataFrame timezones: US timezones.
     :param geopandas.DataFrame pumas: US pumas.
+
     :return: (*pandas.Series*) -- timezone for every puma.
+    :return: (*pandas.DataFrame*) -- latitude and longitude for every puma.
     """
     puma_timezone = gpd.overlay(pumas, timezones.to_crs("EPSG:4269"))
     puma_timezone["area"] = puma_timezone.area
@@ -200,7 +203,16 @@ def puma_timezone_join(timezones, pumas):
     puma_timezone = puma_timezone.drop_duplicates(subset="GEOID10", keep="first")
     puma_timezone.sort_values("GEOID10", ascending=True, inplace=True)
 
-    return puma_timezone["tzid"]
+    puma_lat_long = pd.DataFrame(
+        {
+            "puma": "puma_" + pumas["GEOID10"],
+            "latitude": [float(pumas["INTPTLAT10"][i]) for i in range(len(pumas))],
+            "longitude": [float(pumas["INTPTLON10"][i]) for i in range(len(pumas))],
+        }
+    )
+    puma_lat_long = puma_lat_long.set_index("puma")
+
+    return puma_timezone["tzid"], puma_lat_long
 
 
 if __name__ == "__main__":
@@ -242,5 +254,21 @@ if __name__ == "__main__":
         os.path.join(data_dir, "puma_timezone.csv"), index_col="puma"
     )
     puma_data["timezone"] = puma_timezones["timezone"]
+
+    # Add latitude and longitude information
+    puma_lat_long = pd.read_csv(
+        os.path.join(data_dir, "puma_lat_long.csv"), index_col="puma"
+    )
+    puma_data["latitude"], puma_data["longitude"] = (
+        puma_lat_long["latitude"],
+        puma_lat_long["longitude"],
+    )
+
+    # Add residential AC penetration
+    acpen_b = 0.00117796
+    acpen_n = 1.1243
+    puma_data["AC_penetration"] = 1 - np.exp(
+        -acpen_b * puma_data["cdd65_normals"] ** acpen_n
+    )
 
     puma_data.to_csv(os.path.join(data_dir, "puma_data.csv"))
