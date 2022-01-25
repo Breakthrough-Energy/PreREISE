@@ -21,3 +21,30 @@ class DataclassWithValidation:
                 raise TypeError(
                     f"for {name}: expected {specified_type}, but got {current_type}"
                 )
+
+
+def calculate_z_base(v_base, s_base):
+    """Calculate base impedance from voltage and system base apparent power.
+
+    :param int/float v_base: base voltage (kV).
+    :param int/float s_base: base apparent power (MVA).
+    :return: (*float*) -- base impedance (ohms).
+    """
+    return (v_base**2) / s_base
+
+
+def translate_to_per_unit(x, nominal_unit, z_base):
+    """Translate parameters in nominal units to per-unit values.
+
+    :param int/float x: value to be converted.
+    :param str nominal_unit: the units of ``x``.
+    :param int/float z_base: base impedance (can be calculated with
+        :func:`calculate_z_base').
+    :return: (*float*) -- per-unit value.
+    :raises ValueError: if the nominal unit isn't recognized.
+    """
+    if nominal_unit.lower() in {"ohm", "ohms", "r", "x"}:
+        return x / z_base
+    if nominal_unit.lower() in {"siemen", "siemens"}:
+        return x * z_base
+    raise ValueError(f"Unknown nominal unit: {nominal_unit}")

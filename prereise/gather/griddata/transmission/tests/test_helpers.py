@@ -2,7 +2,11 @@ from dataclasses import dataclass
 
 import pytest
 
-from prereise.gather.griddata.transmission.helpers import DataclassWithValidation
+from prereise.gather.griddata.transmission.helpers import (
+    DataclassWithValidation,
+    calculate_z_base,
+    translate_to_per_unit,
+)
 
 
 @pytest.fixture()
@@ -37,3 +41,15 @@ def test_DataclassWithValidation_not_a_dataclass():  # noqa: N802
     test_object = NotDataclass(a=2, b=3.0)
     with pytest.raises(TypeError):
         test_object.validate_input_types()
+
+
+def test_calculate_z_base():
+    assert calculate_z_base(345, 100) == 1190.25
+
+
+def test_translate_to_per_unit():
+    z_base = 1190.25
+    rel = 0.005
+    assert translate_to_per_unit(2.82, "ohms", z_base) == pytest.approx(2.37e-3, rel)
+    assert translate_to_per_unit(29.2, "x", z_base) == pytest.approx(2.45e-2, rel)
+    assert translate_to_per_unit(3.59e-4, "siemen", z_base) == pytest.approx(0.427, rel)
