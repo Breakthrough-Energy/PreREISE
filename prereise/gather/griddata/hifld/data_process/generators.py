@@ -83,7 +83,15 @@ def map_generator_to_bus_by_sub(generator, bus_groupby):
     if pd.isna(generator.sub_id):
         return pd.NA
     else:
-        return bus_groupby.get_group(generator.sub_id)["baseKV"].idxmin()
+        bus_voltages = bus_groupby.get_group(generator.sub_id)["baseKV"]
+        if len(bus_voltages) == 1 or generator.Pmax < 200:
+            # Return the lowest-voltage for small generators, or the only voltage
+            return bus_voltages.idxmin()
+        if generator.Pmax < 500:
+            # Return the second-lowest voltage for mid-sized generators
+            return bus_voltages.sort_values().index[1]
+        # Return the highest voltage for large generators
+        return bus_voltages.idxmax()
 
 
 def estimate_heat_rate_curve(
