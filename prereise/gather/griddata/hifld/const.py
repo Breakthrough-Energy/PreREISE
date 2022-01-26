@@ -532,7 +532,6 @@ line_interconnect_assumptions = {
         135527,
         141367,
         300170,
-        301858,
         303906,
         305887,
         306332,
@@ -542,7 +541,7 @@ line_interconnect_assumptions = {
         311520,
     },
     "Western": {123525, 141873},
-    "ERCOT": {305330, 309428, 310121},
+    "ERCOT": {305330},
 }
 
 b2b_ratings = {  # MW
