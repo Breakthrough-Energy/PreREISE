@@ -165,13 +165,13 @@ def test_estimate_branch_rating_lines():
     assert rating == (
         const.line_rating_surge_impedance_loading[345]
         * const.line_rating_surge_impedance_coefficient
-        * 100 ** const.line_rating_surge_impedance_exponent
+        * 100**const.line_rating_surge_impedance_exponent
     )
     rating = estimate_branch_rating(branch.iloc[3], pd.Series())
     assert rating == (
         const.line_rating_surge_impedance_loading[500]
         * const.line_rating_surge_impedance_coefficient
-        * 150 ** const.line_rating_surge_impedance_exponent
+        * 150**const.line_rating_surge_impedance_exponent
     )
 
 
