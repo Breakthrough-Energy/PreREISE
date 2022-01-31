@@ -246,6 +246,30 @@ def augment_missing_heat_rates(generators):
     generators.update(linear_heat_rate_assumptions)
 
 
+def aggregate_hydro_generators_by_plant_id(generators):
+    """Combine hydro generators within the same plant into aggregated larger generators.
+    'Pmin' and 'Pmax' values will be summed, all other attributes (including the index)
+    will be taken from the (somewhat arbitrary) first generator in the plant grouping.
+
+    :param pandas.DataFrame generators: data frame of generators.
+    :return: (*pandas.DataFrame*) -- data frame of generators, with hydro generators
+        aggregated.
+    """
+    indiv_hydro_gens = generators.query("`Energy Source 1` == 'WAT'").copy()
+    original_hydro_indices = indiv_hydro_gens.index.tolist()
+    # Retain the original indices to keep track of original indices for later append
+    indiv_hydro_gens.reset_index(inplace=True)
+    hydro_groupby = indiv_hydro_gens.groupby("Plant Code")
+    # Choose characteristics from the (arbitrary) first plant
+    aggregated_hydro = hydro_groupby.first()
+    aggregated_hydro[["Pmin", "Pmax"]] = hydro_groupby[["Pmin", "Pmax"]].sum()
+    # Reset/set index to restore 'Plant Code' as a column and original index numbering
+    aggregated_hydro.reset_index(inplace=True)
+    aggregated_hydro.set_index("index", inplace=True)  # 'index' was the original
+    generators = generators.drop(original_hydro_indices).append(aggregated_hydro)
+    return generators
+
+
 def build_plant(bus, substations, kwargs={}):
     """Use source data on generating units from EIA/EPA, along with transmission network
     data, to produce a plant data frame.
@@ -300,13 +324,8 @@ def build_plant(bus, substations, kwargs={}):
         .map(const.balancingauthority2interconnect)
         .combine_first(generators["NERC Region"].map(const.nercregion2interconnect))
     )
-    print("Mapping generators to substations... (this may take several minutes)")
-    generators["sub_id"] = generators.apply(
-        lambda x: map_generator_to_sub_by_location(x, substation_groupby), axis=1
-    )
-    generators["bus_id"] = generators.apply(
-        lambda x: map_generator_to_bus_by_sub(x, bus_groupby), axis=1
-    )
+
+    # Ensure we have Pmax and Pmin for each generator
     generators["Pmax"] = generators[
         ["Summer Capacity (MW)", "Winter Capacity (MW)"]
     ].max(axis=1)
@@ -314,6 +333,18 @@ def build_plant(bus, substations, kwargs={}):
     generators = generators.loc[~generators["Pmax"].isnull()]
     generators.rename({"Minimum Load (MW)": "Pmin"}, inplace=True, axis=1)
     generators["Pmin"] = generators["Pmin"].fillna(0)
+
+    # Aggregate hydro generators within each plant
+    generators = aggregate_hydro_generators_by_plant_id(generators)
+
+    print("Mapping generators to substations... (this may take several minutes)")
+    generators["sub_id"] = generators.apply(
+        lambda x: map_generator_to_sub_by_location(x, substation_groupby), axis=1
+    )
+    generators["bus_id"] = generators.apply(
+        lambda x: map_generator_to_bus_by_sub(x, bus_groupby), axis=1
+    )
+
     print("Fitting heat rate curves to EPA data... (this may take several minutes)")
     heat_rate_curve_estimates = generators.apply(
         lambda x: estimate_heat_rate_curve(
