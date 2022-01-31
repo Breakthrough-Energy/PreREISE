@@ -104,7 +104,7 @@ def estimate_heat_rate_curve(
     """
 
     def quadratic(x, a, b, c):
-        return a + b * x + c * x ** 2
+        return a + b * x + c * x**2
 
     quadratic_coefficient_bounds = ([0] * 3, [float("inf")] * 3)
     return_index = ["h0", "h1", "h2"]
