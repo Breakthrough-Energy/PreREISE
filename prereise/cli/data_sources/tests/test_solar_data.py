@@ -84,15 +84,15 @@ def test_solar_data_nsrdb_invalid_method(solar_data_nsrdb_object):
 def test_solar_data_nsrdb_happy_path(grid, solar_data_nsrdb_object):
 
     methods_to_test = [
-        ("prereise.cli.data_sources.solar_data.sam", SAM_STRING),
-        ("prereise.cli.data_sources.solar_data.naive", NAIVE_STRING),
+        ("prereise.cli.data_sources.solar_data.sam.retrieve_data_blended", SAM_STRING),
+        ("prereise.cli.data_sources.solar_data.naive.retrieve_data", NAIVE_STRING),
     ]
 
     for patch_path, method_string in methods_to_test:
         with patch(patch_path) as method:
             solar_farms = MagicMock()
             data = MagicMock()
-            method.retrieve_data.return_value = data
+            method.return_value = data
             grid.return_value.plant.groupby.return_value.get_group.return_value = (
                 solar_farms
             )
@@ -105,7 +105,13 @@ def test_solar_data_nsrdb_happy_path(grid, solar_data_nsrdb_object):
                 API_KEY,
                 VALID_GRID_MODEL,
             )
-            method.retrieve_data.assert_called_with(
-                solar_farms, EMAIL, API_KEY, STRING_YEAR_2020
-            )
+            if method_string == SAM_STRING:
+                method.assert_called_with(
+                    EMAIL, API_KEY, solar_plants=solar_farms, year=STRING_YEAR_2020
+                )
+            elif method_string == NAIVE_STRING:
+                method.assert_called_with(solar_farms, EMAIL, API_KEY, STRING_YEAR_2020)
+            else:
+                raise Exception("Unknown method_string!")
+
             data.to_pickle.assert_called_with(CURRENT_DIRECTORY_FILEPATH)

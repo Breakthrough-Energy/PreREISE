@@ -19,7 +19,9 @@ def test_decompose_demand_profile_by_state_to_loadzone():
     agg_dem.index.name = "Local Time"
 
     # Generate the test result
-    test_agg_dem = decompose_demand_profile_by_state_to_loadzone(agg_dem).round(5)
+    test_agg_dem = decompose_demand_profile_by_state_to_loadzone(
+        agg_dem, "demand"
+    ).round(5)
 
     # Create the expected result for demand percentage in load zone 7 (NY)
     exp_agg_dem = pd.Series(

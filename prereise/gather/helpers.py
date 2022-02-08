@@ -2,7 +2,8 @@ import os
 
 import numpy as np
 import pandas as pd
-from powersimdata.network.usa_tamu.constants.zones import abv2loadzone
+
+from prereise.gather.const import abv2state
 
 
 def trim_eia_form_923(filename):
@@ -46,10 +47,9 @@ def get_monthly_net_generation(state, eia_form_923, resource, hps=True):
     if not isinstance(resource, str):
         raise TypeError("resource must be a str")
 
-    if state not in abv2loadzone.keys():
+    if state not in abv2state:
         raise ValueError(
-            "Invalid state. Possible states are %s"
-            % " | ".join(set(abv2loadzone.keys()))
+            "Invalid state. Possible states are %s" % " | ".join(set(abv2state))
         )
 
     all_resource = {

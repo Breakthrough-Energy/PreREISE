@@ -6,16 +6,16 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_almost_equal
 
-from prereise.gather.winddata.rap.power_curves import (
-    _shift_turbine_curve,
+from prereise.gather.winddata.power_curves import (
     build_state_curves,
     get_form_860,
     get_power,
     get_state_power_curves,
     get_turbine_power_curves,
+    shift_turbine_curve,
 )
 
-data_dir = path.abspath(path.join(path.dirname(__file__), "..", "..", "data"))
+data_dir = path.abspath(path.join(path.dirname(__file__), "..", "data"))
 
 
 def _first_one(curve):
@@ -111,7 +111,7 @@ class TestShiftTurbineCurve(unittest.TestCase):
 
     def test_shift_turbine_curve_higher_hub(self):
         original = self.power_curves["IEC class 2"]
-        shifted = _shift_turbine_curve(
+        shifted = shift_turbine_curve(
             original, hub_height=270, maxspd=26, new_curve_res=0.01
         )
         self._check_curve_structure(shifted, maxspd=26, new_curve_res=0.01)
@@ -120,7 +120,7 @@ class TestShiftTurbineCurve(unittest.TestCase):
 
     def test_shift_turbine_curve_lower_hub(self):
         original = self.power_curves["IEC class 2"]
-        shifted = _shift_turbine_curve(
+        shifted = shift_turbine_curve(
             original, hub_height=260, maxspd=29, new_curve_res=0.02
         )
         self._check_curve_structure(shifted, maxspd=29, new_curve_res=0.02)
@@ -129,7 +129,7 @@ class TestShiftTurbineCurve(unittest.TestCase):
 
     def test_shift_turbine_curve_sameheight_hub(self):
         original = self.power_curves["IEC class 2"]
-        shifted = _shift_turbine_curve(
+        shifted = shift_turbine_curve(
             original, hub_height=262.467, maxspd=30, new_curve_res=0.05
         )
         self._check_curve_structure(shifted, maxspd=30, new_curve_res=0.05)

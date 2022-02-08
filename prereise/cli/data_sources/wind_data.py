@@ -14,7 +14,8 @@ from prereise.cli.constants import (
 )
 from prereise.cli.data_sources.data_source import DataSource
 from prereise.cli.helpers import validate_date, validate_file_path
-from prereise.gather.winddata.rap import impute, rap
+from prereise.gather.winddata import impute
+from prereise.gather.winddata.rap import rap
 
 
 class WindDataRapidRefresh(DataSource):
