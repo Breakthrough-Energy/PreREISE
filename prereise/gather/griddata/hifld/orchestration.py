@@ -106,7 +106,8 @@ def create_grid(output_folder=None):
                 col_names += ["type", "GenFuelCost", "GenIOB", "GenIOC", "GenIOD"]
             if name == "dcline":
                 col_names += ["from_interconnect", "to_interconnect"]
-            else:
+            elif name not in {"sub", "bus2sub"}:
+                # these tables already have 'interconnect' within their col_names
                 col_names += ["interconnect"]
             powersimdata_outputs[name] = full_tables[name][col_names]
 
