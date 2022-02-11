@@ -280,11 +280,11 @@ class Line(DataclassWithValidation):
                 setattr(self, attr, float(getattr(self, attr)))
         self.validate_input_types()  # defined in DataclassWithValidation
         # Calculate second-order electrical parameters which depend on frequency
-        self.omega = 2 * pi * self.freq
+        omega = 2 * pi * self.freq
         self.series_impedance_per_km = (
-            self.tower.resistance + 1j * self.tower.inductance * self.omega
+            self.tower.resistance + 1j * self.tower.inductance * omega
         )
-        self.shunt_admittance_per_km = 1j * self.tower.capacitance * self.omega
+        self.shunt_admittance_per_km = 1j * self.tower.capacitance * omega
         self.surge_impedance = cmath.sqrt(
             self.series_impedance_per_km / self.shunt_admittance_per_km
         )
