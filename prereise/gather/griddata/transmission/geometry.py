@@ -33,7 +33,7 @@ class Conductor(DataclassWithValidation):
     resistance_per_km: float = None
     gmr: float = None
     area: float = None
-    permeability: float = field(init=False, default=None)
+    permeability: float = None
 
     def __post_init__(self):
         # Validate inputs
