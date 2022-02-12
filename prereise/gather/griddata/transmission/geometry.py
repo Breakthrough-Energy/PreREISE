@@ -1,3 +1,4 @@
+import cmath
 from dataclasses import dataclass, field
 from itertools import combinations
 from math import exp, log, pi, sqrt
@@ -32,7 +33,7 @@ class Conductor(DataclassWithValidation):
     resistance_per_km: float = None
     gmr: float = None
     area: float = None
-    permeability: float = field(init=False)
+    permeability: float = None
 
     def __post_init__(self):
         # Validate inputs
@@ -248,6 +249,58 @@ class Tower(DataclassWithValidation):
             )
         )
         return capacitance_per_km
+
+
+@dataclass
+class Line(DataclassWithValidation):
+    """Given a Tower design, line voltage, and length, calculate whole-line impedances
+    and rating.
+
+    :param Tower tower: tower parameters (containing per-kilometer impedances).
+    :param int/float length: line length (kilometers).
+    :param int/float voltage: line voltage (kilovolts).
+    :param int/float freq: the system nominal frequency (Hz).
+    """
+
+    tower: Tower
+    length: float
+    voltage: float
+    freq: float = 60.0
+    series_impedance_per_km: complex = field(init=False)
+    shunt_admittance_per_km: complex = field(init=False)
+    propogation_constant_per_km: complex = field(init=False)
+    surge_impedance: complex = field(init=False)
+    series_impedance: complex = field(init=False)
+    shunt_admittance: complex = field(init=False)
+
+    def __post_init__(self):
+        # Convert integers to floats as necessary
+        for attr in ("freq", "length", "voltage"):
+            if isinstance(getattr(self, attr), int):
+                setattr(self, attr, float(getattr(self, attr)))
+        self.validate_input_types()  # defined in DataclassWithValidation
+        # Calculate second-order electrical parameters which depend on frequency
+        omega = 2 * pi * self.freq
+        self.series_impedance_per_km = (
+            self.tower.resistance + 1j * self.tower.inductance * omega
+        )
+        self.shunt_admittance_per_km = 1j * self.tower.capacitance * omega
+        self.surge_impedance = cmath.sqrt(
+            self.series_impedance_per_km / self.shunt_admittance_per_km
+        )
+        self.propogation_constant_per_km = cmath.sqrt(
+            self.series_impedance_per_km * self.shunt_admittance_per_km
+        )
+        self.surge_impedance_loading = self.voltage**2 / abs(self.surge_impedance)
+        # Use the long-line transmission model to calculate lumped-element parameters
+        self.series_impedance = (self.series_impedance_per_km * self.length) * (
+            cmath.sinh(self.propogation_constant_per_km * self.length)
+            / (self.propogation_constant_per_km * self.length)
+        )
+        self.shunt_admittance = (self.shunt_admittance_per_km * self.length) * (
+            cmath.tanh(self.propogation_constant_per_km * self.length / 2)
+            / (self.propogation_constant_per_km * self.length / 2)
+        )
 
 
 def _euclidian(a, b):

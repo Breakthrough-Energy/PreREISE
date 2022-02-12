@@ -5,6 +5,7 @@ import pytest
 from prereise.gather.griddata.transmission.geometry import (
     Conductor,
     ConductorBundle,
+    Line,
     PhaseLocations,
     Tower,
 )
@@ -22,7 +23,6 @@ def test_conductor():
     rated_dc_resistance_per_km = rated_dc_resistance_per_1000_ft * 3.2808
     # Calculate for solid-aluminum (resistance should be lower than rated)
     conductor = Conductor(radius=(outer_diameter / 2), material="aluminum")
-    print(conductor.resistance_per_km)
     assert conductor.resistance_per_km < rated_dc_resistance_per_km
     # Count 54 aluminum strands only for conductance purposes, ignore 7 steel strands
     # (resistance should be approximately equal to rated)
@@ -122,3 +122,23 @@ def test_tower_double_circuit():
     # Check
     assert series_reactance_per_mi == pytest.approx(expected_series_reactance, rel=0.01)
     assert shunt_admittance_per_mi == pytest.approx(expected_shunt_admittance, rel=0.01)
+
+
+def test_line():
+    # ACSR 'Rook'
+    conductor = Conductor(
+        radius=0.012408,
+        gmr=0.009967,
+        material="ACSR",  # No constants for this material, but they're un-needed
+        resistance_per_km=0.09963,  # rated value at 50 C
+    )
+    locations = PhaseLocations(a=(-7.25, 50), b=(0, 50), c=(7.25, 50))
+    bundle = ConductorBundle(n=1, conductor=conductor)
+    tower = Tower(locations=locations, bundle=bundle)
+    line = Line(tower=tower, length=370, voltage=215)
+    # The following values are appreciably different than what we would see using a
+    # short-line model that just multiplies per-length by total length
+    assert line.series_impedance.imag == pytest.approx(183.6619, rel=0.005)
+    assert line.series_impedance.real == pytest.approx(34.20553, rel=0.005)
+    assert line.shunt_admittance == pytest.approx(0.001198j, rel=0.005)
+    assert line.surge_impedance_loading == pytest.approx(215**2 / 406.4, rel=0.005)
