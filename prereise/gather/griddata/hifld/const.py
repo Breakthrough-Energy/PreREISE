@@ -107,6 +107,8 @@ abv_state_neighbor = {
 blob_paths = {
     "eia_form860_2019_generator": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_1_Generator_Y2019_Operable.csv",
     "eia_form860_2019_plant": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/2___Plant_Y2019.csv",
+    "eia_form860_2019_solar": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_3_Solar_Y2019_Operable.csv",
+    "eia_form860_2019_wind": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_2_Wind_Y2019_Operable.csv",
     "epa_ampd": "https://besciences.blob.core.windows.net/datasets/EPA_AMPD/",
     "epa_needs": "https://besciences.blob.core.windows.net/datasets/EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
     "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
