@@ -12,7 +12,7 @@ requests~=2.25
 scipy~=1.7
 tqdm==4.29.1
 xlrd==1.2.0
-nrel-pysam~=2.2
+nrel-pysam~=3.0
 black
 pytest
 coverage

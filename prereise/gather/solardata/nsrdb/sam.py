@@ -1,7 +1,12 @@
+import csv
+import os
+import tempfile
+
 import numpy as np
 import pandas as pd
-import PySAM.Pvwattsv7 as PVWatts
+import PySAM.Pvwattsv8 as PVWatts
 import PySAM.PySSC as pssc  # noqa: N813
+from PySAM import TcsgenericSolar
 from tqdm import tqdm
 
 from prereise.gather.solardata.helpers import get_plant_id_unique_location
@@ -18,41 +23,45 @@ default_pv_parameters = {
     "inv_eff": 94,
     "losses": 14,
     "tilt": 30,
+    "ilr": 1.25,  # Inverter Loading Ratio
 }
+leap_hour_idx = 59 * 24  # 59 days have passed already (31 in January, 28 in February)
 
 
-def generate_timestamps_without_leap_day(year):
-    """For a given year, return timestamps for each non-leap-day hour, and the timestamp
-    of the beginning of the leap day (if there is one).
-
-    :param int/str year: year to generate timestamps for.
-    :return: (*tuple*) --
-        pandas.DatetimeIndex: for each non-leap-day-hour of the given year.
-        pandas.Timestamp/None: timestamp for the first hour of the leap day (if any).
-    """
-    # SAM only takes 365 days, so for a leap year: leave out the leap day.
-    try:
-        leap_day = (pd.Timestamp(f"{year}-02-29-00").dayofyear - 1) * 24
-        sam_dates = pd.date_range(start=f"{year}-01-01-00", freq="H", periods=365 * 24)
-        sam_dates = sam_dates.map(lambda t: t.replace(year=int(year)))
-    except ValueError:
-        leap_day = None
-        sam_dates = pd.date_range(start=f"{year}-01-01-00", freq="H", periods=365 * 24)
-    return sam_dates, leap_day
-
-
-def calculate_power(solar_data, pv_dict):
-    """Use PVWatts to translate weather data into power.
+def calculate_power_pv(solar_data, pv_dict):
+    """Use PVWatts to translate weather data into power using a photovoltaic (PV) model.
 
     :param dict solar_data: weather data as returned by :meth:`Psm3Data.to_dict`.
     :param dict pv_dict: solar plant attributes.
     :return: (*numpy.array*) hourly power output.
     """
-    pv_dat = pssc.dict_to_ssc_table(pv_dict, "pvwattsv7")
+    pv_dat = pssc.dict_to_ssc_table(pv_dict, "pvwattsv8")
     pv = PVWatts.wrap(pv_dat)
     pv.SolarResource.assign({"solar_resource_data": solar_data})
     pv.execute()
     return np.array(pv.Outputs.gen)
+
+
+def calculate_power_csp(solar_data):
+    """Use the System Adviser Model (SAM) to translate weather data into power using a
+    concentrating solar power (CSP) model.
+
+    :param list solar_data: weather data as returned by
+        :meth:`Psm3Data.to_sam_weather_file_format`.
+    :param dict csp_dict: solar plant attributes.
+    :return: (*numpy.array*) hourly power output.
+    """
+    csp = TcsgenericSolar.default("GenericCSPSystemCommercial")
+    csp.Type260.assign({"w_des": 1e-3})  # Capacity is in MW, but outputs are in kW
+    # The solar module expects weather data as a local file, so let's create one
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filename = os.path.join(tmpdirname, "weather_data.csv")
+        with open(filename, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(solar_data)
+        csp.Weather.assign({"file_name": filename})
+        csp.execute()
+    return np.clip(np.array(csp.Outputs.gen), 0, 1)  # clip outside the [0, 1] interval
 
 
 def retrieve_data_blended(
@@ -80,8 +89,9 @@ def retrieve_data_blended(
     :param int/str year: year.
     :param int/float rate_limit: minimum seconds to wait between requests to NREL
     :param str cache_dir: directory to cache downloaded data. If None, don't cache.
-    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
-        *'ts'* and *'ts_id'* as columns. Values are power output for a 1MW generator.
+    :return: (*pandas.DataFrame*) -- data frame of normalized power profiles. The index
+        is hourly timestamps for the profile year, the columns are plant IDs, the values
+        are floats.
     """
     xor_err_msg = (
         "Either grid xor (solar_plant and interconnect_to_state_abvs) must be defined"
@@ -112,10 +122,8 @@ def retrieve_data_blended(
             for z in solar_plant["zone_id"].unique()
         }
 
-    real_dates = pd.date_range(
-        start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H"
-    )
-    sam_dates, leap_day = generate_timestamps_without_leap_day(year)
+    dates = pd.date_range(start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H")
+    leap_day = f"{year}-02-29" in dates
 
     # PV tracking ratios
     # By state and by interconnect when EIA data do not have any solar PV in the state
@@ -130,8 +138,6 @@ def retrieve_data_blended(
             states_in_interconnect = list(interconnect_to_state_abvs[interconnect])
             frac[zone] = get_pv_tracking_ratio_state(pv_info, states_in_interconnect)
 
-    # Inverter Loading Ratio
-    ilr = 1.25
     api = NrelApi(email, api_key, rate_limit)
 
     # Identify unique location
@@ -145,10 +151,10 @@ def retrieve_data_blended(
             lon,
             attributes="dhi,dni,wind_speed,air_temperature",
             year=year,
-            leap_day=False,
-            dates=sam_dates,
+            leap_day=leap_day,
+            dates=dates,
             cache_dir=cache_dir,
-        ).to_dict()
+        )
 
         for i, plant_id in enumerate(plants):
             if i == 0:
@@ -158,29 +164,33 @@ def retrieve_data_blended(
                 power = 0
                 for j, axis in enumerate([0, 2, 4]):
                     plant_pv_dict = {
-                        "system_capacity": ilr,
-                        "dc_ac_ratio": ilr,
+                        "system_capacity": default_pv_parameters["ilr"],
+                        "dc_ac_ratio": default_pv_parameters["ilr"],
                         "array_type": axis,
                     }
                     pv_dict = {**default_pv_parameters, **plant_pv_dict}
-                    power += tracking_ratios[j] * calculate_power(solar_data, pv_dict)
-                if leap_day is not None:
-                    power = np.insert(power, leap_day, power[leap_day - 24 : leap_day])
+                    power += tracking_ratios[j] * calculate_power_pv(
+                        solar_data.to_dict(), pv_dict
+                    )
+                if leap_day:
+                    power = np.insert(
+                        power,
+                        leap_hour_idx,
+                        power[leap_hour_idx - 24 : leap_hour_idx],
+                    )
             else:
                 # For every other plant, look up power from first plant at the location
                 power = data[first_plant_id]
             data[plant_id] = power
 
-    return pd.DataFrame(data, index=real_dates).sort_index(axis="columns")
+    return pd.DataFrame(data, index=dates).sort_index(axis="columns")
 
 
 def retrieve_data_individual(
     email, api_key, solar_plant, year="2016", rate_limit=0.5, cache_dir=None
 ):
     """Retrieves irradiance data from NSRDB and calculate the power output using
-    the System Adviser Model (SAM). Either a Grid object needs to be passed to ``grid``,
-    or (a data frame needs to be passed to ``solar_plant`` and a string needs to be
-    passed to ``grid_model``.
+    the System Adviser Model (SAM).
 
     :param str email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
     :param str api_key: API key.
@@ -190,8 +200,9 @@ def retrieve_data_individual(
     :param int/str year: year.
     :param int/float rate_limit: minimum seconds to wait between requests to NREL
     :param str cache_dir: directory to cache downloaded data. If None, don't cache.
-    :return: (*pandas.DataFrame*) -- data frame with *'Pout'*, *'plant_id'*,
-        *'ts'* and *'ts_id'* as columns. Values are power output for a 1MW generator.
+    :return: (*pandas.DataFrame*) -- data frame of normalized power profiles. The index
+        is hourly timestamps for the profile year, the columns are plant IDs, the values
+        are floats.
     """
     # Verify that each solar plant has exactly one tracking type equal to True
     array_type_mapping = {
@@ -208,10 +219,8 @@ def retrieve_data_individual(
         .apply(lambda x: array_type_mapping[x.idxmax()], axis=1)
     )
 
-    real_dates = pd.date_range(
-        start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H"
-    )
-    sam_dates, leap_day = generate_timestamps_without_leap_day(year)
+    dates = pd.date_range(start=f"{year}-01-01-00", end=f"{year}-12-31-23", freq="H")
+    leap_day = f"{year}-02-29" in dates
 
     api = NrelApi(email, api_key, rate_limit)
 
@@ -225,26 +234,37 @@ def retrieve_data_individual(
             lon,
             attributes="dhi,dni,wind_speed,air_temperature",
             year=year,
-            leap_day=False,
-            dates=sam_dates,
+            leap_day=leap_day,
+            dates=dates,
             cache_dir=cache_dir,
-        ).to_dict()
+        )
 
         for plant_id in plants:
             series = solar_plant.loc[plant_id]
-            ilr = series["DC Net Capacity (MW)"] / series["Nameplate Capacity (MW)"]
-            plant_pv_dict = {
-                "system_capacity": ilr,
-                "dc_ac_ratio": ilr,
-                "array_type": plant_array_types.loc[plant_id],
-            }
-            if plant_pv_dict["array_type"] == 0:
-                plant_pv_dict["tilt"] = series["Tilt Angle"]
-            pv_dict = {**default_pv_parameters, **plant_pv_dict}
-            power = calculate_power(solar_data, pv_dict)
-            if leap_day is not None:
-                power = np.insert(power, leap_day, power[leap_day - 24 : leap_day])
-
+            # EIA codes: PV = Photovoltaic, CP = Concentrating solar, ST = steam turbine
+            if series["Prime Mover"] == "PV":
+                ilr = series["DC Net Capacity (MW)"] / series["Nameplate Capacity (MW)"]
+            else:
+                # Besides PV, other types don't seem to have DC capacity defined
+                ilr = default_pv_parameters["ilr"]
+            if series["Prime Mover"] in {"CP", "PV"}:
+                plant_pv_dict = {
+                    "system_capacity": ilr,
+                    "dc_ac_ratio": ilr,
+                    "array_type": plant_array_types.loc[plant_id],
+                }
+                if plant_pv_dict["array_type"] == 0:
+                    plant_pv_dict["tilt"] = series["Tilt Angle"]
+                pv_dict = {**default_pv_parameters, **plant_pv_dict}
+                power = calculate_power_pv(solar_data.to_dict(), pv_dict)
+            elif series["Prime Mover"] == "ST":
+                power = calculate_power_csp(solar_data.to_sam_weather_file_format())
+            if leap_day:
+                power = np.insert(
+                    power,
+                    leap_hour_idx,
+                    power[leap_hour_idx - 24 : leap_hour_idx],
+                )
             data[plant_id] = power
 
-    return pd.DataFrame(data, index=real_dates).sort_index(axis="columns")
+    return pd.DataFrame(data, index=dates).sort_index(axis="columns")
