@@ -822,6 +822,10 @@ def build_transmission(method="line2sub", **kwargs):
         lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
     )
 
+    # Update substation max & min voltages using bus data (from lines)
+    substations["MAX_VOLT"].update(bus.groupby("sub_id")["baseKV"].apply(max))
+    substations["MIN_VOLT"].update(bus.groupby("sub_id")["baseKV"].apply(min))
+
     # Rename columns to match PowerSimData expectations
     branch.rename({"type": "branch_device_type"}, axis=1, inplace=True)
     substations.rename(
