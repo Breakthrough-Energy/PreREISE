@@ -289,17 +289,16 @@ def build_plant(bus, substations, kwargs={}):
     substation_groupby = substations.groupby(["interconnect", "ZIP"])
     epa_ampd_groupby = epa_ampd.groupby(["ORISPL_CODE", "UNITID"])
 
-    # Add information
-    generators["interconnect"] = (
-        generators["Plant Code"]
-        .map(plants["NERC Region"])
-        .map(const.nercregion2interconnect)
+    # Add information to generators based on Form 860 Plant table
+    generators = generators.merge(plants, on="Plant Code", suffixes=(None, "_860Plant"))
+    generators.rename(
+        {"Latitude": "lat", "Longitude": "lon", "Zip": "ZIP"}, axis=1, inplace=True
     )
-    generators["lat"] = generators["Plant Code"].map(plants["Latitude"])
-    generators["lon"] = generators["Plant Code"].map(plants["Longitude"])
-    generators["ZIP"] = generators["Plant Code"].map(plants["Zip"])
-    generators["Balancing Authority Code"] = generators["Plant Code"].map(
-        plants["Balancing Authority Code"]
+    # Map interconnect via BA first (more reliable) then by NERC Region
+    generators["interconnect"] = (
+        generators["Balancing Authority Code"]
+        .map(const.balancingauthority2interconnect)
+        .combine_first(generators["NERC Region"].map(const.nercregion2interconnect))
     )
     print("Mapping generators to substations... (this may take several minutes)")
     generators["sub_id"] = generators.apply(
