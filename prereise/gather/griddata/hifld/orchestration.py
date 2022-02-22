@@ -6,14 +6,23 @@ from powersimdata.input import const as psd_const
 from prereise.gather.griddata.hifld.const import powersimdata_column_defaults
 from prereise.gather.griddata.hifld.data_process.demand import assign_demand_to_buses
 from prereise.gather.griddata.hifld.data_process.generators import build_plant
-from prereise.gather.griddata.hifld.data_process.profiles import build_solar
+from prereise.gather.griddata.hifld.data_process.profiles import build_solar, build_wind
 from prereise.gather.griddata.hifld.data_process.transmission import build_transmission
 
 
-def create_csvs(output_folder, nrel_email, nrel_api_key, solar_kwargs={}):
+def create_csvs(
+    output_folder,
+    wind_directory,
+    year,
+    nrel_email,
+    nrel_api_key,
+    solar_kwargs={},
+):
     """Process HIFLD source data to CSVs compatible with PowerSimData.
 
     :param str output_folder: directory to write CSVs to.
+    :param str wind_directory: directory to save wind speed data to.
+    :param int/str year: weather year to use to generate profiles.
     :param str nrel_email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
     :param str nrel_api_key: API key.
     :param dict solar_kwargs: keyword arguments to pass to
@@ -21,7 +30,13 @@ def create_csvs(output_folder, nrel_email, nrel_api_key, solar_kwargs={}):
     """
     full_tables = create_grid(output_folder)
     create_profiles(
-        full_tables["plant"], nrel_email, nrel_api_key, output_folder, solar_kwargs
+        full_tables["plant"],
+        year,
+        nrel_email,
+        nrel_api_key,
+        wind_directory,
+        output_folder,
+        solar_kwargs,
     )
 
 
@@ -86,14 +101,22 @@ def create_grid(output_folder=None):
 
 
 def create_profiles(
-    plants, nrel_email, nrel_api_key, output_folder=None, solar_kwargs={}
+    plants,
+    year,
+    nrel_email,
+    nrel_api_key,
+    wind_directory,
+    output_folder=None,
+    solar_kwargs={},
 ):
     """Process a table of plant data to produce profile CSVs compatible with
         PowerSimData.
 
     :param pandas.DataFrame plants: table of plant data.
+    :param int/str year: weather year to use to generate profiles.
     :param str nrel_email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
     :param str nrel_api_key: API key.
+    :param str wind_directory: directory to save wind speed data to.
     :param str output_folder: directory to write CSVs to. If None, CSVs will not be
         written (just returned).
     :param dict solar_kwargs: keyword arguments to pass to
@@ -102,12 +125,18 @@ def create_profiles(
         indexed by timestamp, with plant IDs as columns.
     """
     # Use plant data to build profiles
+    full_solar_kwargs = {**solar_kwargs, **{"year": year}}
     profiles = {
         "solar": build_solar(
             nrel_email,
             nrel_api_key,
             plants.query("type == 'solar'"),
-            **solar_kwargs,
+            **full_solar_kwargs,
+        ),
+        "wind": build_wind(
+            plants.query("type == 'wind'"),
+            wind_directory,
+            year,
         ),
     }
     if output_folder is not None:
