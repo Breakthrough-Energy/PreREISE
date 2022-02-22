@@ -526,9 +526,9 @@ def create_transformers(bus):
         ["from_bus_id", "to_bus_id"].
     """
     bus_pairs = [
-        (b, volt_series.idxmax())
+        (b, volt_series.sort_values().index[i + 1])
         for sub, volt_series in bus.groupby("sub_id")["baseKV"]
-        for b in volt_series.sort_values().index[:-1]
+        for i, b in enumerate(volt_series.sort_values().index[:-1])
         if len(volt_series) > 1
     ]
 
