@@ -6,37 +6,57 @@ from powersimdata.input import const as psd_const
 from prereise.gather.griddata.hifld.const import powersimdata_column_defaults
 from prereise.gather.griddata.hifld.data_process.demand import assign_demand_to_buses
 from prereise.gather.griddata.hifld.data_process.generators import build_plant
-from prereise.gather.griddata.hifld.data_process.profiles import build_solar, build_wind
+from prereise.gather.griddata.hifld.data_process.profiles import (
+    build_hydro,
+    build_solar,
+    build_wind,
+)
 from prereise.gather.griddata.hifld.data_process.transmission import build_transmission
+
+
+def _check_profile_kwargs(kwarg_dicts):
+    required = {
+        "hydro": {"eia_api_key"},
+        "solar": {"nrel_api_key", "nrel_email"},
+        "wind": {"download_directory"},
+    }
+    for profile, required_keys in required.items():
+        if not required_keys <= set(kwarg_dicts[profile]):
+            raise ValueError(
+                f"build_{profile} missing keyword(s). Needs: {required_keys}. "
+                "See prereise.gather.griddata.hifld.data_process.profiles for details."
+            )
 
 
 def create_csvs(
     output_folder,
-    wind_directory,
-    year,
-    nrel_email,
-    nrel_api_key,
-    solar_kwargs={},
+    profile_year,
+    hydro_kwargs,
+    solar_kwargs,
+    wind_kwargs,
 ):
     """Process HIFLD source data to CSVs compatible with PowerSimData.
 
     :param str output_folder: directory to write CSVs to.
-    :param str wind_directory: directory to save wind speed data to.
-    :param int/str year: weather year to use to generate profiles.
-    :param str nrel_email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
-    :param str nrel_api_key: API key.
+    :param int/str profile_year: weather year to use to generate profiles.
+    :param dict hydro_kwargs: keyword arguments to pass to
+        :func:`prereise.gather.hydrodata.eia.fetch_historical.get_generation`.
     :param dict solar_kwargs: keyword arguments to pass to
         :func:`prereise.gather.solardata.nsrdb.sam.retrieve_data_individual`.
+    :param dict wind_kwargs: keyword arguments to pass to
+        :func:`prereise.gather.griddata.hifld.data_process.profiles.build_wind`.
     """
+    _check_profile_kwargs(
+        {"hydro": hydro_kwargs, "solar": solar_kwargs, "wind": wind_kwargs}
+    )
     full_tables = create_grid(output_folder)
     create_profiles(
         full_tables["plant"],
-        year,
-        nrel_email,
-        nrel_api_key,
-        wind_directory,
-        output_folder,
+        profile_year,
+        hydro_kwargs,
         solar_kwargs,
+        wind_kwargs,
+        output_folder,
     )
 
 
@@ -102,42 +122,40 @@ def create_grid(output_folder=None):
 
 def create_profiles(
     plants,
-    year,
-    nrel_email,
-    nrel_api_key,
-    wind_directory,
+    profile_year,
+    hydro_kwargs,
+    solar_kwargs,
+    wind_kwargs,
     output_folder=None,
-    solar_kwargs={},
 ):
     """Process a table of plant data to produce profile CSVs compatible with
         PowerSimData.
 
     :param pandas.DataFrame plants: table of plant data.
-    :param int/str year: weather year to use to generate profiles.
-    :param str nrel_email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
-    :param str nrel_api_key: API key.
-    :param str wind_directory: directory to save wind speed data to.
-    :param str output_folder: directory to write CSVs to. If None, CSVs will not be
-        written (just returned).
+    :param int/str profile_year: weather year to use to generate profiles.
+    :param dict hydro_kwargs: keyword arguments to pass to
+        :func:`prereise.gather.griddata.hifld.data_process.profiles.build_hydro`.
     :param dict solar_kwargs: keyword arguments to pass to
         :func:`prereise.gather.solardata.nsrdb.sam.retrieve_data_individual`.
+    :param dict wind_kwargs: keyword arguments to pass to
+        :func:`prereise.gather.griddata.hifld.data_process.profiles.build_wind`.
+    :param str output_folder: directory to write CSVs to. If None, CSVs will not be
+        written (just returned).
     :return: (*dict*) -- keys are strings for profile names, values are dataframes,
         indexed by timestamp, with plant IDs as columns.
     """
+    # Check and massage kwargs
+    _check_profile_kwargs(
+        {"hydro": hydro_kwargs, "solar": solar_kwargs, "wind": wind_kwargs}
+    )
+    full_hydro_kwargs = {**hydro_kwargs, **{"year": profile_year}}
+    full_solar_kwargs = {**solar_kwargs, **{"year": profile_year}}
+    full_wind_kwargs = {**wind_kwargs, **{"year": profile_year}}
     # Use plant data to build profiles
-    full_solar_kwargs = {**solar_kwargs, **{"year": year}}
     profiles = {
-        "solar": build_solar(
-            nrel_email,
-            nrel_api_key,
-            plants.query("type == 'solar'"),
-            **full_solar_kwargs,
-        ),
-        "wind": build_wind(
-            plants.query("type == 'wind'"),
-            wind_directory,
-            year,
-        ),
+        "solar": build_solar(plants.query("type == 'solar'"), **full_solar_kwargs),
+        "wind": build_wind(plants.query("type == 'wind'"), **full_wind_kwargs),
+        "hydro": build_hydro(plants.query("type == 'hydro'"), **full_hydro_kwargs),
     }
     if output_folder is not None:
         os.makedirs(output_folder, exist_ok=True)

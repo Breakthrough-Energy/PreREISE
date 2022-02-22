@@ -24,12 +24,12 @@ def floatify(x):
         return float("nan")
 
 
-def build_solar(nrel_email, nrel_api_key, solar_plants, **solar_kwargs):
+def build_solar(solar_plants, nrel_email, nrel_api_key, **solar_kwargs):
     """Use plant-level data to build solar profiles.
 
+    :param pandas.DataFrame solar_plants: data frame of solar farms.
     :param str nrel_email: email used to`sign up <https://developer.nrel.gov/signup/>`_.
     :param str nrel_api_key: API key.
-    :param pandas.DataFrame solar_plants: data frame of solar farms.
     :param dict solar_kwargs: keyword arguments to pass to
         :func:`prereise.gather.solardata.nsrdb.sam.retrieve_data_individual`.
     :return: (*pandas.DataFrame*) -- data frame of normalized power profiles. The index
@@ -197,11 +197,11 @@ def parse_eia_to_normalized(hydro_plants, generation, query_regions, year):
     return profiles
 
 
-def build_hydro(eia_api_key, hydro_plants, year, **hydro_kwargs):
+def build_hydro(hydro_plants, eia_api_key, year, **hydro_kwargs):
     """Use plant-level data to build hydro profiles.
 
-    :param str eia_api_key: API key.
     :param pandas.DataFrame hydro_plants: data frame of hydro generators.
+    :param str eia_api_key: API key.
     :param int/str year: year of data to fetch and build profiles for.
     :param dict hydro_kwargs: keyword arguments to pass to
         :func:`prereise.gather.hydrodata.eia.fetch_historical.get_generation`.
