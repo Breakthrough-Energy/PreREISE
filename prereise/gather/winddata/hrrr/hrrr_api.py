@@ -1,3 +1,5 @@
+import os
+
 import requests
 from pandas import date_range
 from tqdm import tqdm
@@ -83,7 +85,7 @@ class HrrrApi:
                     )
                 )
 
-            with open(directory + filename, "ab") as f:
+            with open(os.path.join(directory, filename), "ab") as f:
                 for grib_record_information in grib_record_information_list:
                     try:
                         self.downloader.download(
