@@ -1,7 +1,8 @@
-from prereise.gather.demanddata.transportation_electrification import const
-from scipy.io import loadmat
 import numpy as np
 import pandas as pd
+from scipy.io import loadmat
+
+from prereise.gather.demanddata.transportation_electrification import const
 
 
 def get_model_year_dti(model_year: int):
@@ -22,33 +23,6 @@ def get_input_day(model_year_dti: pd.DatetimeIndex):
     :return: (*numpy.ndarray*) -- array of 1s and 2s indicating weekend/weekday designations for the model year.
     """
     return model_year_dti.dayofweek.isin(range(5)).astype(int) + 1
-
-
-def get_input_month(model_year_dti: pd.DatetimeIndex):
-    """Determine month of each day
-
-    :param pandas.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
-    :return: (*numpy.ndarray*) -- stores the month the day is in for each day of the year.
-    """
-    return model_year_dti.month
-
-
-def get_data_month(data: pd.DataFrame):
-    """Get month value from data.
-
-    :param pandas.DataFrame data: the data to get months from.
-    :return: (*pandas.Series*) -- list of months.
-    """
-    return data["Date"].dt.month
-
-
-def get_day_of_week(data: pd.DataFrame):
-    """Get day of week designation value from data.
-
-    :param pandas.DataFrame data: the data to get day of week from.
-    :return: (*numpy.array*) -- indicates the days of the week.
-    """
-    return np.array(data["Day of Week"])
 
 
 def get_data_day(data: pd.DataFrame):
