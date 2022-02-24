@@ -17,6 +17,74 @@ This package contains a variety of materials, including data sets and related ma
 * Location: ***prereise/gather/data/ba_to_county.txt***
 
 
+#### US County Map Shape Files
+#### Source
+* Name: US County map
+* Author: US Census Bureau
+* Description: US county map
+* Source: https://www.census.gov/
+* Exact source location: https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
+#### Destination
+* Modifications to source files(s): None
+* Location: ***prereise/gather/data/cb_2020_us_county_500k.zip***
+
+
+#### Retail Service Territory 
+#### Source
+* Name: Electric Retail Service Territory 
+* Author: Homeland Infrastructure Foundation-Level Data (HIFLD)
+* Description: electric retail service territory
+* Source: https://hifld-geoplatform.opendata.arcgis.com/
+* Exact source location: https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::electric-retail-service-territories-2/explore
+#### Destination
+* Modifications to source files(s): none
+* Location: ***prereise/gather/data/Electric_Retail_Service_Territories.zip***
+
+
+#### Upstate Subregions of NYISO
+#### Source
+* Name: upstate subregions of NYISO
+* Author: ArcGIS
+* Description: upstate subregions of NYISO
+* Source: https://www.arcgis.com/
+* Exact source location: https://www.arcgis.com/home/item.html?id=6fd1de467b134f47a607721f23a69f0c
+#### Destination
+* Modifications to source files(s): None for the upstate subregions A-F, they are directly downloaded by the program 
+* Location: ***prereise/gather/data/remap_ba_area/nyiso/***
+
+#### Downstate Subregions of NYISO
+#### Source
+* Name: downstate subregions of NYISO
+* Author: Self created
+* Description: downstate subregions of NYISO
+* Source: N/A
+* Exact source location: N/A
+#### Destination
+* Modifications to source files(s): Subregions H and I are made by splitting the Westchester County of New York State; Subregion K is by grouping the five counties of the New York City, Kings, Queens, Richmond, Bronx and New York County; Subregion K is made by combining the Nassau county and the Suffolk county. The NYISO zonal map is referenced here https://www.nyiso.com/documents/20142/1397960/nyca_zonemaps.pdf/8c3807e1-5bab-ab44-3c71-2c8e61b5748b?msclkid=01dfacc4b7a411ec99d260fa17bfa652.
+* Location: ***prereise/gather/data/remap_ba_area/nyiso/NYISO_downstate.geojson***
+
+#### CAISO
+#### Source
+* Name: subregions of CAISO
+* Author: CAISO
+* Description: the subregions of CAISO
+* Source: https://www.caiso.com/
+* Exact source location: https://cecgis-caenergy.opendata.arcgis.com/datasets/CAEnergy::california-electric-balancing-authority-areas
+#### Destination
+* Modifications to source files(s): None
+* Location: ***prereise/gather/data/remap_ba_area/CA_balancing_authorities/***
+
+#### PJM
+#### Source
+* Name: subregions of PJM
+* Author: PJM
+* Description: the subregions of PJM
+* Source: PJM
+* Exact source location:  https://www.monitoringanalytics.com/reports/PJM_State_of_the_Market/2018/2018-som-pjm-volume2-appendix.pdf
+#### Destination
+* Modifications to source files(s): The shape files are made from the image.
+* Location: ***prereise/gather/data/remap_ba_area/pjm.zip***
+
 ---
 ### Generation
 #### Energy Information Administration (EIA)
