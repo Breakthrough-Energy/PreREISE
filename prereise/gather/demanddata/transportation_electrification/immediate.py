@@ -1,7 +1,10 @@
-from prereise.gather.demanddata.transportation_electrification import const
-from prereise.gather.demanddata.transportation_electrification import mileage
-from prereise.gather.demanddata.transportation_electrification import charging
 import numpy as np
+
+from prereise.gather.demanddata.transportation_electrification import (
+    charging,
+    const,
+    data_helper,
+)
 
 
 def immediate_charging(
@@ -14,8 +17,8 @@ def immediate_charging(
     :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
     :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
     :param int power: charger power, EVSE kW.
-    :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, or 5; 
-        1-home only, 2-home and work related, 3-anywhere if possibile, 
+    :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, or 5;
+        1-home only, 2-home and work related, 3-anywhere if possibile,
         4-home and school only, 5-home and work and school.
     :param str veh_type: determine which category (LDV or LDT) to produce charging profiles for
     :return: (*numpy.ndarray*) -- charging profiles.
@@ -23,13 +26,13 @@ def immediate_charging(
 
     # load NHTS data from function
     if veh_type.lower() == "ldv":
-        newdata = mileage.remove_ldt(mileage.load_data(census_region))
+        newdata = data_helper.remove_ldt(data_helper.load_data(census_region))
 
     elif veh_type.lower() == "ldt":
-        newdata = mileage.remove_ldv(mileage.load_data(census_region))
+        newdata = data_helper.remove_ldv(data_helper.load_data(census_region))
 
     # updates the weekend and weekday values in the nhts data
-    newdata = mileage.update_if_weekend(newdata)
+    newdata = data_helper.update_if_weekend(newdata)
 
     # add new columns to newdata to store data that is not in NHTS data
     newdata = newdata.reindex(
@@ -47,10 +50,10 @@ def immediate_charging(
         fill_value=0,
     )
 
-    input_day = mileage.get_input_day(mileage.get_model_year_dti(model_year))
+    input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
 
     TRANS_charge = np.zeros(24 * len(input_day))
-    data_day = mileage.get_data_day(newdata)
+    data_day = data_helper.get_data_day(newdata)
 
     trip_strategy = 1
     kwh = kwhmi * veh_range
@@ -281,11 +284,11 @@ def immediate_charging(
 
 
 def adjust_BEV(TRANS_charge, adjustment_values):
-    """Adjusts the charging profiles by applying weighting factors based on 
+    """Adjusts the charging profiles by applying weighting factors based on
     seasonal/monthly values
 
     :param (*numpy.ndarray*) TRANS_charge: normalized charging profiles
-    :param (*pandas.DataFrame*) adjustment_values: weighting factors for each 
+    :param (*pandas.DataFrame*) adjustment_values: weighting factors for each
         day of the year loaded from month_info_nhts.mat.
     :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
     """
