@@ -7,6 +7,25 @@ from prereise.gather.demanddata.transportation_electrification import (
 )
 
 
+def get_output_electricload(electricload):
+    """Averaging the electric load from the weekday or weekend
+
+    :param numpy.ndarray electricload: the electrical load or total charging power from the weekday or weekend
+    :return: (*numpy.ndarray*) -- the electricload output for weekdays or weekends
+    """
+    output_electricload = np.zeros(48)
+    for k in range(48):
+        if k == 0:
+            output_electricload[k] = sum(electricload[:100]) / 100
+        elif k == 47:
+            output_electricload[k] = sum(electricload[4700:]) / 100
+        else:
+            output_electricload[k] = (
+                sum(electricload[(k + 1) * 100 - 150 : (k + 1) * 100 - 50]) / 100
+            )
+    return output_electricload
+
+
 def immediate_charging(
     census_region,
     model_year,
@@ -159,17 +178,7 @@ def immediate_charging(
                 i, newdata.columns.get_loc("charging power")
             ]
 
-    weekday_output_electricload = np.zeros(48)
-    for k in range(48):
-        if k == 0:
-            weekday_output_electricload[k] = sum(weekday_electricload[:100]) / 100
-        elif k == 47:
-            weekday_output_electricload[k] = sum(weekday_electricload[4700:]) / 100
-        else:
-            weekday_output_electricload[k] = (
-                sum(weekday_electricload[(k + 1) * 100 - 150 : (k + 1) * 100 - 50])
-                / 100
-            )
+    weekday_output_electricload = get_output_electricload(weekday_electricload)
 
     # weekend, reset vars
     trip_num = 1
@@ -259,17 +268,7 @@ def immediate_charging(
                 i, newdata.columns.get_loc("charging power")
             ]
 
-    weekend_output_electricload = np.zeros(48)
-    for k in range(48):
-        if k == 0:
-            weekend_output_electricload[k] = sum(weekend_electricload[:100]) / 100
-        elif k == 47:
-            weekend_output_electricload[k] = sum(weekend_electricload[4700:]) / 100
-        else:
-            weekend_output_electricload[k] = (
-                sum(weekend_electricload[(k + 1) * 100 - 150 : (k + 1) * 100 - 50])
-                / 100
-            )
+    weekend_output_electricload = get_output_electricload(weekend_electricload)
 
     outputs = [weekend_output_electricload, weekday_output_electricload]
 
