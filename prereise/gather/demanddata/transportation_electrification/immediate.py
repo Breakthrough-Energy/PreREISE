@@ -278,13 +278,13 @@ def immediate_charging(
         weekday = input_day[day_iter] - 1
 
         if day_iter == len(input_day) - 1:
-            TRANS_charge[day_iter * 24 :] += outputs[weekday][:24].conj().T
-            TRANS_charge[:24] += outputs[weekday][24:48].conj().T
+            TRANS_charge[day_iter * 24 :] += outputs[weekday][:24].transpose()
+            TRANS_charge[:24] += outputs[weekday][24:48].transpose()
 
         else:
-            TRANS_charge[day_iter * 24 : day_iter * 24 + 48] += (
-                outputs[weekday].conj().T
-            )
+            TRANS_charge[day_iter * 24 : day_iter * 24 + 48] += outputs[
+                weekday
+            ].transpose()
 
     TRANS_charge = TRANS_charge / sum(TRANS_charge)
 
@@ -300,7 +300,7 @@ def adjust_BEV(TRANS_charge, adjustment_values):
         day of the year loaded from month_info_nhts.mat.
     :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
     """
-    adj_vals = adjustment_values.conj().T
+    adj_vals = adjustment_values.transpose()
     profiles = TRANS_charge.reshape((24, 365), order="F")
 
     pr = profiles / sum(profiles)
