@@ -154,6 +154,7 @@ def immediate_charging(
     location_strategy,
     veh_type,
     filepath,
+    trip_strategy=1
 ):
     """Immediate charging function
 
@@ -167,6 +168,7 @@ def immediate_charging(
         4-home and school only, 5-home and work and school.
     :param str veh_type: determine which category (LDV or LDT) to produce charging profiles for
     :param str filepath: the path to the NHTS mat file.
+    :param int trip_strategy: determine to charge after any trip (1) or only after the last trip (2)
     :return: (*numpy.ndarray*) -- charging profiles.
     """
 
@@ -200,8 +202,6 @@ def immediate_charging(
 
     TRANS_charge = np.zeros(24 * len(input_day))
     data_day = data_helper.get_data_day(newdata)
-
-    trip_strategy = 1
 
     weekday_electricload = get_electricload(
         newdata, data_day, 2, veh_range, kwhmi, power, location_strategy, trip_strategy
