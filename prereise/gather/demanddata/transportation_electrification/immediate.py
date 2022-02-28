@@ -37,8 +37,6 @@ def get_electricload(
     electricload = np.zeros(4800)
 
     trip_num = 1
-    start_point = 0
-    end_point = 0
 
     for i in range(nd_len):
         if data_day[i] == type_of_day:
