@@ -16,8 +16,12 @@ class DataclassWithValidation:
             # Check whether the attribute is the specified or default type
             # This supports inputs which have a default value of None
             default_type = type(self.__dataclass_fields__[name].default)
-            if not isinstance(self.__dict__[name], (specified_type, default_type)):
-                current_type = type(self.__dict__[name])
+            value_received = self.__dict__[name]
+            if specified_type == float and isinstance(value_received, int):
+                # per PEP 484, accept an int when a float is specified
+                continue
+            if not isinstance(value_received, (specified_type, default_type)):
+                current_type = type(value_received)
                 raise TypeError(
                     f"for {name}: expected {specified_type}, but got {current_type}"
                 )
