@@ -163,7 +163,7 @@ class PhaseLocations(DataclassWithValidation):
         self.validate_input_types()  # defined in DataclassWithValidation
         if not (len(self.a) == len(self.b) == len(self.c)):
             raise ValueError("each phase location must have the same length")
-        if self.circuits == 1 and len(self.a) == 2 and isinstance(self.a[0], float):
+        if self.circuits == 1 and len(self.a) == 2:
             # Single-circuit specified as (x, y) will be converted to ((x, y))
             self.a = (self.a,)
             self.b = (self.b,)
