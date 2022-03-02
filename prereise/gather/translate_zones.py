@@ -3,7 +3,9 @@ from folium.features import DivIcon
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+
 # IMPORTANT: rtree is required for overlay function, but not imported
+
 
 def plot_zone_map(gdf, interactive=False):
     """Plot map of zones as choropleth. Has 20 colors; buckets zones in
@@ -17,46 +19,40 @@ def plot_zone_map(gdf, interactive=False):
         matplotlib is for non-interactive, folium is interactive
     """
     gdf = gdf.copy()
-    gdf['coords'] = gdf['geometry'].apply(lambda x: x.representative_point().coords[:])
-    gdf['coords'] = [coords[0] for coords in gdf['coords']]
+    gdf["coords"] = gdf["geometry"].apply(lambda x: x.representative_point().coords[:])
+    gdf["coords"] = [coords[0] for coords in gdf["coords"]]
 
     if interactive:
-        gdf['zone'] = gdf.index
+        gdf["zone"] = gdf.index
         interactive_map = gdf.explore(
-            column="zone", # make choropleth based on "zone" column
+            column="zone",  # make choropleth based on "zone" column
             tooltip="zone",
             tiles=None,
-            style_kwds=dict(color="white", weight=0.7), # white outline
+            style_kwds=dict(color="white", weight=0.7),  # white outline
             legend=False,
         )
 
         for idx, row in gdf.iterrows():
-            coords = list(row['coords'])
+            coords = list(row["coords"])
             coords.reverse()
 
             folium.map.Marker(
                 coords,
                 # add labels
-                icon=DivIcon(html=f'<div style="font-size: 8pt; transform: translate(-50%, -50%)">{idx}</div>')
+                icon=DivIcon(
+                    html=f'<div style="font-size: 8pt; transform: translate(-50%, -50%)">{idx}</div>'
+                ),
             ).add_to(interactive_map)
 
         return interactive_map
 
     else:
         plt = gdf.plot(
-            figsize=(50, 50),
-            linewidth=1,
-            edgecolor='white',
-            cmap="tab20",
-            alpha=0.66
+            figsize=(50, 50), linewidth=1, edgecolor="white", cmap="tab20", alpha=0.66
         )
 
         for idx, row in gdf.iterrows():
-            plt.annotate(
-                s=idx,
-                xy=row['coords'],
-                horizontalalignment='center'
-            )
+            plt.annotate(s=idx, xy=row["coords"], horizontalalignment="center")
 
         return plt
 
@@ -69,13 +65,13 @@ def filter_interesting_zones(df, rounding=3):
     :return: (*pandas.DataFrame*) -- subset of original matrix
     """
     df_copy = df.round(rounding)
-    df_copy = df_copy.replace({ 1.0: 0.0 })
-    df_copy.loc['sum'] = df_copy.sum() # sum each col
-    df_copy['sum'] = df_copy.sum(axis=1) # sum each row
+    df_copy = df_copy.replace({1.0: 0.0})
+    df_copy.loc["sum"] = df_copy.sum()  # sum each col
+    df_copy["sum"] = df_copy.sum(axis=1)  # sum each row
 
-    interesting_zones = df_copy.loc[df_copy['sum'] > 0, df_copy.loc['sum'] > 0]
-    interesting_zones = interesting_zones.drop(index=['sum'], columns=['sum'])
-    interesting_zones = interesting_zones.replace({ 0.0: '-' })
+    interesting_zones = df_copy.loc[df_copy["sum"] > 0, df_copy.loc["sum"] > 0]
+    interesting_zones = interesting_zones.drop(index=["sum"], columns=["sum"])
+    interesting_zones = interesting_zones.replace({0.0: "-"})
 
     return interesting_zones
 
@@ -100,12 +96,14 @@ def format_zone_df(df, name):
     df_copy = df_copy.reset_index()
 
     # get zone area
-    df_copy[f'{name}_area'] = df_copy['geometry'].area
+    df_copy[f"{name}_area"] = df_copy["geometry"].area
 
     return df_copy
 
 
-def translate_zone_set(prev_zones, new_zones, name_prev='prev_zones', name_new='new_zones', verbose=False):
+def translate_zone_set(
+    prev_zones, new_zones, name_prev="prev_zones", name_new="new_zones", verbose=False
+):
     """returns matrix of prev_zones to new_zones. Scales rows proportionally so
     that each row adds up to 1
     NOTE: We recommend using EPSG:4269 as your CRS (coordinate reference system).
@@ -122,9 +120,9 @@ def translate_zone_set(prev_zones, new_zones, name_prev='prev_zones', name_new='
     :return: (*pandas.DataFrame*) -- matrix of prev_zones to new_zones
     """
     if verbose:
-        print(f'ZONES: {name_prev}')
+        print(f"ZONES: {name_prev}")
         print(prev_zones)
-        print(f'\nZONES: {name_new}')
+        print(f"\nZONES: {name_new}")
         print(new_zones)
         print()
 
@@ -137,37 +135,48 @@ def translate_zone_set(prev_zones, new_zones, name_prev='prev_zones', name_new='
     # get overlapping areas as new polygons
     # this drops areas of new zones that do not overlap prev zones
     # dropped areas will be re-added at the end this function
-    prev_overlapped_by_new = prev_zones.overlay(new_zones, how='identity', keep_geom_type=False)
+    prev_overlapped_by_new = prev_zones.overlay(
+        new_zones, how="identity", keep_geom_type=False
+    )
 
     # calculate area of overlap as a percentage of the original shape
-    prev_overlapped_by_new['overlap_area'] = prev_overlapped_by_new['geometry'].area
-    prev_overlapped_by_new['pct_of_prev_area'] = prev_overlapped_by_new['overlap_area'] / prev_overlapped_by_new[f'{name_prev}_area']
+    prev_overlapped_by_new["overlap_area"] = prev_overlapped_by_new["geometry"].area
+    prev_overlapped_by_new["pct_of_prev_area"] = (
+        prev_overlapped_by_new["overlap_area"]
+        / prev_overlapped_by_new[f"{name_prev}_area"]
+    )
 
     # pivots dataframe into a matrix where rows=prev_zones and cols=new_zones
     prev_to_new_matrix = prev_overlapped_by_new.pivot(
-        index=name_prev,
-        columns=name_new,
-        values='pct_of_prev_area'
+        index=name_prev, columns=name_new, values="pct_of_prev_area"
     )
 
     # clean NaNs
-    prev_to_new_matrix = prev_to_new_matrix.rename(columns={ np.nan: 'none'})
+    prev_to_new_matrix = prev_to_new_matrix.rename(columns={np.nan: "none"})
     prev_to_new_matrix = prev_to_new_matrix.fillna(value=0)
 
     # check for prev_zones that do not overlap new_zones, then remove
-    isolated_zones = prev_to_new_matrix.loc[prev_to_new_matrix['none'] >= 1]
+    isolated_zones = prev_to_new_matrix.loc[prev_to_new_matrix["none"] >= 1]
     if len(isolated_zones > 0):
-        print(f"\nWARNING: Detected {name_prev} zones that do not overlap with {name_new}: {list(isolated_zones.index)}")
-        prev_to_new_matrix = prev_to_new_matrix.loc[prev_to_new_matrix['none'] < 1]
+        print(
+            f"\nWARNING: Detected {name_prev} zones that do not overlap with {name_new}: {list(isolated_zones.index)}"
+        )
+        prev_to_new_matrix = prev_to_new_matrix.loc[prev_to_new_matrix["none"] < 1]
 
     # Alert if sum > 1 (e.g. new zones overlap each other)
     # NOTE: only checks to three decimal places
-    prev_to_new_matrix['sum'] = prev_to_new_matrix.sum(axis=1)
-    sum_greater_than_one = prev_to_new_matrix.loc[prev_to_new_matrix['sum'].round(3) > 1]
+    prev_to_new_matrix["sum"] = prev_to_new_matrix.sum(axis=1)
+    sum_greater_than_one = prev_to_new_matrix.loc[
+        prev_to_new_matrix["sum"].round(3) > 1
+    ]
     if len(sum_greater_than_one > 0):
-        print(f"WARNING: Detected rows with a sum greater than one. This most likely means that several {name_new} zones overlap each other.")
-        if verbose: print('\nROWS WITH SUM GREATER THAN ONE:')
-        if verbose: print(sum_greater_than_one.round(3))
+        print(
+            f"WARNING: Detected rows with a sum greater than one. This most likely means that several {name_new} zones overlap each other."
+        )
+        if verbose:
+            print("\nROWS WITH SUM GREATER THAN ONE:")
+        if verbose:
+            print(sum_greater_than_one.round(3))
 
     # Scale matrix such that all rows add up to 1 by distributing demand mismatch
     # proportionally between new zones.
@@ -175,18 +184,24 @@ def translate_zone_set(prev_zones, new_zones, name_prev='prev_zones', name_new='
     # if old zones aren't completely covered by new zones, we have < 100% coverage
     # Note: we could technically simplify this to just scale_factor = 1/(sum - none) but
     # the extra cols are nice for verbose mode
-    prev_to_new_matrix['sum_without_none'] = prev_to_new_matrix['sum'] - prev_to_new_matrix['none']
-    prev_to_new_matrix['to_distribute'] = 1 - prev_to_new_matrix['sum_without_none']
-    prev_to_new_matrix['scale_factor'] = 1 + prev_to_new_matrix['to_distribute'] / prev_to_new_matrix['sum_without_none']
+    prev_to_new_matrix["sum_without_none"] = (
+        prev_to_new_matrix["sum"] - prev_to_new_matrix["none"]
+    )
+    prev_to_new_matrix["to_distribute"] = 1 - prev_to_new_matrix["sum_without_none"]
+    prev_to_new_matrix["scale_factor"] = (
+        1 + prev_to_new_matrix["to_distribute"] / prev_to_new_matrix["sum_without_none"]
+    )
 
-    if verbose: print("\nMATRIX BEFORE SCALING")
-    if verbose: print(prev_to_new_matrix.round(3))
+    if verbose:
+        print("\nMATRIX BEFORE SCALING")
+    if verbose:
+        print(prev_to_new_matrix.round(3))
 
     scaled_matrix = prev_to_new_matrix.mul(
-        prev_to_new_matrix['scale_factor'], axis='rows'
+        prev_to_new_matrix["scale_factor"], axis="rows"
     )
     scaled_matrix = scaled_matrix.drop(
-        columns=['none', 'sum', 'sum_without_none', 'to_distribute', 'scale_factor']
+        columns=["none", "sum", "sum_without_none", "to_distribute", "scale_factor"]
     )
 
     # Add any rows that got dropped because they do not overlap. Fill with zeros.
@@ -205,8 +220,10 @@ def translate_zone_set(prev_zones, new_zones, name_prev='prev_zones', name_new='
                 scaled_matrix[zone] = 0
 
     if verbose:
-        print("\nINTERESTING ZONES: rows and cols that include values that are not 1 or 0")
-        with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        print(
+            "\nINTERESTING ZONES: rows and cols that include values that are not 1 or 0"
+        )
+        with pd.option_context("display.max_rows", None, "display.max_columns", None):
             print(filter_interesting_zones(scaled_matrix))
 
     return scaled_matrix
