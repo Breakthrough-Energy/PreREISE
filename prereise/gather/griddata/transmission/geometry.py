@@ -10,13 +10,24 @@ from prereise.gather.griddata.transmission.const import (
     relative_permeability,
     resistivity,
 )
-from prereise.gather.griddata.transmission.helpers import DataclassWithValidation
+from prereise.gather.griddata.transmission.helpers import (
+    DataclassWithValidation,
+    get_standard_conductors,
+)
 
 
 @dataclass
 class Conductor(DataclassWithValidation):
-    """Represent a single conductor (which may be a stranded compsite).
+    """Represent a single conductor (which may be a stranded composite). Conductors can
+    be instantiated by either:
+    - looking them up via their standardized bird ``name``,
+    - passing the parameters relevant to impedance calculations (``radius``, ``gmr``,
+    and ``resistance_per_km``), or
+    - passing paramters which can be used to estimate parameters relevant to impedance
+    calculations (``radius`` and ``material``). In this case, a solid conductor is
+    assumed.
 
+    :param str name: name of standard conductor.
     :param float radius: outer radius of conductor.
     :param str material: material of conductor. Used to calculate ``resistance_per_km``
         and ``gmr`` if these aren't passed to the constructor, unnecessary otherwise.
@@ -28,7 +39,8 @@ class Conductor(DataclassWithValidation):
         other parameters if it isn't passed.
     """
 
-    radius: float
+    name: str = None
+    radius: float = None
     material: str = None
     resistance_per_km: float = None
     gmr: float = None
@@ -38,6 +50,8 @@ class Conductor(DataclassWithValidation):
     def __post_init__(self):
         # Validate inputs
         self.validate_input_types()  # defined in DataclassWithValidation
+        if self.name is not None:
+            self._get_parameters_from_standard_conductor_table()
         if self.gmr is None and (self.material is None):
             raise ValueError(
                 "If gmr is not provided, material and radius are needed to estimate"
@@ -68,6 +82,17 @@ class Conductor(DataclassWithValidation):
                 self.area = pi * self.radius**2
             # convert per-m to per-km
             self.resistance_per_km = self.resistivity * 1000 / self.area
+
+    def _get_parameters_from_standard_conductor_table(self):
+        standard_conductors = get_standard_conductors()
+        title_cased_name = self.name.title()
+        if title_cased_name not in standard_conductors.index:
+            raise ValueError(f"No conductor named '{self.name}' in standard table")
+        data = standard_conductors.loc[title_cased_name]
+        self.gmr = data["gmr_mm"] / 1e3
+        self.radius = data["radius_mm"] / 1e3
+        self.resistance_per_km = data["resistance_ac_per_km_75c"]
+        self.name = title_cased_name
 
 
 @dataclass

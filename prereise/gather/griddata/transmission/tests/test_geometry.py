@@ -15,8 +15,8 @@ km_in_mi = 1.609
 m_in_ft = 304.8e-3
 
 
-def test_conductor():
-    # Cardinal conductor
+def test_conductor_by_parameter_values():
+    # 'Cardinal' conductor
     outer_diameter = 0.03038
     strand_radius = 1.688e-3
     rated_dc_resistance_per_1000_ft = 0.0179
@@ -31,14 +31,16 @@ def test_conductor():
     assert conductor.resistance_per_km == pytest.approx(rated_dc_resistance_per_km, 0.1)
 
 
+def test_conductor_by_name():
+    conductor = Conductor("cardinal")
+    assert conductor.resistance_per_km == 0.0709
+    assert conductor.radius == pytest.approx(0.01519)
+    assert conductor.name == "Cardinal"
+
+
 def test_conductor_bundle():
     spacing = 0.4572
-    conductor = Conductor(
-        radius=0.01519,
-        gmr=0.012253,
-        material="ACSR",  # No constants for this material, but they're un-needed
-        resistance_per_km=0.023,
-    )
+    conductor = Conductor("Cardinal")  # standard ACSR conductor
 
     for n in (2, 3):
         bundle = ConductorBundle(n=n, spacing=spacing, conductor=conductor)
@@ -55,17 +57,9 @@ def test_tower_single_circuit():
         b=(0, 90 * m_in_ft),
         c=(24 * m_in_ft, 90 * m_in_ft),
     )
-    # Conductors are ACSR 'Cardinal'
-    rated_ac_resistance_per_km = 0.0672  # rated value at 50 C
-    # Alternate value range: 0.0614 at 20 C, 0.0748 at 75 C.
 
     # Instantiate objects
-    conductor = Conductor(
-        radius=0.01519,
-        gmr=0.012253,
-        material="ACSR",  # No constants for this material, but they're un-needed
-        resistance_per_km=rated_ac_resistance_per_km,
-    )
+    conductor = Conductor("Cardinal")  # standard ACSR conductor
     bundle = ConductorBundle(n=2, spacing=spacing, conductor=conductor)
     tower = Tower(locations=locations, bundle=bundle)
 
@@ -98,16 +92,9 @@ def test_tower_double_circuit():
         b=((-10.5 * m_in_ft, 110 * m_in_ft), (10.5 * m_in_ft, 110 * m_in_ft)),
         c=((-9 * m_in_ft, 100 * m_in_ft), (9 * m_in_ft, 120 * m_in_ft)),
     )
-    # Conductors are ACSR 'Ostrich'
-    rated_ac_resistance_per_km = 0.2095  # rated value at 50 C
 
     # Instantiate objects
-    conductor = Conductor(
-        radius=0.008636,
-        gmr=0.00698,
-        material="ACSR",  # No constants for this material, but they're un-needed
-        resistance_per_km=rated_ac_resistance_per_km,
-    )
+    conductor = Conductor("Ostrich")  # standard ACSR conductor
     bundle = ConductorBundle(n=1, conductor=conductor)
     tower = Tower(locations=locations, bundle=bundle)
 
@@ -125,13 +112,8 @@ def test_tower_double_circuit():
 
 
 def test_line():
-    # ACSR 'Rook'
-    conductor = Conductor(
-        radius=0.012408,
-        gmr=0.009967,
-        material="ACSR",  # No constants for this material, but they're un-needed
-        resistance_per_km=0.09963,  # rated value at 50 C
-    )
+    conductor = Conductor("Rook")  # standard ACSR conductor
+    conductor.resistance_per_km = 0.09963  # rated value at 50 C
     locations = PhaseLocations(a=(-7.25, 50), b=(0, 50), c=(7.25, 50))
     bundle = ConductorBundle(n=1, conductor=conductor)
     tower = Tower(locations=locations, bundle=bundle)

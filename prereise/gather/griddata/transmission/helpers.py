@@ -1,3 +1,8 @@
+import os
+
+import pandas as pd
+
+
 class DataclassWithValidation:
     """A stub class which defines a method that checks dataclasses.dataclass types."""
 
@@ -52,3 +57,12 @@ def translate_to_per_unit(x, nominal_unit, z_base):
     if nominal_unit.lower() in {"siemen", "siemens"}:
         return x * z_base
     raise ValueError(f"Unknown nominal unit: {nominal_unit}")
+
+
+def get_standard_conductors():
+    """Read the data file on standard conductor parameter values.
+
+    :return: (*pandas.DataFrame*) -- data frame, indexed by conductor code name.
+    """
+    filepath = os.path.join(os.path.dirname(__file__), "data", "conductors.csv")
+    return pd.read_csv(filepath, index_col=0)
