@@ -21,11 +21,11 @@ class Conductor(DataclassWithValidation):
     """Represent a single conductor (which may be a stranded composite). Conductors can
     be instantiated by either:
     - looking them up via their standardized bird ``name``,
-    - passing the parameters relevant to impedance calculations (``radius``, ``gmr``,
-    and ``resistance_per_km``), or
+    - passing the parameters relevant to impedance and rating calculations
+    (``radius``, ``gmr``, ``resistance_per_km``, and ``current_limit``), or
     - passing paramters which can be used to estimate parameters relevant to impedance
-    calculations (``radius`` and ``material``). In this case, a solid conductor is
-    assumed.
+    and rating calculations (``radius``, ``material``, and ``current_limit``). In this
+    case, a solid conductor is assumed.
 
     :param str name: name of standard conductor.
     :param float radius: outer radius of conductor.
@@ -46,6 +46,7 @@ class Conductor(DataclassWithValidation):
     gmr: float = None
     area: float = None
     permeability: float = None
+    current_limit: float = None
 
     def __post_init__(self):
         # Validate inputs
@@ -92,6 +93,7 @@ class Conductor(DataclassWithValidation):
         self.gmr = data["gmr_mm"] / 1e3
         self.radius = data["radius_mm"] / 1e3
         self.resistance_per_km = data["resistance_ac_per_km_75c"]
+        self.current_limit = data["max_amps"]
         self.name = title_cased_name
 
 

@@ -27,7 +27,12 @@ def test_conductor_by_parameter_values():
     # Count 54 aluminum strands only for conductance purposes, ignore 7 steel strands
     # (resistance should be approximately equal to rated)
     area = 54 * pi * strand_radius**2
-    conductor = Conductor(radius=(outer_diameter / 2), area=area, material="aluminum")
+    conductor = Conductor(
+        radius=(outer_diameter / 2),
+        area=area,
+        material="aluminum",
+        current_limit=1015,
+    )
     assert conductor.resistance_per_km == pytest.approx(rated_dc_resistance_per_km, 0.1)
 
 
