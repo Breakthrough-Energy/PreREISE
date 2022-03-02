@@ -1,8 +1,8 @@
 import folium
-from folium.features import DivIcon
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from folium.features import DivIcon
 
 # IMPORTANT: rtree is required for overlay function, but not imported
 
