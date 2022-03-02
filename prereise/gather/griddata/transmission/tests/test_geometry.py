@@ -2,6 +2,7 @@ from math import pi, sqrt
 
 import pytest
 
+from prereise.gather.griddata.transmission.const import kilometers_per_mile as km_per_mi
 from prereise.gather.griddata.transmission.geometry import (
     Conductor,
     ConductorBundle,
@@ -10,7 +11,6 @@ from prereise.gather.griddata.transmission.geometry import (
     Tower,
 )
 
-km_in_mi = 1.609
 # Conversion factor for tower spacing in feet to tower spacing in meters
 m_in_ft = 304.8e-3
 
@@ -69,9 +69,9 @@ def test_tower_single_circuit():
     tower = Tower(locations=locations, bundle=bundle)
 
     # Calculate for 50-mile distances (test case)
-    resistance_per_50_mi = tower.resistance * 50 * km_in_mi
-    series_reactance_per_50_mi = 2 * pi * 60 * tower.inductance * 50 * km_in_mi
-    shunt_admittance_per_50_mi = 2 * pi * 60 * tower.capacitance * 50 * km_in_mi
+    resistance_per_50_mi = tower.resistance * 50 * km_per_mi
+    series_reactance_per_50_mi = 2 * pi * 60 * tower.inductance * 50 * km_per_mi
+    shunt_admittance_per_50_mi = 2 * pi * 60 * tower.capacitance * 50 * km_per_mi
 
     # Expected values
     expected_resistance = 2.82  # Ohms
@@ -104,8 +104,8 @@ def test_tower_double_circuit():
     tower = Tower(locations=locations, bundle=bundle)
 
     # Calculate per-mile values (test case)
-    series_reactance_per_mi = 2 * pi * 60 * tower.inductance * km_in_mi
-    shunt_admittance_per_mi = 2 * pi * 60 * tower.capacitance * km_in_mi
+    series_reactance_per_mi = 2 * pi * 60 * tower.inductance * km_per_mi
+    shunt_admittance_per_mi = 2 * pi * 60 * tower.capacitance * km_per_mi
 
     # Expected values
     expected_series_reactance = 0.372  # Ohms

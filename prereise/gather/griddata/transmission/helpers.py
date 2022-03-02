@@ -2,6 +2,12 @@ import os
 
 import pandas as pd
 
+from prereise.gather.griddata.transmission.const import (
+    kilometers_per_mile,
+    st_clair_power_approx_coeff,
+    st_clair_power_approx_exponent,
+)
+
 
 class DataclassWithValidation:
     """A stub class which defines a method that checks dataclasses.dataclass types."""
@@ -66,3 +72,19 @@ def get_standard_conductors():
     """
     filepath = os.path.join(os.path.dirname(__file__), "data", "conductors.csv")
     return pd.read_csv(filepath, index_col=0)
+
+
+def approximate_loadability(length_km, method="power"):
+    """Approximate the value of the St. Clair curve at a given point, using a given
+    approximation method.
+
+    :param float length_km: line length (kilometers).
+    :param str method: curve approximation method. Currently, only 'power' is supported.
+    :return: (*float*) -- line loadibility (normalized to surge impedance loading).
+    :raises ValueError: if the ``method`` is not supported.
+    """
+    miles = length_km / kilometers_per_mile
+    allowable_methods = {"power"}
+    if method == "power":
+        return st_clair_power_approx_coeff * miles**st_clair_power_approx_exponent
+    raise ValueError(f"Unsupported method: {method}. Choose from: {allowable_methods}")
