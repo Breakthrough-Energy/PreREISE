@@ -110,8 +110,8 @@ class ConductorBundle(DataclassWithValidation):
         regular spacing ``spacing``).
     """
 
-    n: int
     conductor: Conductor
+    n: int = 1
     spacing: float = None  # we need to be able to ignore spacing for a single conductor
     layout: str = "circular"
     resistance_per_km: float = field(init=False)
@@ -121,6 +121,8 @@ class ConductorBundle(DataclassWithValidation):
 
     def __post_init__(self):
         self.validate_input_types()  # defined in DataclassWithValidation
+        if self.n != 1 and self.spacing is None:
+            raise ValueError("With multiple conductors, spacing must be specified")
         self.resistance_per_km = self.conductor.resistance_per_km / self.n
         self.spacing_L = self.calculate_equivalent_spacing("inductance")
         self.spacing_C = self.calculate_equivalent_spacing("capacitance")
