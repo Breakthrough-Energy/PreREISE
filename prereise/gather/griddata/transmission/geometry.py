@@ -332,7 +332,11 @@ class Line(DataclassWithValidation):
         self.propogation_constant_per_km = cmath.sqrt(
             self.series_impedance_per_km * self.shunt_admittance_per_km
         )
-        self.surge_impedance_loading = self.voltage**2 / abs(self.surge_impedance)
+        self.surge_impedance_loading = (
+            self.tower.locations.circuits
+            * self.voltage**2
+            / abs(self.surge_impedance)
+        )
         # Calculate loadability (depends on length)
         if self.tower.phase_current_limit is not None:
             self.thermal_rating = (
