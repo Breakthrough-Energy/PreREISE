@@ -89,6 +89,9 @@ def test_tower_single_circuit():
         expected_shunt_admittance, rel=0.01
     )
 
+    line = Line(tower=tower, length=(50 * km_per_mi), voltage=345)
+    assert line.power_rating == pytest.approx(1207, rel=0.01)
+
 
 def test_tower_double_circuit():
     locations = PhaseLocations(
@@ -116,7 +119,7 @@ def test_tower_double_circuit():
     assert shunt_admittance_per_mi == pytest.approx(expected_shunt_admittance, rel=0.01)
 
 
-def test_line():
+def test_line_long():
     conductor = Conductor("Rook")  # standard ACSR conductor
     conductor.resistance_per_km = 0.09963  # rated value at 50 C
     locations = PhaseLocations(a=(-7.25, 50), b=(0, 50), c=(7.25, 50))
@@ -130,3 +133,26 @@ def test_line():
     assert line.shunt_admittance == pytest.approx(0.001198j, rel=0.005)
     assert line.surge_impedance_loading == pytest.approx(215**2 / 406.4, rel=0.005)
     assert line.thermal_rating == pytest.approx(215 * 795 * sqrt(3) / 1e3)
+    assert line.power_rating == pytest.approx(1.14534 * 113.742, rel=0.005)
+
+
+def test_line_short():
+    short_line_length = 10  # km
+    omega = 60 * 2 * pi
+    conductor = Conductor("Rook")
+    locations = PhaseLocations(a=(-7.25, 50), b=(0, 50), c=(7.25, 50))
+    bundle = ConductorBundle(n=1, conductor=conductor)
+    tower = Tower(locations=locations, bundle=bundle)
+    line = Line(tower=tower, length=10, voltage=215)
+    assert line.power_rating == line.thermal_rating
+    assert line.series_impedance.imag == pytest.approx(
+        line.tower.inductance * omega * short_line_length,
+        rel=1e-4,
+    )
+    assert line.series_impedance.real == pytest.approx(
+        line.tower.resistance * short_line_length,
+        rel=1e-4,
+    )
+    assert line.shunt_admittance.imag == pytest.approx(
+        short_line_length * line.tower.capacitance * omega, rel=1e-4
+    )

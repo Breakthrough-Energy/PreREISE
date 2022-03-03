@@ -12,6 +12,7 @@ from prereise.gather.griddata.transmission.const import (
 )
 from prereise.gather.griddata.transmission.helpers import (
     DataclassWithValidation,
+    approximate_loadability,
     get_standard_conductors,
 )
 
@@ -308,6 +309,8 @@ class Line(DataclassWithValidation):
     series_impedance: complex = field(init=False)
     shunt_admittance: complex = field(init=False)
     thermal_rating: float = field(init=False, default=None)
+    stability_rating: float = field(init=False, default=None)
+    power_rating: float = field(init=False, default=None)
 
     def __post_init__(self):
         # Convert integers to floats as necessary
@@ -333,6 +336,12 @@ class Line(DataclassWithValidation):
             self.thermal_rating = (
                 self.voltage * self.tower.phase_current_limit * sqrt(3) / 1e3  # MW
             )
+            self.stability_rating = (
+                self.tower.locations.circuits
+                * approximate_loadability(self.length)
+                * self.surge_impedance_loading
+            )
+            self.power_rating = min(self.thermal_rating, self.stability_rating)
         # Use the long-line transmission model to calculate lumped-element parameters
         self.series_impedance = (self.series_impedance_per_km * self.length) * (
             cmath.sinh(self.propogation_constant_per_km * self.length)
