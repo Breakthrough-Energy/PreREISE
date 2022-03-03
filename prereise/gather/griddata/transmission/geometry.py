@@ -116,12 +116,15 @@ class ConductorBundle(DataclassWithValidation):
     resistance_per_km: float = field(init=False)
     spacing_L: float = field(init=False)  # noqa: N815
     spacing_C: float = field(init=False)  # noqa: N815
+    current_limit: float = field(init=False, default=None)
 
     def __post_init__(self):
         self.validate_input_types()  # defined in DataclassWithValidation
         self.resistance_per_km = self.conductor.resistance_per_km / self.n
         self.spacing_L = self.calculate_equivalent_spacing("inductance")
         self.spacing_C = self.calculate_equivalent_spacing("capacitance")
+        if self.conductor.current_limit is not None:
+            self.current_limit = self.conductor.current_limit * self.n
 
     def calculate_equivalent_spacing(self, type="inductance"):
         if type == "inductance":
@@ -248,12 +251,17 @@ class Tower(DataclassWithValidation):
     resistance: float = field(init=False)
     inductance: float = field(init=False)
     capacitance: float = field(init=False)
+    phase_current_limit: float = field(init=False, default=None)
 
     def __post_init__(self):
         self.validate_input_types()  # defined in DataclassWithValidation
         self.resistance = self.bundle.resistance_per_km / self.locations.circuits
         self.inductance = self.calculate_inductance_per_km()
         self.capacitance = self.calculate_shunt_capacitance_per_km()
+        if self.bundle.current_limit is not None:
+            self.phase_current_limit = (
+                self.bundle.current_limit * self.locations.circuits
+            )
 
     def calculate_inductance_per_km(self):
         denominator = _circuit_bundle_distances(
@@ -299,6 +307,7 @@ class Line(DataclassWithValidation):
     surge_impedance: complex = field(init=False)
     series_impedance: complex = field(init=False)
     shunt_admittance: complex = field(init=False)
+    thermal_rating: float = field(init=False, default=None)
 
     def __post_init__(self):
         # Convert integers to floats as necessary
@@ -319,6 +328,11 @@ class Line(DataclassWithValidation):
             self.series_impedance_per_km * self.shunt_admittance_per_km
         )
         self.surge_impedance_loading = self.voltage**2 / abs(self.surge_impedance)
+        # Calculate loadability (depends on length)
+        if self.tower.phase_current_limit is not None:
+            self.thermal_rating = (
+                self.voltage * self.tower.phase_current_limit * sqrt(3) / 1e3  # MW
+            )
         # Use the long-line transmission model to calculate lumped-element parameters
         self.series_impedance = (self.series_impedance_per_km * self.length) * (
             cmath.sinh(self.propogation_constant_per_km * self.length)

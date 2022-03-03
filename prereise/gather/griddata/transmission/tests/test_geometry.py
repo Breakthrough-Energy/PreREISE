@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, sqrt
 
 import pytest
 
@@ -129,3 +129,4 @@ def test_line():
     assert line.series_impedance.real == pytest.approx(34.20553, rel=0.005)
     assert line.shunt_admittance == pytest.approx(0.001198j, rel=0.005)
     assert line.surge_impedance_loading == pytest.approx(215**2 / 406.4, rel=0.005)
+    assert line.thermal_rating == pytest.approx(215 * 795 * sqrt(3) / 1e3)
