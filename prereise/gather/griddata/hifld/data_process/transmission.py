@@ -18,6 +18,18 @@ from prereise.gather.griddata.hifld.data_process.topology import (
     add_interconnects_by_connected_components,
     get_mst_edges,
 )
+from prereise.gather.griddata.transmission import const as transmission_const
+from prereise.gather.griddata.transmission.geometry import (
+    Conductor,
+    ConductorBundle,
+    Line,
+    PhaseLocations,
+    Tower,
+)
+from prereise.gather.griddata.transmission.helpers import (
+    calculate_z_base,
+    translate_to_per_unit,
+)
 
 
 def check_for_location_conflicts(substations):
@@ -535,11 +547,92 @@ def create_transformers(bus):
     return pd.DataFrame(bus_pairs, columns=["from_bus_id", "to_bus_id"])
 
 
+def add_impedance_and_rating(branch, bus):
+    """Estimate branch impedances and ratings based on voltage and length (for lines),
+    and add these to the branch data frame (modified inplace).
+
+    :param pandas.DataFrame branch: branch data table.
+    """
+
+    def build_tower(series):
+        """Given a series of line design data, build a representative Tower.
+
+        :param pandas.Series series: line data.
+        :return: (*prereise.gather.griddata.transmission.geometry.Tower*) -- Tower.
+        """
+        conductor = Conductor(series["conductor"])
+        bundle = ConductorBundle(
+            conductor=conductor,
+            n=series["bundle_count"],
+            spacing=series["spacing"],
+        )
+        num_circuits = series["circuits"]
+        locations = PhaseLocations(
+            a=tuple(tuple(series[[f"a{i}x", f"a{i}y"]]) for i in range(num_circuits)),
+            b=tuple(tuple(series[[f"b{i}x", f"b{i}y"]]) for i in range(num_circuits)),
+            c=tuple(tuple(series[[f"c{i}x", f"c{i}y"]]) for i in range(num_circuits)),
+            circuits=num_circuits,
+        )
+        return Tower(bundle=bundle, locations=locations)
+
+    # Read designs
+    designs_path = os.path.join(
+        os.path.dirname(__file__), "..", "data", "line_designs.csv"
+    )
+    tower_designs = pd.read_csv(designs_path)
+    # Use design info to build object for further analysis
+    tower_designs["Tower"] = tower_designs.apply(build_tower, axis=1)
+
+    # The default line design for each voltage is single-circuit, smallest bundle
+    default_designs = pd.Series(
+        {
+            voltage: (voltage, 1, group["bundle_count"].min())
+            for voltage, group in tower_designs.groupby("voltage")
+        }
+    )
+    # Find the default line design for each voltage
+    closest_voltage_design = {
+        v: default_designs.iloc[default_designs.index.get_loc(v, method="nearest")]
+        for v in branch["VOLTAGE"].dropna().unique()
+    }
+    # Add meaningful index for easier lookups using design tuples
+    tower_designs.set_index(["voltage", "circuits", "bundle_count"], inplace=True)
+    # Map each transmission line to its corresponding Tower design
+    branch_plus_lines = branch.assign(
+        line_object=branch.query("type == 'Line'").apply(
+            lambda x: Line(
+                tower=tower_designs.loc[closest_voltage_design[x["VOLTAGE"]], "Tower"],
+                voltage=x["VOLTAGE"],
+                length=x["length"],
+            ),
+            axis=1,
+        ),
+    )
+
+    default_thermal_ratings = (
+        tower_designs.loc[default_designs]
+        .reset_index()
+        .set_index("voltage")
+        .apply(
+            lambda x: Line(tower=x["Tower"], voltage=x.name, length=1).thermal_rating,
+            axis=1,
+        )
+    )
+    # Now that we have Line objects for each Line, we can use the lower-level functions
+    branch["x"] = branch_plus_lines.apply(
+        lambda x: estimate_branch_impedance(x, bus["baseKV"]), axis=1
+    )
+    branch["rateA"] = branch_plus_lines.apply(
+        lambda x: estimate_branch_rating(x, bus["baseKV"], default_thermal_ratings),
+        axis=1,
+    )
+
+
 def estimate_branch_impedance(branch, bus_voltages):
     """Estimate branch impedance using transformer voltages or line voltage and length.
 
     :param pandas.Series branch: data for a single branch (line or transformer). All
-        branches require 'type' attributes, lines require 'VOLTAGE' and 'length',
+        branches require 'type' attributes, lines require 'VOLTAGE' and 'line_object',
         transformers require 'from_bus_id' and 'to_bus_id'.
     :param pandas.Series bus_voltages: mapping of buses to voltages.
     :return: (*float*) -- impedance for that branch (per-unit).
@@ -559,12 +652,10 @@ def estimate_branch_impedance(branch, bus_voltages):
         )
         return const.transformer_reactance[closest_voltage_tuple]
     elif branch.loc["type"] == "Line":
-        # Calculate line length via sum of distances between adjacent coordinate pairs
-        reactance_lookup = pd.Series(const.line_reactance_per_mile)
-        closest_voltage_reactance_per_mile = reactance_lookup.iloc[
-            reactance_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
-        ]
-        return branch.loc["length"] * closest_voltage_reactance_per_mile
+        z_base = calculate_z_base(v_base=branch["VOLTAGE"], s_base=const.s_base)
+        return translate_to_per_unit(
+            branch["line_object"].series_impedance.imag, "x", z_base
+        )
     else:
         raise ValueError(f"{branch.loc['type']} not a valid branch type")
 
@@ -579,38 +670,23 @@ def calculate_branch_mileage(branch):
     return sum([haversine(a, b) for a, b in zip(coordinates[:-1], coordinates[1:])])
 
 
-def estimate_branch_rating(branch, bus_voltages):
+def estimate_branch_rating(branch, bus_voltages, voltage_thermal_ratings):
     """Estimate branch rating using line voltage or constant value for transformers.
 
     :param pandas.Series branch: data for a single branch (line or transformer). All
-        branches require 'type' attributes, lines require 'VOLTAGE' and 'length'.
+        branches require 'type' attributes, lines require 'line_object'.
     :param pandas.Series bus_voltages: mapping of buses to voltages.
+    :param pandas.Series voltage_thermal_ratings: line thermal ratings by voltage.
     :return: (*float*) -- rating for that branch (MW).
     :raises ValueError: if branch 'type' attribute not recognized.
     """
     if branch.loc["type"] == "Line":
-        if branch.loc["length"] <= const.line_rating_short_threshold:
-            rating_lookup = pd.Series(const.line_rating_short)
-            closest_rating = rating_lookup.iloc[
-                rating_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
-            ]
-            return closest_rating
-        else:
-            sil_lookup = pd.Series(const.line_rating_surge_impedance_loading)
-            closest_sil = sil_lookup.iloc[
-                sil_lookup.index.get_loc(branch.loc["VOLTAGE"], method="nearest")
-            ]
-            return (
-                closest_sil
-                * const.line_rating_surge_impedance_coefficient
-                * branch.loc["length"] ** const.line_rating_surge_impedance_exponent
-            )
+        return branch["line_object"].power_rating
     elif branch.loc["type"] == "Transformer":
         rating = const.transformer_rating
         max_voltage = bus_voltages.loc[[branch.from_bus_id, branch.to_bus_id]].max()
-        line_capacities = pd.Series(const.line_rating_short)
-        closest_voltage_rating = line_capacities.iloc[
-            line_capacities.index.get_loc(max_voltage, method="nearest")
+        closest_voltage_rating = voltage_thermal_ratings.iloc[
+            voltage_thermal_ratings.index.get_loc(max_voltage, method="nearest")
         ]
         num_addl_transformers = int(closest_voltage_rating / rating)
         return rating * (1 + num_addl_transformers)
@@ -817,14 +893,12 @@ def build_transmission(method="line2sub", **kwargs):
     first_new_id = ac_lines.index.max() + 1
     transformers.index = pd.RangeIndex(first_new_id, first_new_id + len(transformers))
     ac_lines["type"] = "Line"
-    ac_lines["length"] = ac_lines.apply(calculate_branch_mileage, axis=1)
+    ac_lines["length"] = (
+        ac_lines.apply(calculate_branch_mileage, axis=1)
+        * transmission_const.kilometers_per_mile
+    )
     branch = pd.concat([ac_lines, transformers])
-    branch["x"] = branch.apply(
-        lambda x: estimate_branch_impedance(x, bus["baseKV"]), axis=1
-    )
-    branch["rateA"] = branch.apply(
-        lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
-    )
+    add_impedance_and_rating(branch, bus)
 
     # Update substation max & min voltages using bus data (from lines)
     substations["MAX_VOLT"].update(bus.groupby("sub_id")["baseKV"].apply(max))

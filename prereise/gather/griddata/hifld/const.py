@@ -1,3 +1,5 @@
+s_base = 100  # MVA
+
 mile_to_meter = 1609.34
 meter_to_mile = 1.0 / mile_to_meter
 
