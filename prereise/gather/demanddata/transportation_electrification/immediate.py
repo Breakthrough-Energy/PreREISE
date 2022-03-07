@@ -101,7 +101,7 @@ def resample_daily_charging(trips, charging_power):
 
 
 def immediate_charging(
-    census_region, model_year, veh_range, kwhmi, power, location_strategy, veh_type
+    census_region, model_year, veh_range, kwhmi, power, location_strategy, veh_type, filepath
 ):
     """Immediate charging function
     :param int census_region: any of the 9 census regions defined by US census bureau.
@@ -113,6 +113,7 @@ def immediate_charging(
         1-home only, 2-home and work related, 3-anywhere if possibile,
         4-home and school only, 5-home and work and school.
     :param str veh_type: determine which category (LDV or LDT) to produce charging profiles for
+    :param str filepath: the path to the nhts mat file.
     :return: (*numpy.ndarray*) -- charging profiles.
     """
     # Constants
@@ -122,10 +123,10 @@ def immediate_charging(
 
     # load NHTS data from function
     if veh_type.lower() == "ldv":
-        trips = data_helper.remove_ldt(data_helper.load_data(census_region))
+        trips = data_helper.remove_ldt(data_helper.load_data(census_region, filepath))
 
     elif veh_type.lower() == "ldt":
-        trips = data_helper.remove_ldv(data_helper.load_data(census_region))
+        trips = data_helper.remove_ldv(data_helper.load_data(census_region, filepath))
 
     # updates the weekend and weekday values in the nhts data
     trips = data_helper.update_if_weekend(trips)
