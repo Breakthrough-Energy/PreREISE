@@ -408,7 +408,7 @@ def augment_line_voltages(
         :param str method_name: method name to print once no more updates can be found.
         """
         while True:
-            missing = lines.query("VOLTAGE.isnull()")
+            missing = lines.loc[lines["VOLTAGE"].isnull()]
             if len(missing) == 0:
                 print(f"No more missing voltages remain after neighbor {method_name}")
                 break
