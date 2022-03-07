@@ -101,7 +101,15 @@ def resample_daily_charging(trips, charging_power):
 
 
 def immediate_charging(
-    census_region, model_year, veh_range, kwhmi, power, location_strategy, veh_type, filepath, trip_strategy=1
+    census_region,
+    model_year,
+    veh_range,
+    kwhmi,
+    power,
+    location_strategy,
+    veh_type,
+    filepath,
+    trip_strategy=1,
 ):
     """Immediate charging function
     :param int census_region: any of the 9 census regions defined by US census bureau.
