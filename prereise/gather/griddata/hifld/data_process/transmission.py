@@ -547,11 +547,16 @@ def create_transformers(bus):
     return pd.DataFrame(bus_pairs, columns=["from_bus_id", "to_bus_id"])
 
 
-def add_impedance_and_rating(branch, bus):
+def add_impedance_and_rating(branch, bus_voltages, line_overrides=None):
     """Estimate branch impedances and ratings based on voltage and length (for lines),
     and add these to the branch data frame (modified inplace).
 
-    :param pandas.DataFrame branch: branch data table.
+    :param pandas.DataFrame branch: branch data table. Required columns are:
+        'VOLTAGE' (in kV) and 'length' (in km).
+    :param pandas.Series bus_voltages: mapping of bus IDs to voltages (kV).
+    :param dict/pandas.Series line_overrides: keys/index are line IDs (corresponding to
+        indices of the ``branch`` data frame), values are tuples of
+        (voltage, number of circuits, number of conductors in bundle).
     """
 
     def build_tower(series):
@@ -575,6 +580,7 @@ def add_impedance_and_rating(branch, bus):
         )
         return Tower(bundle=bundle, locations=locations)
 
+    line_overrides = {} if line_overrides is None else line_overrides
     # Read designs
     designs_path = os.path.join(
         os.path.dirname(__file__), "..", "data", "line_designs.csv"
@@ -601,7 +607,10 @@ def add_impedance_and_rating(branch, bus):
     branch_plus_lines = branch.assign(
         line_object=branch.query("type == 'Line'").apply(
             lambda x: Line(
-                tower=tower_designs.loc[closest_voltage_design[x["VOLTAGE"]], "Tower"],
+                tower=tower_designs.loc[
+                    line_overrides.get(x.name, closest_voltage_design[x["VOLTAGE"]]),
+                    "Tower",
+                ],
                 voltage=x["VOLTAGE"],
                 length=x["length"],
             ),
@@ -620,10 +629,10 @@ def add_impedance_and_rating(branch, bus):
     )
     # Now that we have Line objects for each Line, we can use the lower-level functions
     branch["x"] = branch_plus_lines.apply(
-        lambda x: estimate_branch_impedance(x, bus["baseKV"]), axis=1
+        lambda x: estimate_branch_impedance(x, bus_voltages), axis=1
     )
     branch["rateA"] = branch_plus_lines.apply(
-        lambda x: estimate_branch_rating(x, bus["baseKV"], default_thermal_ratings),
+        lambda x: estimate_branch_rating(x, bus_voltages, default_thermal_ratings),
         axis=1,
     )
 
@@ -898,7 +907,7 @@ def build_transmission(method="line2sub", **kwargs):
         * transmission_const.kilometers_per_mile
     )
     branch = pd.concat([ac_lines, transformers])
-    add_impedance_and_rating(branch, bus)
+    add_impedance_and_rating(branch, bus["baseKV"], const.line_design_assumptions)
 
     # Update substation max & min voltages using bus data (from lines)
     substations["MAX_VOLT"].update(bus.groupby("sub_id")["baseKV"].apply(max))
