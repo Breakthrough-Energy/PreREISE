@@ -115,10 +115,12 @@ def estimate_heat_rate_curve(
     try:
         epa_key = crosswalk_translation.loc[eia_key].values[0]
         samples = epa_ampd_groupby.get_group(epa_key)
-        filtered_samples = samples.query(
-            f"(not `{x_col}`.isnull()) and `{x_col}` != 0 "
-            f"and (not `{y_col}`.isnull()) and `{y_col}` != 0"
-        )
+        filtered_samples = samples.loc[
+            (samples[x_col] != 0)
+            & (samples[y_col] != 0)
+            & ~samples[x_col].isnull()
+            & ~samples[y_col].isnull()
+        ]
         if len(filtered_samples[x_col].unique()) < min_unique_x:
             return default_return
         if len(filtered_samples) < min_points:
@@ -321,7 +323,7 @@ def build_plant(bus, substations, kwargs={}):
     filter_suspicious_heat_rates(generators)
     augment_missing_heat_rates(generators)
     # Drop generators whose heat rates can't be estimated
-    to_be_dropped = generators.query("h1.isnull()")
+    to_be_dropped = generators.loc[generators["h1"].isnull()]
     print(
         f"Dropping generators whose heat rates can't be estimated: {len(to_be_dropped)}"
         f" out of {len(generators)}, {round(to_be_dropped['Pmax'].sum(), 0)} MW out of "
