@@ -101,7 +101,7 @@ def resample_daily_charging(trips, charging_power):
 
 
 def immediate_charging(
-    census_region, model_year, veh_range, kwhmi, power, location_strategy, veh_type, filepath
+    census_region, model_year, veh_range, kwhmi, power, location_strategy, veh_type, filepath, trip_strategy=1
 ):
     """Immediate charging function
     :param int census_region: any of the 9 census regions defined by US census bureau.
@@ -114,10 +114,10 @@ def immediate_charging(
         4-home and school only, 5-home and work and school.
     :param str veh_type: determine which category (LDV or LDT) to produce charging profiles for
     :param str filepath: the path to the nhts mat file.
+    :param int trip_strategy: determine to charge after any trip (1) or only after the last trip (2)
     :return: (*numpy.ndarray*) -- charging profiles.
     """
     # Constants
-    trip_strategy = 1
     battery_capacity = kwhmi * veh_range
     input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
 
