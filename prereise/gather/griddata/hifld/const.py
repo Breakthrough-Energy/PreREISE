@@ -594,6 +594,10 @@ line_interconnect_assumptions = {
     "ERCOT": {305330},
 }
 
+line_voltage_assumptions = {
+    128842: 230,
+}
+
 line_design_assumptions = {
     # branch index: (voltage, circuits, bundle count)
     101536: (161, 2, 4),  # TVA Cumberland (between substations)

@@ -403,7 +403,11 @@ def filter_islands_and_connect_with_mst(
 
 
 def augment_line_voltages(
-    lines, substations, volt_class_defaults=None, state_threshold_100_161=0.95
+    lines,
+    substations,
+    volt_class_defaults=None,
+    voltage_assumptions=None,
+    state_threshold_100_161=0.95,
 ):
     """Fill in voltages for lines with missing voltages, using a series of heuristics.
     The ``lines`` dataframe will be modified in-place.
@@ -412,6 +416,8 @@ def augment_line_voltages(
     :param pandas.DataFrame substations: data frame of substations.
     :param dict/pandas.Series volt_class_defaults: mapping of volt classes to default
         replacement voltage values. If None, internally-defined defaults will be used.
+    :param dict/pandas.Series voltage_assumptions: mapping of branches to voltages.
+        If None, internally-defined defaults will be used.
     :param int/float state_threshold_100_161: fraction of lines in the 100-161 kV range
         which must be the same voltage for the most common voltage to be applied to
         missing voltage lines in this state.
@@ -455,7 +461,11 @@ def augment_line_voltages(
     # Interpret input parameters
     if volt_class_defaults is None:
         volt_class_defaults = const.volt_class_defaults
+    if voltage_assumptions is None:
+        voltage_assumptions = const.line_voltage_assumptions
 
+    # Set voltages based on per-branch information
+    lines["VOLTAGE"].update(voltage_assumptions)
     # Set voltages based on voltage class defaults
     null_voltages = lines.loc[lines.VOLTAGE.isna()]
     replacement_voltages = null_voltages.VOLT_CLASS.map(volt_class_defaults)
