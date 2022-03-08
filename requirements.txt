@@ -16,3 +16,4 @@ black
 pytest
 coverage
 pytest-cov
+pygrib~=2.1.4
