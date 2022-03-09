@@ -382,7 +382,7 @@ def partition_demand_by_sector(es, ta, year, sect=None, fpath="", save=False):
     # Include the appropriate timestamps for the local time (with year=2016)
     sect_dem = {
         i: sect_dem[i].set_axis(
-            pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+            pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
             axis="index",
         )
         for i in sect
@@ -488,7 +488,7 @@ def partition_flexibility_by_sector(
     # Include the appropriate timestamps for the local time (with year=2016)
     sect_flex = {
         i: sect_flex[i].set_axis(
-            pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+            pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
             axis="index",
         )
         for i in sect
@@ -672,7 +672,7 @@ def account_for_leap_year(df):
     jan2_dem = df.iloc[24:48]
 
     # Append to the input DataFrame to create an 8784-hour profile
-    new_df = df.append(jan2_dem, ignore_index=True)
+    new_df = pd.concat([df, jan2_dem], ignore_index=True)
 
     # Return the 8784-hour profile
     return new_df

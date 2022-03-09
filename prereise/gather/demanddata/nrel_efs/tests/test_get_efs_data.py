@@ -158,7 +158,7 @@ def test_partition_demand_by_sector():
         # Create the expected results
         exp_res_dem = pd.DataFrame(
             3,
-            index=pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+            index=pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
             columns=cont_states,
         )
         exp_res_dem.index.name = "Local Time"
@@ -198,7 +198,7 @@ def test_partition_flexibility_by_sector():
         # Create the expected results
         exp_res_flex = pd.DataFrame(
             3,
-            index=pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+            index=pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
             columns=cont_states,
         )
         exp_res_flex.index.name = "Local Time"

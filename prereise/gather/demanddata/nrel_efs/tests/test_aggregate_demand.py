@@ -10,7 +10,7 @@ def test_combine_efs_demand():
     cont_states = sorted(set(abv2state) - {"AK", "HI"})
     dummy_data = pd.DataFrame(
         1,
-        index=pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+        index=pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
         columns=cont_states,
     )
     dummy_data.index.name = "Local Time"
@@ -26,7 +26,7 @@ def test_combine_efs_demand():
     # Create the expected result
     exp_agg_dem = pd.DataFrame(
         4,
-        index=pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+        index=pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
         columns=cont_states,
     )
     exp_agg_dem.index.name = "Local Time"
