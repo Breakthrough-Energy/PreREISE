@@ -511,6 +511,16 @@ contiguous_us_bounds = {
     "west": -125,
 }
 
+proxy_substations = [
+    {"LATITUDE": 35.0514, "LONGITUDE": -81.0694, "NAME": "Catawba", "STATE": "SC"},
+    {
+        "LATITUDE": 44.2853,
+        "LONGITUDE": -105.3826,
+        "NAME": "Neil Simpson II",
+        "STATE": "WY",
+    },
+]
+
 seams_substations = {
     "east_west": {
         202364,  # 'LAMAR HVDC TIE'
