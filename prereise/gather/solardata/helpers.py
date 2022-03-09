@@ -29,7 +29,7 @@ def to_reise(data):
         if i == 1:
             profile = data_tmp.T
         else:
-            profile = profile.append(data_tmp.T, sort=False, ignore_index=True)
+            profile = pd.concat([profile, data_tmp.T], sort=False, ignore_index=True)
 
     profile.set_index(ts, inplace=True)
     profile.index.name = "UTC"

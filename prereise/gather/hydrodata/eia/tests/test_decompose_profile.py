@@ -22,6 +22,7 @@ mock_plant_df = pd.DataFrame(
         ],
     }
 )
+
 mock_total_profile = pd.Series(
     [15, 15, 30, 30],
     index=[0, 1, 2, 3],
@@ -76,7 +77,7 @@ def test_get_profile_by_plant_argument_value():
 
 
 def test_get_profile_by_plant():
-    plant_df = mock_plant_df[mock_plant_df.type == "hydro"]
+    plant_df = mock_plant_df.set_index("plant_id").query("type == 'hydro'")
     assert mock_plant_profile.equals(get_profile_by_plant(plant_df, mock_total_profile))
 
 
@@ -102,7 +103,7 @@ def test_get_normalized_profile_argument_value():
 
 
 def test_get_normalized_profile():
-    plant_df = mock_plant_df[mock_plant_df.type == "hydro"]
+    plant_df = mock_plant_df.set_index("plant_id").query("type == 'hydro'")
     assert mock_normalized_profile.equals(
         get_normalized_profile(plant_df, mock_plant_profile)
     )

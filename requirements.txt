@@ -11,6 +11,7 @@ requests~=2.25
 scipy~=1.7
 tqdm==4.29.1
 xlrd==1.2.0
+openpyxl
 nrel-pysam~=2.2
 black
 pytest

@@ -56,7 +56,7 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
     # Initialize agg_dem
     agg_dem = pd.DataFrame(
         0,
-        index=pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left"),
+        index=pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
         columns=sorted(set(abv2state) - {"AK", "HI"}),
     )
     agg_dem.index.name = "Local Time"
@@ -66,7 +66,7 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
         for i in efs_dem:
             # Check the DataFrame dimensions and headers
             if not efs_dem[i].index.equals(
-                pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+                pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left")
             ):
                 raise ValueError("This data does not have the proper timestamps.")
             if set(efs_dem[i].columns) != set(abv2state) - {"AK", "HI"}:
@@ -80,7 +80,7 @@ def combine_efs_demand(efs_dem=None, non_efs_dem=None, save=None):
         for x in non_efs_dem:
             # Check the DataFrame dimensions and headers
             if not x.index.equals(
-                pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+                pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left")
             ):
                 raise ValueError("This data does not have the proper timestamps.")
             if set(x.columns) != set(abv2state) - {"AK", "HI"}:
@@ -136,7 +136,7 @@ def access_non_efs_demand(dem_paths):
 
         # Check the DataFrame dimensions and headers
         if not temp_dem.index.equals(
-            pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+            pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left")
         ):
             raise ValueError("This data does not have the proper timestamps.")
         if set(temp_dem.columns) != set(abv2state) - {"AK", "HI"}:

@@ -56,7 +56,7 @@ def decompose_demand_profile_by_state_to_loadzone(
 
     # Check the demand DataFrame timestamps and column headers
     if not df.index.equals(
-        pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+        pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left")
     ):
         raise ValueError("This data does not have the proper timestamps.")
     if set(df.columns) != set(abv2state) - {"AK", "HI"}:
@@ -144,7 +144,7 @@ def shift_local_time_by_loadzone_to_utc(df):
 
     # Check the demand DataFrame dimensions and headers
     if not df.index.equals(
-        pd.date_range("2016-01-01", "2017-01-01", freq="H", closed="left")
+        pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left")
     ):
         raise ValueError("This data does not have the proper timestamps.")
     if set(df.columns) != set(id2abv):
