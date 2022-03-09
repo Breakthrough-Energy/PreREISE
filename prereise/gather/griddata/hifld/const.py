@@ -521,6 +521,8 @@ proxy_substations = [
     },
 ]
 
+substations_lines_filter_override = {301995}
+
 seams_substations = {
     "east_west": {
         202364,  # 'LAMAR HVDC TIE'

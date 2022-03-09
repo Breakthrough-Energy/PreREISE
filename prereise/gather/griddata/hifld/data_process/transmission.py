@@ -743,6 +743,7 @@ def build_transmission(method="line2sub", **kwargs):
     hifld_zones = get_zone(os.path.join(hifld_data_dir, "zone.csv"))  # noqa: F841
 
     # Filter substations based on their `LINES` attribute, check for location dupes
+    hifld_substations.loc[const.substations_lines_filter_override, "LINES"] = None
     substations = filter_substations_with_zero_lines(hifld_substations)
     check_for_location_conflicts(substations)
     # Append the proxy substations to the source data
