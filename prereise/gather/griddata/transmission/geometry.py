@@ -50,10 +50,25 @@ class Conductor(DataclassWithValidation):
     current_limit: float = None
 
     def __post_init__(self):
+        physical_parameters = {
+            self.radius,
+            self.material,
+            self.resistance_per_km,
+            self.gmr,
+            self.area,
+            self.permeability,
+            self.current_limit,
+        }
         # Validate inputs
         self.validate_input_types()  # defined in DataclassWithValidation
         if self.name is not None:
+            if any([a is not None for a in physical_parameters]):
+                raise TypeError("If name is specified, no other parameters can be")
             self._get_parameters_from_standard_conductor_table()
+        else:
+            self._infer_missing_parameters()
+
+    def _infer_missing_parameters(self):
         if self.gmr is None and (self.material is None):
             raise ValueError(
                 "If gmr is not provided, material and radius are needed to estimate"

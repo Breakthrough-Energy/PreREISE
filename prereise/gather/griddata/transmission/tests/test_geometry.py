@@ -43,6 +43,11 @@ def test_conductor_by_name():
     assert conductor.name == "Cardinal"
 
 
+def test_conductor_name_and_parameters():
+    with pytest.raises(TypeError):
+        Conductor("Cardinal", resistance_per_km=0.1)
+
+
 def test_conductor_bundle():
     spacing = 0.4572
     conductor = Conductor("Cardinal")  # standard ACSR conductor
