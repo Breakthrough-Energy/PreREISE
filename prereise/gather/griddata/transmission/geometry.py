@@ -10,13 +10,25 @@ from prereise.gather.griddata.transmission.const import (
     relative_permeability,
     resistivity,
 )
-from prereise.gather.griddata.transmission.helpers import DataclassWithValidation
+from prereise.gather.griddata.transmission.helpers import (
+    DataclassWithValidation,
+    approximate_loadability,
+    get_standard_conductors,
+)
 
 
 @dataclass
 class Conductor(DataclassWithValidation):
-    """Represent a single conductor (which may be a stranded compsite).
+    """Represent a single conductor (which may be a stranded composite). Conductors can
+    be instantiated by either:
+    - looking them up via their standardized bird ``name``,
+    - passing the parameters relevant to impedance and rating calculations
+    (``radius``, ``gmr``, ``resistance_per_km``, and ``current_limit``), or
+    - passing paramters which can be used to estimate parameters relevant to impedance
+    and rating calculations (``radius``, ``material``, and ``current_limit``). In this
+    case, a solid conductor is assumed.
 
+    :param str name: name of standard conductor.
     :param float radius: outer radius of conductor.
     :param str material: material of conductor. Used to calculate ``resistance_per_km``
         and ``gmr`` if these aren't passed to the constructor, unnecessary otherwise.
@@ -28,16 +40,35 @@ class Conductor(DataclassWithValidation):
         other parameters if it isn't passed.
     """
 
-    radius: float
+    name: str = None
+    radius: float = None
     material: str = None
     resistance_per_km: float = None
     gmr: float = None
     area: float = None
     permeability: float = None
+    current_limit: float = None
 
     def __post_init__(self):
+        physical_parameters = {
+            self.radius,
+            self.material,
+            self.resistance_per_km,
+            self.gmr,
+            self.area,
+            self.permeability,
+            self.current_limit,
+        }
         # Validate inputs
         self.validate_input_types()  # defined in DataclassWithValidation
+        if self.name is not None:
+            if any([a is not None for a in physical_parameters]):
+                raise TypeError("If name is specified, no other parameters can be")
+            self._get_parameters_from_standard_conductor_table()
+        else:
+            self._infer_missing_parameters()
+
+    def _infer_missing_parameters(self):
         if self.gmr is None and (self.material is None):
             raise ValueError(
                 "If gmr is not provided, material and radius are needed to estimate"
@@ -69,6 +100,18 @@ class Conductor(DataclassWithValidation):
             # convert per-m to per-km
             self.resistance_per_km = self.resistivity * 1000 / self.area
 
+    def _get_parameters_from_standard_conductor_table(self):
+        standard_conductors = get_standard_conductors()
+        title_cased_name = self.name.title()
+        if title_cased_name not in standard_conductors.index:
+            raise ValueError(f"No conductor named '{self.name}' in standard table")
+        data = standard_conductors.loc[title_cased_name]
+        self.gmr = data["gmr_mm"] / 1e3
+        self.radius = data["radius_mm"] / 1e3
+        self.resistance_per_km = data["resistance_ac_per_km_75c"]
+        self.current_limit = data["max_amps"]
+        self.name = title_cased_name
+
 
 @dataclass
 class ConductorBundle(DataclassWithValidation):
@@ -82,19 +125,24 @@ class ConductorBundle(DataclassWithValidation):
         regular spacing ``spacing``).
     """
 
-    n: int
     conductor: Conductor
+    n: int = 1
     spacing: float = None  # we need to be able to ignore spacing for a single conductor
     layout: str = "circular"
     resistance_per_km: float = field(init=False)
     spacing_L: float = field(init=False)  # noqa: N815
     spacing_C: float = field(init=False)  # noqa: N815
+    current_limit: float = field(init=False, default=None)
 
     def __post_init__(self):
         self.validate_input_types()  # defined in DataclassWithValidation
+        if self.n != 1 and self.spacing is None:
+            raise ValueError("With multiple conductors, spacing must be specified")
         self.resistance_per_km = self.conductor.resistance_per_km / self.n
         self.spacing_L = self.calculate_equivalent_spacing("inductance")
         self.spacing_C = self.calculate_equivalent_spacing("capacitance")
+        if self.conductor.current_limit is not None:
+            self.current_limit = self.conductor.current_limit * self.n
 
     def calculate_equivalent_spacing(self, type="inductance"):
         if type == "inductance":
@@ -163,7 +211,7 @@ class PhaseLocations(DataclassWithValidation):
         self.validate_input_types()  # defined in DataclassWithValidation
         if not (len(self.a) == len(self.b) == len(self.c)):
             raise ValueError("each phase location must have the same length")
-        if self.circuits == 1 and len(self.a) == 2 and isinstance(self.a[0], float):
+        if self.circuits == 1 and len(self.a) == 2:
             # Single-circuit specified as (x, y) will be converted to ((x, y))
             self.a = (self.a,)
             self.b = (self.b,)
@@ -221,12 +269,17 @@ class Tower(DataclassWithValidation):
     resistance: float = field(init=False)
     inductance: float = field(init=False)
     capacitance: float = field(init=False)
+    phase_current_limit: float = field(init=False, default=None)
 
     def __post_init__(self):
         self.validate_input_types()  # defined in DataclassWithValidation
         self.resistance = self.bundle.resistance_per_km / self.locations.circuits
         self.inductance = self.calculate_inductance_per_km()
         self.capacitance = self.calculate_shunt_capacitance_per_km()
+        if self.bundle.current_limit is not None:
+            self.phase_current_limit = (
+                self.bundle.current_limit * self.locations.circuits
+            )
 
     def calculate_inductance_per_km(self):
         denominator = _circuit_bundle_distances(
@@ -272,6 +325,9 @@ class Line(DataclassWithValidation):
     surge_impedance: complex = field(init=False)
     series_impedance: complex = field(init=False)
     shunt_admittance: complex = field(init=False)
+    thermal_rating: float = field(init=False, default=None)
+    stability_rating: float = field(init=False, default=None)
+    power_rating: float = field(init=False, default=None)
 
     def __post_init__(self):
         # Convert integers to floats as necessary
@@ -291,7 +347,22 @@ class Line(DataclassWithValidation):
         self.propogation_constant_per_km = cmath.sqrt(
             self.series_impedance_per_km * self.shunt_admittance_per_km
         )
-        self.surge_impedance_loading = self.voltage**2 / abs(self.surge_impedance)
+        self.surge_impedance_loading = (
+            self.tower.locations.circuits
+            * self.voltage**2
+            / abs(self.surge_impedance)
+        )
+        # Calculate loadability (depends on length)
+        if self.tower.phase_current_limit is not None:
+            self.thermal_rating = (
+                self.voltage * self.tower.phase_current_limit * sqrt(3) / 1e3  # MW
+            )
+            self.stability_rating = (
+                self.tower.locations.circuits
+                * approximate_loadability(self.length)
+                * self.surge_impedance_loading
+            )
+            self.power_rating = min(self.thermal_rating, self.stability_rating)
         # Use the long-line transmission model to calculate lumped-element parameters
         self.series_impedance = (self.series_impedance_per_km * self.length) * (
             cmath.sinh(self.propogation_constant_per_km * self.length)
