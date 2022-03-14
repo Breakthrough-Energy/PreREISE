@@ -1,8 +1,6 @@
 import numpy as np
 
-from prereise.gather.demanddata.transportation_electrification import const
-from prereise.gather.demanddata.transportation_electrification import data_helper
-
+from prereise.gather.demanddata.transportation_electrification import const, data_helper
 
 allowed_locations_by_strategy = {
     1: {1},  # home only
@@ -74,7 +72,6 @@ def resample_daily_charging(trips, charging_power):
         end_point=lambda x: x["start_point"] + x["elapsed"],
     )
     # Translate times to fine-resolution arrays
-    indices = np.arange(fine_resolution)
     indiv_charging_profiles = np.zeros((len(trips), fine_resolution), dtype=bool)
     for i, (trip_id, trip) in enumerate(augmented_trips.iterrows()):
         indiv_charging_profiles[i, trip["start_point"] : trip["end_point"]] = True
@@ -205,17 +202,17 @@ def immediate_charging(
     return summed_profile
 
 
-def adjust_BEV(TRANS_charge, adjustment_values):
+def adjust_BEV(hourly_profile, adjustment_values):  # noqa: N802
     """Adjusts the charging profiles by applying weighting factors based on
     seasonal/monthly values
 
-    :param (*numpy.ndarray*) TRANS_charge: normalized charging profiles
-    :param (*pandas.DataFrame*) adjustment_values: weighting factors for each
+    :param numpy.ndarray hourly_profile: normalized charging profiles
+    :param pandas.DataFrame adjustment_values: weighting factors for each
         day of the year loaded from month_info_nhts.mat.
     :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
     """
     adj_vals = adjustment_values.transpose()
-    profiles = TRANS_charge.reshape((24, 365), order="F")
+    profiles = hourly_profile.reshape((24, 365), order="F")
 
     pr = profiles / sum(profiles)
     adjusted = pr * adj_vals
