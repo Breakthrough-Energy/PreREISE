@@ -125,43 +125,6 @@ volt_class_defaults = {
     "500": 500,
 }
 
-line_reactance_per_mile = {  # per-unit
-    69: 0.0096,
-    100: 0.0063,
-    115: 0.0039,
-    138: 0.0026,
-    161: 0.0021,
-    230: 0.0011,
-    345: 0.0005,
-    500: 0.0002,
-    765: 0.0001,
-}
-line_rating_short = {  # MVA
-    69: 86,
-    100: 181,
-    115: 239,
-    138: 382,
-    161: 446,
-    230: 797,
-    345: 1793,
-    500: 2598,
-    765: 5300,
-}
-line_rating_short_threshold = 50  # miles
-line_rating_surge_impedance_loading = {  # MVA
-    69: 13,
-    100: 30,
-    115: 35,
-    138: 50,
-    161: 69,
-    230: 140,
-    345: 375,
-    500: 1000,
-    765: 2250,
-}
-line_rating_surge_impedance_coefficient = 43.261
-line_rating_surge_impedance_exponent = -0.6678
-
 transformer_reactance = {  # per-unit
     (69, 115): 0.14242,
     (69, 138): 0.10895,
