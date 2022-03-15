@@ -140,6 +140,15 @@ def map_lines_to_substations_using_coords(
         new_lines[e_sub] = substations.loc[primary_sub.values, "NAME"].values
         new_lines[f"{e_sub}_ID"] = primary_sub.values
 
+    # Remove lines which ended up assigned to the same substation after consolidation
+    if drop_zero_distance_line:
+        idx = new_lines["SUB_1_ID"].compare(new_lines["SUB_2_ID"]).index
+        print(
+            f"dropping {new_lines.shape[0] - len(idx)} lines having same endpoints "
+            "after substation consolidation"
+        )
+        new_lines = new_lines.loc[idx]
+
     return new_lines, new_substations
 
 
