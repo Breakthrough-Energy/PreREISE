@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
@@ -125,15 +127,18 @@ def test_create_transformers():
 
 
 def test_estimate_branch_impedance_lines():
+    resistance = 0.01
+    reactance = 0.1
+    fake_lines = [Mock(series_impedance=(resistance + 1j * reactance))] * 3
     branch = pd.DataFrame(
-        {"VOLTAGE": [69, 70, 345], "type": ["Line"] * 3, "length": [10, 15, 20]}
+        {"VOLTAGE": [69, 70, 345], "type": ["Line"] * 3, "line_object": fake_lines}
     )
     x = estimate_branch_impedance(branch.iloc[0], pd.Series())
-    assert x == const.line_reactance_per_mile[69] * 10
+    assert x == reactance / (69**2 / const.s_base)
     x = estimate_branch_impedance(branch.iloc[1], pd.Series())
-    assert x == const.line_reactance_per_mile[69] * 15
+    assert x == reactance / (70**2 / const.s_base)
     x = estimate_branch_impedance(branch.iloc[2], pd.Series())
-    assert x == const.line_reactance_per_mile[345] * 20
+    assert x == reactance / (345**2 / const.s_base)
 
 
 def test_estimate_branch_impedance_transformers():
@@ -150,42 +155,34 @@ def test_estimate_branch_impedance_transformers():
 
 
 def test_estimate_branch_rating_lines():
+    fake_ratings = pd.Series([10, 20, 30, 40])
+    fake_thermal_ratings = pd.Series([100, 200, 300, 400])
+    fake_lines = [Mock(power_rating=i) for i in fake_ratings]
     branch = pd.DataFrame(
         {
             "VOLTAGE": [69, 140, 345, 499],
             "type": ["Line"] * 4,
-            "length": [10, 50, 100, 150],
+            "line_object": fake_lines,
         }
     )
-    rating = estimate_branch_rating(branch.iloc[0], pd.Series())
-    assert rating == const.line_rating_short[69]
-    rating = estimate_branch_rating(branch.iloc[1], pd.Series())
-    assert rating == const.line_rating_short[138]
-    rating = estimate_branch_rating(branch.iloc[2], pd.Series())
-    assert rating == (
-        const.line_rating_surge_impedance_loading[345]
-        * const.line_rating_surge_impedance_coefficient
-        * 100**const.line_rating_surge_impedance_exponent
-    )
-    rating = estimate_branch_rating(branch.iloc[3], pd.Series())
-    assert rating == (
-        const.line_rating_surge_impedance_loading[500]
-        * const.line_rating_surge_impedance_coefficient
-        * 150**const.line_rating_surge_impedance_exponent
+    assert_series_equal(
+        fake_ratings,
+        branch.apply(estimate_branch_rating, args=[None, fake_thermal_ratings], axis=1),
     )
 
 
 def test_estimate_branch_rating_transformers():
+    thermal_ratings = pd.Series([100, 550, 1655, 2585], index=[69, 230, 345, 500])
     transformers = pd.DataFrame(
         {"from_bus_id": [0, 1, 2], "to_bus_id": [1, 2, 3], "type": ["Transformer"] * 3}
     )
     bus_voltages = pd.Series([69, 230, 350, 500])
 
-    rating = estimate_branch_rating(transformers.iloc[0], bus_voltages)
+    rating = estimate_branch_rating(transformers.iloc[0], bus_voltages, thermal_ratings)
     assert rating == const.transformer_rating
-    rating = estimate_branch_rating(transformers.iloc[1], bus_voltages)
+    rating = estimate_branch_rating(transformers.iloc[1], bus_voltages, thermal_ratings)
     assert rating == const.transformer_rating * 3
-    rating = estimate_branch_rating(transformers.iloc[2], bus_voltages)
+    rating = estimate_branch_rating(transformers.iloc[2], bus_voltages, thermal_ratings)
     assert rating == const.transformer_rating * 4
 
 
