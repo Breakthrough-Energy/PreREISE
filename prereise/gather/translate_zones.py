@@ -1,4 +1,3 @@
-import folium
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -6,7 +5,7 @@ from folium.features import DivIcon
 
 # IMPORTANT: rtree is required for overlay function, but not imported
 
-
+# TODO: use bokeh instead of folium
 def plot_zone_map(gdf, interactive=False):
     """Plot map of zones as choropleth. Has 20 colors; buckets zones in
     alphabetical order
@@ -66,18 +65,12 @@ def filter_interesting_zones(df, rounding=3):
     """
     df_copy = df.round(rounding)
     df_copy = df_copy.replace({1.0: 0.0})
-    df_copy.loc["sum"] = df_copy.sum()  # sum each col
-    df_copy["sum"] = df_copy.sum(axis=1)  # sum each row
 
-    interesting_zones = df_copy.loc[df_copy["sum"] > 0, df_copy.loc["sum"] > 0]
-    interesting_zones = interesting_zones.drop(index=["sum"], columns=["sum"])
-    interesting_zones = interesting_zones.replace({0.0: "-"})
-
-    return interesting_zones
+    return df_copy.loc[(df_copy != 0).any(axis=1), (df_copy != 0).any()].replace({0.0: "-"})
 
 
 def format_zone_df(df, name):
-    """copies df, checks if it contains valid geometry, and adds col for zone area
+    """copies df, checks if it contains invalid geometry and adds col for zone area
 
     :param geopandas.geodataframe.GeoDataFrame df: GeoDataFrame where
         index = zone names, columns = ['geometry']
@@ -87,8 +80,8 @@ def format_zone_df(df, name):
     df_copy = df.copy()
 
     # Check for invalid geometries
-    is_valid_df = df_copy.geometry.is_valid.to_frame()
-    invalid_geom = list(is_valid_df.loc[is_valid_df[0] == False].index)
+    invalid_geom = df_copy.loc[~df_copy.geometry.is_valid].index.tolist()
+
     if len(invalid_geom) > 0:
         print(f"WARNING: {name} contains invalid geometries: {invalid_geom}")
 
@@ -175,7 +168,6 @@ def translate_zone_set(
         )
         if verbose:
             print("\nROWS WITH SUM GREATER THAN ONE:")
-        if verbose:
             print(sum_greater_than_one.round(3))
 
     # Scale matrix such that all rows add up to 1 by distributing demand mismatch
@@ -194,7 +186,6 @@ def translate_zone_set(
 
     if verbose:
         print("\nMATRIX BEFORE SCALING")
-    if verbose:
         print(prev_to_new_matrix.round(3))
 
     scaled_matrix = prev_to_new_matrix.mul(
@@ -205,19 +196,13 @@ def translate_zone_set(
     )
 
     # Add any rows that got dropped because they do not overlap. Fill with zeros.
-    # NOTE: not sure if this will get slow with larger datasets
-    if len(scaled_matrix) < len(prev_zones):
-        index = scaled_matrix.index.values
-        for zone in list(prev_zones[name_prev]):
-            if not zone in index:
-                scaled_matrix.loc[zone] = 0
+    new_rows = list(set(prev_zones[name_prev]) - set(scaled_matrix.index))
+    for row in new_rows:
+        scaled_matrix.loc[row] = 0
 
     # Similarly, add missing columns
-    if len(scaled_matrix.columns) < len(new_zones):
-        columns = scaled_matrix.columns
-        for zone in list(new_zones[name_new]):
-            if not zone in columns:
-                scaled_matrix[zone] = 0
+    new_cols = list(set(new_zones[name_new]) - set(scaled_matrix.columns))
+    scaled_matrix[new_cols] = 0
 
     if verbose:
         print(

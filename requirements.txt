@@ -18,6 +18,5 @@ pytest
 coverage
 pytest-cov
 pygrib~=2.1.4
-folium
 geopandas
 rtree
