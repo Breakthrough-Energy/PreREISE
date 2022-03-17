@@ -88,6 +88,9 @@ def format_zone_df(df, name):
     df_copy.index.name = name
     df_copy = df_copy.reset_index()
 
+    # change coordinate reference system to Pseudo-Mercator to get more accurate area
+    df_copy = df_copy.to_crs('EPSG:3857')
+
     # get zone area
     df_copy[f"{name}_area"] = df_copy["geometry"].area
 
@@ -99,9 +102,6 @@ def translate_zone_set(
 ):
     """returns matrix of prev_zones to new_zones. Scales rows proportionally so
     that each row adds up to 1
-    NOTE: We recommend using EPSG:4269 as your CRS (coordinate reference system).
-    It triggers a warning but it is able to handle invalid geometries, unlike
-    Mercator Projections (EPSG:3395).
 
     :param geopandas.geodataframe.GeoDataFrame prev_zones: GeoDataFrame with
         index = zone names, columns = ['geometry']
@@ -111,16 +111,17 @@ def translate_zone_set(
     :param str name_new: name of the second data set
     :param bool verbose: adds extra print statements for debugging data issues
     :return: (*pandas.DataFrame*) -- matrix of prev_zones to new_zones
+    :raises ValueError: if either zone set has no CRS (coordinate reference system).
     """
+    if not prev_zones.crs or not new_zones.crs:
+        raise ValueError(f"Missing CRS on one or both of {name_prev} and {name_new}. Assign CRS with df.set_crs().")
+
     if verbose:
         print(f"ZONES: {name_prev}")
         print(prev_zones)
         print(f"\nZONES: {name_new}")
         print(new_zones)
         print()
-
-    if prev_zones.crs != new_zones.crs:
-        print("WARNING: GeoDataFrame CRS does not match. We recommend using EPSG:4269")
 
     prev_zones = format_zone_df(prev_zones, name_prev)
     new_zones = format_zone_df(new_zones, name_new)
