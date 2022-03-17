@@ -10,8 +10,7 @@ def plot_zone_map(gdf, **kwargs):
 
     :param geopandas.geodataframe.GeoDataFrame gdf: GeoDataFrame with
         index = zone names, columns = ['geometry']
-    :param bool interactive: highlights zone and shows tooltip on hover. Useful
-        for identifying zones that have disjoint segments, e.g. LRZ1
+    :param \\*\\*kwargs: arbitrary keyword arguments passed to matplotlib plotting function
     :return: (*matplotlib.axes._subplots.AxesSubplot OR folium.folium.Map*) --
         matplotlib is for non-interactive, folium is interactive
     """
