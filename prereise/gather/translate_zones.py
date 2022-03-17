@@ -1,12 +1,10 @@
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from folium.features import DivIcon
 
 # IMPORTANT: rtree is required for overlay function, but not imported
 
-# TODO: use bokeh instead of folium
-def plot_zone_map(gdf, interactive=False):
+def plot_zone_map(gdf, **kwargs):
     """Plot map of zones as choropleth. Has 20 colors; buckets zones in
     alphabetical order
 
@@ -21,39 +19,21 @@ def plot_zone_map(gdf, interactive=False):
     gdf["coords"] = gdf["geometry"].apply(lambda x: x.representative_point().coords[:])
     gdf["coords"] = [coords[0] for coords in gdf["coords"]]
 
-    if interactive:
-        gdf["zone"] = gdf.index
-        interactive_map = gdf.explore(
-            column="zone",  # make choropleth based on "zone" column
-            tooltip="zone",
-            tiles=None,
-            style_kwds=dict(color="white", weight=0.7),  # white outline
-            legend=False,
-        )
+    # kwargs are used for plot visuals
+    default_kwargs = {
+        "figsize": (50, 50),
+        "linewidth": 1,
+        "edgecolor": "white",
+        "cmap": "tab20",
+        "alpha": 0.66
+    }
 
-        for idx, row in gdf.iterrows():
-            coords = list(row["coords"])
-            coords.reverse()
+    plt = gdf.plot(**{**default_kwargs, **kwargs})
 
-            folium.map.Marker(
-                coords,
-                # add labels
-                icon=DivIcon(
-                    html=f'<div style="font-size: 8pt; transform: translate(-50%, -50%)">{idx}</div>'
-                ),
-            ).add_to(interactive_map)
+    for idx, row in gdf.iterrows():
+        plt.annotate(s=idx, xy=row["coords"], horizontalalignment="center")
 
-        return interactive_map
-
-    else:
-        plt = gdf.plot(
-            figsize=(50, 50), linewidth=1, edgecolor="white", cmap="tab20", alpha=0.66
-        )
-
-        for idx, row in gdf.iterrows():
-            plt.annotate(s=idx, xy=row["coords"], horizontalalignment="center")
-
-        return plt
+    return plt
 
 
 def filter_interesting_zones(df, rounding=3):
@@ -76,14 +56,15 @@ def format_zone_df(df, name):
         index = zone names, columns = ['geometry']
     :param str name: the name of the data set
     :return: (*geopandas.geodataframe.GeoDataFrame*) -- the formatted df
+    :raises ValueError: if the zone set contains invalid geometry
     """
-    df_copy = df.copy()
-
     # Check for invalid geometries
-    invalid_geom = df_copy.loc[~df_copy.geometry.is_valid].index.tolist()
+    invalid_geom = df.loc[~df.geometry.is_valid].index.tolist()
 
     if len(invalid_geom) > 0:
-        print(f"WARNING: {name} contains invalid geometries: {invalid_geom}")
+        raise ValueError(f"{name} contains invalid geometries: {invalid_geom}")
+
+    df_copy = df.copy()
 
     df_copy.index.name = name
     df_copy = df_copy.reset_index()
