@@ -178,8 +178,8 @@ def translate_zone_set(
 
     # Add any rows that got dropped because they do not overlap. Fill with zeros.
     new_rows = list(set(prev_zones[name_prev]) - set(scaled_matrix.index))
-    for row in new_rows:
-        scaled_matrix.loc[row] = 0
+    new_rows_df = pd.DataFrame(0, index=new_rows, columns=scaled_matrix.columns)
+    scaled_matrix  = pd.concat([scaled_matrix, new_rows_df])
 
     # Similarly, add missing columns
     new_cols = list(set(new_zones[name_new]) - set(scaled_matrix.columns))
