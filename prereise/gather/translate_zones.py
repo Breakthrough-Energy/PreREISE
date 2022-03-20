@@ -1,8 +1,8 @@
-import geopandas as gpd
 import numpy as np
 import pandas as pd
 
 # IMPORTANT: rtree is required for overlay function, but not imported
+
 
 def plot_zone_map(gdf, **kwargs):
     """Plot map of zones as choropleth. Has 20 colors; buckets zones in
@@ -24,7 +24,7 @@ def plot_zone_map(gdf, **kwargs):
         "linewidth": 1,
         "edgecolor": "white",
         "cmap": "tab20",
-        "alpha": 0.66
+        "alpha": 0.66,
     }
 
     plt = gdf.plot(**{**default_kwargs, **kwargs})
@@ -45,7 +45,9 @@ def filter_interesting_zones(df, rounding=3):
     df_copy = df.round(rounding)
     df_copy = df_copy.replace({1.0: 0.0})
 
-    return df_copy.loc[(df_copy != 0).any(axis=1), (df_copy != 0).any()].replace({0.0: "-"})
+    return df_copy.loc[(df_copy != 0).any(axis=1), (df_copy != 0).any()].replace(
+        {0.0: "-"}
+    )
 
 
 def format_zone_df(df, name):
@@ -69,7 +71,7 @@ def format_zone_df(df, name):
     df_copy = df_copy.reset_index()
 
     # change coordinate reference system to Pseudo-Mercator to get more accurate area
-    df_copy = df_copy.to_crs('EPSG:3857')
+    df_copy = df_copy.to_crs("EPSG:3857")
 
     # get zone area
     df_copy[f"{name}_area"] = df_copy["geometry"].area
@@ -94,7 +96,9 @@ def translate_zone_set(
     :raises ValueError: if either zone set has no CRS (coordinate reference system).
     """
     if not prev_zones.crs or not new_zones.crs:
-        raise ValueError(f"Missing CRS on one or both of {name_prev} and {name_new}. Assign CRS with df.set_crs().")
+        raise ValueError(
+            f"Missing CRS on one or both of {name_prev} and {name_new}. Assign CRS with df.set_crs()."
+        )
 
     if verbose:
         print(f"ZONES: {name_prev}")
@@ -179,7 +183,7 @@ def translate_zone_set(
     # Add any rows that got dropped because they do not overlap. Fill with zeros.
     new_rows = list(set(prev_zones[name_prev]) - set(scaled_matrix.index))
     new_rows_df = pd.DataFrame(0, index=new_rows, columns=scaled_matrix.columns)
-    scaled_matrix  = pd.concat([scaled_matrix, new_rows_df])
+    scaled_matrix = pd.concat([scaled_matrix, new_rows_df])
 
     # Similarly, add missing columns
     new_cols = list(set(new_zones[name_new]) - set(scaled_matrix.columns))
