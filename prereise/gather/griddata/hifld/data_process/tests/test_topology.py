@@ -1,9 +1,12 @@
+import numpy as np
 import pandas as pd
+import pytest
 from powersimdata.utility.distance import haversine, ll2uv
 
 from prereise.gather.griddata.hifld.data_process.topology import (
     connect_islands_with_minimum_cost,
     find_adj_state_of_2_conn_comp,
+    identify_bottlenecks,
     min_dist_of_2_conn_comp,
     min_dist_of_2_conn_comp_kdtree,
 )
@@ -225,3 +228,77 @@ def test_connect_islands_with_minimum_cost():
     for e in all_edges + mst_edges:
         e[2].pop("weight")
     assert (all_edges, mst_edges) == expected_return_kdtree
+
+
+def test_identify_bottlenecks():
+    branch = pd.DataFrame(
+        [
+            {"from_bus_id": 1, "to_bus_id": 2},
+            {"from_bus_id": 2, "to_bus_id": 3},
+            {"from_bus_id": 2, "to_bus_id": 4},
+            {"from_bus_id": 2, "to_bus_id": 5},
+            {"from_bus_id": 2, "to_bus_id": 6},
+            {"from_bus_id": 3, "to_bus_id": 4},
+            {"from_bus_id": 5, "to_bus_id": 6},
+            {"from_bus_id": 5, "to_bus_id": 7},
+            {"from_bus_id": 6, "to_bus_id": 7},
+            {"from_bus_id": 7, "to_bus_id": 8},
+            {"from_bus_id": 7, "to_bus_id": 11},
+            {"from_bus_id": 8, "to_bus_id": 9},
+            {"from_bus_id": 8, "to_bus_id": 11},
+            {"from_bus_id": 8, "to_bus_id": 12},
+            {"from_bus_id": 8, "to_bus_id": 14},
+            {"from_bus_id": 8, "to_bus_id": 15},
+            {"from_bus_id": 9, "to_bus_id": 10},
+            {"from_bus_id": 9, "to_bus_id": 11},
+            {"from_bus_id": 10, "to_bus_id": 11},
+            {"from_bus_id": 10, "to_bus_id": 16},
+            {"from_bus_id": 10, "to_bus_id": 17},
+            {"from_bus_id": 10, "to_bus_id": 18},
+            {"from_bus_id": 12, "to_bus_id": 13},
+            {"from_bus_id": 13, "to_bus_id": 14},
+            {"from_bus_id": 13, "to_bus_id": 15},
+            {"from_bus_id": 17, "to_bus_id": 18},
+        ]
+    )
+    branch["capacity"] = branch["from_bus_id"] * branch["to_bus_id"] / 50
+    demand = pd.Series(np.arange(0.1, 1.9, 0.1), index=range(1, 19))
+    bottlenecks = identify_bottlenecks(
+        branch, demand, root=frozenset({7, 8, 9, 10, 11})
+    )
+    expected_all_keys = {
+        (8, frozenset({8, 12, 13, 14, 15})),
+        (frozenset({7, 8, 9, 10, 11}), 8),
+        (10, frozenset({10, 16})),
+        (10, frozenset({10, 17, 18})),
+        (frozenset({7, 8, 9, 10, 11}), 10),
+        (2, frozenset({2, 3, 4})),
+        (2, frozenset({1, 2})),
+        (frozenset({2, 5, 6, 7}), 2),
+        (7, frozenset({2, 5, 6, 7})),
+        (frozenset({7, 8, 9, 10, 11}), 7),
+    }
+    expected_constrained_keys = {
+        (frozenset({7, 8, 9, 10, 11}), 8),
+        (frozenset({7, 8, 9, 10, 11}), 10),
+        (2, frozenset({2, 3, 4})),
+        (2, frozenset({1, 2})),
+        (frozenset({2, 5, 6, 7}), 2),
+        (7, frozenset({2, 5, 6, 7})),
+        (frozenset({7, 8, 9, 10, 11}), 7),
+    }
+    assert set(bottlenecks["all"]) == expected_all_keys
+    assert set(bottlenecks["constrained"]) == expected_constrained_keys
+    for k, v in bottlenecks["all"].items():
+        assert set(v.keys()) == {"capacity", "demand", "descendants"}
+        assert isinstance(v["capacity"], float)
+        assert isinstance(v["demand"], float)
+        assert isinstance(v["descendants"], set)
+    unconstrained = (8, frozenset({8, 12, 13, 14, 15}))
+    assert bottlenecks["all"][unconstrained]["descendants"] == set()
+    assert bottlenecks["all"][unconstrained]["demand"] == pytest.approx(5.4)
+    assert bottlenecks["all"][unconstrained]["capacity"] == pytest.approx(6.56)
+    constrained = (2, frozenset({2, 3, 4}))
+    assert bottlenecks["constrained"][constrained]["descendants"] == set()
+    assert bottlenecks["constrained"][constrained]["demand"] == pytest.approx(0.7)
+    assert bottlenecks["constrained"][constrained]["capacity"] == pytest.approx(0.28)
