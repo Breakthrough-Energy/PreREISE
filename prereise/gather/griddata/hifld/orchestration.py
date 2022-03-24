@@ -11,6 +11,7 @@ from prereise.gather.griddata.hifld.data_process.profiles import (
     build_solar,
     build_wind,
 )
+from prereise.gather.griddata.hifld.data_process.topology import report_bottlenecks
 from prereise.gather.griddata.hifld.data_process.transmission import build_transmission
 
 
@@ -34,6 +35,7 @@ def create_csvs(
     hydro_kwargs,
     solar_kwargs,
     wind_kwargs,
+    zone_demand=None,
 ):
     """Process HIFLD source data to CSVs compatible with PowerSimData.
 
@@ -45,11 +47,15 @@ def create_csvs(
         :func:`prereise.gather.solardata.nsrdb.sam.retrieve_data_individual`.
     :param dict wind_kwargs: keyword arguments to pass to
         :func:`prereise.gather.griddata.hifld.data_process.profiles.build_wind`.
+    :param pandas.DataFrame zone_demand: per-zone demand profiles, used to evaluate
+        local transmission constraints. If None, this step will be skipped.
     """
     _check_profile_kwargs(
         {"hydro": hydro_kwargs, "solar": solar_kwargs, "wind": wind_kwargs}
     )
     full_tables = create_grid(output_folder)
+    if zone_demand is not None:
+        report_bottlenecks(full_tables["branch"], full_tables["bus"], zone_demand)
     create_profiles(
         full_tables["plant"],
         profile_year,
