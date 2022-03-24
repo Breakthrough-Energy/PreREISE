@@ -396,6 +396,7 @@ def identify_bottlenecks(branch, demand, root=None):
         - "constrained": a dictionary, keys and values are idenical to the 'all'
             dictionary except that only entries where demand is greater than capacity
             are contained.
+        - "root": the root node.
     """
     # Build transmission graph
     graph = nx.convert_matrix.from_pandas_edgelist(
@@ -424,4 +425,4 @@ def identify_bottlenecks(branch, demand, root=None):
     constrained_pairs = {
         k: v for k, v in descendant_pairs.items() if v["demand"] > v["capacity"]
     }
-    return {"all": descendant_pairs, "constrained": constrained_pairs}
+    return {"all": descendant_pairs, "constrained": constrained_pairs, "root": root}
