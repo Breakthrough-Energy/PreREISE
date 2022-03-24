@@ -10,6 +10,9 @@ from scipy.spatial import KDTree
 from tqdm import tqdm
 
 from prereise.gather.griddata.hifld.const import abv_state_neighbor
+from prereise.gather.griddata.hifld.data_process.helpers import (
+    distribute_demand_from_zones_to_buses,
+)
 
 
 def min_dist_of_2_conn_comp(
@@ -426,3 +429,27 @@ def identify_bottlenecks(branch, demand, root=None):
         k: v for k, v in descendant_pairs.items() if v["demand"] > v["capacity"]
     }
     return {"all": descendant_pairs, "constrained": constrained_pairs, "root": root}
+
+
+def report_bottlenecks(branch, bus, zone_demand):
+    """Separate the full branch table by interconnect, and report bottlenecks for each.
+
+    :param pandas.DataFrame branch: full branch table.
+    :param pandas.DataFrame branch: full bus table.
+    :param dict/pandas.Series demand: mapping of demand for each bus.
+    """
+    bus_demand = distribute_demand_from_zones_to_buses(zone_demand, bus).max()
+    bottlenecks = {
+        interconnect: identify_bottlenecks(filtered_branch, bus_demand)
+        for interconnect, filtered_branch in branch.rename(
+            {"rateA": "capacity"}, axis=1
+        ).groupby("interconnect")
+    }
+    for interconnect, result in bottlenecks.items():
+        print("interconnect")
+        root = result["root"]
+        constrained = result["constrained"]
+        for (k1, k2), info in constrained.items():
+            k1 = "root" if k1 == root else k1 if isinstance(k1, int) else set(k1)
+            k2 = "root" if k2 == root else k2 if isinstance(k2, int) else set(k2)
+            print("from", k1, "to", f"{k2}:", info)
