@@ -157,7 +157,9 @@ def shift_local_time_by_loadzone_to_utc(df):
         df_tz[i] = df_tz[i].shift(tz_val)
 
         # Populate with data from December 30 (same day of week) that is the same time
-        df_tz[i][0:tz_val] = df.iloc[(8736 - tz_val) : 8736][i].values
+        df_tz.iloc[0:tz_val, df_tz.columns.get_loc(i)] = df.iloc[
+            (8736 - tz_val) : 8736
+        ][i].values
 
     # Rename index
     df_tz.index.name = "UTC Time"
