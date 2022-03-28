@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import tempfile
@@ -6,6 +7,7 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 from zipfile import ZipFile
 
+import networkx as nx
 import pandas as pd
 from tqdm import tqdm
 
@@ -14,6 +16,7 @@ from prereise.gather.griddata.hifld.const import (
     contiguous_us_bounds,
     heat_rate_estimation_columns,
 )
+from prereise.gather.helpers import angular_distance, latlon_to_xyz
 
 
 def get_eia_form_860(path):
@@ -186,6 +189,94 @@ def get_hifld_electric_substations(path):
     )
 
 
+def _join_line_segments(segments, threshold=0.001):
+    """Given a list of line segments, join them together as best as possible.
+
+    :param list segments: list of segments, each defined as a list of (lon, lat)
+        coordinate pairs.
+    :param float threshold: minimum angular distance for a segment to be considered.
+        Defined as the angular distance from the segment start to segment end (degrees).
+    :return: (*list*) -- consolidated list of points.
+    """
+
+    def _generate_linear_spanning_tree(segments):
+        """Given a list of segments, create a minimum spanning tree and ensure that it
+        is linear (i.e. there are two nodes of degree 1, all other nodes are degree 2).
+
+        :param list segments: list of segments, each defined as a list of (lon, lat)
+            coordinate pairs.
+        :return: (*networkx.Graph*) -- a minimum spanning tree from the segments.
+        :raises ValueError: if the minimum spanning tree is not linear
+        """
+        # Build a Graph representing the existing connections between segment endpoints
+        g = nx.Graph()
+        # add a 'start' and 'end' node for each segment, and a zero-cost edge b/w them
+        for i in range(len(segments)):
+            g.add_edge((i, "start"), (i, "end"), weight=0)
+        # Add edge weights by the angular distance between different segment endpoints
+        for (seg1, which1), (seg2, which2) in itertools.combinations(g.nodes, 2):
+            if seg1 == seg2:
+                # no edge needed, since there's already a zero-cost edge there
+                continue
+            # Extract latitude and longitude from the appropriate end of each segment
+            lon1, lat1 = segments[seg1][0 if which1 == "start" else -1]
+            lon2, lat2 = segments[seg2][0 if which2 == "start" else -1]
+            edge_angle = angular_distance(
+                latlon_to_xyz(lat1, lon1), latlon_to_xyz(lat2, lon2)
+            )
+            g.add_edge((seg1, which1), (seg2, which2), weight=edge_angle)
+        # Identify edges to connect the segments
+        tree = nx.algorithms.tree.minimum_spanning_tree(g)
+        # Ensure that the minimum spanning tree is linear
+        if max(dict(nx.degree(tree)).values()) > 2:
+            raise ValueError("The minimum spanning tree isn't linear")
+        return tree
+
+    if len(segments) == 1:
+        # There's only one segment in the list, so no joining is necessary
+        return segments[0]
+
+    segments_df = pd.Series(segments).to_frame(name="segments")
+    segments_df["distance"] = segments_df["segments"].map(
+        lambda x: angular_distance(
+            latlon_to_xyz(x[0][1], x[0][0]),  # first point
+            latlon_to_xyz(x[-1][1], x[-1][0]),  # last point
+        )
+    )
+    filtered_segments = segments_df.loc[segments_df["distance"] > threshold]
+    if len(filtered_segments) == 1:
+        # There's only one segment left in the list, so no joining is necessary
+        return filtered_segments["segments"].iloc[0]
+
+    # Sort the segments by length, in case the minimum spanning tree isn't linear
+    sorted_segments = filtered_segments.sort_values("distance")
+    # Make a minimum spanning tree, dropping small segments as necessary for linearity
+    for i in range(len(sorted_segments)):
+        try:
+            linear_segments = sorted_segments.iloc[i:]["segments"].tolist()
+            tree = _generate_linear_spanning_tree(linear_segments)
+            # We found a good minimum spanning tree, so we can exit
+            break
+        except ValueError:
+            # The minimum spanning tree wasn't good, go to the next iteration
+            pass
+
+    # Identify an endpoint of the linear minimum spanning tree
+    node_degrees = dict(nx.degree(tree))
+    endpoint = min(k for k, v in node_degrees.items() if v == 1)
+    # Traverse the tree, adding segments in order
+    joined_segments = []
+    traversal = nx.algorithms.traversal.dfs_edges(tree, source=endpoint)
+    for (seg1, which1), (seg2, _) in traversal:
+        if seg1 == seg2:
+            if which1 == "start":
+                joined_segments += linear_segments[seg1]
+            else:
+                joined_segments += linear_segments[seg1][::-1]
+
+    return joined_segments
+
+
 def get_hifld_electric_power_transmission_lines(path):
     """Read the HIFLD Electric Power Transmission Lines json zip file and keep in
     service lines.
@@ -216,8 +307,14 @@ def get_hifld_electric_power_transmission_lines(path):
     )
 
     properties["COORDINATES"] = [
-        line["geometry"]["coordinates"][0] for line in data["features"]
+        line["geometry"]["coordinates"] for line in data["features"]
     ]
+
+    # Join multiple distinct segments as necessary to get one single list
+    properties["COORDINATES"] = properties["COORDINATES"].map(
+        lambda x: _join_line_segments(x) if not isinstance(x[0][0], float) else x
+    )
+
     # Flip [(lon, lat), (lon, lat), ..] points to [(lat, lon), (lat, lon), ...]
     properties["COORDINATES"] = properties["COORDINATES"].map(
         lambda x: [y[::-1] for y in x]
