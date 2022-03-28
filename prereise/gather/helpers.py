@@ -1,5 +1,5 @@
 import os
-from math import cos, radians, sin
+from math import acos, cos, degrees, radians, sin
 
 import numpy as np
 import pandas as pd
@@ -116,3 +116,20 @@ def latlon_to_xyz(latitude, longitude):
     uv = [cos_lat * cos_lon, cos_lat * sin_lon, sin_lat]
 
     return uv
+
+
+def angular_distance(uv1, uv2):
+    """Calculate the angular distance between two vectors.
+
+    :param list uv1: 3-components vector as returned by :func:`latlon_to_xyz`.
+    :param list uv2: 3-components vector as returned by :func:`latlon_to_xyz`.
+    :return: (*float*) -- angle (in radians).
+    """
+    cos_angle = uv1[0] * uv2[0] + uv1[1] * uv2[1] + uv1[2] * uv2[2]
+    if cos_angle >= 1:
+        cos_angle = 1
+    if cos_angle <= -1:
+        cos_angle = -1
+    angle = degrees(acos(cos_angle))
+
+    return angle
