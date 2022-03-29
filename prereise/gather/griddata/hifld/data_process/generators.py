@@ -298,6 +298,9 @@ def build_plant(bus, substations, kwargs={}):
     generators["lat"] = generators["Plant Code"].map(plants["Latitude"])
     generators["lon"] = generators["Plant Code"].map(plants["Longitude"])
     generators["ZIP"] = generators["Plant Code"].map(plants["Zip"])
+    generators["Balancing Authority Code"] = generators["Plant Code"].map(
+        plants["Balancing Authority Code"]
+    )
     print("Mapping generators to substations... (this may take several minutes)")
     generators["sub_id"] = generators.apply(
         lambda x: map_generator_to_sub_by_location(x, substation_groupby), axis=1
