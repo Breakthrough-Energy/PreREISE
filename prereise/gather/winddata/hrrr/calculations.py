@@ -7,9 +7,9 @@ from powersimdata.utility.distance import ll2uv
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
+from prereise.gather.impute import linear
 from prereise.gather.winddata import const
 from prereise.gather.winddata.hrrr.helpers import formatted_filename
-from prereise.gather.winddata.impute import linear
 from prereise.gather.winddata.power_curves import (
     get_power,
     get_state_power_curves,
