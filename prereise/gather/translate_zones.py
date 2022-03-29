@@ -134,12 +134,15 @@ def translate_zone_set(
     prev_to_new_matrix = prev_to_new_matrix.fillna(value=0)
 
     # check for prev_zones that do not overlap new_zones, then remove
-    isolated_zones = prev_to_new_matrix.loc[prev_to_new_matrix["none"] >= 1]
-    if len(isolated_zones > 0):
-        print(
-            f"\nWARNING: Detected {name_prev} zones that do not overlap with {name_new}: {list(isolated_zones.index)}"
-        )
+    if "none" in prev_to_new_matrix.columns:
+        isolated_zones = list(prev_to_new_matrix.loc[prev_to_new_matrix["none"] >= 1].index)
+        if len(isolated_zones) > 0:
+            print(
+                f"\nWARNING: Detected {name_prev} zones that do not overlap with {name_new}: {isolated_zones}"
+            )
         prev_to_new_matrix = prev_to_new_matrix.loc[prev_to_new_matrix["none"] < 1]
+    else:
+        prev_to_new_matrix['none'] = 0
 
     # Alert if sum > 1 (e.g. new zones overlap each other)
     # NOTE: only checks to three decimal places
