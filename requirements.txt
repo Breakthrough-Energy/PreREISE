@@ -20,3 +20,4 @@ pytest-cov
 pygrib~=2.1.4
 geopandas
 rtree
+shapely~=1.8

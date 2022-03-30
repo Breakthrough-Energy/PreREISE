@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
+from shapely.validation import make_valid
 
 # IMPORTANT: rtree is required for overlay function, but not imported
 
+# TODO: add make_valid() helper using shapely
 
 def plot_zone_map(gdf, **kwargs):
     """Plot map of zones as choropleth. Has 20 colors; buckets zones in
