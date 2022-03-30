@@ -302,9 +302,12 @@ def get_hifld_electric_power_transmission_lines(path):
     properties = (
         pd.DataFrame([line["properties"] for line in data["features"]])
         .astype({"ID": "int64", "NAICS_CODE": "int64", "SOURCEDATE": "datetime64"})
-        .drop(columns=["OBJECTID", "SHAPE_Length"])
         .round({"VOLTAGE": 3})
     )
+    # Drop columns which aren't relevant to us. Some names are inconsistent b/w versions
+    shape_lengths = {"SHAPE_Length", "SHAPE__Length"}
+    drop_cols = ["OBJECTID"] + list(shape_lengths & set(properties.columns))
+    properties.drop(columns=drop_cols, inplace=True)
 
     properties["COORDINATES"] = [
         line["geometry"]["coordinates"] for line in data["features"]
