@@ -77,7 +77,7 @@ def test_format_zone_df_invalid_geometry():
     )
     mock_gdf = gpd.GeoDataFrame({"geometry": [invalid_bowtie]}, crs="EPSG:4269")
     with pytest.raises(ValueError):
-        formatted_gdf = format_zone_df(mock_gdf, "foo")
+        format_zone_df(mock_gdf, "foo")
 
 
 def test_translate_zone_set_has_crs():
