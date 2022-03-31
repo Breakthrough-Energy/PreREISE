@@ -336,6 +336,47 @@ def get_hifld_electric_power_transmission_lines(path):
     return properties.query("STATUS == 'IN SERVICE' or STATUS == 'NOT AVAILABLE'")
 
 
+def get_transformer_parameters(
+    data_dir=None, transformer_designs_path=None, impedance_ratios_path=None
+):
+    """Load transformer designs (by voltage pairs) and transformer impedance ratios
+    (by higher voltage) and combine into a single dataframe.
+
+    :param str data_dir: if this is not None, two files in this directory will be
+        loaded: 'transformer_params.csv' and 'transformer_impedance_ratios.csv'.
+        Required columns for each file are listed in the descriptions of
+        the ``transformer_designs_path`` and ``impedance_ratios_path`` parameters.
+    :param str transformer_designs_path: if ``data_dir`` is None, this file will be
+        loaded. Required columns are 'low_kV', 'high_kV', 'x', and 'MVA'.
+    :param str impedance_ratios_path: if ``data_dir`` is None, this file will be loaded.
+        Required columns are 'high_kV' and 'x_to_r_ratio'.
+    :raises TypeError: if ``data_dir`` is None and either of
+        ``transformer_designs_path`` or ``impedance_ratios_path`` is None.
+    :return: (*pandas.DataFrame*) -- index is (low_kV, high_kV), columns are 'x', 'r',
+        and 'MVA'. 'x' and 'r' values are per-unit, 'MVA' is in megawatts.
+    """
+    if data_dir is None and (
+        transformer_designs_path is None or impedance_ratios_path is None
+    ):
+        raise TypeError(
+            "Either data_dir or transformer_designs_path and impedance_ratios_path "
+            "must be specified."
+        )
+    if data_dir is not None:
+        transformer_designs_path = os.path.join(data_dir, "transformer_params.csv")
+        impedance_ratios_path = os.path.join(
+            data_dir, "transformer_impedance_ratios.csv"
+        )
+    transformer_designs = pd.read_csv(transformer_designs_path)
+    transformer_impedance_ratios = pd.read_csv(
+        impedance_ratios_path, index_col="high_kV"
+    )
+    transformer_designs["r"] = transformer_designs["x"] / transformer_designs[
+        "high_kV"
+    ].map(transformer_impedance_ratios["x_to_r_ratio"])
+    return transformer_designs.set_index(["low_kV", "high_kV"])[["x", "r", "MVA"]]
+
+
 def get_zone(path):
     """Read zone CSV file.
 
