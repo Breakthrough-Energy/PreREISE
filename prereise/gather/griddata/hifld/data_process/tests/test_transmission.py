@@ -7,7 +7,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
     add_b2bs_to_dc_lines,
-    add_impedance_and_rating,
+    add_lines_impedances_ratings,
     add_substation_info_to_buses,
     assign_buses_to_lines,
     augment_line_voltages,
@@ -37,7 +37,7 @@ def test_add_b2bs_to_dc_lines():
     assert_frame_equal(dc_lines.iloc[2:], expected_new_rows)
 
 
-def test_add_impedance_and_rating():
+def test_add_lines_impedances_ratings():
     branch = pd.DataFrame(
         {
             "VOLTAGE": [69, 75, 75, 138],
@@ -52,7 +52,7 @@ def test_add_impedance_and_rating():
         }
     )
     expected_modified_branch = pd.concat([branch, expected_new_columns], axis=1)
-    add_impedance_and_rating(branch, bus_voltages=None)
+    add_lines_impedances_ratings(branch)
     assert_frame_equal(branch, expected_modified_branch)
 
 
