@@ -3,7 +3,6 @@ import os
 
 import numpy as np
 import pandas as pd
-import pygrib
 from powersimdata.utility.distance import ll2uv
 from scipy.spatial import KDTree
 from tqdm import tqdm
@@ -32,6 +31,11 @@ def get_wind_data_lat_long(dt, directory):
     :return: (*tuple*) -- A tuple of 2 same lengthed numpy arrays, first one being
         latitude and second one being longitude.
     """
+    try:
+        import pygrib
+    except ImportError:
+        print("pygrib is missing but required for this function")
+        raise
     gribs = pygrib.open(os.path.join(directory, formatted_filename(dt)))
     grib = next(gribs)
     return grib.latlons()
@@ -81,6 +85,11 @@ def extract_wind_speed(wind_farms, start_dt, end_dt, directory):
         dt1   speed       speed
         dt2   speed       speed
     """
+    try:
+        import pygrib
+    except ImportError:
+        print("pygrib is missing but required for this function")
+        raise
     wind_data_lat_long = get_wind_data_lat_long(start_dt, directory)
     wind_farm_to_closest_wind_grid_indices = find_closest_wind_grids(
         wind_farms, wind_data_lat_long

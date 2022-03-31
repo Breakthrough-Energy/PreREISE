@@ -29,9 +29,8 @@ def test_find_closest_wind_grids():
 @patch("prereise.gather.winddata.hrrr.calculations.get_power")
 @patch("prereise.gather.winddata.hrrr.calculations.get_wind_data_lat_long")
 @patch("prereise.gather.winddata.hrrr.calculations.find_closest_wind_grids")
-@patch("prereise.gather.winddata.hrrr.calculations.pygrib")
 def test_calculate_pout_blended(
-    pygrib, find_closest_wind_grids, get_wind_data_lat_long, get_power
+    find_closest_wind_grids, get_wind_data_lat_long, get_power
 ):
     # we assume get_power is well tested and simply return the magnitude value passed in
     # for straightforward testing
@@ -46,24 +45,26 @@ def test_calculate_pout_blended(
     get_power.side_effect = get_power_mock
     find_closest_wind_grids.return_value = np.array([1, 2])
 
-    grib_mock = MagicMock()
-
-    grib_mock.select.return_value.__getitem__.return_value.values.flatten.return_value = np.array(
-        [0, 1, 2]
-    )
-    pygrib.open.return_value = grib_mock
     wind_farms = MagicMock()
     wind_farms.columns = ["type", "state_abv"]
     wind_farms.index = [0, 1]
     wind_farms.loc.__getitem__.return_value.type = "wind_offshore"
     wind_farms.loc.__getitem__.return_value.state_abv = "MA"
     wind_farms.__len__.return_value = 2
-    df = calculate_pout_blended(
-        wind_farms,
-        datetime.fromisoformat("2016-01-01"),
-        datetime.fromisoformat("2016-01-01"),
-        "",
+    grib_mock = MagicMock()
+    grib_mock.select.return_value.__getitem__.return_value.values.flatten.return_value = np.array(
+        [0, 1, 2]
     )
+
+    mocked_pygrib = MagicMock()
+    mocked_pygrib.open = MagicMock(return_value=grib_mock)
+    with patch.dict("sys.modules", {"pygrib": mocked_pygrib}):
+        df = calculate_pout_blended(
+            wind_farms,
+            datetime.fromisoformat("2016-01-01"),
+            datetime.fromisoformat("2016-01-01"),
+            "",
+        )
     expected_df = pd.DataFrame(
         data=[[np.sqrt(2), np.sqrt(8)]],
         index=[datetime.fromisoformat("2016-01-01")],

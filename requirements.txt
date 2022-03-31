@@ -17,7 +17,7 @@ black
 pytest
 coverage
 pytest-cov
-pygrib~=2.1.4
+pygrib~=2.1.4; sys_platform != "win32"
 geopandas
 rtree
 shapely~=1.8
