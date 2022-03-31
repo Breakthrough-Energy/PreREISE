@@ -4,7 +4,23 @@ from shapely.validation import make_valid
 
 # IMPORTANT: rtree is required for overlay function, but not imported
 
-# TODO: add make_valid() helper using shapely
+
+def make_zones_valid(gdf):
+    """Fixes any invalid shapes within a GeoDataFrame
+    From the Shapely docs:
+    A valid Polygon may not possess any overlapping exterior or interior rings.
+    A valid MultiPolygon may not collect any overlapping polygons.
+    https://shapely.readthedocs.io/en/stable/manual.html#object.is_valid
+
+    :param geopandas.geodataframe.GeoDataFrame gdf: GeoDataFrame with columns = ['geometry']
+    :return: (*geopandas.geodataframe.GeoDataFrame*) -- GeoDataFrame where is_valid returns true for all rows
+    """
+    gdf = gdf.copy()
+    gdf.update(
+        gdf["geometry"].loc[~gdf.geometry.is_valid].apply(lambda geom: make_valid(geom))
+    )
+    return gdf
+
 
 def plot_zone_map(gdf, **kwargs):
     """Plot map of zones as choropleth. Has 20 colors; buckets zones in
@@ -13,8 +29,7 @@ def plot_zone_map(gdf, **kwargs):
     :param geopandas.geodataframe.GeoDataFrame gdf: GeoDataFrame with
         index = zone names, columns = ['geometry']
     :param \\*\\*kwargs: arbitrary keyword arguments passed to matplotlib plotting function
-    :return: (*matplotlib.axes._subplots.AxesSubplot OR folium.folium.Map*) --
-        matplotlib is for non-interactive, folium is interactive
+    :return: (*matplotlib.axes._subplots.AxesSubplot) -- the plot object
     """
     gdf = gdf.copy()
     gdf["coords"] = gdf["geometry"].apply(lambda x: x.representative_point().coords[:])

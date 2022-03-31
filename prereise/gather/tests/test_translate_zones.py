@@ -1,14 +1,30 @@
 import pytest
+import pandas as pd
 import geopandas as gpd
-
-# TODO: make this without Shapely?
 from shapely.geometry import Polygon
 
 from prereise.gather.translate_zones import (
     filter_interesting_zones,
     format_zone_df,
     translate_zone_set,
+    make_zones_valid,
 )
+
+
+def test_make_zones_valid():
+    gdf = gpd.GeoDataFrame(
+        {
+            "geometry": [
+                Polygon([(0, 3), (1, 3), (1, 2)]),  # valid
+                Polygon([(0, 0), (1, 1), (1, 0), (0, 1)]),  # bowtie
+                Polygon([(0, 1), (0.5, 0.5), (0, 0), (0, 1), (1, 0)]),  # flag
+            ]
+        },
+        index=["a", "b", "c"],
+    )
+    gdf = make_zones_valid(gdf)
+
+    assert gdf.is_valid.all()
 
 
 def test_filter_interesting_zones():
