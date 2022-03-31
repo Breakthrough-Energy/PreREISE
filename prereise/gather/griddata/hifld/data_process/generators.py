@@ -1,10 +1,14 @@
+from math import asin
+
+import numpy as np
 import pandas as pd
-from powersimdata.utility.distance import haversine
 from scipy.optimize import curve_fit
+from scipy.spatial import KDTree
 from scipy.stats import linregress
 
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_access import load
+from prereise.gather.helpers import latlon_to_xyz
 
 
 def floatify(value, default=float("nan")):
@@ -22,54 +26,127 @@ def floatify(value, default=float("nan")):
         return default
 
 
-def map_generator_to_sub_by_location(generator, substation_groupby):
-    """Determine a likely substation for a generator to be connected to. Priority order
-    of mapping is: 1) if location is available and one or more substations exist in that
-    ZIP code, map by location to closest substation within that ZIP code, 2) if location
-    is available but no substations exist in that ZIP code, map to the closest
-    substation within neighboring ZIP codes, 3) if only ZIP code is available
-    (no location), and one or more substations exist, map to an arbitrarily chosen
-    substation within that ZIP code, 4) if only ZIP code is available (no location)
-    but no substations exist in that ZIP code, return NA.
+def map_generators_to_sub_by_location(
+    generators, substations, inplace=True, report_worst=None
+):
+    """Determine the closest substation to each generator. For generators without
+    latitude and longitude, an attempt will be made to match via ZIP code, and failing
+    that a pandas.NA value will be returned.
 
-    :param pandas.Series generator: one generating unit from data frame.
-    :param pandas.GroupBy substation_groupby: data frame of substations, grouped by
-        (interconnect, ZIP).
-    :return: (*int/pd.NA*) -- substation ID if the generator can be mapped successfully
-        to a substation, else pd.NA.
+    :param pandas.DataFrame generators: generator data. Required columns:
+        'interconnect', 'lat', 'lon', 'ZIP'.
+    :param pandas.DataFrame substations: substation data. Required columns:
+        'interconnect', 'lat', 'lon', 'ZIP'.
+    :param bool inplace: whether to modify the generator table inplace with new 'sub_id'
+        and 'sub_dist' columns or to return a new one.
+    :param int report_worst: if not None, display the distances of the worst N mappings.
+    :return: (*pandas.DataFrame/None*) -- if ``inplace`` is `False`, return the modified
+        DataFrame; otherwise return nothing.
     """
-    lookup_params = tuple(generator.loc[["interconnect", "ZIP"]])
-    if pd.isna(generator["lat"]) or pd.isna(generator["lon"]):
-        # No location available
-        try:
-            matching_subs = substation_groupby.get_group(lookup_params)
-            return matching_subs.index[0]
-        except KeyError:
+
+    def get_closest_substation(generator, voltage_trees, subs_voltage_lookup):
+        if not isinstance(generator["xyz"], list):
             return pd.NA
-    try:
-        # This ZIP code contains substations, this block will execute successfully
-        matching_subs = substation_groupby.get_group(lookup_params)
-    except KeyError:
-        # If this ZIP code does not contain substations, this block will execute, and
-        # we select a set of 'nearby' substations
-        zip_range = [int(generator.loc["ZIP"]) + offset for offset in range(-100, 101)]
-        zip_range_strings = [str(z).rjust(5, "0") for z in zip_range]
-        try:
-            matching_subs = pd.concat(
-                [
-                    substation_groupby.get_group((generator.loc["interconnect"], z))
-                    for z in zip_range_strings
-                    if (generator.loc["interconnect"], z) in substation_groupby.groups
-                ]
-            )
-        except ValueError:
-            # If no matching subs within the given interconnection and ZIPs, give up
-            return pd.NA
-    distance_to_subs = matching_subs.apply(
-        lambda x: haversine((x.lat, x.lon), (generator.lat, generator.lon)),
+        if pd.isnull(generator["voltage_class"]) or generator["Pmax"] < 100:
+            grouper_key = generator["interconnect"]
+        else:
+            grouper_key = (generator["interconnect"], generator["voltage_class"])
+        chord_dist, array_index = voltage_trees[grouper_key].query(generator["xyz"])
+        sub_id = subs_voltage_lookup[grouper_key][array_index]
+        # Translate chord distance (unit circle) to great circle distance (miles)
+        dist_in_miles = 3963 * 2 * asin(chord_dist / 2)  # use 3963 mi as earth radius
+        return pd.Series({"dist": dist_in_miles, "sub_id": sub_id})
+
+    def classify_voltages(voltage, voltage_ranges):
+        for v_range, bounds in voltage_ranges.items():
+            if bounds["min"] <= voltage <= bounds["max"]:
+                return v_range
+        return float("nan")
+
+    voltage_ranges = {
+        "under 100": {"min": 0, "max": 99},
+        "100-161": {"min": 100, "max": 161},
+        "220-287": {"min": 220, "max": 287},
+        "345": {"min": 345, "max": 345},
+        "500": {"min": 500, "max": 500},
+        "735 and above": {"min": 735, "max": float("inf")},
+    }
+
+    # Translate lat/lon to 3D positions (assume spherical earth, origin at center)
+    substations_with_xyz = substations.assign(
+        xyz=substations.apply(lambda x: latlon_to_xyz(x["lat"], x["lon"]), axis=1)
+    )
+    generators_with_xyz = generators.assign(
+        xyz=generators.apply(
+            lambda x: (
+                pd.NA
+                if pd.isna(x["lat"]) or pd.isna(x["lon"])
+                else latlon_to_xyz(x["lat"], x["lon"])
+            ),
+            axis=1,
+        )
+    )
+
+    # Bin voltages into broad classes
+    generators_with_xyz["voltage_class"] = generators["Grid Voltage (kV)"].map(
+        lambda x: classify_voltages(x, voltage_ranges)
+    )
+
+    # Group substations by voltage to build KDTrees
+    subs_voltage_lookup = {
+        (interconnect, voltage_level): substations_with_xyz.loc[
+            (substations_with_xyz["interconnect"] == interconnect)
+            & (substations_with_xyz["MAX_VOLT"] >= voltage_range["min"])
+        ].index
+        for interconnect in generators["interconnect"].unique()
+        for voltage_level, voltage_range in voltage_ranges.items()
+    }
+    # Group substations by ZIP code for a fallback for generators without coordinates
+    subs_zip_groupby = substations_with_xyz.groupby(["interconnect", "ZIP"])
+
+    # Create a KDTree for each combination of voltage and interconnect
+    voltage_trees = {
+        key: KDTree(np.vstack(substations_with_xyz.loc[sub_ids, "xyz"]))
+        for key, sub_ids in subs_voltage_lookup.items()
+        if len(sub_ids) > 0
+    }
+    # Create a KDTree for each interconnect (all voltages)
+    subs_interconnect_groupby = substations_with_xyz.groupby("interconnect")
+    for interconnect in generators["interconnect"].unique():
+        tree_subs = subs_interconnect_groupby.get_group(interconnect)
+        voltage_trees[interconnect] = KDTree(np.vstack(tree_subs["xyz"]))
+        subs_voltage_lookup[interconnect] = tree_subs.index
+
+    # Query the appropriate tree for each generator to get the closest substation ID
+    mapping_results = generators_with_xyz.apply(
+        lambda x: get_closest_substation(x, voltage_trees, subs_voltage_lookup),
         axis=1,
     )
-    return distance_to_subs.idxmin()
+    # For generators without coordinates, try to pick a substation with a matching ZIP
+    for g in generators.loc[mapping_results["sub_id"].isnull()].index:
+        try:
+            candidates = subs_zip_groupby.get_group(
+                (generators.loc[g, "interconnect"], generators.loc[g, "ZIP"])
+            )
+            # arbitrary choose the first one
+            mapping_results.loc[g, "sub_id"] = candidates.index[0]
+        except KeyError:
+            continue  # No coordinates, no matching ZIP, we're out of luck
+
+    if report_worst is not None:
+        print(
+            mapping_results.sort_values("sub_dist", ascending=False)
+            .join(generators[["Plant Code", "Grid Voltage (kV)", "Pmax"]])
+            .head(report_worst)
+        )
+
+    if inplace:
+        generators["sub_id"] = mapping_results["sub_id"]
+        generators["sub_dist"] = mapping_results["dist"]
+    else:
+        return generators_with_xyz.drop(["xyz", "voltage_class"], axis=1).join(
+            mapping_results
+        )
 
 
 def map_generator_to_bus_by_sub(generator, bus_groupby):
@@ -83,7 +160,15 @@ def map_generator_to_bus_by_sub(generator, bus_groupby):
     if pd.isna(generator.sub_id):
         return pd.NA
     else:
-        return bus_groupby.get_group(generator.sub_id)["baseKV"].idxmin()
+        bus_voltages = bus_groupby.get_group(generator.sub_id)["baseKV"]
+        if len(bus_voltages) == 1 or generator.Pmax < 200:
+            # Return the lowest-voltage for small generators, or the only voltage
+            return bus_voltages.idxmin()
+        if generator.Pmax < 500:
+            # Return the second-lowest voltage for mid-sized generators
+            return bus_voltages.sort_values().index[1]
+        # Return the highest voltage for large generators
+        return bus_voltages.idxmax()
 
 
 def estimate_heat_rate_curve(
@@ -246,6 +331,30 @@ def augment_missing_heat_rates(generators):
     generators.update(linear_heat_rate_assumptions)
 
 
+def aggregate_hydro_generators_by_plant_id(generators):
+    """Combine hydro generators within the same plant into aggregated larger generators.
+    'Pmin' and 'Pmax' values will be summed, all other attributes (including the index)
+    will be taken from the (somewhat arbitrary) first generator in the plant grouping.
+
+    :param pandas.DataFrame generators: data frame of generators.
+    :return: (*pandas.DataFrame*) -- data frame of generators, with hydro generators
+        aggregated.
+    """
+    indiv_hydro_gens = generators.query("`Energy Source 1` == 'WAT'").copy()
+    original_hydro_indices = indiv_hydro_gens.index.tolist()
+    # Retain the original indices to keep track of original indices for later append
+    indiv_hydro_gens.reset_index(inplace=True)
+    hydro_groupby = indiv_hydro_gens.groupby("Plant Code")
+    # Choose characteristics from the (arbitrary) first plant
+    aggregated_hydro = hydro_groupby.first()
+    aggregated_hydro[["Pmin", "Pmax"]] = hydro_groupby[["Pmin", "Pmax"]].sum()
+    # Reset/set index to restore 'Plant Code' as a column and original index numbering
+    aggregated_hydro.reset_index(inplace=True)
+    aggregated_hydro.set_index("index", inplace=True)  # 'index' was the original
+    generators = generators.drop(original_hydro_indices).append(aggregated_hydro)
+    return generators
+
+
 def build_plant(bus, substations, kwargs={}):
     """Use source data on generating units from EIA/EPA, along with transmission network
     data, to produce a plant data frame.
@@ -286,28 +395,31 @@ def build_plant(bus, substations, kwargs={}):
     bus_groupby = bus.groupby(bus["sub_id"].astype(int))
     # Filter substations with no buses
     substations = substations.loc[set(bus_groupby.groups.keys())]
-    substation_groupby = substations.groupby(["interconnect", "ZIP"])
     epa_ampd_groupby = epa_ampd.groupby(["ORISPL_CODE", "UNITID"])
 
-    # Add information
+    # Add information to generators based on Form 860 Plant table
+    # Merging this way allows column-on-column merge while preserving original index
+    generators = (
+        generators.reset_index()
+        .merge(
+            plants,
+            on="Plant Code",
+            suffixes=(None, "_860Plant"),
+        )
+        .set_index("index")
+    )
+    generators.rename(
+        {"Latitude": "lat", "Longitude": "lon", "Zip": "ZIP"}, axis=1, inplace=True
+    )
+    # Map interconnect via BA first (more reliable) then by NERC Region
     generators["interconnect"] = (
-        generators["Plant Code"]
-        .map(plants["NERC Region"])
-        .map(const.nercregion2interconnect)
+        generators["Balancing Authority Code"]
+        .map(const.balancingauthority2interconnect)
+        .combine_first(generators["NERC Region"].map(const.nercregion2interconnect))
     )
-    generators["lat"] = generators["Plant Code"].map(plants["Latitude"])
-    generators["lon"] = generators["Plant Code"].map(plants["Longitude"])
-    generators["ZIP"] = generators["Plant Code"].map(plants["Zip"])
-    generators["Balancing Authority Code"] = generators["Plant Code"].map(
-        plants["Balancing Authority Code"]
-    )
-    print("Mapping generators to substations... (this may take several minutes)")
-    generators["sub_id"] = generators.apply(
-        lambda x: map_generator_to_sub_by_location(x, substation_groupby), axis=1
-    )
-    generators["bus_id"] = generators.apply(
-        lambda x: map_generator_to_bus_by_sub(x, bus_groupby), axis=1
-    )
+    generators["Grid Voltage (kV)"] = generators["Grid Voltage (kV)"].map(floatify)
+
+    # Ensure we have Pmax and Pmin for each generator
     generators["Pmax"] = generators[
         ["Summer Capacity (MW)", "Winter Capacity (MW)"]
     ].max(axis=1)
@@ -315,6 +427,15 @@ def build_plant(bus, substations, kwargs={}):
     generators = generators.loc[~generators["Pmax"].isnull()]
     generators.rename({"Minimum Load (MW)": "Pmin"}, inplace=True, axis=1)
     generators["Pmin"] = generators["Pmin"].fillna(0)
+
+    # Aggregate hydro generators within each plant
+    generators = aggregate_hydro_generators_by_plant_id(generators)
+
+    map_generators_to_sub_by_location(generators, substations)
+    generators["bus_id"] = generators.apply(
+        lambda x: map_generator_to_bus_by_sub(x, bus_groupby), axis=1
+    )
+
     print("Fitting heat rate curves to EPA data... (this may take several minutes)")
     heat_rate_curve_estimates = generators.apply(
         lambda x: estimate_heat_rate_curve(

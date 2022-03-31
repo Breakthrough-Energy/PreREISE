@@ -194,6 +194,79 @@ eia_storage_gen_types = {
     "Flywheels",
 }
 
+balancingauthority2interconnect = {
+    "AEC": "Eastern",
+    "AECI": "Eastern",
+    "AVA": "Western",
+    "AVRN": "Western",
+    "AZPS": "Western",
+    "BANC": "Western",
+    "BPAT": "Western",
+    "CHPD": "Western",
+    "CISO": "Western",
+    "CPLE": "Eastern",
+    "CPLW": "Eastern",
+    "CSTO": "Western",
+    "DEAA": "Western",
+    "DOPD": "Western",
+    "DUK": "Eastern",
+    "EEI": "Eastern",
+    "EPE": "Western",
+    "ERCO": "ERCOT",
+    "FMPP": "Eastern",
+    "FPC": "Eastern",
+    "FPL": "Eastern",
+    "GCPD": "Western",
+    "GRIF": "Western",
+    "GRIS": "Western",
+    "GRMA": "Western",
+    "GVL": "Eastern",
+    "GWA": "Western",
+    "HGMA": "Western",
+    "HST": "Eastern",
+    "IID": "Western",
+    "IPCO": "Western",
+    "ISNE": "Eastern",
+    "JEA": "Eastern",
+    "LDWP": "Western",
+    "LGEE": "Eastern",
+    "MISO": "Eastern",
+    "NBSO": "Eastern",
+    "NEVP": "Western",
+    "NSB": "Eastern",
+    "NWMT": "Western",
+    "NYIS": "Eastern",
+    "OVEC": "Eastern",
+    "PACE": "Western",
+    "PACW": "Western",
+    "PGE": "Western",
+    "PJM": "Eastern",
+    "PNM": "Western",
+    "PSCO": "Western",
+    "PSEI": "Western",
+    "SC": "Eastern",
+    "SCEG": "Eastern",
+    "SCL": "Western",
+    "SEC": "Eastern",
+    "SEPA": "Eastern",
+    "SOCO": "Eastern",
+    "SPA": "Eastern",
+    "SRP": "Western",
+    "SWPP": "Eastern",
+    "TAL": "Eastern",
+    "TEC": "Eastern",
+    "TEPC": "Western",
+    "TIDC": "Western",
+    "TPWR": "Western",
+    "TVA": "Eastern",
+    # "WACM": "Western",  # can be Western or Eastern
+    # "WALC": "Western",  # can be Western or Eastern
+    # "WAUW": "Western",  # can be Western or Eastern
+    "WWA": "Western",
+    "YAD": "Eastern",
+}
+
+# Usage of this is deprecated, since these data seem noisier than Balancing Authorities
 nercregion2interconnect = {
     "ASCC": "Alaska",  # Not currently used
     "HICC": "Hawaii",  # Not currently used
@@ -437,6 +510,18 @@ contiguous_us_bounds = {
     "south": 25,
     "west": -125,
 }
+
+proxy_substations = [
+    {"LATITUDE": 35.0514, "LONGITUDE": -81.0694, "NAME": "Catawba", "STATE": "SC"},
+    {
+        "LATITUDE": 44.2853,
+        "LONGITUDE": -105.3826,
+        "NAME": "Neil Simpson II",
+        "STATE": "WY",
+    },
+]
+
+substations_lines_filter_override = {301995}
 
 seams_substations = {
     "east_west": {

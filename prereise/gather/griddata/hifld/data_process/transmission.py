@@ -526,9 +526,9 @@ def create_transformers(bus):
         ["from_bus_id", "to_bus_id"].
     """
     bus_pairs = [
-        (b, volt_series.idxmax())
+        (b, volt_series.sort_values().index[i + 1])
         for sub, volt_series in bus.groupby("sub_id")["baseKV"]
-        for b in volt_series.sort_values().index[:-1]
+        for i, b in enumerate(volt_series.sort_values().index[:-1])
         if len(volt_series) > 1
     ]
 
@@ -743,8 +743,12 @@ def build_transmission(method="line2sub", **kwargs):
     hifld_zones = get_zone(os.path.join(hifld_data_dir, "zone.csv"))  # noqa: F841
 
     # Filter substations based on their `LINES` attribute, check for location dupes
+    hifld_substations.loc[const.substations_lines_filter_override, "LINES"] = None
     substations = filter_substations_with_zero_lines(hifld_substations)
     check_for_location_conflicts(substations)
+    # Append the proxy substations to the source data
+    substations = pd.concat([substations, pd.DataFrame(const.proxy_substations)])
+    substations.index.name = "ID"
 
     # Filter out keyword arguments for filter_islands_and_connect_with_mst function
     island_kwargs = dict()
@@ -821,6 +825,10 @@ def build_transmission(method="line2sub", **kwargs):
     branch["rateA"] = branch.apply(
         lambda x: estimate_branch_rating(x, bus["baseKV"]), axis=1
     )
+
+    # Update substation max & min voltages using bus data (from lines)
+    substations["MAX_VOLT"].update(bus.groupby("sub_id")["baseKV"].apply(max))
+    substations["MIN_VOLT"].update(bus.groupby("sub_id")["baseKV"].apply(min))
 
     # Rename columns to match PowerSimData expectations
     branch.rename({"type": "branch_device_type"}, axis=1, inplace=True)

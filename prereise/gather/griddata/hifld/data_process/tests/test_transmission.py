@@ -118,7 +118,7 @@ def test_create_transformers():
         dtype="float",
     )
     expected_transformers = pd.DataFrame(
-        {"from_bus_id": [0, 2, 4, 5], "to_bus_id": [1, 3, 6, 6]}
+        {"from_bus_id": [0, 2, 4, 5], "to_bus_id": [1, 3, 5, 6]}
     )
     transformers = create_transformers(bus)
     assert_frame_equal(transformers, expected_transformers)

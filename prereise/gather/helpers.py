@@ -1,4 +1,5 @@
 import os
+from math import cos, radians, sin
 
 import numpy as np
 import pandas as pd
@@ -97,3 +98,21 @@ def get_monthly_net_generation(state, eia_form_923, resource, hps=True):
     eia_net_generation = list(np.nan_to_num(eia_net_generation))
 
     return eia_net_generation
+
+
+def latlon_to_xyz(latitude, longitude):
+    """Convert (latitude, longitude) to unit vector.
+
+    :param float latitude: latitude of the site (in deg.). Equator is the zero point.
+    :param float longitude: longitude of the site (in deg.) measured eastward from
+        Greenwich, UK.
+    :return: (*tuple*) -- 3-components (x,y,z) unit vector.
+    """
+    cos_lat = cos(radians(latitude))
+    sin_lat = sin(radians(latitude))
+    cos_lon = cos(radians(longitude))
+    sin_lon = sin(radians(longitude))
+
+    uv = [cos_lat * cos_lon, cos_lat * sin_lon, sin_lat]
+
+    return uv
