@@ -6,6 +6,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
+    add_impedance_and_rating,
     assign_buses_to_lines,
     augment_line_voltages,
     create_buses,
@@ -14,6 +15,25 @@ from prereise.gather.griddata.hifld.data_process.transmission import (
     estimate_branch_rating,
     map_lines_to_substations_using_coords,
 )
+
+
+def test_add_impedance_and_rating():
+    branch = pd.DataFrame(
+        {
+            "VOLTAGE": [69, 75, 75, 138],
+            "length": [10, 20, 100, 50],
+            "type": ["Line"] * 4,
+        }
+    )
+    expected_new_columns = pd.DataFrame(
+        {
+            "x": [0.0963365, 0.163066, 0.813330, 0.122386],
+            "rateA": [85.4507, 92.8812, 42.5257, 227.1693],
+        }
+    )
+    expected_modified_branch = pd.concat([branch, expected_new_columns], axis=1)
+    add_impedance_and_rating(branch, bus_voltages=None)
+    assert_frame_equal(branch, expected_modified_branch)
 
 
 def test_augment_line_voltages_volt_class():
