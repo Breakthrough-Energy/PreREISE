@@ -1,10 +1,7 @@
-from unittest.mock import Mock
-
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
     add_b2bs_to_dc_lines,
     add_lines_impedances_ratings,
@@ -13,8 +10,6 @@ from prereise.gather.griddata.hifld.data_process.transmission import (
     augment_line_voltages,
     create_buses,
     create_transformers,
-    estimate_branch_impedance,
-    estimate_branch_rating,
     filter_islands_and_connect_with_mst,
     map_lines_to_substations_using_coords,
     split_lines_to_ac_and_dc,
@@ -185,71 +180,49 @@ def test_create_transformers():
         },
         dtype="float",
     )
-    expected_transformers = pd.DataFrame(
-        {"from_bus_id": [0, 2, 4, 5], "to_bus_id": [1, 3, 5, 6]}
-    )
-    transformers = create_transformers(bus)
-    assert_frame_equal(transformers, expected_transformers)
-
-
-def test_estimate_branch_impedance_lines():
-    resistance = 0.01
-    reactance = 0.1
-    fake_lines = [Mock(series_impedance=(resistance + 1j * reactance))] * 3
-    branch = pd.DataFrame(
-        {"VOLTAGE": [69, 70, 345], "type": ["Line"] * 3, "line_object": fake_lines}
-    )
-    x = estimate_branch_impedance(branch.iloc[0], pd.Series())
-    assert x == reactance / (69**2 / const.s_base)
-    x = estimate_branch_impedance(branch.iloc[1], pd.Series())
-    assert x == reactance / (70**2 / const.s_base)
-    x = estimate_branch_impedance(branch.iloc[2], pd.Series())
-    assert x == reactance / (345**2 / const.s_base)
-
-
-def test_estimate_branch_impedance_transformers():
-    transformers = pd.DataFrame(
-        {"from_bus_id": [0, 1, 2], "to_bus_id": [1, 2, 3], "type": ["Transformer"] * 3}
-    )
-    bus_voltages = pd.Series([69, 230, 350, 500])
-    x = estimate_branch_impedance(transformers.iloc[0], bus_voltages)
-    assert x == const.transformer_reactance[(69, 230)]
-    x = estimate_branch_impedance(transformers.iloc[1], bus_voltages)
-    assert x == const.transformer_reactance[(230, 345)]
-    x = estimate_branch_impedance(transformers.iloc[2], bus_voltages)
-    assert x == const.transformer_reactance[(345, 500)]
-
-
-def test_estimate_branch_rating_lines():
-    fake_ratings = pd.Series([10, 20, 30, 40])
-    fake_thermal_ratings = pd.Series([100, 200, 300, 400])
-    fake_lines = [Mock(power_rating=i) for i in fake_ratings]
-    branch = pd.DataFrame(
+    transformer_designs = pd.DataFrame(
         {
-            "VOLTAGE": [69, 140, 345, 499],
-            "type": ["Line"] * 4,
-            "line_object": fake_lines,
+            "x": [0.19, 0.07, 0.044, 0.018],
+            "r": [0.01, 0.001, 0.001, 5e-4],
+            "MVA": [60, 250, 280, 580],
+        },
+        index=pd.MultiIndex.from_tuples([(69, 115), (69, 345), (115, 230), (230, 345)]),
+    )
+    lines = pd.DataFrame(
+        [
+            # One branch to low-voltage side of buses (0, 1) transformer
+            {"from_bus_id": 100, "to_bus_id": 0, "rateA": 75},
+            # Two branches to high-voltage side of buses (0, 1) transformer
+            {"from_bus_id": 1, "to_bus_id": 101, "rateA": 100},
+            {"from_bus_id": 1, "to_bus_id": 102, "rateA": 300},
+            # Two branches to low-voltage side of buses (2, 3) transformer
+            {"from_bus_id": 103, "to_bus_id": 2, "rateA": 50},
+            {"from_bus_id": 104, "to_bus_id": 2, "rateA": 100},
+            # One branch to high-voltage side of buses (2, 3) transformer
+            {"from_bus_id": 3, "to_bus_id": 105, "rateA": 300},
+            # One branch to each side of buses (5, 6) transformer
+            # The second of these is also on the high-voltage side of buses (4, 5) xfmr
+            {"from_bus_id": 6, "to_bus_id": 106, "rateA": 500},
+            {"from_bus_id": 5, "to_bus_id": 107, "rateA": 250},
+            # One branch connected to no transformers
+            {"from_bus_id": 998, "to_bus_id": 999, "rateA": 100e3},
+        ]
+    )
+    # One transformer to (0, 1) (only needs to support the low-voltage power)
+    # Three transformer to (2, 3) (low-voltage side requires 3x transformers in total)
+    # One transformer to (4, 5) (only needs to support the low-voltage power)
+    # One transformer to (5, 6) (only needs to support the low-voltage power)
+    expected_transformers = pd.DataFrame(
+        {
+            "from_bus_id": [0, 2, 2, 2, 4, 5],
+            "to_bus_id": [1, 3, 3, 3, 5, 6],
+            "x": [0.07, 0.19, 0.19, 0.19, 0.044, 0.018],
+            "r": [0.001, 0.01, 0.01, 0.01, 0.001, 5e-4],
+            "rateA": [250.0, 60.0, 60.0, 60.0, 280.0, 580.0],
         }
     )
-    assert_series_equal(
-        fake_ratings,
-        branch.apply(estimate_branch_rating, args=[None, fake_thermal_ratings], axis=1),
-    )
-
-
-def test_estimate_branch_rating_transformers():
-    thermal_ratings = pd.Series([100, 550, 1655, 2585], index=[69, 230, 345, 500])
-    transformers = pd.DataFrame(
-        {"from_bus_id": [0, 1, 2], "to_bus_id": [1, 2, 3], "type": ["Transformer"] * 3}
-    )
-    bus_voltages = pd.Series([69, 230, 350, 500])
-
-    rating = estimate_branch_rating(transformers.iloc[0], bus_voltages, thermal_ratings)
-    assert rating == const.transformer_rating
-    rating = estimate_branch_rating(transformers.iloc[1], bus_voltages, thermal_ratings)
-    assert rating == const.transformer_rating * 3
-    rating = estimate_branch_rating(transformers.iloc[2], bus_voltages, thermal_ratings)
-    assert rating == const.transformer_rating * 4
+    transformers = create_transformers(bus, lines, transformer_designs)
+    assert_frame_equal(transformers, expected_transformers)
 
 
 def test_filter_islands_and_connect_with_mst():
