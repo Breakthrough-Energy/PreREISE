@@ -6,6 +6,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
+    add_b2bs_to_dc_lines,
     add_impedance_and_rating,
     add_substation_info_to_buses,
     assign_buses_to_lines,
@@ -17,6 +18,22 @@ from prereise.gather.griddata.hifld.data_process.transmission import (
     filter_islands_and_connect_with_mst,
     map_lines_to_substations_using_coords,
 )
+
+
+def test_add_b2bs_to_dc_lines():
+    dc_lines = pd.DataFrame(
+        {"SUB_1_ID": [1, 2], "SUB_2_ID": [3, 4], "Pmax": [5, 6]},
+        index=[200, 201],
+    )
+    substations = pd.DataFrame(
+        {"NAME": ["Wango_West", "Jango", "Wango_East", "Tango_South", "Tango_North"]}
+    )
+    b2b_ratings = {"Wango": 100, "Tango": 200}
+    expected_new_rows = pd.DataFrame(
+        {"SUB_1_ID": [0, 3], "SUB_2_ID": [2, 4], "Pmax": [100, 200]}, index=[300, 301]
+    )
+    add_b2bs_to_dc_lines(dc_lines, substations, b2b_ratings)
+    assert_frame_equal(dc_lines.iloc[2:], expected_new_rows)
 
 
 def test_add_impedance_and_rating():
