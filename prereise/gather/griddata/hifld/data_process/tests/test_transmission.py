@@ -13,6 +13,7 @@ from prereise.gather.griddata.hifld.data_process.transmission import (
     create_transformers,
     estimate_branch_impedance,
     estimate_branch_rating,
+    filter_islands_and_connect_with_mst,
     map_lines_to_substations_using_coords,
 )
 
@@ -204,6 +205,35 @@ def test_estimate_branch_rating_transformers():
     assert rating == const.transformer_rating * 3
     rating = estimate_branch_rating(transformers.iloc[2], bus_voltages, thermal_ratings)
     assert rating == const.transformer_rating * 4
+
+
+def test_filter_islands_and_connect_with_mst():
+    lines = pd.DataFrame(
+        {
+            "SUB_1_ID": ["Seattle", "Oakland", "Chicago"],
+            "SUB_2_ID": ["Oakland", "Las Vegas", "New York"],
+        }
+    )
+    substations = pd.DataFrame(
+        {
+            "LATITUDE": [47.60, 37.81, 36.17, 41.89, 40.71],
+            "LONGITUDE": [-122.34, -122.26, -115.14, -87.63, -74.00],
+            "STATE": ["WA", "CA", "NV", "IL", "NY"],
+        },
+        index=["Seattle", "Oakland", "Las Vegas", "Chicago", "New York"],
+    )
+    state_neighbor = {
+        "CA": ["WA", "NV"],
+        "IL": ["NV", "NY"],
+        "NV": ["CA", "IL", "NY", "WA"],
+        "NY": ["IL", "NV"],
+        "WA": ["CA", "NV"],
+    }
+    new_lines, new_substations = filter_islands_and_connect_with_mst(
+        lines, substations, state_neighbor=state_neighbor
+    )
+    assert len(new_lines) == len(lines) + 1
+    assert set(new_lines.iloc[-1][["SUB_1_ID", "SUB_2_ID"]]) == {"Chicago", "Las Vegas"}
 
 
 def test_map_lines_to_substations_using_coords():
