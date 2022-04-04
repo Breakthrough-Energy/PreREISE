@@ -17,6 +17,7 @@ from prereise.gather.griddata.hifld.data_process.transmission import (
     estimate_branch_rating,
     filter_islands_and_connect_with_mst,
     map_lines_to_substations_using_coords,
+    split_lines_to_ac_and_dc,
 )
 
 
@@ -341,3 +342,14 @@ def test_assign_buses_to_lines():
     assert ac_lines["to_bus_id"].equals(pd.Series([310, 311, 410]))
     assert dc_lines["from_bus_id"].equals(pd.Series([311]))
     assert dc_lines["to_bus_id"].equals(pd.Series([400]))
+
+
+def test_split_lines_to_ac_and_dc():
+    lines = pd.DataFrame(
+        {"TYPE": ["DC; OVERHEAD", "DC; UNDERGROUND", "AC", "AC", "unknown", "unknown"]},
+        index=[101, 102, 103, 104, 105, 106],
+    )
+    dc_override_indices = {105}
+    ac_lines, dc_lines = split_lines_to_ac_and_dc(lines, dc_override_indices)
+    assert ac_lines.index.tolist() == [103, 104, 106]
+    assert dc_lines.index.tolist() == [101, 102, 105]
