@@ -7,6 +7,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
     add_impedance_and_rating,
+    add_substation_info_to_buses,
     assign_buses_to_lines,
     augment_line_voltages,
     create_buses,
@@ -35,6 +36,32 @@ def test_add_impedance_and_rating():
     expected_modified_branch = pd.concat([branch, expected_new_columns], axis=1)
     add_impedance_and_rating(branch, bus_voltages=None)
     assert_frame_equal(branch, expected_modified_branch)
+
+
+def test_add_substation_info_to_buses():
+    bus = pd.DataFrame({"sub_id": [0, 0, 1, 2]})
+    substations = pd.DataFrame(
+        {
+            "interconnect": ["Eastern", "Western", "Western", "Western", "ERCOT"],
+            "STATE": ["MT", "MT", "CA", "CA", "TX"],
+        }
+    )
+    zones = pd.DataFrame(
+        {
+            "state": ["Montana", "Montana", "California", "Texas"],
+            "interconnect": ["Western", "Eastern", "Western", "ERCOT"],
+            "zone_id": ["MT Western", "MT Eastern", "California", "TX ERCOT"],
+        }
+    )
+    expected_new_columns = pd.DataFrame(
+        {
+            "interconnect": ["Eastern", "Eastern", "Western", "Western"],
+            "zone_id": ["MT Eastern", "MT Eastern", "MT Western", "California"],
+        }
+    )
+    expected_bus = pd.concat([bus, expected_new_columns], axis=1)
+    add_substation_info_to_buses(bus, substations, zones)
+    assert_frame_equal(bus, expected_bus)
 
 
 def test_augment_line_voltages_volt_class():
