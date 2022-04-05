@@ -1,3 +1,5 @@
+s_base = 100  # MVA
+
 mile_to_meter = 1609.34
 meter_to_mile = 1.0 / mile_to_meter
 
@@ -124,43 +126,6 @@ volt_class_defaults = {
     "345": 345,
     "500": 500,
 }
-
-line_reactance_per_mile = {  # per-unit
-    69: 0.0096,
-    100: 0.0063,
-    115: 0.0039,
-    138: 0.0026,
-    161: 0.0021,
-    230: 0.0011,
-    345: 0.0005,
-    500: 0.0002,
-    765: 0.0001,
-}
-line_rating_short = {  # MVA
-    69: 86,
-    100: 181,
-    115: 239,
-    138: 382,
-    161: 446,
-    230: 797,
-    345: 1793,
-    500: 2598,
-    765: 5300,
-}
-line_rating_short_threshold = 50  # miles
-line_rating_surge_impedance_loading = {  # MVA
-    69: 13,
-    100: 30,
-    115: 35,
-    138: 50,
-    161: 69,
-    230: 140,
-    345: 375,
-    500: 1000,
-    765: 2250,
-}
-line_rating_surge_impedance_coefficient = 43.261
-line_rating_surge_impedance_exponent = -0.6678
 
 transformer_reactance = {  # per-unit
     (69, 115): 0.14242,
@@ -627,6 +592,47 @@ line_interconnect_assumptions = {
     },
     "Western": {123525, 141873},
     "ERCOT": {305330},
+}
+
+line_voltage_assumptions = {
+    128842: 230,
+}
+
+line_design_assumptions = {
+    # branch index: (voltage, circuits, bundle count)
+    101536: (161, 2, 4),  # TVA Cumberland (between substations)
+    103726: (161, 2, 4),  # TVA Cumberland (plant to substation)
+    110220: (115, 1, 2),  # Riverside Generating Station
+    112166: (230, 1, 2),  # Waterford 3 Nuclear Generating Station
+    116493: (230, 1, 2),  # Herbert A. Wagner Generating Station
+    132671: (230, 1, 3),  # Florida Power & Light St. Lucie
+    130105: (161, 1, 3),  # TVA Cumberland (downstream)
+    132804: (230, 1, 2),  # Waterford 3 Nuclear Generating Station
+    139216: (230, 4, 3),  # Catawba Nuclear Station
+    140651: (230, 1, 3),  # Florida Power & Light St. Lucie
+    147054: (115, 1, 2),  # RE Ginna Nuclear Power Plant
+    158263: (100, 1, 4),  # G. G. Allen Steam Station
+    160723: (230, 1, 3),  # Florida Power & Light St. Lucie
+    203381: (230, 1, 2),  # Midpoint to Boise Bench
+    203382: (230, 1, 2),  # Midpoint to Boise Bench
+    203383: (230, 1, 2),  # Midpoint to Boise Bench
+    300029: (69, 2, 1),  # Ormat Brawley geothermal
+    301320: (138, 2, 2),  # Collin/Frisco substation connection
+    301847: (115, 1, 2),  # Coso Power Station
+    303557: (138, 2, 2),  # West Levee substations connection (Dallas)
+    304908: (69, 2, 1),  # Heber geothermal
+    305018: (138, 2, 2),  # TH Wharton Generating Station
+    305464: (230, 2, 2),  # The Geysers
+    305990: (100, 2, 1),  # southeast Salton Sea geothermal plants (several)
+    306949: (230, 2, 2),  # The Geysers
+    307569: (230, 2, 2),  # The Geysers
+    308434: (230, 2, 2),  # The Geysers
+    309268: (69, 2, 1),  # Ormat Brawley geothermal
+    309441: (69, 2, 2),  # substation connection near Lake Creek Reservoir, outside Waco
+    309966: (138, 2, 2),  # Garfield to Pilot Knob (south of Austin)
+    312241: (100, 2, 1),  # southeast Salton Sea geothermal plants (several)
+    313473: (69, 2, 2),  # Holtville geothermal?
+    313474: (69, 2, 2),  # Holtville geothermal?
 }
 
 b2b_ratings = {  # MW

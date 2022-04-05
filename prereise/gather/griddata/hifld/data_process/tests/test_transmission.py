@@ -1,17 +1,85 @@
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_process.transmission import (
+    add_b2bs_to_dc_lines,
+    add_impedance_and_rating,
+    add_substation_info_to_buses,
     assign_buses_to_lines,
     augment_line_voltages,
     create_buses,
     create_transformers,
     estimate_branch_impedance,
     estimate_branch_rating,
+    filter_islands_and_connect_with_mst,
     map_lines_to_substations_using_coords,
+    split_lines_to_ac_and_dc,
 )
+
+
+def test_add_b2bs_to_dc_lines():
+    dc_lines = pd.DataFrame(
+        {"SUB_1_ID": [1, 2], "SUB_2_ID": [3, 4], "Pmax": [5, 6]},
+        index=[200, 201],
+    )
+    substations = pd.DataFrame(
+        {"NAME": ["Wango_West", "Jango", "Wango_East", "Tango_South", "Tango_North"]}
+    )
+    b2b_ratings = {"Wango": 100, "Tango": 200}
+    expected_new_rows = pd.DataFrame(
+        {"SUB_1_ID": [0, 3], "SUB_2_ID": [2, 4], "Pmax": [100, 200]}, index=[300, 301]
+    )
+    add_b2bs_to_dc_lines(dc_lines, substations, b2b_ratings)
+    assert_frame_equal(dc_lines.iloc[2:], expected_new_rows)
+
+
+def test_add_impedance_and_rating():
+    branch = pd.DataFrame(
+        {
+            "VOLTAGE": [69, 75, 75, 138],
+            "length": [10, 20, 100, 50],
+            "type": ["Line"] * 4,
+        }
+    )
+    expected_new_columns = pd.DataFrame(
+        {
+            "x": [0.0963365, 0.163066, 0.813330, 0.122386],
+            "rateA": [85.4507, 92.8812, 42.5257, 227.1693],
+        }
+    )
+    expected_modified_branch = pd.concat([branch, expected_new_columns], axis=1)
+    add_impedance_and_rating(branch, bus_voltages=None)
+    assert_frame_equal(branch, expected_modified_branch)
+
+
+def test_add_substation_info_to_buses():
+    bus = pd.DataFrame({"sub_id": [0, 0, 1, 2]})
+    substations = pd.DataFrame(
+        {
+            "interconnect": ["Eastern", "Western", "Western", "Western", "ERCOT"],
+            "STATE": ["MT", "MT", "CA", "CA", "TX"],
+        }
+    )
+    zones = pd.DataFrame(
+        {
+            "state": ["Montana", "Montana", "California", "Texas"],
+            "interconnect": ["Western", "Eastern", "Western", "ERCOT"],
+            "zone_id": ["MT Western", "MT Eastern", "California", "TX ERCOT"],
+        }
+    )
+    expected_new_columns = pd.DataFrame(
+        {
+            "interconnect": ["Eastern", "Eastern", "Western", "Western"],
+            "zone_id": ["MT Eastern", "MT Eastern", "MT Western", "California"],
+        }
+    )
+    expected_bus = pd.concat([bus, expected_new_columns], axis=1)
+    add_substation_info_to_buses(bus, substations, zones)
+    assert_frame_equal(bus, expected_bus)
 
 
 def test_augment_line_voltages_volt_class():
@@ -125,15 +193,18 @@ def test_create_transformers():
 
 
 def test_estimate_branch_impedance_lines():
+    resistance = 0.01
+    reactance = 0.1
+    fake_lines = [Mock(series_impedance=(resistance + 1j * reactance))] * 3
     branch = pd.DataFrame(
-        {"VOLTAGE": [69, 70, 345], "type": ["Line"] * 3, "length": [10, 15, 20]}
+        {"VOLTAGE": [69, 70, 345], "type": ["Line"] * 3, "line_object": fake_lines}
     )
     x = estimate_branch_impedance(branch.iloc[0], pd.Series())
-    assert x == const.line_reactance_per_mile[69] * 10
+    assert x == reactance / (69**2 / const.s_base)
     x = estimate_branch_impedance(branch.iloc[1], pd.Series())
-    assert x == const.line_reactance_per_mile[69] * 15
+    assert x == reactance / (70**2 / const.s_base)
     x = estimate_branch_impedance(branch.iloc[2], pd.Series())
-    assert x == const.line_reactance_per_mile[345] * 20
+    assert x == reactance / (345**2 / const.s_base)
 
 
 def test_estimate_branch_impedance_transformers():
@@ -150,43 +221,64 @@ def test_estimate_branch_impedance_transformers():
 
 
 def test_estimate_branch_rating_lines():
+    fake_ratings = pd.Series([10, 20, 30, 40])
+    fake_thermal_ratings = pd.Series([100, 200, 300, 400])
+    fake_lines = [Mock(power_rating=i) for i in fake_ratings]
     branch = pd.DataFrame(
         {
             "VOLTAGE": [69, 140, 345, 499],
             "type": ["Line"] * 4,
-            "length": [10, 50, 100, 150],
+            "line_object": fake_lines,
         }
     )
-    rating = estimate_branch_rating(branch.iloc[0], pd.Series())
-    assert rating == const.line_rating_short[69]
-    rating = estimate_branch_rating(branch.iloc[1], pd.Series())
-    assert rating == const.line_rating_short[138]
-    rating = estimate_branch_rating(branch.iloc[2], pd.Series())
-    assert rating == (
-        const.line_rating_surge_impedance_loading[345]
-        * const.line_rating_surge_impedance_coefficient
-        * 100**const.line_rating_surge_impedance_exponent
-    )
-    rating = estimate_branch_rating(branch.iloc[3], pd.Series())
-    assert rating == (
-        const.line_rating_surge_impedance_loading[500]
-        * const.line_rating_surge_impedance_coefficient
-        * 150**const.line_rating_surge_impedance_exponent
+    assert_series_equal(
+        fake_ratings,
+        branch.apply(estimate_branch_rating, args=[None, fake_thermal_ratings], axis=1),
     )
 
 
 def test_estimate_branch_rating_transformers():
+    thermal_ratings = pd.Series([100, 550, 1655, 2585], index=[69, 230, 345, 500])
     transformers = pd.DataFrame(
         {"from_bus_id": [0, 1, 2], "to_bus_id": [1, 2, 3], "type": ["Transformer"] * 3}
     )
     bus_voltages = pd.Series([69, 230, 350, 500])
 
-    rating = estimate_branch_rating(transformers.iloc[0], bus_voltages)
+    rating = estimate_branch_rating(transformers.iloc[0], bus_voltages, thermal_ratings)
     assert rating == const.transformer_rating
-    rating = estimate_branch_rating(transformers.iloc[1], bus_voltages)
+    rating = estimate_branch_rating(transformers.iloc[1], bus_voltages, thermal_ratings)
     assert rating == const.transformer_rating * 3
-    rating = estimate_branch_rating(transformers.iloc[2], bus_voltages)
+    rating = estimate_branch_rating(transformers.iloc[2], bus_voltages, thermal_ratings)
     assert rating == const.transformer_rating * 4
+
+
+def test_filter_islands_and_connect_with_mst():
+    lines = pd.DataFrame(
+        {
+            "SUB_1_ID": ["Seattle", "Oakland", "Chicago"],
+            "SUB_2_ID": ["Oakland", "Las Vegas", "New York"],
+        }
+    )
+    substations = pd.DataFrame(
+        {
+            "LATITUDE": [47.60, 37.81, 36.17, 41.89, 40.71],
+            "LONGITUDE": [-122.34, -122.26, -115.14, -87.63, -74.00],
+            "STATE": ["WA", "CA", "NV", "IL", "NY"],
+        },
+        index=["Seattle", "Oakland", "Las Vegas", "Chicago", "New York"],
+    )
+    state_neighbor = {
+        "CA": ["WA", "NV"],
+        "IL": ["NV", "NY"],
+        "NV": ["CA", "IL", "NY", "WA"],
+        "NY": ["IL", "NV"],
+        "WA": ["CA", "NV"],
+    }
+    new_lines, new_substations = filter_islands_and_connect_with_mst(
+        lines, substations, state_neighbor=state_neighbor
+    )
+    assert len(new_lines) == len(lines) + 1
+    assert set(new_lines.iloc[-1][["SUB_1_ID", "SUB_2_ID"]]) == {"Chicago", "Las Vegas"}
 
 
 def test_map_lines_to_substations_using_coords():
@@ -250,3 +342,14 @@ def test_assign_buses_to_lines():
     assert ac_lines["to_bus_id"].equals(pd.Series([310, 311, 410]))
     assert dc_lines["from_bus_id"].equals(pd.Series([311]))
     assert dc_lines["to_bus_id"].equals(pd.Series([400]))
+
+
+def test_split_lines_to_ac_and_dc():
+    lines = pd.DataFrame(
+        {"TYPE": ["DC; OVERHEAD", "DC; UNDERGROUND", "AC", "AC", "unknown", "unknown"]},
+        index=[101, 102, 103, 104, 105, 106],
+    )
+    dc_override_indices = {105}
+    ac_lines, dc_lines = split_lines_to_ac_and_dc(lines, dc_override_indices)
+    assert ac_lines.index.tolist() == [103, 104, 106]
+    assert dc_lines.index.tolist() == [101, 102, 105]
