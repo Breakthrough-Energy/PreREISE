@@ -115,7 +115,7 @@ blob_subpaths = {
     "epa_ampd": "EPA_AMPD/",
     "epa_needs": "EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
     "substations": "hifld/Electric_Substations_Apr2022.csv",
-    "transmission_lines": "hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
+    "transmission_lines": "hifld/Electric_Power_Transmission_Lines_Apr2022.geojson.zip",
     "us_counties": "geo_data/uscounties.csv",
     "us_zips": "geo_data/uszips.csv",
 }
