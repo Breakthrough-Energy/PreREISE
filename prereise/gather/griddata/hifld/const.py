@@ -479,13 +479,16 @@ seams_substations = {
     "east_ercot": {
         161924,  # Logansport, TX
         300490,  # Vernon, TX
+        301244,  # 'Martin Lakes', Dirgin, TX
         301314,  # Valley Lake, TX connection to OK
+        301390,  # Navasota, TX
         301729,  # Hawkins, TX
         302012,  # Vernon, TX
         302274,  # 'COTTONWOOD', Glenn, TX
         303004,  # Crowell, TX
         303646,  # San Augustine, TX
         303719,  # Big Sandy, TX
+        303946,  # Crockett, TX
         304100,  # Matador, TX
         304328,  # Midland, TX
         304477,  # Oklaunion substation (B2B)
@@ -495,7 +498,7 @@ seams_substations = {
         306058,  # Munday, TX
         306638,  # Pittsburg, TX
         306738,  # Henderson, TX
-        307121,  # Kirkland, TX
+        307121,  # 'TESLA', Kirkland, TX
         307363,  # Navasota, TX
         307539,  # Mt. Pleasant, TX
         307735,  # Shiro, TX
@@ -503,6 +506,7 @@ seams_substations = {
         308951,  # Beckville, TX
         308976,  # Dayton, TX
         309403,  # Kilgore, TX
+        309458,  # 'CIRRUS WIND', SE of Tahoka, TX
         310861,  # Overton, TX
         310879,  # Huntsville, TX
     },
@@ -555,10 +559,67 @@ line_interconnect_assumptions = {
         306885,
         310668,
         311279,
+        313416,
         311520,
+        313561,
+        313693,
+        313694,
     },
     "Western": {123525, 141873},
-    "ERCOT": {305330},
+    "ERCOT": {
+        300270,
+        300371,
+        300382,
+        300524,
+        301301,
+        301462,
+        301875,
+        302406,
+        302858,
+        302962,
+        303383,
+        303767,
+        303855,
+        304312,
+        305291,
+        305330,
+        305429,
+        305443,
+        305827,
+        306006,
+        306429,
+        306558,
+        306648,
+        306743,
+        306965,
+        307016,
+        307050,
+        308307,
+        308698,
+        309003,
+        309868,
+        310205,
+        310378,
+        310424,
+        310558,
+        310807,
+        310895,
+        310963,
+        311259,
+        311838,
+        311495,
+        311677,
+        311984,
+        312005,
+        312048,
+        312135,
+        312169,
+        312253,
+        312687,
+        313032,
+        313269,
+        315062,
+    },
 }
 
 line_voltage_assumptions = {
