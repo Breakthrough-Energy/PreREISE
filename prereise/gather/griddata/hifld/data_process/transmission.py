@@ -884,10 +884,9 @@ def build_transmission(method="line2sub", **kwargs):
 
     # Filter substations based on their `LINES` attribute, check for location dupes
     hifld_substations.loc[const.substations_lines_filter_override, "LINES"] = None
-    substations = filter_substations_with_zero_lines(hifld_substations)
-    check_for_location_conflicts(substations)
+    check_for_location_conflicts(hifld_substations)
     # Append the proxy substations to the source data
-    substations = pd.concat([substations, pd.DataFrame(const.proxy_substations)])
+    substations = pd.concat([hifld_substations, pd.DataFrame(const.proxy_substations)])
     substations.index.name = "ID"
 
     # Filter out keyword arguments for filter_islands_and_connect_with_mst function
