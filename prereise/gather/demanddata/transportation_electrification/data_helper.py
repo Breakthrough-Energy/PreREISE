@@ -12,7 +12,8 @@ def get_model_year_dti(model_year: int):
     """Creates a DatetimeIndex based on the input year of the model.
 
     :param int model_year: the input year of the model
-    :return: (*pandas.DatetimeIndex model_year_dti*) -- a DatetimeIndex encompassing the model year.
+    :return: (*pandas.DatetimeIndex model_year_dti*) -- a DatetimeIndex encompassing
+        the model year.
     """
     return pd.date_range(
         start=f"{model_year}-01-01", end=f"{model_year}-12-31", freq="D"
@@ -22,8 +23,10 @@ def get_model_year_dti(model_year: int):
 def get_input_day(model_year_dti: pd.DatetimeIndex):
     """Determine whether each day of the model year is a weekend (1) or weekday (2)
 
-    :param pandas.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the model year.
-    :return: (*numpy.ndarray*) -- array of 1s and 2s indicating weekend/weekday designations for the model year.
+    :param pandas.DatetimeIndex model_year_dti: a DatetimeIndex encompassing the
+        model year.
+    :return: (*numpy.ndarray*) -- array of 1s and 2s indicating weekend/weekday
+        designations for the model year.
     """
     return model_year_dti.dayofweek.isin(range(5)).astype(int) + 1
 
@@ -50,7 +53,7 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
         raise ValueError("census_region must be between 1 and 9 (inclusive).")
 
     nhts_census = loadmat(filepath)
-    raw_data = nhts_census[f"census_{census_region}_updated"]
+    raw_data = nhts_census[f"census_{census_region}_updated_dwell"]
     return pd.DataFrame(raw_data, columns=const.nhts_census_column_names)
 
 
@@ -59,8 +62,8 @@ def remove_ldt(data: pd.DataFrame):
     Keep light duty vehicles (vehicle types 1-3).
 
     :param pandas.DataFrame data: the data returned from :func:`load_data`.
-    :return: (*pandas.DataFrame*) -- the data loaded from :func:`load_data` with all rows
-        involving LDT removed.
+    :return: (*pandas.DataFrame*) -- the data loaded from :func:`load_data` with all
+        rows involving LDT removed.
     """
     return data.loc[data["Vehicle type"].isin(range(1, 4))].copy()
 
@@ -70,8 +73,8 @@ def remove_ldv(data: pd.DataFrame):
     Keep light duty trucks (vehicle types 4-6).
 
     :param pandas.DataFrame data: the data returned from :func:`load_data`.
-    :return: (*pandas.DataFrame*) -- the data loaded from :func:`load_data` with all rows
-        involving LDT removed.
+    :return: (*pandas.DataFrame*) -- the data loaded from :func:`load_data` with all
+        rows involving LDT removed.
     """
     return data.loc[data["Vehicle type"].isin(range(4, 7))].copy()
 
@@ -81,8 +84,10 @@ def update_if_weekend(data: pd.DataFrame):
     Fridays and Sundays overlap into the weekend or weekday due to the
     vehicle time window, 6AM - 5:59AM.
 
-    :param pandas.DataFrame data: the data returned from :func:`remove_ldt` or :func:`remove_ldv`.
-    :return: (*pandas.DataFrame*) -- the data loaded from :func:`remove_ldt` or :func:`remove_ldv`
+    :param pandas.DataFrame data: the data returned from :func:`remove_ldt` or
+        :func:`remove_ldv`.
+    :return: (*pandas.DataFrame*) -- the data loaded from :func:`remove_ldt` or
+        :func:`remove_ldv`
         with updated "If Weekend" values.
     """
     # weekend in the case of 1 or 7
@@ -130,3 +135,30 @@ def generate_daily_weighting(year, area_type="urban"):
         / daily_values.groupby(daily_values.index.month).sum()
     )
     return daily_values
+
+
+def get_total_daily_vmt(data: pd.DataFrame, input_day, daily_values):
+    """Calculates the total VMT and total vehicles for for each day of the model year,
+    based on if the day is a weekend (1) or weekday (2).
+
+    :param pandas.DataFrame data: the data returned from :func:`load_data`.
+    :param numpy.ndarray input_day: day of the week for each day in the year derived
+        from :func:`get_input_day`.
+    :param pandas.Series daily_values: daily weight factors returned from
+        :func:`generate_daily_weighting`.
+    :return: (*np.array*) -- an array where each element is the daily VMT and total
+        vehicles for that day.
+    """
+    weekend_vmt = data.loc[data["If Weekend"] == 1, "Miles traveled"].sum()
+    weekday_vmt = data.loc[data["If Weekend"] == 2, "Miles traveled"].sum()
+
+    annual_vmt = 0
+    for i in range(len(input_day)):
+        if input_day[i] == 1:
+            annual_vmt += weekend_vmt
+        elif input_day[i] == 2:
+            annual_vmt += weekday_vmt
+
+    daily_vmt_total = daily_values * annual_vmt
+
+    return daily_vmt_total
