@@ -50,7 +50,7 @@ def check_for_location_conflicts(substations):
 
 
 def map_lines_to_substations_using_coords(
-    substations, lines, rounding=3, drop_zero_distance_line=True
+    substations, lines, rounding=3, drop_zero_distance_line=True, max_remap=5
 ):
     """Map lines to substations using coordinates.
 
@@ -59,9 +59,19 @@ def map_lines_to_substations_using_coords(
     :param int rounding: number of digits in coordinates rounded up to.
     :param bool drop_zero_distance_line: drop zero distance line or not, defaults to
         True.
+    :param float max_remap: maximum distance (km) to map line endpoints. If a line's
+        endpoint is more than this distance away from the closest substation, a
+        substation will be created to map the line to.
     :return: (*tuple*) -- lines and substations data frame.
     :raises TypeError: if rounding is not an integer.
     """
+
+    def _make_mapping_structures(df, rounding):
+        dfcoord2dfid = df.round(rounding).groupby(["LATITUDE", "LONGITUDE"]).groups
+        dfcoord = list(dfcoord2dfid)
+        tree = KDTree([ll2uv(p[1], p[0]) for p in dfcoord])
+        return dfcoord2dfid, dfcoord, tree
+
     if not isinstance(rounding, int):
         raise TypeError("rounding must be an integer")
 
@@ -70,9 +80,7 @@ def map_lines_to_substations_using_coords(
         "assigning substations to lines' endpoints by mapping their rounded "
         f"({rounding} digits) coordinates"
     )
-    subcoord2subid = (
-        substations.round(rounding).groupby(["LATITUDE", "LONGITUDE"]).groups
-    )
+    subcoord2subid, subcoord, tree = _make_mapping_structures(substations, rounding)
     lines_coord = lines["COORDINATES"].map(
         lambda x: list(np.round([x[0], x[-1]], rounding))
     )
@@ -88,7 +96,6 @@ def map_lines_to_substations_using_coords(
         line2sub[e_sub] = line2sub[e].apply(
             lambda x: list(subcoord2subid[x]) if x in subcoord2subid else np.NaN
         )
-
     # Remove zero-distance lines
     if drop_zero_distance_line:
         idx = line2sub["FROM"].compare(line2sub["TO"]).index
@@ -100,14 +107,36 @@ def map_lines_to_substations_using_coords(
 
     # Find closest neighbor(s) of unmapped lines' endpoints
     print("finding closest substation to unmapped lines' endpoint(s)")
-    subcoord = list(subcoord2subid)
     missing_points = set().union(
         *[
             set(line2sub.loc[line2sub[e_sub].isna(), e].map(tuple))
             for e, e_sub in end_sub.items()
         ]
     )
-    tree = KDTree([ll2uv(p[1], p[0]) for p in subcoord])
+
+    # Find points which would get mapped beyond our max distance
+    tree_query_results = [(p, tree.query(ll2uv(p[1], p[0]))) for p in missing_points]
+    # For small angles, secant distance is approximately equal to angle * radius
+    max_remap_unit_vector = max_remap / transmission_const.earth_radius_km
+    to_add_list = [
+        {
+            "LATITUDE": p[0],
+            "LONGITUDE": p[1],
+            "NAME": str(p),
+            "STATE": substations.loc[subcoord2subid[subcoord[closest_idx]][0], "STATE"],
+        }
+        for p, (dist, closest_idx) in tree_query_results
+        if dist > max_remap_unit_vector
+    ]
+    first_new_id = substations.index.max() + 1
+    substations_to_add = pd.DataFrame(
+        to_add_list, index=pd.RangeIndex(first_new_id, first_new_id + len(to_add_list))
+    )
+    print(f"Adding {len(substations_to_add)} new substations for unmapped endpoints")
+    # Append the new ones, then re-generate the mapping
+    substations = pd.concat([substations, substations_to_add])
+    substations.index.name = "ID"
+    subcoord2subid, subcoord, tree = _make_mapping_structures(substations, rounding)
     endpoint2neighbor = {
         p: subcoord2subid[subcoord[tree.query(ll2uv(p[1], p[0]))[1]]]
         for p in tqdm(missing_points, total=len(missing_points))
