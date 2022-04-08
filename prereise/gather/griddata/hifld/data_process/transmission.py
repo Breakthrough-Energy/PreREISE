@@ -128,9 +128,8 @@ def map_lines_to_substations_using_coords(
         for p, (dist, closest_idx) in tree_query_results
         if dist > max_remap_unit_vector
     ]
-    first_new_id = substations.index.max() + 1
     substations_to_add = pd.DataFrame(
-        to_add_list, index=pd.RangeIndex(first_new_id, first_new_id + len(to_add_list))
+        to_add_list, index=pd.RangeIndex(len(to_add_list)) + substations.index.max() + 1
     )
     print(f"Adding {len(substations_to_add)} new substations for unmapped endpoints")
     # Append the new ones, then re-generate the mapping
