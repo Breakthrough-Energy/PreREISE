@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
+from typing import List
 
 from prereise.gather.demanddata.transportation_electrification import const
 
@@ -130,3 +131,54 @@ def generate_daily_weighting(year, area_type="urban"):
         / daily_values.groupby(daily_values.index.month).sum()
     )
     return daily_values
+def get_total_daily_vmt(
+    data: pd.DataFrame,
+    comm_type: int,
+    locationstrategy: List[int],
+    input_day: List[int],
+    data_day: np.array,
+):
+    """Load data and use the parameters to calculate total_daily_vmt.
+
+    :param pandas.DataFrame data: the data returned from :func:`load_data`.
+    :param int comm_type: the type of Commute
+    :param List[int] locationstrategy: strategy for each location
+    :param List[int] input_day: day of the week for each day in the year derived from
+        first_func
+    :param np.array data_day: indicates weekend or weekday for every day.
+    :return: (*np.array*) -- an array where each element is a year of entries for each vehicle
+        type
+    """
+    # get the data
+    n = len(data)
+
+    if comm_type == 1:
+        # removes VMT for trips from work->home and home-> work
+        # (not exactly correct due to chained trips involving work and home but no
+        # way to remove the data)
+        if all([i != 2 for i in locationstrategy]):
+            locationstrategy = 2
+            # putting this part in function means rest of code won't be able to see
+            # change in locationstrategy value.
+            # will have to use global or return locationstrategy and reassign
+            print('"locationstrategy" changed to "Home and Work" for comm_type == 1')
+        # isolates home->work trips
+        trip_home_work = data.loc[data["why from"] == 1 and data["why to"] == 11]
+        # isolates work->home trips
+        trip_work_home = data.loc[data["why from"] == 11 and data["why to"] == 1]
+
+        # set trips from work to home to 0 distance
+        data.loc[trip_work_home.index, "Miles traveled"] = 0
+        data.loc[trip_home_work.index, "Miles traveled"] = 0
+
+    daily_vmt_total = np.zeros(len(input_day), 2)
+
+    for day_iter in range(len(input_day)):
+        for i in range(n):
+            if data_day[i] == input_day[day_iter]:
+                daily_vmt_total[day_iter][0] += data.iloc[
+                    i, data.columns.get_loc("Miles traveled")
+                ]
+                daily_vmt_total[day_iter][1] += 1
+
+    return daily_vmt_total
