@@ -317,4 +317,5 @@ def add_interconnects_by_connected_components(
         )
     for i, name in enumerate(interconnect_size_rank):
         substations.loc[sorted_interconnects[i], "interconnect"] = name
+        lines.loc[lines.SUB_1_ID.isin(sorted_interconnects[i]), "interconnect"] = name
     substations.drop(seams_substations, inplace=True)
