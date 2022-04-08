@@ -311,7 +311,10 @@ def add_interconnects_by_connected_components(
     revised_g = nx.convert_matrix.from_pandas_edgelist(lines, "SUB_1_ID", "SUB_2_ID")
     sorted_interconnects = sorted(nx.connected_components(revised_g), key=len)[::-1]
     if len(sorted_interconnects) != len(interconnect_size_rank):
-        raise ValueError("Interconnections were not separated successfully")
+        interconnect_sizes = [len(c) for c in sorted_interconnects]
+        raise ValueError(
+            f"Interconnections were not separated successfully {interconnect_sizes}"
+        )
     for i, name in enumerate(interconnect_size_rank):
         substations.loc[sorted_interconnects[i], "interconnect"] = name
     substations.drop(seams_substations, inplace=True)
