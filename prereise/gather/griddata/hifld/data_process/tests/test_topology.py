@@ -326,4 +326,7 @@ def test_identify_bottlenecks():
     }
     for key, result in results_to_check.items():
         for subkey, subresult in result.items():
-            assert bottlenecks["all"][key][subkey] == pytest.approx(result[subkey])
+            if subkey == "descendants":
+                assert bottlenecks["all"][key][subkey] == result[subkey]
+            else:
+                assert bottlenecks["all"][key][subkey] == pytest.approx(result[subkey])
