@@ -249,6 +249,7 @@ def test_identify_bottlenecks():
             {"from_bus_id": 8, "to_bus_id": 12},
             {"from_bus_id": 8, "to_bus_id": 14},
             {"from_bus_id": 8, "to_bus_id": 15},
+            {"from_bus_id": 15, "to_bus_id": 8},  # Same nodes, different orientation
             {"from_bus_id": 9, "to_bus_id": 10},
             {"from_bus_id": 9, "to_bus_id": 11},
             {"from_bus_id": 10, "to_bus_id": 11},
@@ -294,11 +295,35 @@ def test_identify_bottlenecks():
         assert isinstance(v["capacity"], float)
         assert isinstance(v["demand"], float)
         assert isinstance(v["descendants"], set)
-    unconstrained = (8, frozenset({8, 12, 13, 14, 15}))
-    assert bottlenecks["all"][unconstrained]["descendants"] == set()
-    assert bottlenecks["all"][unconstrained]["demand"] == pytest.approx(5.4)
-    assert bottlenecks["all"][unconstrained]["capacity"] == pytest.approx(6.56)
-    constrained = (2, frozenset({2, 3, 4}))
-    assert bottlenecks["constrained"][constrained]["descendants"] == set()
-    assert bottlenecks["constrained"][constrained]["demand"] == pytest.approx(0.7)
-    assert bottlenecks["constrained"][constrained]["capacity"] == pytest.approx(0.28)
+    for k, v in bottlenecks["constrained"].items():
+        assert v == bottlenecks["all"][k]
+    results_to_check = {
+        (8, frozenset({8, 12, 13, 14, 15})): {
+            "descendants": set(),
+            "demand": 5.4,
+            "capacity": 8.96,
+        },
+        (2, frozenset({2, 3, 4})): {
+            "descendants": set(),
+            "demand": 0.7,
+            "capacity": 0.28,
+        },
+        (frozenset({2, 5, 6, 7}), 2): {
+            "descendants": {1, 3, 4},
+            "demand": 1.0,
+            "capacity": 0.44,
+        },
+        (7, frozenset({2, 5, 6, 7})): {
+            "descendants": {1, 2, 3, 4},
+            "demand": 2.1,
+            "capacity": 1.54,
+        },
+        (frozenset({7, 8, 9, 10, 11}), 7): {
+            "descendants": {1, 2, 3, 4, 5, 6},
+            "demand": 2.8,
+            "capacity": 2.66,
+        },
+    }
+    for key, result in results_to_check.items():
+        for subkey, subresult in result.items():
+            assert bottlenecks["all"][key][subkey] == pytest.approx(result[subkey])
