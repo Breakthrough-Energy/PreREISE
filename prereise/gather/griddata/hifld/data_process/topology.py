@@ -343,16 +343,19 @@ def find_descendants(graph, bctree, parent, grandparent, result=None):
     """
     if result is None:
         result = {}
-    result[parent] = {"descendants": set(), "demand": 0}
     children = set(bctree[parent]) - {grandparent}
     if isinstance(parent, int):
         # parent is an articulation point, children are blocks
-        result[parent]["descendants"] |= set().union(*children) - {parent}
-        result[parent]["demand"] += graph.nodes[parent]["demand"]
+        result[parent] = {
+            "descendants": set().union(*children) - {parent},
+            "demand": graph.nodes[parent]["demand"],
+        }
     else:
         # parent is a block, children are articulation points
-        result[parent]["descendants"] |= children
-        result[parent]["demand"] += sum(graph.nodes[p]["demand"] for p in parent)
+        result[parent] = {
+            "descendants": children.copy(),
+            "demand": sum(graph.nodes[p]["demand"] for p in parent),
+        }
     for child in children:
         # We need to find all descendants of the child to be able sum their demands
         child_descendants = find_descendants(graph, bctree, child, parent, result)
