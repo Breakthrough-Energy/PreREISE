@@ -367,7 +367,10 @@ def find_descendants(graph, bctree, parent, grandparent, result=None):
                 graph[child][n]["capacity"] for n in graph[child] if n in parent
             )
             result[(parent, child)]["demand"] = child_descendants["demand"]
-            result[parent]["descendants"].add(child)
+            # Avoid double-counting demand from the articulation point
+            result[parent]["demand"] += (
+                result[(parent, child)]["demand"] - graph.nodes[child]["demand"]
+            )
         else:
             # parent is an articulation point, child is a block
             # downstream branches are connected to parent and within child
@@ -378,7 +381,7 @@ def find_descendants(graph, bctree, parent, grandparent, result=None):
             result[(parent, child)]["demand"] = (
                 child_descendants["demand"] - graph.nodes[parent]["demand"]
             )
-        result[parent]["demand"] += result[(parent, child)]["demand"]
+            result[parent]["demand"] += result[(parent, child)]["demand"]
 
     return result[parent]
 
