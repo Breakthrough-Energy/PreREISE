@@ -12,7 +12,6 @@ def download_shapefiles(url_base, shape_filename, base_filepath, overwrite=False
     :param bool overwrite: Whether to overwrite existing files, defaults to False
     :return: (*str*)  -- path to shapefile
     """
-
     os.makedirs(base_filepath, exist_ok=True)
     shape_entensions = ["cpg", "dbf", "prj", "shp", "shx"]
 

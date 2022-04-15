@@ -42,7 +42,6 @@ def generate_urban_and_rural_shapefiles():
 
     :return: (*str*) path to the new shapefiles
     """
-
     base_url = "https://besciences.blob.core.windows.net"
 
     states_folder = os.path.join(os.path.dirname(__file__), "state_shapefiles")
@@ -50,7 +49,6 @@ def generate_urban_and_rural_shapefiles():
         f"{base_url}/us-shapefiles/",
         "cb_2018_us_state_20m",
         states_folder,
-        overwrite=True,
     )
     states = gpd.read_file(states_file)
 
