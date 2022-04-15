@@ -1,5 +1,6 @@
 voltage,circuits,bundle_count,conductor,spacing,a0x,a0y,b0x,b0y,c0x,c0y,a1x,a1y,b1x,b1y,c1x,c1y,a2x,a2y,b2x,b2y,c2x,c2y,a3x,a3y,b3x,b3y,c3x,c3y,notes
 69,1,1,Osprey,,-2,16.5,2,15,-2,13.5,,,,,,,,,,,,,,,,,,,single-pole design
+69,1,2,Osprey,0.5,-2,16.5,2,15,-2,13.5,,,,,,,,,,,,,,,,,,,single-pole design
 69,2,1,Osprey,,-2,16.5,-2,15,-2,13.5,2,13.5,2,15,2,16.5,,,,,,,,,,,,,single-pole double-circuit
 69,2,2,Osprey,0.5,-2,16.5,-2,15,-2,13.5,2,13.5,2,15,2,16.5,,,,,,,,,,,,,single-pole double-circuit
 100,1,1,Drake,,-2,19,2,17,-2,15,,,,,,,,,,,,,,,,,,,single-pole design
@@ -8,16 +9,22 @@ voltage,circuits,bundle_count,conductor,spacing,a0x,a0y,b0x,b0y,c0x,c0y,a1x,a1y,
 115,1,1,Drake,,-2,19,2,17,-2,15,,,,,,,,,,,,,,,,,,,single-pole design
 115,1,2,Drake,0.5,-4,15,0,15,4,15,,,,,,,,,,,,,,,,,,,H-frame design
 138,1,1,Ortolan,,-3,22.5,3,20,-3,17.5,,,,,,,,,,,,,,,,,,,single-pole design
+138,1,2,Ortolan,0.5,-3,22.5,3,20,-3,17.5,,,,,,,,,,,,,,,,,,,single-pole design
+138,2,1,Ortolan,,-3,19,-3,17,-3,15,3,15,3,17,3,19,,,,,,,,,,,,,Double-circuit lattice
 138,2,2,Ortolan,0.5,-7.5,15,-4.5,15,-1.5,15,1.5,15,4.5,15,7.5,15,,,,,,,,,,,,,two parallel H-frames
+138,4,2,Ortolan,0.5,-4.5,19,-5,17,-4.5,15,-1.5,15,-1,17,-1.5,19,1.5,19,1,17,1.5,15,4.5,15,5,17,4.5,19,two parallel single-pole double-circuit
 161,1,1,Bluejay,,-5,15,0,15,5,15,,,,,,,,,,,,,,,,,,,H-frame design
 161,1,3,Bluejay,0.5,-6,15,0,15,6,15,,,,,,,,,,,,,,,,,,,lattice
 161,2,4,Bluejay,0.5,-5,15,-5,17,-5,19,5,19,5,17,5,15,,,,,,,,,,,,,Two parallel single-poles
 230,1,1,Falcon,,-7,20,0,20,7,20,,,,,,,,,,,,,,,,,,,H-frame design
 230,1,2,Drake,0.5,-7,20,0,20,7,20,,,,,,,,,,,,,,,,,,,H-frame design
 230,1,3,Drake,0.5,-7,20,0,20,7,20,,,,,,,,,,,,,,,,,,,H-frame design
+230,2,1,Drake,0.5,-3,19,-3,17,-3,15,3,15,3,17,3,19,,,,,,,,,,,,,Double-circuit lattice
 230,2,2,Drake,0.5,-3,19,-3,17,-3,15,3,15,3,17,3,19,,,,,,,,,,,,,Double-circuit lattice
 230,4,3,Drake,0.5,-7,20,0,20,7,20,18,20,25,20,32,20,43,20,50,20,57,20,68,20,75,20,82,20,Four parallel H-frames
 345,1,2,Falcon,0.5,-8,25,0,25,8,25,,,,,,,,,,,,,,,,,,,H-frame design
+345,1,3,Falcon,0.5,-8,25,0,25,8,25,,,,,,,,,,,,,,,,,,,
+345,2,2,Falcon,0.5,-20,25,-12,25,-4,25,4,25,12,25,20,25,,,,,,,,,,,,,Two parallel H-frames
 500,1,3,Rail,0.5,-10,30,0,30,10,30,,,,,,,,,,,,,,,,,,,lattice
 500,2,3,Drake,0.5,-5,40,-8,30,-5,20,5,20,8,30,5,40,,,,,,,,,,,,,lattice
 765,1,4,Martin,0.5,-15,40,0,40,15,40,,,,,,,,,,,,,,,,,,,H-frame design
