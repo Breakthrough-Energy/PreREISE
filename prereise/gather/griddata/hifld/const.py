@@ -453,6 +453,37 @@ contiguous_us_bounds = {
 }
 
 
+proxy_lines = [
+    {
+        "SUB_1_ID": 301352,
+        "SUB_2_ID": 308812,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 2,
+    },
+    {
+        "SUB_1_ID": 309418,
+        "SUB_2_ID": 308608,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 1,
+    },
+    {
+        "SUB_1_ID": 305043,
+        "SUB_2_ID": 308608,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 1,
+    },
+    {
+        "SUB_1_ID": 304262,
+        "SUB_2_ID": 309953,
+        "VOLTAGE": 138,
+        "circuits": 1,
+        "conductors": 2,
+    },
+]
+
 substations_lines_filter_override = {301995}
 
 seams_substations = {
@@ -624,6 +655,15 @@ line_interconnect_assumptions = {
 
 line_voltage_assumptions = {
     128842: 230,
+    302300: 138,
+    307339: 138,
+    307571: 138,
+    308478: 138,
+    309857: 138,
+    309961: 138,
+    310327: 138,
+    310857: 138,
+    312844: 138,
 }
 
 

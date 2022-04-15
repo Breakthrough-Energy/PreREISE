@@ -16,23 +16,218 @@ branch_id,kV,circuits,conductors,notes
 203381,230,1,2,Midpoint to Boise Bench
 203382,230,1,2,Midpoint to Boise Bench
 203383,230,1,2,Midpoint to Boise Bench
+300023,138,1,2,Southeast of Houston (TX)
 300029,69,2,1,Ormat Brawley geothermal
+300101,138,1,2,TH Wharton Generating Station
+300125,138,2,2,Carrollton (TX)
+300151,138,2,2,South of Lake Arlington (TX)
+300181,138,2,1,Tomball to Pinehurst (TX)
+300225,138,1,2,Corpus Christi (TX)
+300342,138,1,2,W.A. Parish Generating Station
+300374,138,1,2,San Antonio (TX)
+300415,138,2,2,Chambersville substation to Chambersville Cemetary (TX)
+300437,138,1,2,North San Antonio
+300481,138,1,2,South Houston (TX)
+300498,138,1,2,Los Fresnos (TX)
+300872,138,1,2,North of Jersey City (TX)
+301017,138,1,2,Northwest of Houston
+301082,138,1,2,Houston (TX)
+301247,138,1,2,Ingleside (TX)
+301275,138,1,2,CPS Energy Braunig Power Station
 301320,138,2,2,Collin/Frisco substation connection
+301344,138,1,2,San Antonio (TX)
+301624,138,1,2,Edinburg (TX)
+301666,138,1,2,East of DFW airport
+301741,138,1,2,Austin (TX)
+301814,138,2,2,Sunnyvale (TX)
 301847,115,1,2,Coso Power Station
+301891,138,2,2,The Colony (TX)
+301933,138,1,2,Chocolate Bayou to Danbury (TX)
+302082,69,1,2,Victoria (TX)
+302122,69,1,2,Copperas Cove (TX)
+302230,138,1,2,W.A. Parish Generating Station
+302236,138,1,2,San Marcos (TX)
+302238,138,1,2,Austin (TX)
+302247,138,1,2,Chambersville Cemetary to Chambersville Rd substation (TX)
+302287,138,2,2,Fresno (TX)
+302300,138,2,2,Northwest of Houston
+302389,138,1,2,Haltom City (TX)
+302404,138,2,2,TH Wharton Generating Station
+302485,138,1,2,Edinburg (TX)
+302501,138,1,2,San Marcos (TX)
+302532,138,1,2,Northwest of Houston
+302592,138,1,2,Northwest of San Antonio
+302731,138,1,2,Athens (TX)
+302842,138,2,1,General Motors (Arlington TX)
+302878,138,1,2,Chambersville Cemetary to Chambersville Rd substation (TX)
+302954,138,2,2,Corpus Christi (TX)
+303007,138,2,1,Lake Hubbard Generating Station
+303094,138,2,2,W.A. Parish Generating Station
+303225,138,1,2,Wharton (TX)
+303259,138,1,2,Austin (TX)
+303266,138,1,2,Dallas (TX)
+303268,138,1,2,East of DFW airport
+303326,69,2,2,Paris (TX)
+303395,138,1,2,Edinburg (TX)
+303467,138,2,2,Southeastern Houston
+303493,138,1,2,Northwest of San Antonio (TX)
+303500,138,1,2,Corpus Christi (TX)
 303557,138,2,2,West Levee substations connection (Dallas)
+303566,138,2,1,General Motors (Arlington TX)
+303581,138,1,2,Indian Lake (TX)
+303602,138,1,2,Victoria (TX)
+303615,138,1,2,Odessa (TX)
+303623,138,2,1,Lake Hubbard Generating Station
+304022,69,1,2,Corpus Christi (TX)
+304039,138,2,1,General Motors (Arlington TX)
+304048,69,2,2,Southeast of San Antonio (connects two 345 kV buses)
+304064,138,1,2,Austin (TX)
+304085,69,1,2,Milby Park Houston (TX)
+304089,69,1,2,Victoria (TX)
+304142,138,1,2,Western Fort Worth
+304145,138,2,2,Edinburg (TX)
+304214,69,2,2,substation connection west of Corpus Christi (TX)
+304289,138,1,2,Chocolate Bayou to Danbury (TX)
+304413,138,1,2,Lady Bird Lake (TX)
+304515,138,1,2,Wharton (TX)
+304602,69,2,2,Guadalupe Energy Center
+304613,138,4,2,San Benito substation connection (South Texas)
+304645,69,2,2,Weatherford (TX)
+304673,138,1,2,Temple (TX)
+304779,69,1,2,Handley Power Plant (Lake Arlington TX)
+304841,138,1,2,Austin (TX)
 304908,69,2,1,Heber geothermal
-305018,138,2,2,TH Wharton Generating Station
+305018,138,4,2,TH Wharton Generating Station
+305041,138,1,2,North Richland Hills (TX)
+305091,230,2,1,Walnut substation to Mesa substation (CA)
+305145,138,1,2,Chocolate Bayou (TX)
+305273,138,1,2,West of Houston (TX)
+305277,69,2,1,Mineola to Lindale (TX)
+305290,138,1,2,Edinburg (TX)
+305364,138,1,2,Corpus Christi (TX)
+305446,138,1,2,Ingleside (TX)
 305464,230,2,2,The Geysers
+305635,138,1,2,Dallas (TX)
+305640,138,1,2,Lewisville (TX)
+305647,138,1,2,Edinburg (TX)
+305667,138,2,1,Houston (TX)
+305694,138,1,2,Laredo (TX)
+305806,138,2,2,Bastrop Energy Center (TX)
+305810,138,1,2,Chocolate Bayou to Danbury (TX)
+305812,138,1,2,Selma (TX)
+305859,138,2,2,McKinney (TX)
+305871,138,1,2,Pasadena (TX)
+305912,138,1,2,Calaveras Power Station to San Antonio
 305990,100,2,1,southeast Salton Sea geothermal plants (several)
+306124,138,1,2,Bayside (TX)
+306339,138,1,2,Chocolate Bayou to Danbury (TX)
+306350,69,2,2,Elm Mott (TX)
+306354,138,1,2,CPS Energy Braunig Power Station
+306360,138,2,2,Santa Clara (TX)
+306363,138,1,2,Temple (TX)
+306384,138,1,2,Corpus Christi (TX)
 306568,69,2,1,Geothermal in the Brawley region
+306580,138,2,1,Lake Hubbard Generating Station
+306661,138,1,2,San Antonio (TX)
+306688,138,1,2,Austin Energy Sand Hill Center (TX)
+306707,138,1,2,Houston (TX)
+306761,138,1,2,South of Houston (TX)
+306879,138,2,2,Northeast Dallas metro (TX)
 306949,230,2,2,The Geysers
+307281,138,2,2,Corpus Christi (TX)
+307386,138,1,2,Sherman (TX)
+307421,138,1,2,San Marcos (TX)
+307491,69,2,2,substation connection at Jack County power plant near Bridgeport (TX)
+307496,138,1,2,Edinburg (TX)
+307497,138,1,2,Mont Belvieu (TX)
+307502,138,2,2,Below DFW airport
 307569,230,2,2,The Geysers
+307605,138,1,2,Mitchell Lake (TX)
+307682,138,2,1,Midlothian (TX)
+307764,138,1,2,Fresno (TX)
+307910,138,2,2,The Colony (TX)
+308057,69,1,2,Padre Island (TX)
+308150,138,1,2,Western Houston (TX)
+308233,138,1,2,West of Houston (TX)
+308278,138,1,2,North of Jersey City (TX)
+308281,138,1,2,South of Austin (TX)
+308359,69,1,2,Comstock to Sheffield (TX)
+308363,138,1,2,North of Corpus Christi (TX)
 308434,230,2,2,The Geysers
+308454,138,2,1,Pfugerville (TX)
+308529,345,1,3,East of Austin (TX)
+308606,138,1,2,Edinburg (TX)
+308740,69,1,2,Southeast of Austin (TX)
 308885,69,2,1,Geothermal in the Brawley region
+309028,138,1,2,Austin (TX)
+309097,138,1,2,Edinburg (TX)
+309131,138,1,2,Pasadena (TX)
+309210,138,1,2,TH Wharton Generating Station
+309241,138,1,2,Northeast Dallas
 309268,69,2,1,Ormat Brawley geothermal
-309441,69,2,2,substation connection near Lake Creek Reservoir outside Waco
+309434,138,1,2,Chocolate Bayou to Danbury (TX)
+309441,69,2,2,substation connection near Lake Creek Reservoir outside Waco (TX)
+309536,138,1,2,Austin (TX)
+309664,69,2,1,Aransas Pass (TX)
+309687,69,1,2,Lake Weatherford (TX)
+309745,138,1,2,Killeen (TX)
+309802,138,1,2,McAllen (TX)
+309840,115,1,2,Hearne (TX)
+309845,138,2,2,Carrollton (TX)
+309901,138,1,2,East of Austin (TX)
 309966,138,2,2,Garfield to Pilot Knob (south of Austin)
+310064,138,2,2,West of DFW airport
+310247,138,2,2,Corpus Christi to Victoria (TX)
+310327,138,1,2,TH Wharton Generating Station
+310484,345,1,3,North of Laredo (TX)
+310531,138,1,2,Sunset Valley (TX)
+310651,69,2,2,substation connection at Jack County power plant near Bridgeport (TX)
+310895,138,1,2,Tenaska Gateway Generating Station
+310939,138,2,2,McKinney (TX)
+310982,138,1,2,Texas City (TX)
+311021,345,2,2,North of Edinburg (TX)
+311090,138,1,2,Pasadena (TX)
+311113,138,1,2,Tomball (TX)
+311189,138,1,2,South Houston (TX)
+311229,138,1,2,Wharton (TX)
+311292,138,1,2,Edinburg (TX)
+311291,138,1,2,Austin (TX)
+311306,69,2,2,substation connection near Lake Creek Reservoir outside Waco (TX)
+311321,138,1,2,Southwest of Houston (TX)
+311385,138,1,2,Temple (TX)
+311620,69,1,2,Padre Island (TX)
+311901,69,1,2,Cleburne (TX)
+311935,138,1,2,Northwest of San Antonio (TX)
+311937,138,1,2,Mesquite (TX)
+311975,138,1,2,Haltom City (TX)
+312147,138,1,2,Alvin (TX)
 312199,69,2,1,Geothermal in the Brawley region
+312236,138,1,2,substation connection in San Benito (TX)
 312241,100,2,1,southeast Salton Sea geothermal plants (several)
+312327,138,1,2,South of Austin (TX)
+312342,138,1,2,Schertz (TX)
+312375,138,1,2,West of Houston (TX)
+312397,138,2,2,Corpus Christi (TX)
+312469,138,1,2,Lewisville (TX)
+312501,138,2,2,McKinney to Fairview (TX)
+312514,138,1,2,Mountain Creek Lake (TX)
+312549,69,2,1,Victoria (TX)
+311586,69,1,2,Jacinto City (TX)
+312589,138,1,2,Pearland (TX)
+312651,138,1,2,Pasadena (TX)
+312694,138,2,2,Edinburg (TX)
+312723,69,1,2,Lady Bird Lake (TX)
+312760,138,1,2,substation connection west of Mont Belvieu (TX)
+312797,138,1,2,Dallas (TX)
+312853,138,1,2,Mitchell Lake (TX)
+312856,138,1,2,North of Austin (TX)
+312970,138,1,2,Hillcrest (TX)
+312996,69,2,1,Copperas Cove (TX)
+313183,69,2,1,Athens (TX)
+313294,138,1,2,Tomball (TX)
+313297,138,1,2,West Houston
+313305,138,1,2,substation connection east of Nacogdoches
 313473,69,2,2,Holtville geothermal?
 313474,69,2,2,Holtville geothermal?
+313730,138,1,2,Killeen (TX)
+315402,69,2,1,Unknown MST edge
