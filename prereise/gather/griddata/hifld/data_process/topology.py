@@ -405,8 +405,13 @@ def identify_bottlenecks(branch, demand, root=None):
         - "root": the root node.
     """
     # Build transmission graph
+    sorted_buses = branch[["from_bus_id", "to_bus_id"]].apply(sorted, axis=1).map(tuple)
+    aggregated_capacity = branch.groupby(sorted_buses)["capacity"].sum()
+    aggregated_branch = pd.DataFrame(
+        aggregated_capacity.index.tolist(), columns=["bus1", "bus2"]
+    ).assign(capacity=aggregated_capacity.tolist())
     graph = nx.convert_matrix.from_pandas_edgelist(
-        branch, "from_bus_id", "to_bus_id", ["capacity"]
+        aggregated_branch, "bus1", "bus2", ["capacity"]
     )
     nx.set_node_attributes(graph, {k: {"demand": v} for k, v in demand.items()})
     # Build block-cut graph of biconnected components
