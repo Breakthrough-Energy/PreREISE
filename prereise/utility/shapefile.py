@@ -4,7 +4,7 @@ import urllib
 
 # Mostly copied from download_states_shapefile in postreise.plot.plot_states
 def download_shapefiles(url_base, shape_filename, base_filepath, overwrite=False):
-    """Downloads shapefiles from url
+    """Downloads shapefiles from url and writes them to a local folder.
 
     :param str url_base: URL to folder containing shapefiles. Must include foward slash at end.
     :param str shape_filename: all shapefiles in folder must have the same name

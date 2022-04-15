@@ -1,4 +1,5 @@
 import os
+
 import geopandas as gpd
 
 from prereise.gather.const import abv2state
@@ -7,7 +8,7 @@ from prereise.utility.shapefile import download_shapefiles
 
 def append_rural_areas_to_urban(states, urban_areas):
     """Takes shapefiles of US States and US urban areas, processes the files,
-    and adds rural areas (areas that are not urban) to the geodataframe
+    and adds rural areas (areas that are not urban) to the geodataframe.
 
     :param geopandas.geodataframe.GeoDataFrame states: US state outlines
     :param geopandas.geodataframe.GeoDataFrame urban_areas: US urban area outlines
@@ -35,9 +36,9 @@ def append_rural_areas_to_urban(states, urban_areas):
 
 
 def generate_urban_and_rural_shapefiles():
-    """Downloads shapefiles of state outlines and urban areas from BES azure blob storage
+    """Downloads shapefiles of state outlines and urban areas from BES azure blob storage.
     Writes these shapefiles to a local folder, then creates new shapefiles that
-    include both urban and rural areas
+    include both urban and rural areas.
 
     :return: (*str*) path to the new shapefiles
     """
