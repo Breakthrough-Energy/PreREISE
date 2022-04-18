@@ -5,7 +5,7 @@ def get_segment(dwelling_start_time, total_dwell_period):
     :param float sn: dwelling end time.
     :return: (*int*) -- the amount of the rates (cost function) segments the dwelling activity possess.
     """
-    return total_dwell_period - dwelling_start_time + 1
+    return round(total_dwell_period) - round(dwelling_start_time) + 1
 
 
 def get_location(location_strategy, dwell_location):
