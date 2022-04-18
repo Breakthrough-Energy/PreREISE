@@ -81,18 +81,18 @@ def get_energy_limit(
     :param float total_dwell_period: the total dwelling period.
     :return: (*list*) -- list of energy limits during the time span of available charging
     """
-    t1 = dwelling_start_time + 1 - dwelling_start_time
-    tn = dwelling_start_time + dwelling_length - total_dwell_period
+    partial_start_time = round(dwelling_start_time) + 1 - dwelling_start_time
+    partial_end_time = dwelling_start_time + dwelling_length - round(total_dwell_period)
 
     if segment == 1:
         energy_limit = [power * dwelling_length]
 
     elif segment == 2:
-        energy_limit = [power * t1, power * tn]
+        energy_limit = [power * partial_start_time, power * partial_end_time]
 
     else:
-        energy_limit = [power * t1]
+        energy_limit = [power * partial_start_time]
         energy_limit += [power for s in range(segment - 1)]
-        energy_limit += [power * tn]
+        energy_limit += [power * partial_end_time]
 
     return energy_limit
