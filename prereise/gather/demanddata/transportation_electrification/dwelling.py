@@ -1,8 +1,8 @@
 def get_segment(dwelling_start_time, total_dwell_period):
     """Get dwelling activity segment.
 
-    :param float s1: dwelling start time.
-    :param float sn: dwelling end time.
+    :param float dwelling_start_time: dwelling start time.
+    :param float total_dwell_period: dwelling end time.
     :return: (*int*) -- the amount of the rates (cost function) segments the dwelling activity possess.
     """
     return round(total_dwell_period) - round(dwelling_start_time) + 1
@@ -72,10 +72,11 @@ def get_charging_power(power, trip_strategy, location_strategy, trip_data):
 def get_energy_limit(
     power, segment, dwelling_start_time, dwelling_length, total_dwell_period
 ):
-    """Determines the energy limit
+    """Determines the energy limit for the entire dwelling period. Takes into
+    consideration if charging does not start or end directly on the hour.
 
     :param int power: charger power, EVSE kW.
-    :param segment: the amount of the rates segments the dwelling activity possess.
+    :param int segment: the amount of the rates segments the dwelling activity possess.
     :param float dwelling_start_time: dwelling start time.
     :param float dwelling_length: dwelling end time.
     :param float total_dwell_period: the total dwelling period.
