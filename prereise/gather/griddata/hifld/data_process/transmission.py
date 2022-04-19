@@ -14,6 +14,7 @@ from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_substations,
     get_transformer_number_overrides,
     get_transformer_parameters,
+    get_line_assumptions,
     get_zone,
 )
 from prereise.gather.griddata.hifld.data_process.topology import (
@@ -880,6 +881,9 @@ def build_transmission(method="line2sub", **kwargs):
     transformer_number_assumptions = get_transformer_number_overrides(
         os.path.join(hifld_data_dir, "transformer_number_assumptions.csv")
     )
+    line_design_assumptions = get_line_assumptions(
+        os.path.join(hifld_data_dir, "line_assumptions.csv")
+    )
 
     # Filter substations based on their `LINES` attribute, check for location dupes
     hifld_substations.loc[const.substations_lines_filter_override, "LINES"] = None
@@ -948,7 +952,7 @@ def build_transmission(method="line2sub", **kwargs):
         ac_lines.apply(calculate_branch_mileage, axis=1)
         * transmission_const.kilometers_per_mile
     )
-    add_lines_impedances_ratings(ac_lines, const.line_design_assumptions)
+    add_lines_impedances_ratings(ac_lines, line_design_assumptions)
 
     # Create buses from lines
     bus = create_buses(ac_lines)

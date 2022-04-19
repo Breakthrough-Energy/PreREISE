@@ -391,6 +391,19 @@ def get_transformer_parameters(
     return transformer_designs.set_index(["low_kV", "high_kV"])[["x", "r", "MVA"]]
 
 
+def get_line_assumptions(path):
+    """Read the CSV file containing line design assumptions and return a mapping dict.
+
+    :param str path: path to file. Required columns are 'branch_id', 'kV', 'circuits', &
+        'conductors'.
+    :return: (*pandas.Series*) -- index is branch_id, values are
+        (kV, circuits, conductors) tuples.
+    """
+    df = pd.read_csv(path)
+    s = df.set_index("branch_id")[["kV", "circuits", "conductors"]].apply(tuple, axis=1)
+    return s
+
+
 def get_zone(path):
     """Read zone CSV file.
 

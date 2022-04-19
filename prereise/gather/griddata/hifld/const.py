@@ -571,42 +571,6 @@ line_voltage_assumptions = {
     128842: 230,
 }
 
-line_design_assumptions = {
-    # branch index: (voltage, circuits, bundle count)
-    101536: (161, 2, 4),  # TVA Cumberland (between substations)
-    103726: (161, 2, 4),  # TVA Cumberland (plant to substation)
-    110220: (115, 1, 2),  # Riverside Generating Station
-    112166: (230, 1, 2),  # Waterford 3 Nuclear Generating Station
-    116493: (230, 1, 2),  # Herbert A. Wagner Generating Station
-    132671: (230, 1, 3),  # Florida Power & Light St. Lucie
-    130105: (161, 1, 3),  # TVA Cumberland (downstream)
-    132804: (230, 1, 2),  # Waterford 3 Nuclear Generating Station
-    139216: (230, 4, 3),  # Catawba Nuclear Station
-    140651: (230, 1, 3),  # Florida Power & Light St. Lucie
-    147054: (115, 1, 2),  # RE Ginna Nuclear Power Plant
-    158263: (100, 1, 4),  # G. G. Allen Steam Station
-    160723: (230, 1, 3),  # Florida Power & Light St. Lucie
-    203381: (230, 1, 2),  # Midpoint to Boise Bench
-    203382: (230, 1, 2),  # Midpoint to Boise Bench
-    203383: (230, 1, 2),  # Midpoint to Boise Bench
-    300029: (69, 2, 1),  # Ormat Brawley geothermal
-    301320: (138, 2, 2),  # Collin/Frisco substation connection
-    301847: (115, 1, 2),  # Coso Power Station
-    303557: (138, 2, 2),  # West Levee substations connection (Dallas)
-    304908: (69, 2, 1),  # Heber geothermal
-    305018: (138, 2, 2),  # TH Wharton Generating Station
-    305464: (230, 2, 2),  # The Geysers
-    305990: (100, 2, 1),  # southeast Salton Sea geothermal plants (several)
-    306949: (230, 2, 2),  # The Geysers
-    307569: (230, 2, 2),  # The Geysers
-    308434: (230, 2, 2),  # The Geysers
-    309268: (69, 2, 1),  # Ormat Brawley geothermal
-    309441: (69, 2, 2),  # substation connection near Lake Creek Reservoir, outside Waco
-    309966: (138, 2, 2),  # Garfield to Pilot Knob (south of Austin)
-    312241: (100, 2, 1),  # southeast Salton Sea geothermal plants (several)
-    313473: (69, 2, 2),  # Holtville geothermal?
-    313474: (69, 2, 2),  # Holtville geothermal?
-}
 
 b2b_ratings = {  # MW
     "BLACKWATER TIE": 200,  # a.k.a. 'Clovis'/'Roosevelt County' (Eastern/Western)
