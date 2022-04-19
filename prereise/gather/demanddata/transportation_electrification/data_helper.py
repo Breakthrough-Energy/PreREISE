@@ -138,16 +138,19 @@ def get_total_daily_vmt(
     input_day: List[int],
     data_day: np.array,
 ):
-    """Load data and use the parameters to calculate total_daily_vmt.
+    """Calculates the total VMT and total vehicles for for each day of the model year,
+    based on if the day is a weekend (1) or weekday (2).
 
     :param pandas.DataFrame data: the data returned from :func:`load_data`.
     :param int comm_type: the type of Commute
-    :param List[int] locationstrategy: strategy for each location
-    :param List[int] input_day: day of the week for each day in the year derived from
-        first_func
+    :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, 5, or 6;
+        1-home only, 2-home and work related, 3-anywhere if possibile,
+        4-home and school only, 5-home and work and school, 6-only work
+    :param numpy.ndarray input_day: day of the week for each day in the year derived from
+        :func:`get_input_day`.
     :param np.array data_day: indicates weekend or weekday for every day.
-    :return: (*np.array*) -- an array where each element is a year of entries for each vehicle
-        type
+    :return: (*np.array*) -- an array where each element is the daily VMT and total
+        vehicles for that day.
     """
     # maybe separate into another function for this part after hearing back from brian
     if comm_type == 1:
