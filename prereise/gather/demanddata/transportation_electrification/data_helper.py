@@ -134,7 +134,7 @@ def generate_daily_weighting(year, area_type="urban"):
 def get_total_daily_vmt(
     data: pd.DataFrame,
     comm_type: int,
-    locationstrategy: List[int],
+    location_strategy: List[int],
     input_day: List[int],
     data_day: np.array,
 ):
@@ -149,16 +149,17 @@ def get_total_daily_vmt(
     :return: (*np.array*) -- an array where each element is a year of entries for each vehicle
         type
     """
+    # maybe separate into another function for this part after hearing back from brian
     if comm_type == 1:
         # removes VMT for trips from work->home and home-> work
         # (not exactly correct due to chained trips involving work and home but no
         # way to remove the data)
-        if all([i != 2 for i in locationstrategy]):
-            locationstrategy = 2
+        if location_strategy != 2:
+            location_strategy = 2
             # putting this part in function means rest of code won't be able to see
-            # change in locationstrategy value.
-            # will have to use global or return locationstrategy and reassign
-            print('"locationstrategy" changed to "Home and Work" for comm_type == 1')
+            # change in location_strategy value.
+            # will have to use global or return location_strategy and reassign
+            print('"location_strategy" changed to "Home and Work" for comm_type == 1')
         # isolates home->work trips
         trip_home_work = data.loc[data["why from"] == 1 and data["why to"] == 11]
         # isolates work->home trips
