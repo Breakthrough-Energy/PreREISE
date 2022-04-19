@@ -4,7 +4,6 @@ import os
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
-from typing import List
 
 from prereise.gather.demanddata.transportation_electrification import const
 
@@ -134,8 +133,8 @@ def generate_daily_weighting(year, area_type="urban"):
 def get_total_daily_vmt(
     data: pd.DataFrame,
     comm_type: int,
-    location_strategy: List[int],
-    input_day: List[int],
+    location_strategy: int,
+    input_day: np.ndarray,
     data_day: np.array,
 ):
     """Calculates the total VMT and total vehicles for for each day of the model year,

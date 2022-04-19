@@ -1,4 +1,8 @@
-from prereise.gather.demanddata.transportation_electrification import const, data_helper, dwelling
+from prereise.gather.demanddata.transportation_electrification import (
+    const,
+    data_helper,
+    dwelling,
+)
 
 import numpy as np
 import scipy
@@ -115,7 +119,7 @@ def smart_charging(
 
                     # zero the consumption, this is a vector, the consumption for each trip
                     charging_consumption = []
-                    
+
                     # zero the rates of all segments, which will be used as cost function later
                     rates = []
 
@@ -175,7 +179,7 @@ def smart_charging(
                             elimit.append(energylimit)
 
                         # record the amount of the segments in the ith dwelling activity
-                        seg.append(segment)  
+                        seg.append(segment)
 
                         dwelling_times.append([dwelling_start_time, total_dwell_period])
 
@@ -187,18 +191,18 @@ def smart_charging(
                     f = rates / const.charging_efficiency
 
                     # form all the constraints
-                    
-                    # equality constraint
-                    Aeq = np.ones(1, segsum)  
 
                     # equality constraint
-                    Beq = -sum(charging_consumption)  
+                    Aeq = np.ones(1, segsum)
+
+                    # equality constraint
+                    Beq = -sum(charging_consumption)
 
                     # G2V power upper bound in DC
                     ub = elimit * const.charging_efficiency
 
                     # G2V power lower bound
-                    lb = np.zeros((segsum, 1))  
+                    lb = np.zeros((segsum, 1))
 
                     # formulate the constraints matrix in Ax <= b, A can be divided into m
                     # generate the cumulative sum array of seg in segcum
@@ -206,9 +210,9 @@ def smart_charging(
                     segsum = sum(seg)
 
                     # the amount of trips. submatrix dimension is m-1 * m
-                    m = total_trips  
+                    m = total_trips
                     # 'a' is a m-1 * segsum matrix
-                    a = np.zeros((m - 1, segsum))  
+                    a = np.zeros((m - 1, segsum))
                     A_coeff = np.zeros(((m - 1) * m, segsum))
                     b = np.tril(np.ones((m - 1, m)), 1)
                     B_coeff = np.zeros((m * (m - 1), 1))
