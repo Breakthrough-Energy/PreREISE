@@ -137,6 +137,22 @@ These datasets are used to generate flexibility profiles that are realized throu
 These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer](https://www.nrel.gov/disclaimer.html) first.
 
 
+#### U.S. Environmental Protection Agency
+##### Source
+* Name: MOtor Vehicle Emission Simulator (MOVES) model
+* Author: U.S. Environmental Protection Agency
+* Description: Weight factors generated for each month of the year
+* Source: https://www.epa.gov/moves
+
+##### Destination
+* Modifications to source file(s): None
+* Location:
+  * ***prereise/gather/demanddata/transportation_electrification/moves_adjustment_values.csv***
+
+##### General Purpose
+The dataset is used to distribute the annual vehicle miles traveled (VMT) using seasonal weight factors for the final charging profiles.
+
+
 
 ---
 ### Hydro
