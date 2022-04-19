@@ -149,9 +149,6 @@ def get_total_daily_vmt(
     :return: (*np.array*) -- an array where each element is a year of entries for each vehicle
         type
     """
-    # get the data
-    n = len(data)
-
     if comm_type == 1:
         # removes VMT for trips from work->home and home-> work
         # (not exactly correct due to chained trips involving work and home but no
@@ -173,12 +170,16 @@ def get_total_daily_vmt(
 
     daily_vmt_total = np.zeros(len(input_day), 2)
 
-    for day_iter in range(len(input_day)):
-        for i in range(n):
-            if data_day[i] == input_day[day_iter]:
-                daily_vmt_total[day_iter][0] += data.iloc[
-                    i, data.columns.get_loc("Miles traveled")
-                ]
-                daily_vmt_total[day_iter][1] += 1
+    weekend_vmt = data.loc[data["If Weekend"] == 1, "Miles traveled"].sum()
+    weekday_vmt = data.loc[data["If Weekend"] == 2, "Miles traveled"].sum()
+
+    weekend_total = np.sum(data_day == 1)
+    weekday_total = np.sum(data_day == 2)
+
+    for i in range(len(input_day)):
+        if input_day[i] == 1:
+            daily_vmt_total[i] = (weekend_vmt, weekend_total)
+        elif input_day[i] == 2:
+            daily_vmt_total[i] = (weekday_vmt, weekday_total)
 
     return daily_vmt_total
