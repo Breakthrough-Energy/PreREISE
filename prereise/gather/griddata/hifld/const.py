@@ -459,6 +459,23 @@ proxy_substations = [
     },
 ]
 
+proxy_lines = [
+    {
+        "SUB_1_ID": 301352,
+        "SUB_2_ID": 308812,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 2,
+    },
+    {
+        "SUB_1_ID": 309418,
+        "SUB_2_ID": 308608,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 1,
+    },
+]
+
 substations_lines_filter_override = {301995}
 
 seams_substations = {
