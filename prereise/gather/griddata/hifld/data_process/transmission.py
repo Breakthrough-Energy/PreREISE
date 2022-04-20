@@ -673,14 +673,19 @@ def add_lines_impedances_ratings(branch, line_overrides=None):
     }
     # Add meaningful index for easier lookups using design tuples
     tower_designs.set_index(["voltage", "circuits", "bundle_count"], inplace=True)
-    # Map each transmission line to its corresponding Tower design, and build a Line
+    # Map each transmission line to an assumed Tower design
+    line_to_design = branch.apply(
+        lambda x: line_overrides.get(x.name, closest_voltage_design[x["VOLTAGE"]]),
+        axis=1,
+    )
+    if "line_design_assumptions" in branch:
+        # If some lines already have design assumptions, prefer these
+        line_to_design.update(branch["line_design_assumptions"])
+    # Now that we have a tower design for each line, create a Line with additional info
     branch_plus_line_designs = branch.assign(
         line_object=branch.apply(
             lambda x: Line(
-                tower=tower_designs.loc[
-                    line_overrides.get(x.name, closest_voltage_design[x["VOLTAGE"]]),
-                    "Tower",
-                ],
+                tower=tower_designs.loc[line_to_design[x.name], "Tower"],
                 voltage=x["VOLTAGE"],
                 length=x["length"],
             ),
@@ -701,6 +706,45 @@ def add_lines_impedances_ratings(branch, line_overrides=None):
     branch["rateA"] = branch_plus_line_designs["line_object"].map(
         lambda x: x.power_rating
     )
+
+
+def add_proxy_lines(branch, substation, proxy_lines=None):
+    """Given a set of proxy lines, join these data with the existing branch data.
+
+    :param pandas.Dataframe branch: existing branch data.
+    :param pandas.Dataframe substation: substation data. Required columns are 'LATITUDE'
+        and 'LONGITUDE'.
+    :param list/dict/pandas.DataFrame: information on the new branches to be added. This
+        input can be a list of dictionaries or any other input that can be used to
+        instantiate a pandas DataFrame (including another pandas DataFrame). If this is
+        None, an unmodified copy of the ``branch`` data frame will be returned.
+    :raises ValueError: if any substations IDs from ``proxy_lines`` aren't present
+        within the index of ``substation``.
+    :return: (*pandas.DataFrame*) -- a combined data frame of existing and new lines.
+        If ``proxy_lines`` is non-empty, this returned data frame will contain a
+        'line_design_assumptions' column, with (voltage, circuits, conductors) tuples.
+    """
+    if proxy_lines is None or len(proxy_lines) == 0:
+        return branch.copy()
+    proxy_lines_df = pd.DataFrame(proxy_lines)
+    all_proxy_line_subs = set(proxy_lines_df["SUB_1_ID"]) | set(
+        proxy_lines_df["SUB_2_ID"]
+    )
+    if not all_proxy_line_subs <= set(substation.index):
+        missing = all_proxy_line_subs - set(substation.index)
+        raise ValueError(f"Some proxy lines have non-matching substations: {missing=}")
+    proxy_lines_df["COORDINATES"] = proxy_lines_df.apply(
+        lambda x: [
+            substation.loc[x["SUB_1_ID"], ["LATITUDE", "LONGITUDE"]].tolist(),
+            substation.loc[x["SUB_2_ID"], ["LATITUDE", "LONGITUDE"]].tolist(),
+        ],
+        axis=1,
+    )
+    proxy_lines_df["line_design_assumptions"] = proxy_lines_df[
+        ["VOLTAGE", "circuits", "conductors"]
+    ].apply(tuple, axis=1)
+    proxy_lines_df.index += branch.index.max() + 1
+    return pd.concat([branch, proxy_lines_df])
 
 
 def estimate_transformers(bus_pair, lines, bus_voltages, transformer_designs):
@@ -920,6 +964,9 @@ def build_transmission(method="line2sub", **kwargs):
             substations, hifld_lines, **kwargs
         )
 
+    # Add proxy lines
+    lines = add_proxy_lines(lines, substations, const.proxy_lines)
+    # Add lines required to connect islands
     lines, substations = filter_islands_and_connect_with_mst(
         lines, substations, **island_kwargs
     )
