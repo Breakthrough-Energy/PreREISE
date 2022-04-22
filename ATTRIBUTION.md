@@ -139,10 +139,11 @@ These datasets are generously provided by NREL, which is operated for the U.S. D
 
 #### U.S. Environmental Protection Agency
 ##### Source
-* Name: MOtor Vehicle Emission Simulator (MOVES) model
+* Name: MOVES2010 Highway Vehicle: Population and Activity Data
 * Author: U.S. Environmental Protection Agency
 * Description: Weight factors generated for each month of the year
 * Source: https://www.epa.gov/moves
+* Exact Source Location: https://www.yumpu.com/en/document/view/11485279/moves2010-highway-vehicle-population-and-activity-data-us-
 
 ##### Destination
 * Modifications to source file(s): None
