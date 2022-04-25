@@ -1,7 +1,6 @@
 import json
 
 import geopandas as gpd
-import pandas as pd
 from shapely.geometry import Polygon
 
 from prereise.utility.generate_rural_shapefiles import append_rural_areas_to_urban
