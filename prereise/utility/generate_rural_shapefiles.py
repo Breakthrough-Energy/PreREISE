@@ -7,8 +7,9 @@ from prereise.utility.shapefile import download_shapefiles
 
 
 def append_rural_areas_to_urban(states, urban_areas):
-    """Takes shapefiles of US States and US urban areas, processes the files,
-    and adds rural areas (areas that are not urban) to the geodataframe.
+    """Takes shapefiles of US States and US urban areas, filters to the
+    contiguous 48 states, and adds rural areas (areas that are not urban) to
+    the geodataframe.
 
     :param geopandas.geodataframe.GeoDataFrame states: US state outlines
     :param geopandas.geodataframe.GeoDataFrame urban_areas: US urban area outlines
