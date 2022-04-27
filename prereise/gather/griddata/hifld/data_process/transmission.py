@@ -12,9 +12,10 @@ from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_power_transmission_lines,
     get_hifld_electric_substations,
+    get_line_assumptions,
+    get_proxy_substations,
     get_transformer_number_overrides,
     get_transformer_parameters,
-    get_line_assumptions,
     get_zone,
 )
 from prereise.gather.griddata.hifld.data_process.topology import (
@@ -928,12 +929,16 @@ def build_transmission(method="line2sub", **kwargs):
     line_design_assumptions = get_line_assumptions(
         os.path.join(hifld_data_dir, "line_assumptions.csv")
     )
+    proxy_substations = get_proxy_substations(
+        os.path.join(hifld_data_dir, "proxy_substations.csv")
+    )
+    proxy_substations.index += hifld_substations.index.max() + 1
 
     # Filter substations based on their `LINES` attribute, check for location dupes
     hifld_substations.loc[const.substations_lines_filter_override, "LINES"] = None
     check_for_location_conflicts(hifld_substations)
     # Append the proxy substations to the source data
-    substations = pd.concat([hifld_substations, pd.DataFrame(const.proxy_substations)])
+    substations = pd.concat([hifld_substations, proxy_substations])
     substations.index.name = "ID"
 
     # Filter out keyword arguments for filter_islands_and_connect_with_mst function

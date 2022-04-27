@@ -350,6 +350,16 @@ def get_transformer_number_overrides(path):
     return pd.read_csv(path).set_index(["sub_id", "low_kV", "high_kV"]).squeeze()
 
 
+def get_proxy_substations(path):
+    """Load information for substations to be added.
+
+    :param str path: path to substation CSV file containing columns: 'LATITUDE',
+        'LONGITUDE', 'NAME', and 'STATE'.
+    :return: (*pandas.DataFrame*) -- data frame of proxy substation information.
+    """
+    return pd.read_csv(path)
+
+
 def get_transformer_parameters(
     data_dir=None, transformer_designs_path=None, impedance_ratios_path=None
 ):
