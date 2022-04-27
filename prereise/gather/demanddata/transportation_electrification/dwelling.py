@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_segment(dwelling_start_time, total_dwell_period):
     """Get dwelling activity segment.
 
@@ -97,3 +99,45 @@ def get_energy_limit(
         energy_limit += [power * partial_end_time]
 
     return energy_limit
+
+
+def get_rates(cost, dwelling_start_time, dwelling_length):
+    """Determine the rates that will be used for the cost function.
+
+    :param numpy.array cost: cost function
+    :param float dwelling_start_time: dwelling start time.
+    :param float dwelling_length: dwelling end time.
+    :return: (*numpy.array*) -- rates for the corresponding dwelling period
+    """
+    total_dwell_period = dwelling_start_time + dwelling_length
+    return cost[round(dwelling_start_time):round(total_dwell_period)+1]
+
+
+def get_optimized_values(optimized_values, segcum, seg):
+    """Determine the optimized values for the battery charge.
+
+    :param numpy.array optimized_values: optimal values from linear optimization
+    :param pandas.Series segcum: cumulative sum of the segments
+    :param pandas.Series seg: the amount of the segments in the dwelling activity
+    :return: (*numpy.array*) -- optimized values for the trip
+    """
+    return optimized_values[int(segcum)-int(seg):int(segcum)]
+
+
+def get_elecricity_cost(optimized_values, cost, tripg2vload, segcum, seg, dwelling_start_time, dwelling_length, charging_efficiency):
+    """Determine the electricity cost 
+
+    :param numpy.array optimized_values: optimal values from linear optimization
+    :param numpy.array cost: cost function, 1-D array
+    :param numpy.array tripg2vload: the G2V load during a trip, 1-D array
+    :param pandas.Series segcum: cumulative sum of the segments
+    :param pandas.Series seg: the amount of the segments in the dwelling activity
+    :param float dwelling_start_time: dwelling start time.
+    :param float dwelling_length: dwelling end time.
+    :param float charging_efficiency: grid to battery efficiency.
+    :return: (*int/float*) -- electricity cost for the trip
+    """
+    opt_vals = get_optimized_values(optimized_values, segcum, seg)
+    total_dwell_period = dwelling_start_time + dwelling_length
+    tripg2vload[dwelling_start_time:total_dwell_period+1] = opt_vals / charging_efficiency
+    return np.matmul(tripg2vload, cost)
