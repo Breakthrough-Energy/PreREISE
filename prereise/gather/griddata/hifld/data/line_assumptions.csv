@@ -36,9 +36,12 @@ branch_id,kV,circuits,conductors,notes
 301275,138,1,2,CPS Energy Braunig Power Station
 301320,138,2,2,Collin/Frisco substation connection
 301344,138,1,2,San Antonio (TX)
+301513,230,1,2,Alamitos substation to Lightpipe substation (CA)
 301624,138,1,2,Edinburg (TX)
 301666,138,1,2,East of DFW airport
+301693,230,2,2,Laguna Bell to Rio Hondo (CA)
 301741,138,1,2,Austin (TX)
+301751,230,1,2,Alamitos substation to Barre substation (CA)
 301814,138,2,2,Sunnyvale (TX)
 301847,115,1,2,Coso Power Station
 301891,138,2,2,The Colony (TX)
@@ -103,6 +106,7 @@ branch_id,kV,circuits,conductors,notes
 305145,138,1,2,Chocolate Bayou (TX)
 305273,138,1,2,West of Houston (TX)
 305277,69,2,1,Mineola to Lindale (TX)
+305282,230,1,2,Alamitos substation to Barre substation (CA)
 305290,138,1,2,Edinburg (TX)
 305364,138,1,2,Corpus Christi (TX)
 305446,138,1,2,Ingleside (TX)
@@ -127,6 +131,7 @@ branch_id,kV,circuits,conductors,notes
 306363,138,1,2,Temple (TX)
 306384,138,1,2,Corpus Christi (TX)
 306568,69,2,1,Geothermal in the Brawley region
+306578,230,1,2,APS West Phoenix (AZ)
 306580,138,2,1,Lake Hubbard Generating Station
 306661,138,1,2,San Antonio (TX)
 306688,138,1,2,Austin Energy Sand Hill Center (TX)
@@ -159,12 +164,15 @@ branch_id,kV,circuits,conductors,notes
 308606,138,1,2,Edinburg (TX)
 308740,69,1,2,Southeast of Austin (TX)
 308885,69,2,1,Geothermal in the Brawley region
+308896,230,2,2,Mesa Substation to La Fresa substation (CA)
 309028,138,1,2,Austin (TX)
 309097,138,1,2,Edinburg (TX)
+309113,230,2,2,Mesa substation to Center substation (CA)
 309131,138,1,2,Pasadena (TX)
 309210,138,1,2,TH Wharton Generating Station
 309241,138,1,2,Northeast Dallas
 309268,69,2,1,Ormat Brawley geothermal
+309307,230,2,2,Mesa substation to Eagle Rock substation (CA)
 309434,138,1,2,Chocolate Bayou to Danbury (TX)
 309441,69,2,2,substation connection near Lake Creek Reservoir outside Waco (TX)
 309536,138,1,2,Austin (TX)
@@ -179,23 +187,32 @@ branch_id,kV,circuits,conductors,notes
 310064,138,2,2,West of DFW airport
 310247,138,2,2,Corpus Christi to Victoria (TX)
 310327,138,1,2,TH Wharton Generating Station
+310356,230,2,2,Mesa substation to Eaton substation (CA)
 310484,345,1,3,North of Laredo (TX)
 310531,138,1,2,Sunset Valley (TX)
 310651,69,2,2,substation connection at Jack County power plant near Bridgeport (TX)
+310812,230,1,2,Walnus substation to Mira Loma substation (CA)
+310822,230,2,2,Mesa to Rio Hondo (CA)
 310895,138,1,2,Tenaska Gateway Generating Station
 310939,138,2,2,McKinney (TX)
+310958,230,1,2,Alamitos substation to Center substation (CA)
+310967,230,2,2,Mesa substation to Lightpipe substation (CA)
 310982,138,1,2,Texas City (TX)
 311021,345,2,2,North of Edinburg (TX)
 311090,138,1,2,Pasadena (TX)
 311113,138,1,2,Tomball (TX)
 311189,138,1,2,South Houston (TX)
 311229,138,1,2,Wharton (TX)
-311292,138,1,2,Edinburg (TX)
 311291,138,1,2,Austin (TX)
+311292,138,1,2,Edinburg (TX)
 311306,69,2,2,substation connection near Lake Creek Reservoir outside Waco (TX)
 311321,138,1,2,Southwest of Houston (TX)
 311385,138,1,2,Temple (TX)
+311453,230,1,2,APS West Phoenix (AZ)
+311586,69,1,2,Jacinto City (TX)
 311620,69,1,2,Padre Island (TX)
+311647,230,2,2,Laguna Bell substation to Del Amo substation (CA)
+311765,230,1,2,Walnut substation to Olinda substation (CA)
 311901,69,1,2,Cleburne (TX)
 311935,138,1,2,Northwest of San Antonio (TX)
 311937,138,1,2,Mesquite (TX)
@@ -204,6 +221,7 @@ branch_id,kV,circuits,conductors,notes
 312199,69,2,1,Geothermal in the Brawley region
 312236,138,1,2,substation connection in San Benito (TX)
 312241,100,2,1,southeast Salton Sea geothermal plants (several)
+312279,230,2,1,Goodrich substation to Laguna Bell substation (CA)
 312327,138,1,2,South of Austin (TX)
 312342,138,1,2,Schertz (TX)
 312375,138,1,2,West of Houston (TX)
@@ -212,9 +230,9 @@ branch_id,kV,circuits,conductors,notes
 312501,138,2,2,McKinney to Fairview (TX)
 312514,138,1,2,Mountain Creek Lake (TX)
 312549,69,2,1,Victoria (TX)
-311586,69,1,2,Jacinto City (TX)
 312589,138,1,2,Pearland (TX)
 312651,138,1,2,Pasadena (TX)
+312656,230,2,2,Mesa Substation to La Fresa substation (CA)
 312694,138,2,2,Edinburg (TX)
 312723,69,1,2,Lady Bird Lake (TX)
 312760,138,1,2,substation connection west of Mont Belvieu (TX)

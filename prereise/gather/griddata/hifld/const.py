@@ -482,6 +482,13 @@ proxy_lines = [
         "circuits": 1,
         "conductors": 2,
     },
+    {
+        "SUB_1_ID": 302011,
+        "SUB_2_ID": 307289,
+        "VOLTAGE": 230,
+        "circuits": 2,
+        "conductors": 2,
+    },
 ]
 
 substations_lines_filter_override = {301995}
