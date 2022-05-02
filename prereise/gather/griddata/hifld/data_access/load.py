@@ -336,6 +336,17 @@ def get_hifld_electric_power_transmission_lines(path):
     return properties.query("STATUS == 'IN SERVICE' or STATUS == 'NOT AVAILABLE'")
 
 
+def get_transformer_number_overrides(path):
+    """Load overrides for the number of transformers between buses.
+
+    :param str path: path to a CSV file containing columns: 'sub_id', 'low_kV',
+        'high_kV', and 'number'.
+    :return: (*pandas.Series*) -- index is a MultiIndex of
+        ('sub_id', 'low_kV', 'high_kV'), values are 'number' integers.
+    """
+    return pd.read_csv(path).set_index(["sub_id", "low_kV", "high_kV"]).squeeze()
+
+
 def get_transformer_parameters(
     data_dir=None, transformer_designs_path=None, impedance_ratios_path=None
 ):
