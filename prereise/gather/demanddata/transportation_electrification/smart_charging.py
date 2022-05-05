@@ -278,6 +278,7 @@ def smart_charging(
                     if exitflag == 1:
 
                         # can be an EV
+                        individual = individual.copy()
                         individual.iloc[
                             :, newdata.columns.get_loc("BEV could be used")
                         ] = 1
