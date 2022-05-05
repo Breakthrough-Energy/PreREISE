@@ -262,71 +262,10 @@ def smart_charging(
                     seg = constraints["seg"].apply(int).tolist() 
 
                     segsum = sum(seg)
-
-                    # first cost function matrix, dimension 1 * segsum. representing the charging costs (rates * charging efficiency)
-                    f = rates / const.charging_efficiency
-
-                    # form all the constraints
-
-                    # equality constraint
-                    Aeq = np.ones(1, segsum)
-
-                    # equality constraint
-                    Beq = -sum(charging_consumption)
-
-                    # G2V power upper bound in DC
-                    ub = elimit * const.charging_efficiency
-
-                    # G2V power lower bound
-                    lb = np.zeros((segsum, 1))
-
-                    # formulate the constraints matrix in Ax <= b, A can be divided into m
-                    # generate the cumulative sum array of seg in segcum
                     segcum = np.cumsum(seg)
-                    segsum = sum(seg)
 
-                    # the amount of trips. submatrix dimension is m-1 * m
-                    m = total_trips
-                    # 'a' is a m-1 * segsum matrix
-                    a = np.zeros((m - 1, segsum))
-                    A_coeff = np.zeros(((m - 1) * m, segsum))
-                    b = np.tril(np.ones((m - 1, m)), 1)
-                    B_coeff = np.zeros((m * (m - 1), 1))
+                    linprog_result = calculate_optimization(charging_consumption, rates, elimit, seg, segsum, segcum, total_trips, kwh)
 
-                    for j in range(m):
-                        # part of the A matrix
-                        a = np.zeros((m - 1, segsum))
-
-                        if j > 0:
-                            # switch components in b matrix
-                            bb = [b[:, m - j + 1 : m + 1], b[:, : m - j + 1]]
-                        else:
-                            # do not switch if j is 0
-                            bb = b
-
-                        # set the constraints in DC
-                        B_coeff[(m - 1) * j : (m - 1) * (j + 1), :] = (
-                            kwh + bb * charging_consumption
-                        )
-
-                        for i in range(m - 1):
-                            # indicate the number of the trips
-                            k = j + i
-
-                            if k <= m:
-                                # ones part of the column
-                                a[i - 1 : m, segcum[k] - seg[k] + 1 : segcum[k]] = 1
-                            else:
-                                k = k - m
-                                # ones part of the column
-                                a[i - 1 : m, segcum[k] - seg[k] + 1 : segcum[k]] = 1
-
-                        A_coeff[(m - 1) * j : (m - 1) * j, :] = -a
-
-                    # try to use linopy instead
-                    linprog_result = scipy.optimize.linprog(
-                        f, A_coeff, B_coeff, Aeq, Beq, zip(lb, ub)
-                    )
                     # fval is the value of the final cost, exitflag is the reason why the optimization terminates
                     # 0-success, 1-limit reached, 2-problem infeasible, 3-problem unbounded, 4-numerical difficulties
                     x = np.array(linprog_result.x)
