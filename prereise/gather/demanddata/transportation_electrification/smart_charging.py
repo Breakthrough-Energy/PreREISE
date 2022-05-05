@@ -153,8 +153,6 @@ def smart_charging(
         i = 0
 
         while i < nd_len:
-            # zero individual block, this for each vehicle per day
-            individual = 0
 
             # trip amount for each vehicle
             total_trips = newdata.iloc[
@@ -171,81 +169,19 @@ def smart_charging(
                 ):
 
                     # copy one vehicle information to the block
-                    individual = newdata[i : i + total_trips - 1]
+                    individual = newdata[i : i + total_trips]
 
-                    # 'trip' is used to determine if the loop should end. 'trip' is to count the trip number
-                    # e.g. 1.5-3.3 has 3 segment 1 2 3
-                    trip_num = 0
+                    constraints = get_constraints(individual, kwhmi, power, trip_strategy, location_strategy, cost)
 
-                    # get the consumption and charging constraints for each trip(hour segment)
+                    charging_consumption = constraints["charging consumption"].tolist()
 
-                    # zero the consumption, this is a vector, the consumption for each trip
-                    charging_consumption = []
+                    rates = constraints["rates"]
+                    rates = [r for trip_rates in rates for r in trip_rates]
 
-                    # zero the rates of all segments, which will be used as cost function later
-                    rates = []
+                    elimit = constraints["energy limit"]
+                    elimit = [el for energy_lim in elimit for el in energy_lim]
 
-                    # zero the charging energy limits of all segments, which will be used as the upper bound
-                    elimit = []
-
-                    seg = []
-
-                    # total_trips * 2 matrix, recording dwelling start and end time.
-                    dwelling_times = []
-
-                    while trip_num < total_trips:
-                        # DC consumption
-                        charging_consumption.append(
-                            individual.iloc[
-                                trip_num, individual.columns.get_loc("Miles traveled")
-                            ]
-                            * kwhmi
-                            * -1
-                        )
-
-                        # dwelling part, energylimit is the charging energy constraint
-                        # get segment, t1, tn, s1, sn, energylimit, extracost from dwell function
-                        dwelling_start_time = individual.iloc[
-                            trip_num,
-                            individual.columns.get_loc("End time (hour decimal)"),
-                        ]
-                        dwelling_length = individual.iloc[
-                            trip_num,
-                            individual.columns.get_loc("Dwell time (hour decimal)"),
-                        ]
-                        total_dwell_period = dwelling_start_time + dwelling_length
-
-                        segment = dwelling.get_segment(
-                            dwelling_start_time, total_dwell_period
-                        )
-                        power = dwelling.get_charging_power(
-                            power,
-                            trip_strategy,
-                            location_strategy,
-                            individual.iloc[trip_num],
-                        )
-                        energylimit = dwelling.get_energy_limit(
-                            power,
-                            segment,
-                            dwelling_start_time,
-                            dwelling_length,
-                            total_dwell_period,
-                        )
-
-                        # get the rates and the extra cost related to the infrastructures; used as cost function
-                        for _ in range(dwelling_start_time, dwelling_length + 1):
-                            rates.append(cost[_])
-
-                        # get the energy limit; used as constraint
-                        for s in range(segment):
-                            elimit.append(energylimit)
-
-                        # record the amount of the segments in the ith dwelling activity
-                        seg.append(segment)
-
-                        dwelling_times.append([dwelling_start_time, total_dwell_period])
-
-                        trip_num += 1
+                    seg = constraints["seg"].apply(int).tolist() 
 
                     segsum = sum(seg)
 
