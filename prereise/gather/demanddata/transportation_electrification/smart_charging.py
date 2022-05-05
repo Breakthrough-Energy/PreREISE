@@ -358,14 +358,7 @@ def smart_charging(
                         ] = batterysize
 
                         # copy individual back to newdata if it can be an EV
-                        newdata[i : i + total_trips - 1, :] = individual
-
-                    # no feasible points/other issue
-                    else:
-                        # cannot be an EV
-                        individual.iloc[
-                            :, newdata.columns.get_loc("BEV could be used")
-                        ] = 0
+                        newdata[i : i + total_trips] = individual
 
             # update the counter to the next vehicle
             i += total_trips
