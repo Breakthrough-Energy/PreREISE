@@ -332,7 +332,7 @@ def smart_charging(
 
                             if n == 1:
                                 SOC[n][0] = charging_consumption[n]
-                                SOC[n][1] = charging_consumption[n] + charge
+                                SOC[n][1] = SOC[n][0] + charge
                             else:
                                 SOC[n][0] = SOC[n - 1][1] + charging_consumption[n]
                                 SOC[n][1] = SOC[n][0] + charge
@@ -341,13 +341,13 @@ def smart_charging(
                                 n, newdata.columns.get_loc("Electricity cost")
                             ] = electricitycost
 
-                        # copy SOC back
-                        individual.iloc[
-                            :, newdata.columns.get_loc("trip start battery charge")
-                        ] = SOC
-                        individual.iloc[
-                            :, newdata.columns.get_loc("trip end battery charge")
-                        ] = SOC
+                            # copy SOC back
+                            individual.iloc[
+                                n, newdata.columns.get_loc("trip start battery charge")
+                            ] = SOC[n,0]
+                            individual.iloc[
+                                n, newdata.columns.get_loc("trip end battery charge")
+                            ] = SOC[n,1]
 
                         # find the acutal battery size, in DC
                         batterysize = max(SOC[:, 1]) - min(SOC[:, 0])
