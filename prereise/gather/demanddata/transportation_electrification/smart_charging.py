@@ -172,7 +172,7 @@ def smart_charging(
     location_strategy,
     veh_type,
     filepath,
-    comm_type,
+    LOAD,
     trip_strategy=1,
 ):
     """Smart charging function
@@ -185,7 +185,7 @@ def smart_charging(
     :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, or 5; 1-home only, 2-home and work related, 3-anywhere if possibile, 4-home and school only, 5-home and work and school.
     :param str veh_type: determine which category (LDV or LDT) to produce charging profiles for
     :param str filepath: the path to the nhts mat file.
-    :param int comm_type: the type of Commute
+    :param np.array LOAD: the initial load demand
     :param int trip_strategy: determine to charge after any trip (1) or only after the last trip (2)
     :return: (*numpy.ndarray*) -- charging profiles.
     """
@@ -220,7 +220,7 @@ def smart_charging(
     data_day = data_helper.get_data_day(newdata)
 
     daily_vmt_total = data_helper.total_daily_vmt(
-        census_region, comm_type, location_strategy, input_day
+        newdata, data_day
     )
     daily_vmt = {
         0: "weekend_vmt_total",
@@ -229,8 +229,6 @@ def smart_charging(
 
     kwh = kwhmi * veh_range
     emfacvmt = 758118400
-
-    LOAD = np.ones(24 * len(input_day))
 
     nd_len = len(newdata)
 
