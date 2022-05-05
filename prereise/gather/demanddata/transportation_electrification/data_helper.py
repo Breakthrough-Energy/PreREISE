@@ -156,6 +156,6 @@ def get_total_daily_vmt(
 
     daily_vmt_total = {
         "weekend_vmt_total": (weekend_vmt, weekend_total),
-        "weekday_vmt_total": (weekday_vmt, weekday_total)
+        "weekday_vmt_total": (weekday_vmt, weekday_total),
     }
     return daily_vmt_total
