@@ -4,8 +4,9 @@ from prereise.gather.demanddata.transportation_electrification import (
     dwelling,
 )
 
+import pandas as pd
 import numpy as np
-import scipy
+from scipy.optimize import linprog
 import math
 
 
