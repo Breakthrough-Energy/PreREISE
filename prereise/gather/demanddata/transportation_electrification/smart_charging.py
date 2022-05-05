@@ -8,6 +8,64 @@ import numpy as np
 import scipy
 
 
+def get_constraints(individual, kwhmi, power, trip_strategy, location_strategy, cost):
+    """Determine the consumption and charging constraints for each trip (hour segment)
+    
+    :param pandas.DataFrame individual: trip data of an individual vehicle
+    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
+    :param float power: charger power, EVSE kW.
+    :param int trip_strategy: a toggle that determines if should charge on any trip or only 
+        after last trip (1-anytrip number, 2-last trip)
+    :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, 5, or 6; 
+        1-home only, 2-home and work related, 3-anywhere if possibile, 
+        4-home and school only, 5-home and work and school, 6-only work
+    :param numpy.array cost: cost function
+    :return: (*pandas.DataFrame*) -- a DataFrame adding the calculated constraints 
+        to an individual vehicle's data
+    """
+    constraints_df = individual.copy()
+    grouped_trips = individual.groupby("sample vehicle number")
+
+    # for "power" - setting power value based on "why to"
+    constraints_df.loc[constraints_df["why to"].isin(why_to_list), "power_allowed"] = power
+    constraints_df["power_allowed"].fillna(0, inplace=True)
+
+    # for "power" - location
+    if location_strategy == 3:
+        constraints_df["location_allowed"] = True
+    else:
+        allowed = location_allowed[location_strategy]
+        constraints_df["location_allowed"] = constraints_df["why to"].map(lambda x: x in allowed)
+
+    # for "power" - trip number
+    if trip_strategy == 1:
+        constraints_df["trip_allowed"] = True
+    elif trip_strategy == 2:
+        constraints_df["trip_allowed"] = constraints_df["trip number"] == constraints_df["total vehicle trips"]
+
+    # for "power" - dwell
+    constraints_df["dwell_allowed"] = constraints_df["Dwell time (hour decimal)"] > 0.2
+
+    # for "power" - determine if can charge
+    allowed_cols = ["power_allowed", "location_allowed", "trip_allowed", "dwell_allowed"]
+    constraints_df["charging_allowed"] = constraints_df[allowed_cols].apply(all, axis=1)
+
+    for trip_num, group in grouped_trips:
+        constraints_df.loc[group.index, "charging consumption"] = constraints_df.loc[group.index, "Miles traveled"] * kwhmi * -1
+        constraints_df.loc[group.index, "seg"] = dwelling.get_segment(constraints_df.loc[group.index, "End time (hour decimal)"], constraints_df.loc[group.index, "Dwell time (hour decimal)"])
+        
+    constraints_df.loc[constraints_df["charging_allowed"] == True, "power"] = constraints_df["power_allowed"]
+    constraints_df["power"].fillna(0, inplace=True)
+
+    constraints_df["segcum"] = constraints_df["seg"].transform(pd.Series.cumsum)
+    
+    constraints_df["energy limit"] = constraints_df.apply(lambda d: dwelling.get_energy_limit(d["power"], d["seg"], d["End time (hour decimal)"], d["Dwell time (hour decimal)"], const.charging_efficiency), axis=1)
+    
+    constraints_df["rates"] = constraints_df.apply(lambda d: dwelling.get_rates(cost, d["End time (hour decimal)"], d["Dwell time (hour decimal)"]), axis=1)
+    
+    return constraints_df
+
+
 def smart_charging(
     census_region,
     model_year,
