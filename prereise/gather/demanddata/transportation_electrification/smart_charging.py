@@ -212,6 +212,8 @@ def smart_charging(
     ]
     newdata = newdata.reindex(list(newdata.columns) + new_columns, axis=1, fill_value=0)
 
+    newdata["trip number"] = newdata.groupby("sample vehicle number").cumcount() + 1
+
     input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
 
     TRANS_charge = np.zeros(24 * len(input_day))
