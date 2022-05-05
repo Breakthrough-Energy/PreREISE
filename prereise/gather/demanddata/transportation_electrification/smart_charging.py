@@ -46,6 +46,10 @@ def smart_charging(
     newdata = data_helper.update_if_weekend(newdata)
 
     new_columns = [
+        "trip start battery charge",
+        "trip end battery charge",
+        "BEV could be used",
+        "trip number", 
         "Electricity cost",
         "Battery discharge",
         "Battery charge",
