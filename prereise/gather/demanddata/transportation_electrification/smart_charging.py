@@ -222,6 +222,10 @@ def smart_charging(
     daily_vmt_total = data_helper.total_daily_vmt(
         census_region, comm_type, location_strategy, input_day
     )
+    daily_vmt = {
+        0: "weekend_vmt_total",
+        1: "weekday_vmt_total"
+    }
 
     kwh = kwhmi * veh_range
     emfacvmt = 758118400
@@ -247,7 +251,10 @@ def smart_charging(
         cost = LOAD_adj
 
         G2Vload = np.zeros((100, 48))
-        individualG2Vload = np.zeros(nd_len, 48)
+        individualG2Vload = np.zeros((nd_len, 48))
+
+        # used to indicate weekend or weekday for daily_vmt_total
+        flag = input_day[day_iter] - 1
 
         i = 0
 
@@ -341,9 +348,9 @@ def smart_charging(
                             cost += (
                                 tripload
                                 / 1000
-                                / daily_vmt_total[day_iter, 0]
+                                / daily_vmt_total[daily_vmt[flag]][0]
                                 * emfacvmt
-                            )
+                            )[0,:]
 
                             # SOC rise in kwh, from charging
                             individual.iloc[
@@ -389,19 +396,19 @@ def smart_charging(
             # MW
             TRANS_charge[day_iter * 24 : day_iter * 24 + 24] += (
                 outputelectricload[:24]
-                / (daily_vmt_total[day_iter][0] * 1000)
+                / (daily_vmt_total[daily_vmt[flag]][0] * 1000)
                 * emfacvmt
             )
             TRANS_charge[:24] += (
                 outputelectricload[24:48]
-                / (daily_vmt_total[day_iter, 0] * 1000)
+                / (daily_vmt_total[daily_vmt[flag]][0] * 1000)
                 * emfacvmt
             )
 
         else:
             # MW
             TRANS_charge[day_iter * 24 : day_iter * 24 + 24] += (
-                outputelectricload / (daily_vmt_total[day_iter, 0] * 1000) * emfacvmt
+                outputelectricload / (daily_vmt_total[daily_vmt[flag]][0] * 1000) * emfacvmt
             )
 
     return TRANS_charge
