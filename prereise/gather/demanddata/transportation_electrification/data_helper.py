@@ -132,9 +132,6 @@ def generate_daily_weighting(year, area_type="urban"):
     return daily_values
 def get_total_daily_vmt(
     data: pd.DataFrame,
-    comm_type: int,
-    location_strategy: int,
-    input_day: np.ndarray,
     data_day: np.array,
 ):
     """Calculates the total VMT and total vehicles for for each day of the model year,
@@ -151,18 +148,14 @@ def get_total_daily_vmt(
     :return: (*np.array*) -- an array where each element is the daily VMT and total
         vehicles for that day.
     """
-    daily_vmt_total = np.zeros(len(input_day), 2)
-
     weekend_vmt = data.loc[data["If Weekend"] == 1, "Miles traveled"].sum()
     weekday_vmt = data.loc[data["If Weekend"] == 2, "Miles traveled"].sum()
 
     weekend_total = np.sum(data_day == 1)
     weekday_total = np.sum(data_day == 2)
 
-    for i in range(len(input_day)):
-        if input_day[i] == 1:
-            daily_vmt_total[i] = (weekend_vmt, weekend_total)
-        elif input_day[i] == 2:
-            daily_vmt_total[i] = (weekday_vmt, weekday_total)
-
+    daily_vmt_total = {
+        "weekend_vmt_total": (weekend_vmt, weekend_total),
+        "weekday_vmt_total": (weekday_vmt, weekday_total)
+    }
     return daily_vmt_total
