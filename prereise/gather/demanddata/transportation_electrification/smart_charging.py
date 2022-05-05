@@ -66,6 +66,84 @@ def get_constraints(individual, kwhmi, power, trip_strategy, location_strategy, 
     return constraints_df
 
 
+def calculate_optimization(charging_consumption, rates, elimit, seg, segsum, segcum, total_trips, kwh):
+    """Calculates the minimized charging cost during a specific dwelling activity
+
+    :param list charging_consumption: the charging consumption for each trip
+    :param list rates: rates to be used for the cost function
+    :param list elimit: energy limits during the time span of available charging
+    :param list seg: the amount of the segments in the dwelling activity
+    :param int segsum: the overall total of segments
+    :param list segcum: cumulative sum of the segments
+    :param int total_trips: total number of trips for the current vehicle
+    :param float kwh: kwhmi * veh_range, amount of energy needed to charge vehicle.
+    :return: (*scipy.optimize.OptimizeResult*) -- contains the result from the optimization, 
+        such as "x", an array of the optimal values, and "status", which tells the 
+        exit status of the algorithm.
+    """
+    f = np.array(rates) / const.charging_efficiency
+
+    # form all the constraints
+    # equality constraint
+    Aeq = np.ones((1, segsum))
+
+    # equality constraint
+    Beq = -sum(charging_consumption)
+
+    # G2V power upper bound in DC
+    ub = elimit
+    lb = [0] * segsum
+    bounds = list(zip(lb, ub))
+
+    # formulate the constraints matrix in Ax <= b, A can be divided into m
+    # generate the cumulative sum array of seg in segcum
+    
+    # the amount of trips. submatrix dimension is m-1 * m
+    m = total_trips               
+
+    # 'a' is a m-1 * segsum matrix
+    a = np.zeros((m-1, segsum))     
+    A_coeff = np.zeros(((m-1)*m, segsum))
+
+    b = np.tril(np.ones((m-1,m)), 1)
+    B_coeff = np.zeros((m*(m-1), 1))
+
+    for j in range(m):
+        # part of the A matrix
+        a = np.zeros((m-1, segsum))    
+
+        if j > 0:
+            # switch components in b matrix
+            bb = np.concatenate((b[:,m-j:m], b[:,:m-j]), axis=1)
+            
+        else:
+            # do not switch if j is 0
+            bb = b
+
+        charging_consumption = np.array(charging_consumption)
+        cc = charging_consumption.reshape((charging_consumption.shape[0],1))
+
+        # set the constraints in DC
+        B_coeff[(m-1)*j:(m-1)*(j+1),:] = kwh + (np.dot(bb, cc))
+
+        for ii in range(m-1):
+            # indicate the number of the trips
+            k = j + ii
+
+            if k < m:
+                # ones part of the column
+                a[ii:m-1, segcum[k]-seg[k]:segcum[k]] = 1
+
+            else:
+                k = k - m
+                # ones part of the column
+                a[ii:m-1, segcum[k]-seg[k]:segcum[k]] = 1
+
+        A_coeff[(m-1)*j:(m-1)*(j+1),:] = -a
+
+    return linprog(c=f, A_ub=A_coeff, b_ub=B_coeff, A_eq=Aeq, b_eq=Beq, bounds=bounds, method='highs-ipm')
+
+
 def smart_charging(
     census_region,
     model_year,
