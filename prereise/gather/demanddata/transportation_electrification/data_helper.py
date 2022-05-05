@@ -151,26 +151,6 @@ def get_total_daily_vmt(
     :return: (*np.array*) -- an array where each element is the daily VMT and total
         vehicles for that day.
     """
-    # maybe separate into another function for this part after hearing back from brian
-    if comm_type == 1:
-        # removes VMT for trips from work->home and home-> work
-        # (not exactly correct due to chained trips involving work and home but no
-        # way to remove the data)
-        if location_strategy != 2:
-            location_strategy = 2
-            # putting this part in function means rest of code won't be able to see
-            # change in location_strategy value.
-            # will have to use global or return location_strategy and reassign
-            print('"location_strategy" changed to "Home and Work" for comm_type == 1')
-        # isolates home->work trips
-        trip_home_work = data.loc[data["why from"] == 1 and data["why to"] == 11]
-        # isolates work->home trips
-        trip_work_home = data.loc[data["why from"] == 11 and data["why to"] == 1]
-
-        # set trips from work to home to 0 distance
-        data.loc[trip_work_home.index, "Miles traveled"] = 0
-        data.loc[trip_home_work.index, "Miles traveled"] = 0
-
     daily_vmt_total = np.zeros(len(input_day), 2)
 
     weekend_vmt = data.loc[data["If Weekend"] == 1, "Miles traveled"].sum()
