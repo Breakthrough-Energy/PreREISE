@@ -1,13 +1,14 @@
 import numpy as np
 
-def get_segment(dwelling_start_time, total_dwell_period):
+def get_segment(dwelling_start_time, dwelling_length):
     """Get dwelling activity segment.
 
     :param float dwelling_start_time: dwelling start time.
-    :param float total_dwell_period: dwelling end time.
+    :param float dwelling_length: dwelling end time.
     :return: (*int*) -- the amount of the rates (cost function) segments the dwelling activity possess.
     """
-    return round(total_dwell_period) - round(dwelling_start_time) + 1
+    total_dwell_period = dwelling_start_time + dwelling_length
+    return np.floor(total_dwell_period) - np.floor(dwelling_start_time) + 1
 
 
 def get_energy_limit(
