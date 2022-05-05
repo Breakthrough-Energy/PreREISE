@@ -6,6 +6,7 @@ from prereise.gather.demanddata.transportation_electrification import (
 
 import numpy as np
 import scipy
+import math
 
 
 def get_constraints(individual, kwhmi, power, trip_strategy, location_strategy, cost):
@@ -292,27 +293,28 @@ def smart_charging(
                             # G2V results
                             # define the G2V load during a trip
                             tripG2Vload = np.zeros((1, 48))
-                            start, end = dwelling_times[n][0], dwelling_times[n][1]
-                            why_to = individual.iloc[
-                                :, newdata.columns.get_loc("why to")
-                            ]
+                            start = math.floor(individual.iloc[n, individual.columns.get_loc("End time (hour decimal)")])
+                            end = math.floor(individual.iloc[n, individual.columns.get_loc("End time (hour decimal)")] + individual.iloc[n, individual.columns.get_loc("Dwell time (hour decimal)")])
 
-                            tripG2Vload[start : end + 1] = (
+                            why_to = int(individual.iloc[
+                                :, newdata.columns.get_loc("why to")
+                            ])
+
+                            tripG2Vload[:, start : end + 1] = (
                                 x[segcum[n] - seg[n] : segcum[n]]
                                 / const.charging_efficiency
                             )
-                            G2Vload[why_to, :] += tripG2Vload
+                            G2Vload[why_to, :] += tripG2Vload[0,:]
                             individualG2Vload[i + n][:] = tripG2Vload
-                            tripG2Vcost = tripG2Vload * cost
+                            tripG2Vcost = np.matmul(tripG2Vload, cost)[0]
 
                             # charging charge. in DC
                             charge = sum(x[segcum[n] - seg[n] : segcum[n]])
 
                             # V2G results
                             tripV2Gload = np.zeros((1, 48))
-                            tripV2Gcost = 0
 
-                            electricitycost = tripG2Vcost + tripV2Gcost
+                            electricitycost = tripG2Vcost
                             tripload = tripV2Gload + tripG2Vload
 
                             # update the cost function and vonvert from KW to MW
