@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 def get_segment(dwelling_start_time, dwelling_length):
     """Get dwelling activity segment.
 
@@ -27,7 +28,9 @@ def get_energy_limit(
     """
     total_dwell_period = dwelling_start_time + dwelling_length
     partial_start_time = math.floor(dwelling_start_time) + 1 - dwelling_start_time
-    partial_end_time = dwelling_start_time + dwelling_length - math.floor(total_dwell_period)
+    partial_end_time = (
+        dwelling_start_time + dwelling_length - math.floor(total_dwell_period)
+    )
 
     energy = power * charging_efficiency
 
@@ -36,10 +39,10 @@ def get_energy_limit(
 
     elif segment == 2:
         energy_limit = [energy * partial_start_time, energy * partial_end_time]
-    
+
     else:
         energy_limit = [energy * partial_start_time]
-        energy_limit += [energy] * (int(segment)-2)
+        energy_limit += [energy] * (int(segment) - 2)
         energy_limit += [energy * partial_end_time]
 
     return energy_limit
@@ -54,4 +57,4 @@ def get_rates(cost, dwelling_start_time, dwelling_length):
     :return: (*numpy.array*) -- rates for the corresponding dwelling period
     """
     total_dwell_period = dwelling_start_time + dwelling_length
-    return cost[math.floor(dwelling_start_time):math.floor(total_dwell_period)+1]
+    return cost[math.floor(dwelling_start_time) : math.floor(total_dwell_period) + 1]
