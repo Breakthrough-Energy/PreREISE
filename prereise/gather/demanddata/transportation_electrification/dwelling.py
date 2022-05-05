@@ -54,4 +54,4 @@ def get_rates(cost, dwelling_start_time, dwelling_length):
     :return: (*numpy.array*) -- rates for the corresponding dwelling period
     """
     total_dwell_period = dwelling_start_time + dwelling_length
-    return cost[round(dwelling_start_time):round(total_dwell_period)+1]
+    return cost[math.floor(dwelling_start_time):math.floor(total_dwell_period)+1]
