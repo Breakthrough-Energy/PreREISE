@@ -41,21 +41,21 @@ def generate_urban_and_rural_shapefiles():
     Writes these shapefiles to a local folder, then creates new shapefiles that
     include both urban and rural areas.
 
-    :return: (*str*) path to the new shapefiles
+    :return: (*str*) -- path to the new shapefiles
     """
-    base_url = "https://besciences.blob.core.windows.net"
+    base_url = "https://besciences.blob.core.windows.net/shapefiles/USA/"
 
-    states_folder = os.path.join(os.path.dirname(__file__), "state_shapefiles")
+    states_folder = os.path.join(os.path.dirname(__file__), "state-outlines")
     states_file = download_shapefiles(
-        f"{base_url}/us-shapefiles/",
+        f"{base_url}state-outlines/",
         "cb_2018_us_state_20m",
         states_folder,
     )
     states = gpd.read_file(states_file)
 
-    urban_folder = os.path.join(os.path.dirname(__file__), "urban_shapefiles")
+    urban_folder = os.path.join(os.path.dirname(__file__), "urban-areas")
     urban_file = download_shapefiles(
-        f"{base_url}/shapefiles/urban-area-shapefiles/",
+        f"{base_url}urban-areas/",
         "cb_2019_us_ua10_500k",
         urban_folder,
     )
@@ -63,7 +63,7 @@ def generate_urban_and_rural_shapefiles():
 
     urban_and_rural_areas = append_rural_areas_to_urban(states, urban_areas)
 
-    os.makedirs("./urban_and_rural_shapefiles", exist_ok=True)
-    filepath = "./urban_and_rural_shapefiles/urban_and_rural_areas.shp"
+    os.makedirs("./urban-and-rural-areas", exist_ok=True)
+    filepath = "./urban-and-rural-areas/urban-and-rural-areas.shp"
     urban_and_rural_areas.to_file(filepath)
     return filepath
