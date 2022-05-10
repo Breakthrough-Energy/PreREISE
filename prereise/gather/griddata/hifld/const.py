@@ -106,18 +106,21 @@ abv_state_neighbor = {
     "WY": ["CO", "ID", "MT", "NE", "SD", "UT"],
 }
 
-blob_paths = {
-    "eia_form860_2019_generator": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_1_Generator_Y2019_Operable.csv",
-    "eia_form860_2019_plant": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/2___Plant_Y2019.csv",
-    "eia_form860_2019_solar": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_3_Solar_Y2019_Operable.csv",
-    "eia_form860_2019_wind": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_2_Wind_Y2019_Operable.csv",
-    "epa_ampd": "https://besciences.blob.core.windows.net/datasets/EPA_AMPD/",
-    "epa_needs": "https://besciences.blob.core.windows.net/datasets/EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
-    "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
-    "transmission_lines": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
-    "us_counties": "https://besciences.blob.core.windows.net/datasets/geo_data/uscounties.csv",
-    "us_zips": "https://besciences.blob.core.windows.net/datasets/geo_data/uszips.csv",
+blob_path_base = "https://besciences.blob.core.windows.net/datasets"
+blob_subpaths = {
+    "eia_form860_2019_generator": "EIA_Form860/3_1_Generator_Y2019_Operable.csv",
+    "eia_form860_2019_plant": "EIA_Form860/2___Plant_Y2019.csv",
+    "eia_form860_2019_solar": "EIA_Form860/3_3_Solar_Y2019_Operable.csv",
+    "eia_form860_2019_wind": "EIA_Form860/3_2_Wind_Y2019_Operable.csv",
+    "epa_ampd": "EPA_AMPD/",
+    "epa_needs": "EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
+    "substations": "hifld/Electric_Substations_Jul2020.csv",
+    "transmission_lines": "hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
+    "us_counties": "geo_data/uscounties.csv",
+    "us_zips": "geo_data/uszips.csv",
 }
+blob_paths = {k: f"{blob_path_base}/{v}" for k, v in blob_subpaths.items()}
+
 eia_epa_crosswalk_path = "https://raw.githubusercontent.com/Breakthrough-Energy/camd-eia-crosswalk/master/epa_eia_crosswalk.csv"
 
 volt_class_defaults = {
