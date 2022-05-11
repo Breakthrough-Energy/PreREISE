@@ -302,9 +302,12 @@ def get_hifld_electric_power_transmission_lines(path):
     properties = (
         pd.DataFrame([line["properties"] for line in data["features"]])
         .astype({"ID": "int64", "NAICS_CODE": "int64", "SOURCEDATE": "datetime64"})
-        .drop(columns=["OBJECTID", "SHAPE_Length"])
         .round({"VOLTAGE": 3})
     )
+    # Drop columns which aren't relevant to us. Some names are inconsistent b/w versions
+    shape_lengths = {"SHAPE_Length", "SHAPE__Length"}
+    drop_cols = ["OBJECTID"] + list(shape_lengths & set(properties.columns))
+    properties.drop(columns=drop_cols, inplace=True)
 
     properties["COORDINATES"] = [
         line["geometry"]["coordinates"] for line in data["features"]
@@ -347,6 +350,16 @@ def get_transformer_number_overrides(path):
     return pd.read_csv(path).set_index(["sub_id", "low_kV", "high_kV"]).squeeze()
 
 
+def get_proxy_substations(path):
+    """Load information for substations to be added.
+
+    :param str path: path to substation CSV file containing columns: 'LATITUDE',
+        'LONGITUDE', 'NAME', and 'STATE'.
+    :return: (*pandas.DataFrame*) -- data frame of proxy substation information.
+    """
+    return pd.read_csv(path)
+
+
 def get_transformer_parameters(
     data_dir=None, transformer_designs_path=None, impedance_ratios_path=None
 ):
@@ -386,6 +399,19 @@ def get_transformer_parameters(
         "high_kV"
     ].map(transformer_impedance_ratios["x_to_r_ratio"])
     return transformer_designs.set_index(["low_kV", "high_kV"])[["x", "r", "MVA"]]
+
+
+def get_line_assumptions(path):
+    """Read the CSV file containing line design assumptions and return a mapping dict.
+
+    :param str path: path to file. Required columns are 'branch_id', 'kV', 'circuits', &
+        'conductors'.
+    :return: (*pandas.Series*) -- index is branch_id, values are
+        (kV, circuits, conductors) tuples.
+    """
+    df = pd.read_csv(path)
+    s = df.set_index("branch_id")[["kV", "circuits", "conductors"]].apply(tuple, axis=1)
+    return s
 
 
 def get_zone(path):

@@ -12,6 +12,8 @@ from prereise.gather.griddata.hifld import const
 from prereise.gather.griddata.hifld.data_access.load import (
     get_hifld_electric_power_transmission_lines,
     get_hifld_electric_substations,
+    get_line_assumptions,
+    get_proxy_substations,
     get_transformer_number_overrides,
     get_transformer_parameters,
     get_zone,
@@ -50,7 +52,7 @@ def check_for_location_conflicts(substations):
 
 
 def map_lines_to_substations_using_coords(
-    substations, lines, rounding=3, drop_zero_distance_line=True
+    substations, lines, rounding=3, drop_zero_distance_line=True, max_remap=5
 ):
     """Map lines to substations using coordinates.
 
@@ -59,9 +61,19 @@ def map_lines_to_substations_using_coords(
     :param int rounding: number of digits in coordinates rounded up to.
     :param bool drop_zero_distance_line: drop zero distance line or not, defaults to
         True.
+    :param float max_remap: maximum distance (km) to map line endpoints. If a line's
+        endpoint is more than this distance away from the closest substation, a
+        substation will be created to map the line to.
     :return: (*tuple*) -- lines and substations data frame.
     :raises TypeError: if rounding is not an integer.
     """
+
+    def _make_mapping_structures(df, rounding):
+        dfcoord2dfid = df.round(rounding).groupby(["LATITUDE", "LONGITUDE"]).groups
+        dfcoord = list(dfcoord2dfid)
+        tree = KDTree([ll2uv(p[1], p[0]) for p in dfcoord])
+        return dfcoord2dfid, dfcoord, tree
+
     if not isinstance(rounding, int):
         raise TypeError("rounding must be an integer")
 
@@ -70,9 +82,7 @@ def map_lines_to_substations_using_coords(
         "assigning substations to lines' endpoints by mapping their rounded "
         f"({rounding} digits) coordinates"
     )
-    subcoord2subid = (
-        substations.round(rounding).groupby(["LATITUDE", "LONGITUDE"]).groups
-    )
+    subcoord2subid, subcoord, tree = _make_mapping_structures(substations, rounding)
     lines_coord = lines["COORDINATES"].map(
         lambda x: list(np.round([x[0], x[-1]], rounding))
     )
@@ -88,7 +98,6 @@ def map_lines_to_substations_using_coords(
         line2sub[e_sub] = line2sub[e].apply(
             lambda x: list(subcoord2subid[x]) if x in subcoord2subid else np.NaN
         )
-
     # Remove zero-distance lines
     if drop_zero_distance_line:
         idx = line2sub["FROM"].compare(line2sub["TO"]).index
@@ -100,14 +109,35 @@ def map_lines_to_substations_using_coords(
 
     # Find closest neighbor(s) of unmapped lines' endpoints
     print("finding closest substation to unmapped lines' endpoint(s)")
-    subcoord = list(subcoord2subid)
     missing_points = set().union(
         *[
             set(line2sub.loc[line2sub[e_sub].isna(), e].map(tuple))
             for e, e_sub in end_sub.items()
         ]
     )
-    tree = KDTree([ll2uv(p[1], p[0]) for p in subcoord])
+
+    # Find points which would get mapped beyond our max distance
+    tree_query_results = [(p, tree.query(ll2uv(p[1], p[0]))) for p in missing_points]
+    # For small angles, secant distance is approximately equal to angle * radius
+    max_remap_unit_vector = max_remap / transmission_const.earth_radius_km
+    to_add_list = [
+        {
+            "LATITUDE": p[0],
+            "LONGITUDE": p[1],
+            "NAME": str(p),
+            "STATE": substations.loc[subcoord2subid[subcoord[closest_idx]][0], "STATE"],
+        }
+        for p, (dist, closest_idx) in tree_query_results
+        if dist > max_remap_unit_vector
+    ]
+    substations_to_add = pd.DataFrame(
+        to_add_list, index=pd.RangeIndex(len(to_add_list)) + substations.index.max() + 1
+    )
+    print(f"Adding {len(substations_to_add)} new substations for unmapped endpoints")
+    # Append the new ones, then re-generate the mapping
+    substations = pd.concat([substations, substations_to_add])
+    substations.index.name = "ID"
+    subcoord2subid, subcoord, tree = _make_mapping_structures(substations, rounding)
     endpoint2neighbor = {
         p: subcoord2subid[subcoord[tree.query(ll2uv(p[1], p[0]))[1]]]
         for p in tqdm(missing_points, total=len(missing_points))
@@ -644,14 +674,19 @@ def add_lines_impedances_ratings(branch, line_overrides=None):
     }
     # Add meaningful index for easier lookups using design tuples
     tower_designs.set_index(["voltage", "circuits", "bundle_count"], inplace=True)
-    # Map each transmission line to its corresponding Tower design, and build a Line
+    # Map each transmission line to an assumed Tower design
+    line_to_design = branch.apply(
+        lambda x: line_overrides.get(x.name, closest_voltage_design[x["VOLTAGE"]]),
+        axis=1,
+    )
+    if "line_design_assumptions" in branch:
+        # If some lines already have design assumptions, prefer these
+        line_to_design.update(branch["line_design_assumptions"])
+    # Now that we have a tower design for each line, create a Line with additional info
     branch_plus_line_designs = branch.assign(
         line_object=branch.apply(
             lambda x: Line(
-                tower=tower_designs.loc[
-                    line_overrides.get(x.name, closest_voltage_design[x["VOLTAGE"]]),
-                    "Tower",
-                ],
+                tower=tower_designs.loc[line_to_design[x.name], "Tower"],
                 voltage=x["VOLTAGE"],
                 length=x["length"],
             ),
@@ -672,6 +707,45 @@ def add_lines_impedances_ratings(branch, line_overrides=None):
     branch["rateA"] = branch_plus_line_designs["line_object"].map(
         lambda x: x.power_rating
     )
+
+
+def add_proxy_lines(branch, substation, proxy_lines=None):
+    """Given a set of proxy lines, join these data with the existing branch data.
+
+    :param pandas.Dataframe branch: existing branch data.
+    :param pandas.Dataframe substation: substation data. Required columns are 'LATITUDE'
+        and 'LONGITUDE'.
+    :param list/dict/pandas.DataFrame: information on the new branches to be added. This
+        input can be a list of dictionaries or any other input that can be used to
+        instantiate a pandas DataFrame (including another pandas DataFrame). If this is
+        None, an unmodified copy of the ``branch`` data frame will be returned.
+    :raises ValueError: if any substations IDs from ``proxy_lines`` aren't present
+        within the index of ``substation``.
+    :return: (*pandas.DataFrame*) -- a combined data frame of existing and new lines.
+        If ``proxy_lines`` is non-empty, this returned data frame will contain a
+        'line_design_assumptions' column, with (voltage, circuits, conductors) tuples.
+    """
+    if proxy_lines is None or len(proxy_lines) == 0:
+        return branch.copy()
+    proxy_lines_df = pd.DataFrame(proxy_lines)
+    all_proxy_line_subs = set(proxy_lines_df["SUB_1_ID"]) | set(
+        proxy_lines_df["SUB_2_ID"]
+    )
+    if not all_proxy_line_subs <= set(substation.index):
+        missing = all_proxy_line_subs - set(substation.index)
+        raise ValueError(f"Some proxy lines have non-matching substations: {missing=}")
+    proxy_lines_df["COORDINATES"] = proxy_lines_df.apply(
+        lambda x: [
+            substation.loc[x["SUB_1_ID"], ["LATITUDE", "LONGITUDE"]].tolist(),
+            substation.loc[x["SUB_2_ID"], ["LATITUDE", "LONGITUDE"]].tolist(),
+        ],
+        axis=1,
+    )
+    proxy_lines_df["line_design_assumptions"] = proxy_lines_df[
+        ["VOLTAGE", "circuits", "conductors"]
+    ].apply(tuple, axis=1)
+    proxy_lines_df.index += branch.index.max() + 1
+    return pd.concat([branch, proxy_lines_df])
 
 
 def estimate_transformers(bus_pair, lines, bus_voltages, transformer_designs):
@@ -852,13 +926,19 @@ def build_transmission(method="line2sub", **kwargs):
     transformer_number_assumptions = get_transformer_number_overrides(
         os.path.join(hifld_data_dir, "transformer_number_assumptions.csv")
     )
+    line_design_assumptions = get_line_assumptions(
+        os.path.join(hifld_data_dir, "line_assumptions.csv")
+    )
+    proxy_substations = get_proxy_substations(
+        os.path.join(hifld_data_dir, "proxy_substations.csv")
+    )
+    proxy_substations.index += hifld_substations.index.max() + 1
 
     # Filter substations based on their `LINES` attribute, check for location dupes
     hifld_substations.loc[const.substations_lines_filter_override, "LINES"] = None
-    substations = filter_substations_with_zero_lines(hifld_substations)
-    check_for_location_conflicts(substations)
+    check_for_location_conflicts(hifld_substations)
     # Append the proxy substations to the source data
-    substations = pd.concat([substations, pd.DataFrame(const.proxy_substations)])
+    substations = pd.concat([hifld_substations, proxy_substations])
     substations.index.name = "ID"
 
     # Filter out keyword arguments for filter_islands_and_connect_with_mst function
@@ -889,6 +969,9 @@ def build_transmission(method="line2sub", **kwargs):
             substations, hifld_lines, **kwargs
         )
 
+    # Add proxy lines
+    lines = add_proxy_lines(lines, substations, const.proxy_lines)
+    # Add lines required to connect islands
     lines, substations = filter_islands_and_connect_with_mst(
         lines, substations, **island_kwargs
     )
@@ -921,7 +1004,7 @@ def build_transmission(method="line2sub", **kwargs):
         ac_lines.apply(calculate_branch_mileage, axis=1)
         * transmission_const.kilometers_per_mile
     )
-    add_lines_impedances_ratings(ac_lines, const.line_design_assumptions)
+    add_lines_impedances_ratings(ac_lines, line_design_assumptions)
 
     # Create buses from lines
     bus = create_buses(ac_lines)

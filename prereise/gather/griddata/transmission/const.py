@@ -9,3 +9,4 @@ st_clair_power_approx_coeff = 43.261
 st_clair_power_approx_exponent = -0.6678
 
 kilometers_per_mile = 1.609344
+earth_radius_km = 6371

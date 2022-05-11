@@ -106,18 +106,21 @@ abv_state_neighbor = {
     "WY": ["CO", "ID", "MT", "NE", "SD", "UT"],
 }
 
-blob_paths = {
-    "eia_form860_2019_generator": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_1_Generator_Y2019_Operable.csv",
-    "eia_form860_2019_plant": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/2___Plant_Y2019.csv",
-    "eia_form860_2019_solar": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_3_Solar_Y2019_Operable.csv",
-    "eia_form860_2019_wind": "https://besciences.blob.core.windows.net/datasets/EIA_Form860/3_2_Wind_Y2019_Operable.csv",
-    "epa_ampd": "https://besciences.blob.core.windows.net/datasets/EPA_AMPD/",
-    "epa_needs": "https://besciences.blob.core.windows.net/datasets/EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
-    "substations": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Substations_Jul2020.csv",
-    "transmission_lines": "https://besciences.blob.core.windows.net/datasets/hifld/Electric_Power_Transmission_Lines_Jul2020.geojson.zip",
-    "us_counties": "https://besciences.blob.core.windows.net/datasets/geo_data/uscounties.csv",
-    "us_zips": "https://besciences.blob.core.windows.net/datasets/geo_data/uszips.csv",
+blob_path_base = "https://besciences.blob.core.windows.net/datasets"
+blob_subpaths = {
+    "eia_form860_2019_generator": "EIA_Form860/3_1_Generator_Y2019_Operable.csv",
+    "eia_form860_2019_plant": "EIA_Form860/2___Plant_Y2019.csv",
+    "eia_form860_2019_solar": "EIA_Form860/3_3_Solar_Y2019_Operable.csv",
+    "eia_form860_2019_wind": "EIA_Form860/3_2_Wind_Y2019_Operable.csv",
+    "epa_ampd": "EPA_AMPD/",
+    "epa_needs": "EPA_NEEDS/needs-v620_06-30-21-2_active.csv",
+    "substations": "hifld/Electric_Substations_Apr2022.csv",
+    "transmission_lines": "hifld/Electric_Power_Transmission_Lines_Apr2022.geojson.zip",
+    "us_counties": "geo_data/uscounties.csv",
+    "us_zips": "geo_data/uszips.csv",
 }
+blob_paths = {k: f"{blob_path_base}/{v}" for k, v in blob_subpaths.items()}
+
 eia_epa_crosswalk_path = "https://raw.githubusercontent.com/Breakthrough-Energy/camd-eia-crosswalk/master/epa_eia_crosswalk.csv"
 
 volt_class_defaults = {
@@ -449,13 +452,42 @@ contiguous_us_bounds = {
     "west": -125,
 }
 
-proxy_substations = [
-    {"LATITUDE": 35.0514, "LONGITUDE": -81.0694, "NAME": "Catawba", "STATE": "SC"},
+
+proxy_lines = [
     {
-        "LATITUDE": 44.2853,
-        "LONGITUDE": -105.3826,
-        "NAME": "Neil Simpson II",
-        "STATE": "WY",
+        "SUB_1_ID": 301352,
+        "SUB_2_ID": 308812,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 2,
+    },
+    {
+        "SUB_1_ID": 309418,
+        "SUB_2_ID": 308608,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 1,
+    },
+    {
+        "SUB_1_ID": 305043,
+        "SUB_2_ID": 308608,
+        "VOLTAGE": 138,
+        "circuits": 2,
+        "conductors": 1,
+    },
+    {
+        "SUB_1_ID": 304262,
+        "SUB_2_ID": 309953,
+        "VOLTAGE": 138,
+        "circuits": 1,
+        "conductors": 2,
+    },
+    {
+        "SUB_1_ID": 302011,
+        "SUB_2_ID": 307289,
+        "VOLTAGE": 230,
+        "circuits": 2,
+        "conductors": 2,
     },
 ]
 
@@ -485,13 +517,16 @@ seams_substations = {
     "east_ercot": {
         161924,  # Logansport, TX
         300490,  # Vernon, TX
+        301244,  # 'Martin Lakes', Dirgin, TX
         301314,  # Valley Lake, TX connection to OK
+        301390,  # Navasota, TX
         301729,  # Hawkins, TX
         302012,  # Vernon, TX
         302274,  # 'COTTONWOOD', Glenn, TX
         303004,  # Crowell, TX
         303646,  # San Augustine, TX
         303719,  # Big Sandy, TX
+        303946,  # Crockett, TX
         304100,  # Matador, TX
         304328,  # Midland, TX
         304477,  # Oklaunion substation (B2B)
@@ -501,7 +536,7 @@ seams_substations = {
         306058,  # Munday, TX
         306638,  # Pittsburg, TX
         306738,  # Henderson, TX
-        307121,  # Kirkland, TX
+        307121,  # 'TESLA', Kirkland, TX
         307363,  # Navasota, TX
         307539,  # Mt. Pleasant, TX
         307735,  # Shiro, TX
@@ -509,6 +544,7 @@ seams_substations = {
         308951,  # Beckville, TX
         308976,  # Dayton, TX
         309403,  # Kilgore, TX
+        309458,  # 'CIRRUS WIND', SE of Tahoka, TX
         310861,  # Overton, TX
         310879,  # Huntsville, TX
     },
@@ -561,52 +597,82 @@ line_interconnect_assumptions = {
         306885,
         310668,
         311279,
+        313416,
         311520,
+        313561,
+        313693,
+        313694,
     },
     "Western": {123525, 141873},
-    "ERCOT": {305330},
+    "ERCOT": {
+        300270,
+        300371,
+        300382,
+        300524,
+        301301,
+        301462,
+        301875,
+        302406,
+        302858,
+        302962,
+        303383,
+        303767,
+        303855,
+        304312,
+        305291,
+        305330,
+        305429,
+        305443,
+        305827,
+        306006,
+        306429,
+        306558,
+        306648,
+        306743,
+        306965,
+        307016,
+        307050,
+        308307,
+        308698,
+        309003,
+        309868,
+        310205,
+        310378,
+        310424,
+        310558,
+        310807,
+        310895,
+        310963,
+        311259,
+        311838,
+        311495,
+        311677,
+        311984,
+        312005,
+        312048,
+        312135,
+        312169,
+        312253,
+        312687,
+        313032,
+        313269,
+        315062,
+    },
 }
 
 line_voltage_assumptions = {
     128842: 230,
+    302300: 138,
+    307339: 138,
+    307571: 138,
+    308478: 138,
+    309857: 138,
+    309961: 138,
+    310327: 138,
+    310857: 138,
+    312844: 138,
 }
 
-line_design_assumptions = {
-    # branch index: (voltage, circuits, bundle count)
-    101536: (161, 2, 4),  # TVA Cumberland (between substations)
-    103726: (161, 2, 4),  # TVA Cumberland (plant to substation)
-    110220: (115, 1, 2),  # Riverside Generating Station
-    112166: (230, 1, 2),  # Waterford 3 Nuclear Generating Station
-    116493: (230, 1, 2),  # Herbert A. Wagner Generating Station
-    132671: (230, 1, 3),  # Florida Power & Light St. Lucie
-    130105: (161, 1, 3),  # TVA Cumberland (downstream)
-    132804: (230, 1, 2),  # Waterford 3 Nuclear Generating Station
-    139216: (230, 4, 3),  # Catawba Nuclear Station
-    140651: (230, 1, 3),  # Florida Power & Light St. Lucie
-    147054: (115, 1, 2),  # RE Ginna Nuclear Power Plant
-    158263: (100, 1, 4),  # G. G. Allen Steam Station
-    160723: (230, 1, 3),  # Florida Power & Light St. Lucie
-    203381: (230, 1, 2),  # Midpoint to Boise Bench
-    203382: (230, 1, 2),  # Midpoint to Boise Bench
-    203383: (230, 1, 2),  # Midpoint to Boise Bench
-    300029: (69, 2, 1),  # Ormat Brawley geothermal
-    301320: (138, 2, 2),  # Collin/Frisco substation connection
-    301847: (115, 1, 2),  # Coso Power Station
-    303557: (138, 2, 2),  # West Levee substations connection (Dallas)
-    304908: (69, 2, 1),  # Heber geothermal
-    305018: (138, 2, 2),  # TH Wharton Generating Station
-    305464: (230, 2, 2),  # The Geysers
-    305990: (100, 2, 1),  # southeast Salton Sea geothermal plants (several)
-    306949: (230, 2, 2),  # The Geysers
-    307569: (230, 2, 2),  # The Geysers
-    308434: (230, 2, 2),  # The Geysers
-    309268: (69, 2, 1),  # Ormat Brawley geothermal
-    309441: (69, 2, 2),  # substation connection near Lake Creek Reservoir, outside Waco
-    309966: (138, 2, 2),  # Garfield to Pilot Knob (south of Austin)
-    312241: (100, 2, 1),  # southeast Salton Sea geothermal plants (several)
-    313473: (69, 2, 2),  # Holtville geothermal?
-    313474: (69, 2, 2),  # Holtville geothermal?
-}
 
 b2b_ratings = {  # MW
     "BLACKWATER TIE": 200,  # a.k.a. 'Clovis'/'Roosevelt County' (Eastern/Western)

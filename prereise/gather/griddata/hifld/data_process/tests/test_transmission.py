@@ -262,11 +262,12 @@ def test_map_lines_to_substations_using_coords():
             "LONGITUDE": [-118.25, -80.2086, -71.0636, -122.3331, -122.3333],
             "TYPE": ["SUBSTATION"] * 5,
             "NAME": ["Los Angeles", "Miami", "Boston", "Seattle", "Seattle B"],
+            "STATE": ["CA", "FL", "MA", "WA", "WA"],
         },
         index=pd.Index([3, 4, 5, 6, 7], name="ID"),
     )
     # One line approximately connects Seattle and Miami
-    lines = pd.DataFrame({"COORDINATES": [[(47.61, -122.4), (25.7, -80.3)]]})
+    lines = pd.DataFrame({"COORDINATES": [[(47.61, -122.334), (25.775, -80.208)]]})
 
     # With default rounding (three decimal places)
     new_lines, new_substations = map_lines_to_substations_using_coords(
