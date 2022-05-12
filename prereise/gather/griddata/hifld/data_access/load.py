@@ -182,6 +182,7 @@ def get_hifld_electric_substations(path):
         pd.read_csv(path)
         .drop(columns=["OBJECTID"])
         .round({"MAX_VOLT": 3, "MIN_VOLT": 3})
+        .replace(to_replace={"ZIP": "NOT AVAILABLE"}, value=None)
     )
 
     return data.query(
