@@ -10,6 +10,9 @@ from scipy.spatial import KDTree
 from tqdm import tqdm
 
 from prereise.gather.griddata.hifld.const import abv_state_neighbor
+from prereise.gather.griddata.hifld.data_process.helpers import (
+    distribute_demand_from_zones_to_buses,
+)
 
 
 def min_dist_of_2_conn_comp(
@@ -319,3 +322,149 @@ def add_interconnects_by_connected_components(
         substations.loc[sorted_interconnects[i], "interconnect"] = name
         lines.loc[lines.SUB_1_ID.isin(sorted_interconnects[i]), "interconnect"] = name
     substations.drop(seams_substations, inplace=True)
+
+
+def find_descendants(graph, bctree, parent, grandparent, result=None):
+    """Given a graph and its block-cut tree representation, aggregate demand from leaves
+    towards root and identify capacity bottlenecks along the way.
+
+    :param networkx.Graph graph: original graph, where nodes have at least a 'demand'
+        attribute and edges have at least a 'capacity' attribute.
+    :param networkx.Graph bctree: block-cut tree representation of ``graph``, where
+        articulation point IDs are their original node ID and block ID are a frozenset
+        of the nodes within the block (including articulation points).
+    :param int/frozenset parent: a node ID within ``bctree`` to aggregate 'downstream'
+        demand for and to evaluate capacity constraints towards.
+    :param int/frozenset grandparent: a node ID within ``bctree`` which is directly
+        'upstream' of ``parent``, used to identify 'downstream' directions. If None is
+        passed, then ``parent`` is considered to be the 'root' node, i.e. all directions
+        are 'downstream'.
+    :param dict result: a dictionary to be used to store results. If None is passed, one
+        will be created.
+    :return: (*dict*) -- a dictionary of information for the ``parent`` node. Note: this
+        dictionary is the value of the ``parent`` key within the higher-level ``result``
+        dictionary.
+    """
+    if result is None:
+        result = {}
+    children = set(bctree[parent]) - {grandparent}
+    if isinstance(parent, int):
+        # parent is an articulation point, children are blocks
+        result[parent] = {
+            "descendants": set().union(*children) - {parent},
+            "demand": graph.nodes[parent]["demand"],
+        }
+    else:
+        # parent is a block, children are articulation points
+        result[parent] = {
+            "descendants": children.copy(),
+            "demand": sum(graph.nodes[p]["demand"] for p in parent),
+        }
+    for child in children:
+        # We need to find all descendants of the child to be able sum their demands
+        child_descendants = find_descendants(graph, bctree, child, parent, result)
+        result[(parent, child)] = {
+            "descendants": child_descendants["descendants"] - {parent},
+        }
+        result[parent]["descendants"] |= child_descendants["descendants"]
+        if isinstance(child, int):
+            # parent is a block, child is an articulation point
+            # downstream branches are connected to child and within parent
+            result[(parent, child)]["capacity"] = sum(
+                graph[child][n]["capacity"] for n in graph[child] if n in parent
+            )
+            result[(parent, child)]["demand"] = child_descendants["demand"]
+            # Avoid double-counting demand from the articulation point
+            result[parent]["demand"] += (
+                result[(parent, child)]["demand"] - graph.nodes[child]["demand"]
+            )
+        else:
+            # parent is an articulation point, child is a block
+            # downstream branches are connected to parent and within child
+            result[(parent, child)]["capacity"] = sum(
+                graph[parent][n]["capacity"] for n in graph[parent] if n in child
+            )
+            # We don't want to include the articulation point's demand
+            result[(parent, child)]["demand"] = (
+                child_descendants["demand"] - graph.nodes[parent]["demand"]
+            )
+            result[parent]["demand"] += result[(parent, child)]["demand"]
+
+    return result[parent]
+
+
+def identify_bottlenecks(branch, demand, root=None):
+    """Given a table of branch connectivity and capacities, and bus demands, identify
+    bottlenecks 'downstream' of the largest connected component
+
+    :param pandas.DataFrame branch: branch info, containing at least: 'from_bus_id',
+        'to_bus_id', and 'capacity' columns.
+    :param dict/pandas.Series demand: mapping of bus IDs to demand.
+    :param int/frozenset root: node to use as the root of the constructed BC tree. If
+        None, the largest connected component will be chosen.
+    :return: (*dict*) -- dictionary with keys:
+        - "all": a dictionary, keys are tuples of either (articulation point, block) or
+            (block, articulation point), values are dictionaries of information on that
+            potential constraints (keys of 'descendants', 'capacity', and 'demand').
+        - "constrained": a dictionary, keys and values are idenical to the 'all'
+            dictionary except that only entries where demand is greater than capacity
+            are contained.
+        - "root": the root node.
+    """
+    # Build transmission graph
+    sorted_buses = branch[["from_bus_id", "to_bus_id"]].apply(sorted, axis=1).map(tuple)
+    aggregated_capacity = branch.groupby(sorted_buses)["capacity"].sum()
+    aggregated_branch = pd.DataFrame(
+        aggregated_capacity.index.tolist(), columns=["bus1", "bus2"]
+    ).assign(capacity=aggregated_capacity.tolist())
+    graph = nx.convert_matrix.from_pandas_edgelist(
+        aggregated_branch, "bus1", "bus2", ["capacity"]
+    )
+    nx.set_node_attributes(graph, {k: {"demand": v} for k, v in demand.items()})
+    # Build block-cut graph of biconnected components
+    biconnected_components = list(
+        frozenset(s) for s in nx.algorithms.biconnected_components(graph)
+    )
+    articulation_points = list(nx.algorithms.articulation_points(graph))
+    bctree = nx.Graph()
+    bctree.add_nodes_from(articulation_points)
+    bctree.add_nodes_from(biconnected_components)
+    bctree.add_edges_from(
+        (a, b) for a in articulation_points for b in biconnected_components if a in b
+    )
+    # Using the largest component as the 'root', identify 'downstream' bottlenecks
+    if root is None:
+        root = frozenset(max(biconnected_components, key=len))
+    descendants = {}
+    find_descendants(graph, bctree, parent=root, grandparent=None, result=descendants)
+    # Filter out BC-tree node information, keep block/articulation pairs only
+    descendant_pairs = {k: v for k, v in descendants.items() if isinstance(k, tuple)}
+    # Identify pairs with capacity constraints
+    constrained_pairs = {
+        k: v for k, v in descendant_pairs.items() if v["demand"] > v["capacity"]
+    }
+    return {"all": descendant_pairs, "constrained": constrained_pairs, "root": root}
+
+
+def report_bottlenecks(branch, bus, zone_demand):
+    """Separate the full branch table by interconnect, and report bottlenecks for each.
+
+    :param pandas.DataFrame branch: full branch table.
+    :param pandas.DataFrame branch: full bus table.
+    :param dict/pandas.Series demand: mapping of demand for each bus.
+    """
+    bus_demand = distribute_demand_from_zones_to_buses(zone_demand, bus).max()
+    bottlenecks = {
+        interconnect: identify_bottlenecks(filtered_branch, bus_demand)
+        for interconnect, filtered_branch in branch.rename(
+            {"rateA": "capacity"}, axis=1
+        ).groupby("interconnect")
+    }
+    for interconnect, result in bottlenecks.items():
+        print("interconnect")
+        root = result["root"]
+        constrained = result["constrained"]
+        for (k1, k2), info in constrained.items():
+            k1 = "root" if k1 == root else k1 if isinstance(k1, int) else set(k1)
+            k2 = "root" if k2 == root else k2 if isinstance(k2, int) else set(k2)
+            print("from", k1, "to", f"{k2}:", info)
