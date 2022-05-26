@@ -1,3 +1,6 @@
+import calendar
+import os
+
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
@@ -89,3 +92,41 @@ def update_if_weekend(data: pd.DataFrame):
     data.loc[data["Day of Week"].isin(range(2, 7)), "If Weekend"] = 2
 
     return data
+
+
+def generate_daily_weighting(year, area_type="urban"):
+    """Generate daily weighting factors based on vehicle-miles-travelled distributions.
+
+    :param int/str year: year to generate weighting factors for.
+    :param str area_type: Either 'urban' or 'rural'.
+    :return: (*pandas.Series*) -- index is the day of the year, values are the fraction
+        of the year's vehicle miles travelled are estimated to occur in that day.
+    :raises ValueError: if ``area_type`` is neither 'urban' nor 'rural'.
+    """
+    allowable_area_types = {"urban", "rural"}
+    if area_type not in allowable_area_types:
+        raise ValueError(f"area_type must be one of {allowable_area_types}")
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    monthly_distribution = pd.read_csv(
+        os.path.join(data_dir, "moves_monthly.csv"), index_col=0
+    )
+    weekday_distribution = pd.read_csv(
+        os.path.join(data_dir, "moves_daily.csv"), index_col=0
+    )
+    weekday_distribution.loc["weekday"] /= 5  # normalize to each day within weekdays
+    weekday_distribution.loc["weekend"] /= 2  # normalize to each day within weekends
+    year_type = "leap_year" if calendar.isleap(int(year)) else "regular_year"
+    index = get_model_year_dti(year)
+    # Retrieve the appropriate day weighting value
+    daily_values = index.to_series().map(
+        lambda x: weekday_distribution.loc[
+            "weekday" if x.dayofweek < 5 else "weekend", area_type
+        ]
+    )
+    # Normalize each month so that it sums to 1, and multiply by each month's share
+    daily_values *= daily_values.index.month.map(
+        monthly_distribution[year_type]
+        / monthly_distribution[year_type].sum()  # correct for independent rounding
+        / daily_values.groupby(daily_values.index.month).sum()
+    )
+    return daily_values
