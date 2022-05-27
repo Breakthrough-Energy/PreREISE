@@ -132,30 +132,30 @@ def generate_daily_weighting(year, area_type="urban"):
     return daily_values
 def get_total_daily_vmt(
     data: pd.DataFrame,
-    data_day: np.array,
+    input_day,
+    daily_values
 ):
     """Calculates the total VMT and total vehicles for for each day of the model year,
     based on if the day is a weekend (1) or weekday (2).
 
     :param pandas.DataFrame data: the data returned from :func:`load_data`.
-    :param int comm_type: the type of Commute
-    :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, 5, or 6;
-        1-home only, 2-home and work related, 3-anywhere if possibile,
-        4-home and school only, 5-home and work and school, 6-only work
     :param numpy.ndarray input_day: day of the week for each day in the year derived from
         :func:`get_input_day`.
-    :param np.array data_day: indicates weekend or weekday for every day.
+    :param pandas.Series daily_values: daily weight factors returned from 
+        :func:`generate_daily_weighting`.
     :return: (*np.array*) -- an array where each element is the daily VMT and total
         vehicles for that day.
     """
     weekend_vmt = data.loc[data["If Weekend"] == 1, "Miles traveled"].sum()
     weekday_vmt = data.loc[data["If Weekend"] == 2, "Miles traveled"].sum()
 
-    weekend_total = np.sum(data_day == 1)
-    weekday_total = np.sum(data_day == 2)
+    annual_vmt = 0
+    for i in range(len(input_day)):
+        if input_day[i] == 1:
+            annual_vmt += weekend_vmt
+        elif input_day[i] == 2:
+            annual_vmt += weekday_vmt
 
-    daily_vmt_total = {
-        "weekend_vmt_total": (weekend_vmt, weekend_total),
-        "weekday_vmt_total": (weekday_vmt, weekday_total),
-    }
+    daily_vmt_total = daily_values * annual_vmt
+
     return daily_vmt_total
