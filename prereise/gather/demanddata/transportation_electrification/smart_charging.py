@@ -296,8 +296,7 @@ def smart_charging(
     TRANS_charge = np.zeros(24 * len(input_day))
     data_day = data_helper.get_data_day(newdata)
 
-    daily_vmt_total = data_helper.get_total_daily_vmt(newdata, data_day)
-    daily_vmt = {0: "weekend_vmt_total", 1: "weekday_vmt_total"}
+    daily_vmt_total = data_helper.get_total_daily_vmt(newdata, input_day, daily_values)
 
     kwh = kwhmi * veh_range
     emfacvmt = 758118400
@@ -322,9 +321,6 @@ def smart_charging(
 
         G2Vload = np.zeros((100, 48))
         individualG2Vload = np.zeros((nd_len, 48))
-
-        # used to indicate weekend or weekday for daily_vmt_total
-        flag = input_day[day_iter] - 1
 
         i = 0
 
@@ -451,7 +447,7 @@ def smart_charging(
                             cost += (
                                 tripload
                                 / 1000
-                                / daily_vmt_total[daily_vmt[flag]][0]
+                                / daily_vmt_total[day_iter]
                                 * emfacvmt
                             )[0, :]
 
@@ -499,12 +495,12 @@ def smart_charging(
             # MW
             TRANS_charge[day_iter * 24 :] += (
                 outputelectricload[:24]
-                / (daily_vmt_total[daily_vmt[flag]][0] * 1000)
+                / (daily_vmt_total[day_iter] * 1000)
                 * emfacvmt
             )
             TRANS_charge[:24] += (
                 outputelectricload[24:48]
-                / (daily_vmt_total[daily_vmt[flag]][0] * 1000)
+                / (daily_vmt_total[day_iter] * 1000)
                 * emfacvmt
             )
 
@@ -512,7 +508,7 @@ def smart_charging(
             # MW
             TRANS_charge[day_iter * 24 : day_iter * 24 + 48] += (
                 outputelectricload
-                / (daily_vmt_total[daily_vmt[flag]][0] * 1000)
+                / (daily_vmt_total[day_iter] * 1000)
                 * emfacvmt
             )
 
