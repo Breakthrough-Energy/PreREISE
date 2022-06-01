@@ -284,6 +284,19 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 load_temp_hr_heat["temp_c"], load_temp_hr_heat["load_mw"]
             )
 
+            lm_dark = LinearRegression().fit(
+                np.expand_dims(load_temp_hr_heat["hourly_dark_frac"], 1),
+                load_temp_hr_heat["load_mw"],
+            )
+
+            s_dark_only, i_heat_dark_only = (
+                lm_dark.coef_[0],
+                lm_dark.intercept_,
+            )
+
+            if s_heat > 0:
+                s_heat, s_dark, i_heat = 0, s_dark_only, i_heat_dark_only
+
             if (
                 s_dark < 0
                 or (
@@ -293,6 +306,9 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 < 0.3
             ):
                 s_dark, s_heat, i_heat = 0, s_heat_only, i_heat_only
+
+                if s_heat > 0:
+                    s_dark, s_heat, i_heat = 0, 0, np.mean(load_temp_hr_heat["load_mw"])
 
             load_temp_hr_cool["cool_load_mw"] = [
                 load_temp_hr_cool["load_mw"][j]
@@ -530,7 +546,7 @@ def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit):
             + s_cool_wb
             * (
                 temp_wb
-                - (db_wb_fit[0] * temp ** 2 + db_wb_fit[1] * temp + db_wb_fit[2])
+                - (db_wb_fit[0] * temp**2 + db_wb_fit[1] * temp + db_wb_fit[2])
             )
             + i_cool
         )
@@ -542,7 +558,7 @@ def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit):
             + s_cool_wb
             * (
                 temp_wb
-                - (db_wb_fit[0] * temp ** 2 + db_wb_fit[1] * temp + db_wb_fit[2])
+                - (db_wb_fit[0] * temp**2 + db_wb_fit[1] * temp + db_wb_fit[2])
             )
             + i_cool
         )

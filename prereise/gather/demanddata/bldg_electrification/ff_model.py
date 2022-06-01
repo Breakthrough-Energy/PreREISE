@@ -377,7 +377,7 @@ def adjust_puma_slopes(
         ls_args = (
             # Divide by 1000 for robust solver
             np.array(area_scale[clas]["hdd_normals_popwtd"]) / 1000,
-            np.array(area_scale[clas]["htg_slope_mmbtu_m2_degC_pophddwtd"]) * 10 ** 6,
+            np.array(area_scale[clas]["htg_slope_mmbtu_m2_degC_pophddwtd"]) * 10**6,
         )
         ls = least_squares(
             model,

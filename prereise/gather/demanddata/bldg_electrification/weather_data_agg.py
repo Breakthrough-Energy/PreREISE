@@ -189,7 +189,7 @@ def create_era5_pumas(
 
         # Create tracts values time series data frame with interpoltion using inverse distance-squared weighting for 4 nearest neighbors
         d, inds = tree_era5.query(np.column_stack((x_tracts, y_tracts, z_tracts)), k=4)
-        w = 1.0 / d ** 2
+        w = 1.0 / d**2
         vals_tracts = pd.Series(range(0, 8760)).apply(
             lambda x: pd.Series(
                 (w * ds_era5[variable_nc][x].values.flatten()[inds]).sum(axis=1)
