@@ -4,7 +4,9 @@ import pandas as pd
 
 
 def calculate_dwell_time(data: pd.DataFrame):
-    """Calculates the dwell time, how long a vehicle has been charging
+    """Calculates the dwell time, how long a vehicle has been charging. For the last
+    trip, dwell time is calculated based on the last trip's end time and the start
+    time of the first trip. This calculation handles when start times begin past 12AM.
 
     :param pandas.DataFrame data: the data to calculate the dwell time from
     :return: (*pandas.Series*) -- list of dwell times
@@ -14,10 +16,10 @@ def calculate_dwell_time(data: pd.DataFrame):
         - data["End time (hour decimal)"].iloc[:-1]
     )
     dwells.loc[data.index[-1]] = (
-        24
+        data["Start time (hour decimal)"].iloc[0]
         - data["End time (hour decimal)"].iloc[-1]
-        + data["Start time (hour decimal)"].iloc[0]
     )
+    dwells[dwells < 0] += 24
 
     return dwells
 
