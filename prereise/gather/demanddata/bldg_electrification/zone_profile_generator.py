@@ -44,14 +44,14 @@ def bkpt_scale(df, num_points, bkpt, heat_cool):
 def zone_shp_overlay(zone_name_shp):
     """Select pumas within a zonal load area
 
-    :param str zone_name_shp: name of zone in BA_map.shp
+    :param str zone_name_shp: name of zone in ba_area.shp
 
     :return: (*pandas.DataFrame*) puma_data_zone -- puma data of all pumas within zone, including fraction within zone
     """
 
     shapefile = gpd.GeoDataFrame(
         gpd.read_file(
-            os.path.join(os.path.dirname(__file__), "shapefiles", "BA_map.shp")
+            os.path.join(os.path.dirname(__file__), "shapefiles", "ba_area.shp")
         )
     )
     zone_shp = shapefile[shapefile["BA"] == zone_name_shp]
@@ -59,7 +59,8 @@ def zone_shp_overlay(zone_name_shp):
         gpd.read_file(
             os.path.join(os.path.dirname(__file__), "shapefiles", "pumas_overlay.shp")
         )
-    )
+    ).to_crs("EPSG:4269")
+    pumas_shp["area"] = pumas_shp["geometry"].to_crs({"proj": "cea"}).area
 
     puma_zone = gpd.overlay(pumas_shp, zone_shp.to_crs("EPSG:4269"))
     puma_zone["area"] = puma_zone["geometry"].to_crs({"proj": "cea"}).area
@@ -165,7 +166,7 @@ def zonal_data(puma_data, hours_utc):
         list(
             pd.Series(data=zone_states).apply(
                 lambda x: pd.read_csv(
-                    f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/temps/temps_pumas_{x}_{year}.csv"
+                    f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/{year}/temps/temps_pumas_{x}_{year}.csv"
                 ).T
             )
         )
@@ -174,7 +175,7 @@ def zonal_data(puma_data, hours_utc):
         list(
             pd.Series(data=zone_states).apply(
                 lambda x: pd.read_csv(
-                    f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/temps_wetbulb/temps_wetbulb_pumas_{x}_{year}.csv"
+                    f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/{year}/temps_wetbulb/temps_wetbulb_pumas_{x}_{year}.csv"
                 ).T
             )
         )
@@ -183,7 +184,7 @@ def zonal_data(puma_data, hours_utc):
         list(
             pd.Series(data=zone_states).apply(
                 lambda x: pd.read_csv(
-                    f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/dark_frac/dark_frac_pumas_{x}_{year}.csv"
+                    f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/{year}/dark_frac/dark_frac_pumas_{x}_{year}.csv"
                 ).T
             )
         )
@@ -753,20 +754,26 @@ if __name__ == "__main__":
         "LDWP",
         "TIDC",
         "BANC",
+        "ISNE-4000",
+        "ISNE-4001",
+        "ISNE-4002",
+        "ISNE-4003",
+        "ISNE-4004",
+        "ISNE-4005",
     ]
 
     zone_name_shps = [
-        "West",
-        "Genesee",
-        "Central",
-        "North",
-        "Mohawk Valley",
-        "Capital",
-        "Hudson Valley",
-        "Millwood",
-        "Dunwoodie",
-        "N.Y.C.",
-        "Long Island",
+        "NYISO-A",
+        "NYISO-B",
+        "NYISO-C",
+        "NYISO-D",
+        "NYISO-E",
+        "NYISO-F",
+        "NYISO-G",
+        "NYISO-H",
+        "NYISO-I",
+        "NYISO-J",
+        "NYISO-K",
         "ERCO-C",
         "ERCO-E",
         "ERCO-FW",
@@ -784,6 +791,12 @@ if __name__ == "__main__":
         "LADWP",
         "TID",
         "BANC",
+        "ISONE-Massachusetts",
+        "ISONE-Maine",
+        "ISONE-New Hampshire",
+        "ISONE-Vermont",
+        "ISONE-Connecticut",
+        "ISONE-Rhode Island",
     ]
 
     for i in range(len(zone_names)):
