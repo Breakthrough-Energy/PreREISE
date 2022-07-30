@@ -23,6 +23,7 @@ def append_rural_areas_to_urban(states, urban_areas):
     states = states.rename(columns={"STUSPS": "state"})
     states = states.loc[states["state"].isin(lower_48_states_abv)]
 
+    urban_areas.index = urban_areas["NAME10"]
     urban_areas["state"] = urban_areas["NAME10"].str[-2:]
     # this drops 66 out of 3601 rows
     urban_areas = urban_areas.loc[urban_areas["state"].isin(lower_48_states_abv)]
