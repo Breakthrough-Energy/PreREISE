@@ -29,3 +29,4 @@ pygrib = {version = "~=2.1.4", sys_platform = "!= 'win32'"}
 geopandas = "*"
 rtree = "~=1.0"
 shapely = "~=1.8"
+geopy = "~=2.0"
