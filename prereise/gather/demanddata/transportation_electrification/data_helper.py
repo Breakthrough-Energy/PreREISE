@@ -1,10 +1,13 @@
 import calendar
+import inspect
 import os
+import pathlib
 
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
+import prereise
 from prereise.gather.demanddata.transportation_electrification import const
 
 
@@ -51,10 +54,13 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
     """
     if not (1 <= census_region <= 9):
         raise ValueError("census_region must be between 1 and 9 (inclusive).")
-
-    nhts_census = loadmat(filepath)
-    raw_data = nhts_census[f"census_{census_region}_updated_dwell"]
-    return pd.DataFrame(raw_data, columns=const.nhts_census_column_names)
+    if pathlib.Path(filepath).suffix == ".csv":
+        census_data = pd.read_csv(filepath)
+    else:
+        nhts_census = loadmat(filepath)
+        raw_data = nhts_census[f"census_{census_region}_updated_dwell"]
+        census_data = pd.DataFrame(raw_data, columns=const.nhts_census_column_names)
+    return census_data
 
 
 def remove_ldt(data: pd.DataFrame):
@@ -111,7 +117,13 @@ def generate_daily_weighting(year, area_type="urban"):
     allowable_area_types = {"urban", "rural"}
     if area_type not in allowable_area_types:
         raise ValueError(f"area_type must be one of {allowable_area_types}")
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    data_dir = os.path.join(
+        os.path.dirname(inspect.getsourcefile(prereise)),
+        "gather",
+        "demanddata",
+        "transportation_electrification",
+        "data",
+    )
     monthly_distribution = pd.read_csv(
         os.path.join(data_dir, "moves_monthly.csv"), index_col=0
     )
