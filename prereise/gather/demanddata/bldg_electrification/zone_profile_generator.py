@@ -4,9 +4,8 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar  # noqa: N813
-from scipy.stats import linregress
-from sklearn.linear_model import LinearRegression
 
 from prereise.gather.demanddata.bldg_electrification import const
 
@@ -263,40 +262,44 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 load_temp_hr, numpoints, t_bph_start, "cool"
             )
 
-            lm_heat = LinearRegression().fit(
+            lm_heat = sm.OLS(
+                load_temp_hr_heat["load_mw"],
                 np.array(
                     [
                         [
                             load_temp_hr_heat["temp_c"][j],
                             load_temp_hr_heat["hourly_dark_frac"][j],
+                            1,
                         ]
                         for j in range(len(load_temp_hr_heat))
                     ]
                 ),
-                load_temp_hr_heat["load_mw"],
-            )
+            ).fit()
+
             s_heat, s_dark, i_heat = (
-                lm_heat.coef_[0],
-                lm_heat.coef_[1],
-                lm_heat.intercept_,
+                lm_heat.params[0],
+                lm_heat.params[1],
+                lm_heat.params[2],
             )
-
-            s_heat_only, i_heat_only, r_heat, pval_heat, stderr_heat = linregress(
-                load_temp_hr_heat["temp_c"], load_temp_hr_heat["load_mw"]
-            )
-
-            lm_dark = LinearRegression().fit(
-                np.expand_dims(load_temp_hr_heat["hourly_dark_frac"], 1),
-                load_temp_hr_heat["load_mw"],
-            )
-
-            s_dark_only, i_heat_dark_only = (
-                lm_dark.coef_[0],
-                lm_dark.intercept_,
+            s_heat_stderr, s_dark_stderr, n_heat, r_squared_heat = (
+                lm_heat.bse[0],
+                lm_heat.bse[1],
+                lm_heat.nobs,
+                lm_heat.rsquared,
             )
 
             if s_heat > 0:
-                s_heat, s_dark, i_heat = 0, s_dark_only, i_heat_dark_only
+                lm_heat = sm.OLS(
+                    load_temp_hr_heat["load_mw"],
+                    np.array(
+                        [
+                            [load_temp_hr_heat["hourly_dark_frac"][j], 1]
+                            for j in range(len(load_temp_hr_heat))
+                        ]
+                    ),
+                ).fit()
+
+                s_heat, s_dark, i_heat = (0, lm_heat.params[0], lm_heat.params[1])
 
             if (
                 s_dark < 0
@@ -306,10 +309,30 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 )
                 < 0.3
             ):
-                s_dark, s_heat, i_heat = 0, s_heat_only, i_heat_only
+                lm_heat = sm.OLS(
+                    load_temp_hr_heat["load_mw"],
+                    np.array(
+                        [
+                            [load_temp_hr_heat["temp_c"][j], 1]
+                            for j in range(len(load_temp_hr_heat))
+                        ]
+                    ),
+                ).fit()
+
+                s_dark, s_heat, i_heat = (0, lm_heat.params[0], lm_heat.params[1])
+                s_heat_stderr, s_dark_stderr, n_heat, r_squared_heat = (
+                    lm_heat.bse[0],
+                    0,
+                    lm_heat.nobs,
+                    lm_heat.rsquared,
+                )
 
                 if s_heat > 0:
-                    s_dark, s_heat, i_heat = 0, 0, np.mean(load_temp_hr_heat["load_mw"])
+                    lm_heat = sm.OLS(
+                        load_temp_hr_heat["load_mw"],
+                        np.array([[1] for j in range(len(load_temp_hr_heat))]),
+                    ).fit()
+                    s_dark, s_heat, i_heat = (0, 0, lm_heat.params[0])
 
             load_temp_hr_cool["cool_load_mw"] = [
                 load_temp_hr_cool["load_mw"][j]
@@ -324,23 +347,30 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 + db_wb_fit[2]
             )
 
-            lm_cool = LinearRegression().fit(
+            lm_cool = sm.OLS(
+                load_temp_hr_cool["cool_load_mw"],
                 np.array(
                     [
                         [
                             load_temp_hr_cool["temp_c"][i],
                             load_temp_hr_cool["temp_c_wb_diff"][i],
+                            1,
                         ]
                         for i in range(len(load_temp_hr_cool))
                     ]
                 ),
-                load_temp_hr_cool["cool_load_mw"],
-            )
+            ).fit()
+
             s_cool_db, s_cool_wb, i_cool = (
-                lm_cool.coef_[0],
-                lm_cool.coef_[1],
-                lm_cool.intercept_,
+                lm_cool.params[0],
+                lm_cool.params[1],
+                lm_cool.params[2],
             )
+
+            s_cool_db_stderr = lm_cool.bse[0]
+            s_cool_wb_stderr = lm_cool.bse[1]
+            n_cool = lm_cool.nobs
+            r_squared_cool = lm_cool.rsquared
 
             t_bph = -i_cool / s_cool_db if -i_cool / s_cool_db > t_bph else t_bph
 
@@ -369,14 +399,19 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 + load_temp_hr_heat["hourly_dark_frac"] * s_dark
                 + i_heat
             )
+            load_temp_hr_cool_plot = load_temp_hr_cool[
+                load_temp_hr_cool["temp_c"] >= t_bph
+            ]
+            load_temp_hr_cool_plot = load_temp_hr_cool_plot.reset_index(drop=True)
+
             cool_eqn = [
                 max(
-                    load_temp_hr_cool["temp_c"][i] * s_cool_db
+                    load_temp_hr_cool_plot["temp_c"][i] * s_cool_db
                     + (
-                        load_temp_hr_cool["temp_c_wb"][i]
+                        load_temp_hr_cool_plot["temp_c_wb"][i]
                         - (
-                            db_wb_fit[0] * load_temp_hr_cool["temp_c"][i] ** 2
-                            + db_wb_fit[1] * load_temp_hr_cool["temp_c"][i]
+                            db_wb_fit[0] * load_temp_hr_cool_plot["temp_c"][i] ** 2
+                            + db_wb_fit[1] * load_temp_hr_cool_plot["temp_c"][i]
                             + db_wb_fit[2]
                         )
                     )
@@ -385,9 +420,9 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                     0,
                 )
                 + t_bph * s_heat
-                + load_temp_hr_cool["hourly_dark_frac"][i] * s_dark
+                + load_temp_hr_cool_plot["hourly_dark_frac"][i] * s_dark
                 + i_heat
-                for i in range(len(load_temp_hr_cool))
+                for i in range(len(load_temp_hr_cool_plot))
             ]
             cool_func_eqn = [
                 max(
@@ -422,7 +457,7 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 plt.scatter(wk_graph["temp_c"], wk_graph["load_mw"], color="black")
 
                 plt.scatter(load_temp_hr_heat["temp_c"], heat_eqn, color="red")
-                plt.scatter(load_temp_hr_cool["temp_c"], cool_eqn, color="blue")
+                plt.scatter(load_temp_hr_cool_plot["temp_c"], cool_eqn, color="blue")
                 plt.scatter(
                     load_temp_hr_cool_func["temp_c"], cool_func_eqn, color="green"
                 )
@@ -453,18 +488,21 @@ def hourly_load_fit(load_temp_df, plot_boolean):
             mrae_heat = np.mean(
                 [
                     np.abs(heat_eqn[i] - load_temp_hr_heat["load_mw"][i])
+                    / load_temp_hr_heat["load_mw"][i]
                     for i in range(len(load_temp_hr_heat))
                 ]
             )
             mrae_cool = np.mean(
                 [
-                    np.abs(cool_eqn[i] - load_temp_hr_cool["load_mw"][i])
-                    for i in range(len(load_temp_hr_cool))
+                    np.abs(cool_eqn[i] - load_temp_hr_cool_plot["load_mw"][i])
+                    / load_temp_hr_cool_plot["load_mw"][i]
+                    for i in range(len(load_temp_hr_cool_plot))
                 ]
             )
             mrae_cool_func = np.mean(
                 [
                     np.abs(cool_func_eqn[i] - load_temp_hr_cool_func["load_mw"][i])
+                    / load_temp_hr_cool_func["load_mw"][i]
                     for i in range(len(load_temp_hr_cool_func))
                 ]
             )
@@ -478,9 +516,17 @@ def hourly_load_fit(load_temp_df, plot_boolean):
                 f"i.cool.{wk_wknd}": i_cool,
                 f"s.cool.{wk_wknd}.db": s_cool_db,
                 f"s.cool.{wk_wknd}.wb": s_cool_wb,
+                f"s.heat.stderr.{wk_wknd}": s_heat_stderr,
+                f"s.dark.stderr.{wk_wknd}": s_dark_stderr,
+                f"n.heat.{wk_wknd}": n_heat,
+                f"s.cool.db.stderr.{wk_wknd}": s_cool_db_stderr,
+                f"s.cool.wb.stderr.{wk_wknd}": s_cool_wb_stderr,
+                f"n.cool.{wk_wknd}": n_cool,
                 f"mrae.heat.{wk_wknd}.mw": mrae_heat,
                 f"mrae.cool.{wk_wknd}.mw": mrae_cool,
                 f"mrae.mid.{wk_wknd}.mw": mrae_cool_func,
+                f"r2.heat.{wk_wknd}": r_squared_heat,
+                f"r2.cool.{wk_wknd}": r_squared_cool,
             }
 
         return pd.Series({**result["wk"], **result["wknd"]})
@@ -634,9 +680,11 @@ def main(zone_name, zone_name_shp, base_year, year, plot_boolean=False):
     :param int year: profile year to calculate.
     :param boolean plot_boolean: whether or not create profile plots.
     """
+
     zone_load = pd.read_csv(
         f"https://besciences.blob.core.windows.net/datasets/bldg_el/zone_loads_{year}/{zone_name}_demand_{year}_UTC.csv"
     )["demand.mw"]
+
     hours_utc_base_year = pd.date_range(
         start=f"{base_year}-01-01", end=f"{base_year+1}-01-01", freq="H", tz="UTC"
     )[:-1]
