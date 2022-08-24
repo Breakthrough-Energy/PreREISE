@@ -80,6 +80,7 @@ conv_kw_to_mw = 1 / 1000  # Convert kW to MW
 conv_mmbtu_to_kwh = 293.0711  # Convert MMBtu (million Btu) to kWh
 conv_m2_to_ft2 = 1 / (0.3048**2)  # Convert square meters to square feet
 conv_ft2_to_bsf = 1 / (10**9)  # Convert square feet to billion square feet
+conv_mw_to_btu = 3412141  # Convert MW to Btu
 
 eff_htg_ff_base = 0.80  # Assumed efficiency of existing fossil fuel HTG
 eff_dhw_ff_base = 0.58  # Assumed efficiency of existing fossil fuel DHW
