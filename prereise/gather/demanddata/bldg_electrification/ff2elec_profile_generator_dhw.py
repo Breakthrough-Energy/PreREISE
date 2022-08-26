@@ -42,11 +42,11 @@ def func_dhw_cop(temp_c, model):
 os.makedirs("Profiles", exist_ok=True)
 
 
-def generate_profiles(yr_temps=2016, bldg_class="res", hp_model="advperfhp"):
+def generate_profiles(yr_temps=const.base_year, bldg_class="res", hp_model="advperfhp"):
     """Create time series for electricity loads from converting fossil fuel
     water heating to heat pump water heaters
 
-    :param int yr_temps: year for temperature. Default is 2016.
+    :param int yr_temps: year for temperature. Default is 2019.
     :param str bldg_class: type of building. Default is residential.
     :param str hp_model: type of heat pump. Default is advanced performance cold
         climate heat pump.

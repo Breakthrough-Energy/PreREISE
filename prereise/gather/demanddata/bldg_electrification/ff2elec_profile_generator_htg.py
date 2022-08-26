@@ -40,7 +40,7 @@ def _calculate_cop_base_cr_base(temp_c, model):
 
     for i, temp in enumerate(temp_k):
         if temp + b > 0:
-            cr_base[i] = a * np.log(temp) + c
+            cr_base[i] = a * np.log(temp + b) + c
         if temp > T2_K:
             cop_base[i] = ((COP1 - COP2) / (T1_K - T2_K)) * temp + (
                 COP2 * T1_K - COP1 * T2_K
