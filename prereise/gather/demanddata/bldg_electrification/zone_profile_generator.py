@@ -1,6 +1,5 @@
 import os
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -8,6 +7,10 @@ import statsmodels.api as sm
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar  # noqa: N813
 
 from prereise.gather.demanddata.bldg_electrification import const
+from prereise.gather.demanddata.bldg_electrification.helper import (
+    read_shapefile,
+    zone_shp_overlay,
+)
 
 
 def bkpt_scale(df, num_points, bkpt, heat_cool):
@@ -38,51 +41,6 @@ def bkpt_scale(df, num_points, bkpt, heat_cool):
         )
 
     return dft.sort_index(), bkpt
-
-
-def zone_shp_overlay(zone_name_shp):
-    """Select pumas within a zonal load area
-
-    :param str zone_name_shp: name of zone in ba_area.shp
-
-    :return: (*pandas.DataFrame*) puma_data_zone -- puma data of all pumas within zone, including fraction within zone
-    """
-
-    shapefile = gpd.GeoDataFrame(
-        gpd.read_file(
-            os.path.join(os.path.dirname(__file__), "shapefiles", "ba_area.shp")
-        )
-    )
-    zone_shp = shapefile[shapefile["BA"] == zone_name_shp]
-    pumas_shp = gpd.GeoDataFrame(
-        gpd.read_file(
-            os.path.join(os.path.dirname(__file__), "shapefiles", "pumas_overlay.shp")
-        )
-    ).to_crs("EPSG:4269")
-    pumas_shp["area"] = pumas_shp["geometry"].to_crs({"proj": "cea"}).area
-
-    puma_zone = gpd.overlay(pumas_shp, zone_shp.to_crs("EPSG:4269"))
-    puma_zone["area"] = puma_zone["geometry"].to_crs({"proj": "cea"}).area
-    puma_zone["puma"] = "puma_" + puma_zone["GEOID10"]
-
-    puma_zone["area_frac"] = [
-        puma_zone["area"][i]
-        / list(pumas_shp[pumas_shp["puma"] == puma_zone["puma"][i]]["area"])[0]
-        for i in range(len(puma_zone))
-    ]
-
-    puma_data_zone = pd.DataFrame(
-        {"puma": puma_zone["puma"], "frac_in_zone": puma_zone["area_frac"]}
-    )
-
-    puma_data = pd.read_csv(
-        os.path.join(os.path.dirname(__file__), "data", "puma_data.csv"),
-        index_col="puma",
-    )
-    puma_data_zone = puma_data_zone.join(puma_data, on="puma")
-    puma_data_zone = puma_data_zone.set_index("puma")
-
-    return puma_data_zone
 
 
 def zonal_data(puma_data, hours_utc):
@@ -693,7 +651,7 @@ def main(zone_name, zone_name_shp, base_year, year, plot_boolean=False):
         start=f"{year}-01-01", end=f"{year+1}-01-01", freq="H", tz="UTC"
     )[:-1]
 
-    puma_data_zone = zone_shp_overlay(zone_name_shp)
+    puma_data_zone = zone_shp_overlay(zone_name_shp, zone_shp, pumas_shp)
 
     temp_df_base_year, stats_base_year = zonal_data(puma_data_zone, hours_utc_base_year)
 
@@ -846,6 +804,9 @@ if __name__ == "__main__":
         "ISONE-Connecticut",
         "ISONE-Rhode Island",
     ]
+
+    zone_shp = read_shapefile("shapefiles", "ba_area.shp")
+    pumas_shp = read_shapefile("shapefiles", "pumas_overlay.shp")
 
     for i in range(len(zone_names)):
         zone_name, zone_name_shp = zone_names[i], zone_name_shps[i]

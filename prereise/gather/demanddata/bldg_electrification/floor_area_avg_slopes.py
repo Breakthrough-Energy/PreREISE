@@ -1,28 +1,32 @@
 import os
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from zone_profile_generator import zone_shp_overlay
 
 from prereise.gather.demanddata.bldg_electrification import const
+from prereise.gather.demanddata.bldg_electrification.helper import (
+    read_shapefile,
+    state_shp_overlay,
+    zone_shp_overlay,
+)
 
 
-def get_zone_floor_area(iso):
+def get_zone_floor_area(iso, zone_shp, pumas_shp):
     """Computes the zone floor area for each ISO.
 
     :param str iso: abbrev. name of ISO.
+    :param geopandas.GeoDataFrame zone_shp: geo data frame of zone(BA) shape file
+    :param geopandas.GeoDataFrame pumas_shp: geo data frame of pumas shape file
     :return: (*pandas.DataFrame*) -- Floor area in square meters for all the zones
         with breakdowns of residential, commercial, total heated and total cooled
 
     .. note:: zone floor area in square meters saved as csv into Profiles/result_stats
     """
-
     zone_floor_area = pd.DataFrame()
     for zone in zone_names[iso]:
         puma_data_zone = zone_shp_overlay(
-            zone_name_shps[iso][zone_names[iso].index(zone)]
+            zone_name_shps[iso][zone_names[iso].index(zone)], zone_shp, pumas_shp
         )
         puma_data_zone = puma_data_zone[~(puma_data_zone["frac_in_zone"] < 0.05)]
 
@@ -90,54 +94,20 @@ def get_zone_floor_area(iso):
     return zone_floor_area
 
 
-def state_shp_overlay(state):
-    """Select load zones within a state
-
-    :param str state: abbrev. of state
-    :return: (*geopandas.GeoDataFrame*) -- state boundaries and load zones within it
-    """
-    state_shapefile = gpd.GeoDataFrame(
-        gpd.read_file(
-            os.path.join(
-                os.path.dirname(__file__), "shapefiles", "cb_2018_us_state_20m.shp"
-            )
-        )
-    )
-
-    state_shp = state_shapefile[state_shapefile["STUSPS"] == state]
-
-    zone_shp = gpd.GeoDataFrame(
-        gpd.read_file(
-            os.path.join(os.path.dirname(__file__), "shapefiles", "ba_area.shp")
-        )
-    ).to_crs("EPSG:4269")
-
-    zone_shp["area"] = zone_shp["geometry"].to_crs({"proj": "cea"}).area
-
-    zone_state = gpd.overlay(zone_shp, state_shp.to_crs("EPSG:4269"))
-    zone_state["area"] = zone_state["geometry"].to_crs({"proj": "cea"}).area
-    zone_state["area_frac"] = [
-        zone_state["area"][i]
-        / list(zone_shp[zone_shp["BA"] == zone_state["BA"][i]]["area"])[0]
-        for i in range(len(zone_state))
-    ]
-    zone_state.loc[zone_state["area_frac"] >= 0.99, "area_frac"] = 1
-    zone_state = zone_state.drop(zone_state[zone_state["area_frac"] <= 0.00001].index)
-
-    return zone_state
-
-
-def main_plots(iso, plot_show=True):
+def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
     """Creats floor area avraged slopes for all zones within the ISO for one year.
 
     :param str iso: abbrev. name of ISO.
+    :param geopandas.GeoDataFrame zone_shape: geo data frame of zone(BA) shape file
+    :param geopandas.GeoDataFrame pumas_shp: geo data frame of pumas shape file
+    :param geopandas.GeoDataFrame state_shp: geo data frame of state shape file
     :param bool plot_show: show the plot or not, default to True.
 
     .. note:: Floor area avg. heating and cooling slope, error and map plots for all
         zones in each ISO saved as png and csv into Profiles/result_stats/hourly_plots
     """
 
-    zone_floor_area = get_zone_floor_area(iso)
+    zone_floor_area = get_zone_floor_area(iso, zone_shape, pumas_shp)
 
     # Slope plots for all zones in each ISO in btu/m2/C
 
@@ -440,7 +410,7 @@ def main_plots(iso, plot_show=True):
         ]:
             zone_shp = zone_shp.append(i)
     else:
-        zone_shp = state_shp_overlay(iso)
+        zone_shp = state_shp_overlay(iso, state_shp, zone_shape)
 
     zone_shp.index = zone_shp["BA"]
 
@@ -502,12 +472,16 @@ if __name__ == "__main__":
         exist_ok=True,
     )
 
-    zone_shp_ma = state_shp_overlay("MA")
-    zone_shp_me = state_shp_overlay("ME")
-    zone_shp_nh = state_shp_overlay("NH")
-    zone_shp_vt = state_shp_overlay("VT")
-    zone_shp_ct = state_shp_overlay("CT")
-    zone_shp_ri = state_shp_overlay("RI")
+    zone_shape = read_shapefile("shapefiles", "ba_area.shp")
+    pumas_shp = read_shapefile("shapefiles", "pumas_overlay.shp")
+    state_shp = read_shapefile("shapefiles", "cb_2018_us_state_20m.shp")
+
+    zone_shp_ma = state_shp_overlay("MA", state_shp, zone_shape)
+    zone_shp_me = state_shp_overlay("ME", state_shp, zone_shape)
+    zone_shp_nh = state_shp_overlay("NH", state_shp, zone_shape)
+    zone_shp_vt = state_shp_overlay("VT", state_shp, zone_shape)
+    zone_shp_ct = state_shp_overlay("CT", state_shp, zone_shape)
+    zone_shp_ri = state_shp_overlay("RI", state_shp, zone_shape)
 
     zone_names = {
         "NY": [
@@ -608,4 +582,4 @@ if __name__ == "__main__":
     base_year = const.base_year
 
     for iso in ["NY", "TX", "CA", "NE"]:
-        main_plots(iso)
+        main_plots(iso, zone_shape, pumas_shp, state_shp)
