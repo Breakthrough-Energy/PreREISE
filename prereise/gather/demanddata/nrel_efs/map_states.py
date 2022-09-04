@@ -2,13 +2,14 @@ from collections import defaultdict
 
 import pandas as pd
 from powersimdata.input.grid import Grid
-from powersimdata.network.usa_tamu.constants.zones import (
-    abv2id,
-    abv2state,
-    id2abv,
-    id2timezone,
-    interconnect2id,
-)
+from powersimdata.network.model import ModelImmutables
+
+mi = ModelImmutables("usa_tamu")
+abv2id = mi.zones["abv2id"]
+abv2state = mi.zones["abv2state"]
+id2abv = mi.zones["id2abv"]
+id2timezone = mi.zones["id2timezone"]
+interconnect2id = mi.zones["interconnect2id"]
 
 
 def decompose_demand_profile_by_state_to_loadzone(

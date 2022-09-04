@@ -1,11 +1,15 @@
 import pandas as pd
 from pandas.testing import assert_series_equal
-from powersimdata.network.usa_tamu.constants.zones import abv2state, id2abv
+from powersimdata.network.model import ModelImmutables
 
 from prereise.gather.demanddata.nrel_efs.map_states import (
     decompose_demand_profile_by_state_to_loadzone,
     shift_local_time_by_loadzone_to_utc,
 )
+
+mi = ModelImmutables("usa_tamu")
+abv2state = mi.zones["abv2state"]
+id2abv = mi.zones["id2abv"]
 
 
 def test_decompose_demand_profile_by_state_to_loadzone():

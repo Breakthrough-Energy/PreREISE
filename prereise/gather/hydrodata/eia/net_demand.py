@@ -1,8 +1,11 @@
 from powersimdata.input.grid import Grid
 from powersimdata.input.transform_profile import TransformProfile
-from powersimdata.network.usa_tamu.constants.zones import abv2loadzone
+from powersimdata.network.model import ModelImmutables
 from powersimdata.scenario.analyze import Analyze
 from powersimdata.scenario.scenario import Scenario
+
+mi = ModelImmutables("usa_tamu")
+abv2loadzone = mi.zones["abv2loadzone"]
 
 
 def get_net_demand_profile(

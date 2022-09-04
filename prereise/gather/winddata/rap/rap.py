@@ -4,7 +4,7 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 from netCDF4 import Dataset
-from powersimdata.network.usa_tamu.constants.zones import id2abv
+from powersimdata.network.model import ModelImmutables
 from powersimdata.utility.distance import angular_distance, ll2uv
 from tqdm import tqdm
 
@@ -14,6 +14,9 @@ from prereise.gather.winddata.power_curves import (
     get_turbine_power_curves,
 )
 from prereise.gather.winddata.rap.noaa_api import NoaaApi
+
+mi = ModelImmutables("usa_tamu")
+id2abv = mi.zones["id2abv"]
 
 
 def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
