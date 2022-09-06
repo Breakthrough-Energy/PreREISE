@@ -12,10 +12,9 @@ from prereise.gather.winddata.hrrr.helpers import (
 
 class HrrrApi:
     """Class to interact with to get and download HRRR data. More information
-    about HRRR data can be found at
-    `this link <https://registry.opendata.aws/noaa-hrrr-pds/>`_
-    and
-    `this link <https://www.nco.ncep.noaa.gov/pmb/products/hrrr/>`_
+    about HRRR data can be found at `this link
+    <https://registry.opendata.aws/noaa-hrrr-pds/>`_ and `this link
+    <https://www.nco.ncep.noaa.gov/pmb/products/hrrr/>`_
 
     :param prereise.gather.winddata.hrrr.downloader.Downloader downloader: class
         that holds helper functions for downloading
@@ -50,18 +49,18 @@ class HrrrApi:
         self, start_dt, end_dt, directory, product, selectors=None
     ):
         """Iterates from a start datetime (inclusive) to a end datetime (inclusive)
-        at 1 hour steps, downloading data for each intermediary datetime into
-        the directory provided. product and selectors variables are used
-        to control what specific type of data to download. See
-        `this link <https://www.nco.ncep.noaa.gov/pmb/products/hrrr/>`_ to understand
-        more about product and
-        `this link <https://github.com/blaylockbk/Herbie/blob/18945e4c5103386c98d08dcb2de590e2ac14c3d5/docs/user_guide/grib2.rst#how-grib-subsetting-works-in-herbie>`_
-        to understand more about what kind of strings can be passed into selectors
+        at 1 hour steps, downloading data for each intermediary datetime into the
+        directory provided. product and selectors variables are used to control what
+        specific type of data to download. See `this link
+        <https://www.nco.ncep.noaa.gov/pmb/products/hrrr/>`_ to understand more about
+        product and `this link <https://github.com/blaylockbk/Herbie/blob/18945e4c5103386c98d08dcb2de590e2ac14c3d5/docs/user_guide/grib2.rst#how-grib-subsetting-works-in-herbie>`_ to understand more about what kind of strings can
+        be passed into selectors
 
         :param datetime.datetime start_dt: datetime to start at
         :param datetime.datetime end_dt: datetime to end at
         :param str directory: file directory to download data into
-        :param str product: info at `this link <https://www.nco.ncep.noaa.gov/pmb/products/hrrr/>`_
+        :param str product: info at `this link
+            <https://www.nco.ncep.noaa.gov/pmb/products/hrrr/>`_
         :param list selectors: list of strings that can be used to narrow down
             the amount of data downloaded from a specific GRIB file.
         """
@@ -99,10 +98,10 @@ class HrrrApi:
                         )
 
     def download_wind_data(self, start_dt, end_dt, directory):
-        """See :meth:`download_meteorological_data`
-        for more information. Default product used is "sfc" which represents
-        2D Surface Levels, and the selectors used filter specifically for
-        U component and V component of wind at 80 meters above ground.
+        """See :meth:`download_meteorological_data` for more information. Default
+        product used is "sfc" which represents 2D Surface Levels, and the selectors
+        used filter specifically for U component and V component of wind at 80 meters
+        above ground.
 
         :param datetime.datetime start_dt: datetime to start at
         :param datetime.datetime end_dt: datetime to end at

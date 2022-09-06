@@ -54,7 +54,7 @@ def translate_to_per_unit(x, nominal_unit, z_base):
     :param int/float x: value to be converted.
     :param str nominal_unit: the units of ``x``.
     :param int/float z_base: base impedance (can be calculated with
-        :func:`calculate_z_base').
+        :func:`calculate_z_base`).
     :return: (*float*) -- per-unit value.
     :raises ValueError: if the nominal unit isn't recognized.
     """
