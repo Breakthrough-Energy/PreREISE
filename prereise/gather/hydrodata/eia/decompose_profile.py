@@ -1,6 +1,10 @@
 import pandas as pd
 from powersimdata.input.grid import Grid
-from powersimdata.network.usa_tamu.constants.zones import abv2interconnect, abv2loadzone
+from powersimdata.network.model import ModelImmutables
+
+mi = ModelImmutables("usa_tamu")
+abv2interconnect = mi.zones["abv2interconnect"]
+abv2loadzone = mi.zones["abv2loadzone"]
 
 
 def get_profile_by_state(profile, state, grid=None):

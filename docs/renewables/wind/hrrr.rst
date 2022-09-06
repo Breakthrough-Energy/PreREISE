@@ -1,5 +1,5 @@
 High-Resolution Rapid Refresh
-#############
+#############################
 The `HRRR`_ (High-Resolution Rapid Refresh) is a NOAA real-time 3-km resolution,
 hourly updated, cloud-resolving, convection-allowing atmospheric model, initialized by
 3km grids with 3km radar assimilation. Radar data is assimilated in the HRRR every 15 min
