@@ -43,6 +43,48 @@ def get_data_day(data: pd.DataFrame):
     return np.array(data["If Weekend"])
 
 
+def get_kwhmi(model_year, veh_type, veh_range):
+    """Get the fuel efficiency value based on the model year and vehicle type.
+
+    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
+    :param str veh_type: determine which category (MDV, HDV, or Transit) to produce
+        a fuel efficiency value for.
+    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
+    :return: (*float*) -- fuel efficiency value from the Fuel_efficiencies.csv
+    :raises ValueError: if ``veh_range`` is not 100, 200, or 300 and if ``veh_type``
+        is not 'LDT', 'LDV', 'MDV', 'HDV', or 'Transit
+    """
+    allowable_vehicle_types = {"LDT", "LDV", "MDV", "HDV", "Transit"}
+    allowable_ranges = {100, 200, 300}
+
+    if veh_range not in allowable_ranges:
+        raise ValueError(f"veh_range must be one of {allowable_ranges}")
+
+    filepath = os.path.join(
+        os.path.dirname(inspect.getsourcefile(prereise)),
+        "gather",
+        "demanddata",
+        "transportation_electrification",
+        "data",
+        "Fuel_Efficiencies.csv",
+    )
+    data = pd.read_csv(filepath, index_col="veh_type")
+
+    if (veh_type.upper() == "LDV") or (veh_type.upper() == "LDT"):
+        kwhmi = data.loc[f"{veh_type.upper()}_{veh_range}", model_year]
+
+    elif (veh_type.upper() == "MDV") or (veh_type.upper() == "HDV"):
+        kwhmi = data.loc[f"{veh_type.upper()}", str(model_year)]
+
+    elif veh_type == "Transit":
+        kwhmi = data.loc[f"{veh_type}", str(model_year)]
+
+    else:
+        raise ValueError(f"veh_type must be one of {allowable_vehicle_types}")
+
+    return kwhmi
+
+
 def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
     """Load the data at nhts_census.mat.
 
@@ -61,6 +103,112 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
         raw_data = nhts_census[f"census_{census_region}_updated_dwell"]
         census_data = pd.DataFrame(raw_data, columns=const.nhts_census_column_names)
     return census_data
+
+
+def load_hdv_data(veh_type, filepath: str = "fdata_v10st.mat"):
+    """Load the data at fdata_v10st.mat.
+
+    :param str filepath: the path to the matfile.
+    :return: (*pandas.DataFrame*) -- the data loaded from fdata_v10st.mat, with column
+        names added.
+    """
+
+    hdv_data = loadmat(filepath)
+    raw_data = hdv_data[f"{veh_type}_data"]
+
+    return pd.DataFrame(raw_data, columns=const.hdv_data_column_names)
+
+
+def load_urbanized_scaling_factor(
+    model_year,
+    veh_type,
+    veh_range,
+    urbanized_area,
+    state,
+    filepath="Regional_scaling_factors_UA_",
+):
+    """Load the scaling factor for urbanized areas based on model year and vehicle
+    type for the inputted urbanized area and state.
+
+    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
+    :param str veh_type: determine which category (MDV, HDV, or Transit) to produce
+        a fuel efficiency value for.
+    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
+    :param str urbanized_area: name of urbanized area or city.
+    :param str state: the US state the inputted urbanized area is in.
+    :param str filepath: the path to the csv.
+    :return: (*int/float*) -- scaling factor value from the Regional_scaling_factors_UA_{model_year}.csv
+    :raises ValueError: if ``veh_range`` is not 100, 200, or 300 and if ``veh_type``
+        is not 'LDT', 'LDV', 'MDV', 'HDV', or 'Transit
+    """
+    allowable_vehicle_types = {"LDT", "LDV", "MDV", "HDV", "Transit"}
+    allowable_ranges = {100, 200, 300}
+
+    if veh_range not in allowable_ranges:
+        raise ValueError(f"veh_range must be one of {allowable_ranges}")
+
+    data = pd.read_csv(filepath + str(model_year) + ".csv", index_col=["UA", "State"])
+
+    if veh_type.upper() == "LDV":
+        bev_vmt = data.loc[
+            (urbanized_area, state), f"{veh_type.upper()} Car - {veh_range} mi"
+        ]
+
+    elif veh_type.upper() == "LDT":
+        bev_vmt = data.loc[(urbanized_area, state), f"LDV Truck - {veh_range} mi"]
+
+    elif (veh_type.upper() == "MDV") or (veh_type.upper() == "HDV"):
+        bev_vmt = data.loc[(urbanized_area, state), f"{veh_type.upper()} Truck"]
+
+    elif veh_type == "Transit":
+        bev_vmt = data.loc[(urbanized_area, state), f"{veh_type} Bus"]
+
+    else:
+        raise ValueError(f"veh_type must be one of {allowable_vehicle_types}")
+
+    return bev_vmt
+
+
+def load_rural_scaling_factor(
+    model_year, veh_type, veh_range, state, filepath="Regional_scaling_factors_RA_"
+):
+    """Load the scaling factor for rural areas based on model year and vehicle
+    type for the inputted state.
+
+    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
+    :param str veh_type: determine which category (MDV, HDV, or Transit) to produce
+        a fuel efficiency value for.
+    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
+    :param str state: the US state the inputted urbanized area is in.
+    :param str filepath: the path to the csv.
+    :return: (*int/float*) -- scaling factor value from the Regional_scaling_factors_RA_{model_year}.csv
+    :raises ValueError: if ``veh_range`` is not 100, 200, or 300 and if ``veh_type``
+        is not 'LDT', 'LDV', 'MDV', 'HDV', or 'Transit
+    """
+    allowable_vehicle_types = {"LDT", "LDV", "MDV", "HDV", "Transit"}
+    allowable_ranges = {100, 200, 300}
+
+    if veh_range not in allowable_ranges:
+        raise ValueError(f"veh_range must be one of {allowable_ranges}")
+
+    data = pd.read_csv(filepath + str(model_year) + ".csv", index_col=["State"])
+
+    if veh_type.upper() == "LDV":
+        bev_vmt = data.loc[state.upper(), f"{veh_type.upper()} Car - {veh_range} mi"]
+
+    elif veh_type.upper() == "LDT":
+        bev_vmt = data.loc[state.upper(), f"LDV Truck - {veh_range} mi"]
+
+    elif (veh_type.upper() == "MDV") or (veh_type.upper() == "HDV"):
+        bev_vmt = data.loc[state.upper(), f"{veh_type.upper()} Truck"]
+
+    elif veh_type == "Transit":
+        bev_vmt = data.loc[state.upper(), f"{veh_type} Bus"]
+
+    else:
+        raise ValueError(f"veh_type must be one of {allowable_vehicle_types}")
+
+    return bev_vmt
 
 
 def remove_ldt(data: pd.DataFrame):
@@ -172,5 +320,23 @@ def get_total_daily_vmt(data: pd.DataFrame, input_day, daily_values):
             annual_vmt += weekday_vmt
 
     daily_vmt_total = daily_values * annual_vmt
+
+    return daily_vmt_total
+
+
+def get_hdv_daily_vmt_total(
+    data: pd.DataFrame,
+):
+    """Calculates the total VMT and total vehicles for for each day of the model year,
+    based on if the day is a weekend (1) or weekday (2).
+
+    :param pandas.DataFrame data: the data returned from :func:`load_data`.
+    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
+    :return: (*np.array*) -- an array where each element is the daily VMT and total
+        vehicles for that day.
+    """
+
+    range_vmt = data["Trip Distance"].copy()
+    daily_vmt_total = sum(range_vmt) * np.ones(365)
 
     return daily_vmt_total
