@@ -202,7 +202,7 @@ def immediate_charging(
     return summed_profile
 
 
-def adjust_BEV(hourly_profile, adjustment_values):  # noqa: N802
+def adjust_bev(hourly_profile, adjustment_values):  # noqa: N802
     """Adjusts the charging profiles by applying weighting factors based on
     seasonal/monthly values
 

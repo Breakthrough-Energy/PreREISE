@@ -31,6 +31,22 @@ nhts_census_column_names = [
     "total vehicle miles traveled",
 ]
 
+hdv_data_column_names = [
+    "Vehicle Number",
+    "Trip Number",
+    "Home base end (1/0)",
+    "Destination from",
+    "Destination to",
+    "Trip Distance",
+    "Trip Start",
+    "Trip End",
+    "Dwell Time",
+    "Trip Time",
+    "Speed",
+    "Total Vehicle Trips",
+    "Total Vehicle Miles",
+]
+
 # from grid to battery efficiency
 charging_efficiency = 0.9
 
