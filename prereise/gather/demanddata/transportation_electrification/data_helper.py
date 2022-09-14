@@ -105,7 +105,17 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
     return census_data
 
 
-def load_hdv_data(veh_type, filepath: str = "fdata_v10st.mat"):
+def load_hdv_data(
+    veh_type,
+    filepath=os.path.join(
+        os.path.dirname(inspect.getsourcefile(prereise)),
+        "gather",
+        "demanddata",
+        "transportation_electrification",
+        "data",
+        "fdata_v10st.mat",
+    ),
+):
     """Load the data at fdata_v10st.mat.
 
     :param str filepath: the path to the matfile.
