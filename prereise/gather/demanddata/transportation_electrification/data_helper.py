@@ -324,19 +324,22 @@ def get_total_daily_vmt(data: pd.DataFrame, input_day, daily_values):
     return daily_vmt_total
 
 
-def get_hdv_daily_vmt_total(
-    data: pd.DataFrame,
-):
+def get_total_hdv_daily_vmt(data: pd.DataFrame, veh_range):
     """Calculates the total VMT and total vehicles for for each day of the model year,
-    based on if the day is a weekend (1) or weekday (2).
+    based on vehicle range.
 
     :param pandas.DataFrame data: the data returned from :func:`load_data`.
     :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
     :return: (*np.array*) -- an array where each element is the daily VMT and total
         vehicles for that day.
+    :raises ValueError: if ``veh_range`` is not 100, 200, or 300
     """
+    allowable_ranges = {100, 200, 300}
+    if veh_range not in allowable_ranges:
+        raise ValueError(f"veh_range must be one of {allowable_ranges}")
 
     range_vmt = data["Trip Distance"].copy()
+    range_vmt[data["Total Vehicle Miles"] > veh_range] = 0
     daily_vmt_total = sum(range_vmt) * np.ones(365)
 
     return daily_vmt_total
