@@ -10,7 +10,16 @@ from prereise.gather.demanddata.transportation_electrification import (
     dwelling,
 )
 
-def get_constraints(constraints_df, kwhmi, power, trip_strategy, location_strategy):
+
+def get_constraints(
+    constraints_df,
+    kwhmi,
+    power,
+    trip_strategy,
+    location_strategy,
+    location_allowed,
+    charging_efficiency,
+):
     """Determine the consumption and charging constraints for each trip (hour segment)
 
     :param pandas.DataFrame constraints_df: trip data of vehicles for optimization constraints
@@ -22,6 +31,7 @@ def get_constraints(constraints_df, kwhmi, power, trip_strategy, location_strate
         1-home only, 2-home and work related, 3-anywhere if possibile,
         4-home and school only, 5-home and work and school, 6-only work
     :param Dict[int, Set[int]] location_allowed:
+    :param float charging_efficiency: from grid to battery efficiency.
     :return: (*pandas.DataFrame*) -- a DataFrame adding the calculated constraints
         to an individual vehicle's data
     """
@@ -82,9 +92,9 @@ def get_constraints(constraints_df, kwhmi, power, trip_strategy, location_strate
         lambda d: dwelling.get_energy_limit(
             d["power"],
             d["seg"],
-            const.charging_efficiency,
             d["trip_end"],
             d["dwell_time"],
+            charging_efficiency,
         ),
         axis=1,
     )
@@ -93,7 +103,15 @@ def get_constraints(constraints_df, kwhmi, power, trip_strategy, location_strate
 
 
 def calculate_optimization(
-    charging_consumption, rates, elimit, seg, segsum, segcum, total_trips, kwh
+    charging_consumption,
+    rates,
+    elimit,
+    seg,
+    segsum,
+    segcum,
+    total_trips,
+    kwh,
+    charging_efficiency,
 ):
     """Calculates the minimized charging cost during a specific dwelling activity
 
@@ -105,9 +123,10 @@ def calculate_optimization(
     :param list segcum: cumulative sum of the segments
     :param int total_trips: total number of trips for the current vehicle
     :param float kwh: kwhmi * veh_range, amount of energy needed to charge vehicle.
+    :param float charging_efficiency: from grid to battery efficiency.
     :return: (*dict*) -- contains the necessary inputs for the linprog optimization
     """
-    f = np.array(rates) / const.charging_efficiency
+    f = np.array(rates) / charging_efficiency
 
     # form all the constraints
     # equality constraint
