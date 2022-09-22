@@ -10,51 +10,6 @@ from prereise.gather.demanddata.transportation_electrification import (
     dwelling,
 )
 
-location_allowed = {
-    1: {1},  # home only
-    2: set(range(1, 13)),  # home and go to work related
-    4: {1, 21},  # home and school only
-    5: {1, 11, 12, 21},  # home and work and school
-    6: {10, 11, 12},  # only work
-}
-
-why_to_list = [
-    1,
-    53,  # home related
-    10,
-    11,
-    12,  # work related
-    13,
-    14,
-    17,
-    20,
-    21,
-    22,
-    23,  # other
-    24,
-    30,
-    40,
-    41,
-    42,
-    50,
-    51,
-    52,
-    53,
-    54,
-    55,
-    60,
-    61,
-    62,
-    63,
-    64,
-    65,
-    80,
-    81,
-    82,
-    83,
-]
-
-
 def get_constraints(constraints_df, kwhmi, power, trip_strategy, location_strategy):
     """Determine the consumption and charging constraints for each trip (hour segment)
 
