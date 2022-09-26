@@ -120,6 +120,6 @@ charging_efficiency = 0.9
 
 safety_coefficient = 1
 
-ER = 1'
+ER = 1
 
 emfacvmt = 758118400
