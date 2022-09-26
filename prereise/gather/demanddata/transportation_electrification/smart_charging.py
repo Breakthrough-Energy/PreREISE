@@ -393,6 +393,7 @@ def smart_charging(
                                 individual.iloc[n, newdata.columns.get_loc("why_to")]
                             )
 
+                            segcum = np.cumsum(seg)
                             trip_g2v_load[:, start : end + 1] = (
                                 x[segcum[n] - seg[n] : segcum[n]]
                                 / const.charging_efficiency
