@@ -263,7 +263,7 @@ def smart_charging(
     daily_vmt_total = data_helper.get_total_daily_vmt(newdata, input_day, daily_values)
 
     kwh = kwhmi * veh_range
-    emfacvmt = 758118400
+    emfacvmt = const.emfacvmt
 
     nd_len = len(newdata)
 
