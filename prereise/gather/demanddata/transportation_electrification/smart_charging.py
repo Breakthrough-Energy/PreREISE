@@ -30,14 +30,13 @@ def get_constraints(
     :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, 5, or 6;
         1-home only, 2-home and work related, 3-anywhere if possibile,
         4-home and school only, 5-home and work and school, 6-only work
-    :param Dict[int, Set[int]] location_allowed:
+    :param dict location_allowed: starting locations allowed in the dataset
     :param float charging_efficiency: from grid to battery efficiency.
     :return: (*pandas.DataFrame*) -- a DataFrame adding the calculated constraints
         to an individual vehicle's data
     """
     grouped_trips = constraints_df.groupby("vehicle_number")
 
-    # for "power" - setting power value based on "why_to"
     constraints_df.loc[
         constraints_df["why_to"].isin(const.why_to_list), "power_allowed"
     ] = power
@@ -107,8 +106,6 @@ def calculate_optimization(
     rates,
     elimit,
     seg,
-    segsum,
-    segcum,
     total_trips,
     kwh,
     charging_efficiency,
@@ -119,13 +116,15 @@ def calculate_optimization(
     :param list rates: rates to be used for the cost function
     :param list elimit: energy limits during the time span of available charging
     :param list seg: the amount of the segments in the dwelling activity
-    :param int segsum: the overall total of segments
-    :param list segcum: cumulative sum of the segments
     :param int total_trips: total number of trips for the current vehicle
     :param float kwh: kwhmi * veh_range, amount of energy needed to charge vehicle.
     :param float charging_efficiency: from grid to battery efficiency.
     :return: (*dict*) -- contains the necessary inputs for the linprog optimization
     """
+
+    segsum = np.sum(seg)
+    segcum = np.cumsum(seg)
+
     f = np.array(rates) / charging_efficiency
 
     # form all the constraints
@@ -337,16 +336,11 @@ def smart_charging(
 
                     seg = individual["seg"].apply(int).to_numpy()
 
-                    segsum = np.sum(seg)
-                    segcum = np.cumsum(seg)
-
                     linprog_inputs = calculate_optimization(
                         charging_consumption,
                         rates,
                         elimit,
                         seg,
-                        segsum,
-                        segcum,
                         total_trips,
                         kwh,
                         const.charging_efficiency,
