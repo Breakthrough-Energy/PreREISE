@@ -19,36 +19,36 @@ def calculate_charging(trips, charging_power, battery_capacity, kwhmi):
     :param int/float battery_capacity: battery capacity (kWh).
     :param int/float kwhmi: vehicle electricity consumption (kWh/ mile).
     """
-    # Add trip number entries
-    trips["trip number"] = trips.groupby("sample vehicle number").cumcount() + 1
+    # Add trip_number entries
+    trips["trip_number"] = trips.groupby("vehicle_number").cumcount() + 1
 
-    grouped_trips = trips.groupby("trip number")
+    grouped_trips = trips.groupby("trip_number")
     for trip_num, group in grouped_trips:
         if trip_num == 1:
             # For the first trip, we assume that the vehicle starts with a full battery
             trips.loc[group.index, "trip start battery charge"] = battery_capacity
         else:
             # For subsequent trips, the starting SoC depends on the previous trip
-            relevant_vehicles = group["sample vehicle number"]
+            relevant_vehicles = group["vehicle_number"]
             previous_group = grouped_trips.get_group(trip_num - 1)
             start_soc = (
                 previous_group["trip end battery charge"]
                 + previous_group["charging consumption"]
             )
             trips.loc[group.index, "trip start battery charge"] = start_soc.values[
-                previous_group["sample vehicle number"].isin(relevant_vehicles)
+                previous_group["vehicle_number"].isin(relevant_vehicles)
             ]
         # For all trips, update ending state of charge
         trips.loc[group.index, "trip end battery charge"] = (
             trips.loc[group.index, "trip start battery charge"]
-            - group["Miles traveled"] * kwhmi * const.ER
+            - group["trip_miles"] * kwhmi * const.ER
         )
         # Calculate charging duration/energy for the trips that can charge
         trips.loc[group.index, "full_charge_time"] = (
             battery_capacity - trips["trip end battery charge"]
         ) / (charging_power * const.charging_efficiency)
         trips.loc[group.index, "charging time"] = trips["charging_allowed"] * (
-            trips[["full_charge_time", "Dwell time (hour decimal)"]].apply(min, axis=1)
+            trips[["full_charge_time", "dwell_time"]].apply(min, axis=1)
         )
         trips.loc[group.index, "charging consumption"] = (
             trips["charging time"] * charging_power * const.charging_efficiency
@@ -67,7 +67,7 @@ def resample_daily_charging(trips, charging_power):
     ratio = int(fine_resolution / coarse_resolution)
     # determine timing of charging
     augmented_trips = trips.assign(
-        start_point=(ratio * trips["End time (hour decimal)"]).map(round),
+        start_point=(ratio * trips["trip_end"]).map(round),
         elapsed=(ratio * trips["charging time"]).map(round),
         end_point=lambda x: x["start_point"] + x["elapsed"],
     )
@@ -143,7 +143,7 @@ def immediate_charging(
         "charging time",
         "charging consumption",
         "BEV could be used",
-        "trip number",
+        "trip_number",
     ]
     trips = trips.reindex(list(trips.columns) + new_columns, axis=1, fill_value=0)
     # Add flag for whether the total mileage is within the vehicle's range
@@ -155,14 +155,14 @@ def immediate_charging(
         trips["location_allowed"] = True
     else:
         allowed = allowed_locations_by_strategy[location_strategy]
-        trips["location_allowed"] = trips["why to"].map(lambda x: x in allowed)
-    # Add booleans for whether the trip number (compared to total trips) allows charging
+        trips["location_allowed"] = trips["why_to"].map(lambda x: x in allowed)
+    # Add booleans for whether the trip_number (compared to total trips) allows charging
     if trip_strategy == 1:
         trips["trip_allowed"] = True
     elif trip_strategy == 2:
-        trips["trip_allowed"] = trips["trip number"] == trips["total vehicle trips"]
+        trips["trip_allowed"] = trips["trip_number"] == trips["total_trips"]
     # Add booleans for whether the dell time is long enough to allow charging
-    trips["dwell_allowed"] = trips["Dwell time (hour decimal)"] > 0.2
+    trips["dwell_allowed"] = trips["dwell_time"] > 0.2
     # Add boolean for whether this trip allows charging
     allowed_cols = ["location_allowed", "trip_allowed", "dwell_allowed"]
     trips["charging_allowed"] = trips[allowed_cols].apply(all, axis=1)
