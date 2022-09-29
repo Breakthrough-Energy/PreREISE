@@ -102,6 +102,9 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
         nhts_census = loadmat(filepath)
         raw_data = nhts_census[f"census_{census_region}_updated_dwell"]
         census_data = pd.DataFrame(raw_data, columns=const.nhts_census_column_names)
+
+    census_data = census_data.rename(columns=const.ldv_columns_transform)
+
     return census_data
 
 
@@ -319,8 +322,8 @@ def get_total_daily_vmt(data: pd.DataFrame, input_day, daily_values):
     :return: (*np.array*) -- an array where each element is the daily VMT and total
         vehicles for that day.
     """
-    weekend_vmt = data.loc[data["If Weekend"] == 1, "Miles traveled"].sum()
-    weekday_vmt = data.loc[data["If Weekend"] == 2, "Miles traveled"].sum()
+    weekend_vmt = data.loc[data["If Weekend"] == 1, "trip_miles"].sum()
+    weekday_vmt = data.loc[data["If Weekend"] == 2, "trip_miles"].sum()
 
     annual_vmt = 0
     for i in range(len(input_day)):
