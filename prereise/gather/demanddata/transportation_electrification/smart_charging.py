@@ -38,7 +38,8 @@ def get_constraints(
     grouped_trips = constraints_df.groupby("vehicle_number")
 
     constraints_df.loc[
-        constraints_df["why_to"].isin(const.why_to_list), "power_allowed"
+        constraints_df["dwell_location"].isin(const.dwell_location_list),
+        "power_allowed",
     ] = power
     constraints_df["power_allowed"].fillna(0, inplace=True)
 
@@ -47,7 +48,7 @@ def get_constraints(
         constraints_df["location_allowed"] = True
     else:
         allowed = location_allowed[location_strategy]
-        constraints_df["location_allowed"] = constraints_df["why_to"].map(
+        constraints_df["location_allowed"] = constraints_df["dwell_location"].map(
             lambda x: x in allowed
         )
 
@@ -309,7 +310,7 @@ def smart_charging(
                 if (
                     newdata.iloc[i, newdata.columns.get_loc("why_from")]
                     * newdata.iloc[
-                        i + total_trips - 1, newdata.columns.get_loc("why_to")
+                        i + total_trips - 1, newdata.columns.get_loc("dwell_location")
                     ]
                     == 1
                 ):
@@ -389,8 +390,10 @@ def smart_charging(
                                 ]
                             )
 
-                            why_to = int(
-                                individual.iloc[n, newdata.columns.get_loc("why_to")]
+                            dwell_location = int(
+                                individual.iloc[
+                                    n, newdata.columns.get_loc("dwell_location")
+                                ]
                             )
 
                             segcum = np.cumsum(seg)
@@ -398,7 +401,7 @@ def smart_charging(
                                 x[segcum[n] - seg[n] : segcum[n]]
                                 / const.charging_efficiency
                             )
-                            g2v_load[why_to, :] += trip_g2v_load[0, :]
+                            g2v_load[dwell_location, :] += trip_g2v_load[0, :]
                             individual_g2v_load[i + n][:] = trip_g2v_load
                             trip_g2v_cost = np.matmul(trip_g2v_load, cost)[0]
 

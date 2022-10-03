@@ -155,7 +155,7 @@ def immediate_charging(
         trips["location_allowed"] = True
     else:
         allowed = allowed_locations_by_strategy[location_strategy]
-        trips["location_allowed"] = trips["why_to"].map(lambda x: x in allowed)
+        trips["location_allowed"] = trips["dwell_location"].map(lambda x: x in allowed)
     # Add booleans for whether the trip_number (compared to total trips) allows charging
     if trip_strategy == 1:
         trips["trip_allowed"] = True
