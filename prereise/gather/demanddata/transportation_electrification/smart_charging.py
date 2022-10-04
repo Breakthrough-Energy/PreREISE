@@ -285,17 +285,31 @@ def smart_charging(
                 load_demand[i] + model_year_profile[i]
                 for i in range(day_iter * 24, (day_iter + 1) * 24)
             ]
+            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(48)]
+
+        elif day_iter == len(input_day) - 2:  # 364
+            adjusted_load = [
+                load_demand[i] + model_year_profile[i]
+                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 24)
+            ]
             adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(24)]
+
+        elif day_iter == len(input_day) - 3:  # 363
+            adjusted_load = [
+                load_demand[i] + model_year_profile[i]
+                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 48)
+            ]
+
         else:
             adjusted_load = [
                 load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, day_iter * 24 + 48)
+                for i in range(day_iter * 24, day_iter * 24 + 72)
             ]
 
         cost = np.array(adjusted_load)
 
-        g2v_load = np.zeros((100, 48))
-        individual_g2v_load = np.zeros((nd_len, 48))
+        g2v_load = np.zeros((100, 72))
+        individual_g2v_load = np.zeros((nd_len, 72))
 
         i = 0
 
@@ -372,7 +386,7 @@ def smart_charging(
 
                             # G2V results
                             # define the G2V load during a trip
-                            trip_g2v_load = np.zeros((1, 48))
+                            trip_g2v_load = np.zeros((1, 72))
                             start = math.floor(
                                 individual.iloc[
                                     n,
@@ -409,7 +423,7 @@ def smart_charging(
                             charge = sum(x[segcum[n] - seg[n] : segcum[n]])
 
                             # V2G results
-                            trip_v2g_load = np.zeros((1, 48))
+                            trip_v2g_load = np.zeros((1, 72))
 
                             electricitycost = trip_g2v_cost
                             tripload = trip_v2g_load + trip_g2v_load
@@ -473,10 +487,26 @@ def smart_charging(
                 / (daily_vmt_total[day_iter] * 1000)
                 * emfacvmt
             )
+            model_year_profile[24:48] += (
+                outputelectricload[48:72]
+                / (daily_vmt_total[day_iter] * 1000)
+                * emfacvmt
+            )
+
+        elif day_iter == len(input_day) - 2:
+            # MW
+            model_year_profile[day_iter * 24 : day_iter * 24 + 48] += (
+                outputelectricload[:48] / (daily_vmt_total[day_iter] * 1000) * emfacvmt
+            )
+            model_year_profile[:24] += (
+                outputelectricload[48:72]
+                / (daily_vmt_total[day_iter] * 1000)
+                * emfacvmt
+            )
 
         else:
             # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 48] += (
+            model_year_profile[day_iter * 24 : day_iter * 24 + 72] += (
                 outputelectricload / (daily_vmt_total[day_iter] * 1000) * emfacvmt
             )
 
