@@ -115,9 +115,6 @@ hdv_columns_transform = {
     "Trip End": "trip_end",
 }
 
-# from grid to battery efficiency
-charging_efficiency = 0.9
-
 safety_coefficient = 1
 
 ER = 1
