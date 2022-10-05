@@ -282,32 +282,20 @@ def smart_charging(
         charging_efficiency,
     )
 
-    for day_iter in range(len(input_day)):
+    day_num = len(input_day)
+    for day_iter in range(day_num):
 
-        if day_iter == len(input_day) - 1:
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, (day_iter + 1) * 24)
-            ]
-            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(48)]
+        adjusted_load = [
+            load_demand[i] + model_year_profile[i]
+            for i in range(
+                day_iter * 24, (day_iter + 1) * 24 + min(day_num - day_iter - 1, 2) * 24
+            )
+        ]
 
-        elif day_iter == len(input_day) - 2:  # 364
-            adjusted_load = [
+        if 3 - day_num + day_iter > 0:
+            adjusted_load += [
                 load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 24)
-            ]
-            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(24)]
-
-        elif day_iter == len(input_day) - 3:  # 363
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 48)
-            ]
-
-        else:
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, day_iter * 24 + 72)
+                for i in range(24 * (3 - day_num + day_iter))
             ]
 
         cost = np.array(adjusted_load)
