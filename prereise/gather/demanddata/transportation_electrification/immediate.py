@@ -11,13 +11,16 @@ allowed_locations_by_strategy = {
 }
 
 
-def calculate_charging(trips, charging_power, battery_capacity, kwhmi):
+def calculate_charging(
+    trips, charging_power, battery_capacity, kwhmi, charging_efficiency
+):
     """Parse travel patterns to estimate charging and state-of-charge after each trip.
 
     :param pandas.DataFrame trips: trip data.
     :param int/float charging_power: charging power (kW).
     :param int/float battery_capacity: battery capacity (kWh).
     :param int/float kwhmi: vehicle electricity consumption (kWh/ mile).
+    :param int/float charging_efficiency: from grid to battery efficiency.
     """
     # Add trip_number entries
     trips["trip_number"] = trips.groupby("vehicle_number").cumcount() + 1
@@ -46,12 +49,12 @@ def calculate_charging(trips, charging_power, battery_capacity, kwhmi):
         # Calculate charging duration/energy for the trips that can charge
         trips.loc[group.index, "full_charge_time"] = (
             battery_capacity - trips["trip end battery charge"]
-        ) / (charging_power * const.charging_efficiency)
+        ) / (charging_power * charging_efficiency)
         trips.loc[group.index, "charging time"] = trips["charging_allowed"] * (
             trips[["full_charge_time", "dwell_time"]].apply(min, axis=1)
         )
         trips.loc[group.index, "charging consumption"] = (
-            trips["charging time"] * charging_power * const.charging_efficiency
+            trips["charging time"] * charging_power * charging_efficiency
         )
 
 
@@ -136,6 +139,11 @@ def immediate_charging(
     # updates the weekend and weekday values in the nhts data
     trips = data_helper.update_if_weekend(trips)
 
+    if power > 19.2:
+        charging_efficiency = 0.95
+    else:
+        charging_efficiency = 0.9
+
     # add new columns to newdata to store data that is not in NHTS data
     new_columns = [
         "trip start battery charge",
@@ -155,7 +163,7 @@ def immediate_charging(
         trips["location_allowed"] = True
     else:
         allowed = allowed_locations_by_strategy[location_strategy]
-        trips["location_allowed"] = trips["why_to"].map(lambda x: x in allowed)
+        trips["location_allowed"] = trips["dwell_location"].isin(allowed)
     # Add booleans for whether the trip_number (compared to total trips) allows charging
     if trip_strategy == 1:
         trips["trip_allowed"] = True
@@ -177,8 +185,12 @@ def immediate_charging(
     ].copy()
 
     # Calculate the charge times and SOC for each trip, then resample resolution
-    calculate_charging(weekday_trips, power, battery_capacity, kwhmi)
-    calculate_charging(weekend_trips, power, battery_capacity, kwhmi)
+    calculate_charging(
+        weekday_trips, power, battery_capacity, kwhmi, charging_efficiency
+    )
+    calculate_charging(
+        weekend_trips, power, battery_capacity, kwhmi, charging_efficiency
+    )
     daily_resampled_profiles = {
         "weekday": resample_daily_charging(weekday_trips, power),
         "weekend": resample_daily_charging(weekend_trips, power),

@@ -38,7 +38,8 @@ def get_constraints(
     grouped_trips = constraints_df.groupby("vehicle_number")
 
     constraints_df.loc[
-        constraints_df["why_to"].isin(const.why_to_list), "power_allowed"
+        constraints_df["dwell_location"].isin(const.dwell_location_list),
+        "power_allowed",
     ] = power
     constraints_df["power_allowed"].fillna(0, inplace=True)
 
@@ -47,7 +48,7 @@ def get_constraints(
         constraints_df["location_allowed"] = True
     else:
         allowed = location_allowed[location_strategy]
-        constraints_df["location_allowed"] = constraints_df["why_to"].map(
+        constraints_df["location_allowed"] = constraints_df["dwell_location"].map(
             lambda x: x in allowed
         )
 
@@ -264,6 +265,10 @@ def smart_charging(
 
     kwh = kwhmi * veh_range
     emfacvmt = const.emfacvmt
+    if power > 19.2:
+        charging_efficiency = 0.95
+    else:
+        charging_efficiency = 0.9
 
     nd_len = len(newdata)
 
@@ -274,27 +279,29 @@ def smart_charging(
         trip_strategy,
         location_strategy,
         const.ldv_location_allowed,
-        const.charging_efficiency,
+        charging_efficiency,
     )
 
-    for day_iter in range(len(input_day)):
+    day_num = len(input_day)
+    for day_iter in range(day_num):
 
-        if day_iter == len(input_day) - 1:
-            adjusted_load = [
+        adjusted_load = [
+            load_demand[i] + model_year_profile[i]
+            for i in range(
+                day_iter * 24, (day_iter + 1) * 24 + min(day_num - day_iter - 1, 2) * 24
+            )
+        ]
+
+        if 3 - day_num + day_iter > 0:
+            adjusted_load += [
                 load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, (day_iter + 1) * 24)
-            ]
-            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(24)]
-        else:
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, day_iter * 24 + 48)
+                for i in range(24 * (3 - day_num + day_iter))
             ]
 
         cost = np.array(adjusted_load)
 
-        g2v_load = np.zeros((100, 48))
-        individual_g2v_load = np.zeros((nd_len, 48))
+        g2v_load = np.zeros((100, 72))
+        individual_g2v_load = np.zeros((nd_len, 72))
 
         i = 0
 
@@ -309,7 +316,7 @@ def smart_charging(
                 if (
                     newdata.iloc[i, newdata.columns.get_loc("why_from")]
                     * newdata.iloc[
-                        i + total_trips - 1, newdata.columns.get_loc("why_to")
+                        i + total_trips - 1, newdata.columns.get_loc("dwell_location")
                     ]
                     == 1
                 ):
@@ -343,7 +350,7 @@ def smart_charging(
                         seg,
                         total_trips,
                         kwh,
-                        const.charging_efficiency,
+                        charging_efficiency,
                     )
 
                     linprog_result = linprog(**linprog_inputs)
@@ -371,7 +378,7 @@ def smart_charging(
 
                             # G2V results
                             # define the G2V load during a trip
-                            trip_g2v_load = np.zeros((1, 48))
+                            trip_g2v_load = np.zeros((1, 72))
                             start = math.floor(
                                 individual.iloc[
                                     n,
@@ -389,16 +396,17 @@ def smart_charging(
                                 ]
                             )
 
-                            why_to = int(
-                                individual.iloc[n, newdata.columns.get_loc("why_to")]
+                            dwell_location = int(
+                                individual.iloc[
+                                    n, newdata.columns.get_loc("dwell_location")
+                                ]
                             )
 
                             segcum = np.cumsum(seg)
                             trip_g2v_load[:, start : end + 1] = (
-                                x[segcum[n] - seg[n] : segcum[n]]
-                                / const.charging_efficiency
+                                x[segcum[n] - seg[n] : segcum[n]] / charging_efficiency
                             )
-                            g2v_load[why_to, :] += trip_g2v_load[0, :]
+                            g2v_load[dwell_location, :] += trip_g2v_load[0, :]
                             individual_g2v_load[i + n][:] = trip_g2v_load
                             trip_g2v_cost = np.matmul(trip_g2v_load, cost)[0]
 
@@ -406,7 +414,7 @@ def smart_charging(
                             charge = sum(x[segcum[n] - seg[n] : segcum[n]])
 
                             # V2G results
-                            trip_v2g_load = np.zeros((1, 48))
+                            trip_v2g_load = np.zeros((1, 72))
 
                             electricitycost = trip_g2v_cost
                             tripload = trip_v2g_load + trip_g2v_load
@@ -470,10 +478,26 @@ def smart_charging(
                 / (daily_vmt_total[day_iter] * 1000)
                 * emfacvmt
             )
+            model_year_profile[24:48] += (
+                outputelectricload[48:72]
+                / (daily_vmt_total[day_iter] * 1000)
+                * emfacvmt
+            )
+
+        elif day_iter == len(input_day) - 2:
+            # MW
+            model_year_profile[day_iter * 24 : day_iter * 24 + 48] += (
+                outputelectricload[:48] / (daily_vmt_total[day_iter] * 1000) * emfacvmt
+            )
+            model_year_profile[:24] += (
+                outputelectricload[48:72]
+                / (daily_vmt_total[day_iter] * 1000)
+                * emfacvmt
+            )
 
         else:
             # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 48] += (
+            model_year_profile[day_iter * 24 : day_iter * 24 + 72] += (
                 outputelectricload / (daily_vmt_total[day_iter] * 1000) * emfacvmt
             )
 
