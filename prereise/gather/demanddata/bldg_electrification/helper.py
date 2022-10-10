@@ -1,19 +1,30 @@
+import io
 import os
+import zipfile
 
 import geopandas as gpd
 import pandas as pd
+import requests
 
 
-def read_shapefile(filepath, filename):
+def read_shapefile(url):
     """Read shape files for overlay
 
-    :param str filepath: directory of the shape file to be read
-    :param str filename: name of the shape file to be read
+    :param str url: directory in blob storage that contained the shape file in zip format
     :return: (*geopandas.GeoDataFrame*) -- geo data frame of the shape file
     """
-    shapefile_df = gpd.GeoDataFrame(
-        gpd.read_file(os.path.join(os.path.dirname(__file__), filepath, filename))
-    ).to_crs("EPSG:4269")
+    local_path = "tmp/"
+    r = requests.get(url)
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    z.extractall(path=local_path)  # extract to folder
+    filenames = [
+        y for y in sorted(z.namelist()) if y[-3:] in {"dbf", "prj", "shp", "shx"}
+    ]
+    dbf, prj, shp, shx = [filename for filename in filenames]
+
+    shapefile_df = gpd.GeoDataFrame(gpd.read_file((local_path + shp))).to_crs(
+        "EPSG:4269"
+    )
 
     return shapefile_df
 

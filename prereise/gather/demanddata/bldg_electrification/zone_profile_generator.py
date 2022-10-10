@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -805,9 +806,16 @@ if __name__ == "__main__":
         "ISONE-Rhode Island",
     ]
 
-    zone_shp = read_shapefile("shapefiles", "ba_area.shp")
-    pumas_shp = read_shapefile("shapefiles", "pumas_overlay.shp")
+    zone_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/balancing-authorities/ba_area/ba_area.zip"
+    )
+    pumas_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/pumas-overlay/pumas_overlay.zip"
+    )
 
     for i in range(len(zone_names)):
         zone_name, zone_name_shp = zone_names[i], zone_name_shps[i]
         main(zone_name, zone_name_shp, base_year, year, plot_boolean)
+
+    # Delete the tmp folder that holds the shapefiles localy after the script is run to completion
+    shutil.rmtree(os.path.join("tmp"), ignore_errors=False, onerror=None)

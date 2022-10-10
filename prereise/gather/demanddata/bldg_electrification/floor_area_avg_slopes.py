@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -115,7 +116,8 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
     fig2, ax2 = plt.subplots()
     for zone in zone_names[iso]:
         dayhour_fits = pd.read_csv(
-            f"./dayhour_fits/{zone}_dayhour_fits_{base_year}.csv", index_col=0
+            f"https://besciences.blob.core.windows.net/datasets/bldg_el/dayhour_fits/{zone}_dayhour_fits_{base_year}.csv",
+            index_col=0,
         )
         for wk_wknd in ["wk", "wknd"]:
             dayhour_fits[f"s.heat.{wk_wknd}"] = (
@@ -192,11 +194,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
         # read hourly slopes
         dayhour_fits = {
             i: pd.read_csv(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "dayhour_fits",
-                    f"{zone}_dayhour_fits_{base_year}.csv",
-                ),
+                f"https://besciences.blob.core.windows.net/datasets/bldg_el/dayhour_fits/{zone}_dayhour_fits_{base_year}.csv",
                 index_col=0,
             )
             for i, zone in enumerate(zone_names[iso])
@@ -358,7 +356,8 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
     zone_slope_df = pd.DataFrame()
     for zone in zone_names[iso]:
         hourly_data = pd.read_csv(
-            f"./dayhour_fits/{zone}_dayhour_fits_2019.csv", index_col=0
+            f"https://besciences.blob.core.windows.net/datasets/bldg_el/dayhour_fits/{zone}_dayhour_fits_{base_year}.csv",
+            index_col=0,
         )
 
         htg_mean = (
@@ -472,9 +471,15 @@ if __name__ == "__main__":
         exist_ok=True,
     )
 
-    zone_shape = read_shapefile("shapefiles", "ba_area.shp")
-    pumas_shp = read_shapefile("shapefiles", "pumas_overlay.shp")
-    state_shp = read_shapefile("shapefiles", "cb_2018_us_state_20m.shp")
+    zone_shape = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/balancing-authorities/ba_area/ba_area.zip"
+    )
+    pumas_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/pumas-overlay/pumas_overlay.zip"
+    )
+    state_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/state-outlines/cb_2018_us_state_20m.zip"
+    )
 
     zone_shp_ma = state_shp_overlay("MA", state_shp, zone_shape)
     zone_shp_me = state_shp_overlay("ME", state_shp, zone_shape)
@@ -583,3 +588,6 @@ if __name__ == "__main__":
 
     for iso in ["NY", "TX", "CA", "NE"]:
         main_plots(iso, zone_shape, pumas_shp, state_shp)
+
+    # Delete the tmp folder that holds the shapefiles localy after the script is run to completion
+    shutil.rmtree(os.path.join("tmp"), ignore_errors=False, onerror=None)
