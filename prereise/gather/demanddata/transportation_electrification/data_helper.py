@@ -110,14 +110,7 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
 
 def load_hdv_data(
     veh_type,
-    filepath=os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
-        "fdata_v10st.mat",
-    ),
+    filepath,
 ):
     """Load the data at fdata_v10st.mat.
 
@@ -125,11 +118,16 @@ def load_hdv_data(
     :return: (*pandas.DataFrame*) -- the data loaded from fdata_v10st.mat, with column
         names added.
     """
+    if pathlib.Path(filepath).suffix == ".csv":
+        hdv_data = pd.read_csv(filepath)
+    else:
+        mat_data = loadmat(filepath)
+        raw_data = mat_data[f"{veh_type}_data"]
 
-    hdv_data = loadmat(filepath)
-    raw_data = hdv_data[f"{veh_type}_data"]
+        hdv_data = pd.DataFrame(raw_data, columns=const.hdv_data_column_names)
 
-    return pd.DataFrame(raw_data, columns=const.hdv_data_column_names)
+
+    return hdv_data
 
 
 def load_urbanized_scaling_factor(

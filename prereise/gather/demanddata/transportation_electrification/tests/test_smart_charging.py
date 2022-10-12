@@ -209,7 +209,7 @@ def test_smart_charging():
     np.testing.assert_allclose(result.cumsum()[::1095], correct_cumsum)
 
 
-@pytest.mark.skip(reason="currently too slow")
+# @pytest.mark.skip(reason="currently too slow")
 def test_smart_charging_hdv():
     data_dir = os.path.join(
         os.path.dirname(inspect.getsourcefile(prereise)),
@@ -248,8 +248,8 @@ def test_smart_charging_hdv():
             "gather",
             "demanddata",
             "transportation_electrification",
-            "data",
-            "fdata_v10st.mat",
+            "tests",
+            "hdv_test.csv",
         ),
         initial_load=load_demand,
         bev_vmt=bev_vmt,
@@ -258,21 +258,21 @@ def test_smart_charging_hdv():
 
     correct_cumsum = np.array(
         [
-            1.22854177233283,
-            4729.417063,
-            9456.028814,
-            14087.49171,
-            18817.56654,
-            23521.75604,
-            28175.75066,
-            32904.52077,
+            0.0,
+            3856.38868062,
+            7712.77736124,
+            11485.33150533,
+            15341.72018595,
+            19197.26691589,
+            22970.66301066,
+            26827.05169128,
         ]
     )
 
     np.testing.assert_allclose(result.cumsum()[::1095], correct_cumsum)
 
 
-@pytest.mark.skip(reason="currently too slow")
+# @pytest.mark.skip(reason="currently too slow")
 def test_smart_charging_mdv():
     data_dir = os.path.join(
         os.path.dirname(inspect.getsourcefile(prereise)),
@@ -311,8 +311,8 @@ def test_smart_charging_mdv():
             "gather",
             "demanddata",
             "transportation_electrification",
-            "data",
-            "fdata_v10st.mat",
+            "tests",
+            "mdv_test.csv",
         ),
         initial_load=load_demand,
         bev_vmt=bev_vmt,
@@ -321,14 +321,14 @@ def test_smart_charging_mdv():
 
     correct_cumsum = np.array(
         [
-            0.291225084060603,
-            4160.770734,
-            8320.031013,
-            12391.66618,
-            16553.00332,
-            20705.85663,
-            24784.48369,
-            28946.34624,
+            0.0,
+            4043.9900878,
+            8087.9801756,
+            12044.05743541,
+            16088.04752321,
+            20132.03761101,
+            24088.11487082,
+            28132.10495862,
         ]
     )
 
