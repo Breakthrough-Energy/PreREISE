@@ -157,8 +157,6 @@ def smart_charging(
             elimit = [el for energy_lim in elimit for el in energy_lim]
 
             seg = individual["seg"].apply(int).to_numpy()
-
-            segsum = np.sum(seg)
             segcum = np.cumsum(seg)
 
             linprog_inputs = charging_optimization.calculate_optimization(
