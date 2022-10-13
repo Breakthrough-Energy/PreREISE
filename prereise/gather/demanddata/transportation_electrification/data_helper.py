@@ -126,7 +126,7 @@ def load_hdv_data(
 
         hdv_data = pd.DataFrame(raw_data, columns=const.hdv_data_column_names)
 
-    # hdv_data = hdv_data.rename(columns=const.hdv_columns_transform)
+    hdv_data = hdv_data.rename(columns=const.hdv_columns_transform)
 
     return hdv_data
 
@@ -350,7 +350,7 @@ def get_total_hdv_daily_vmt(data: pd.DataFrame, veh_range):
     if veh_range not in allowable_ranges:
         raise ValueError(f"veh_range must be one of {allowable_ranges}")
 
-    range_vmt = data["Trip Distance"].copy()
+    range_vmt = data["trip_miles"].copy()
     range_vmt[data["Total Vehicle Miles"] > veh_range] = 0
     daily_vmt_total = sum(range_vmt) * np.ones(365)
 

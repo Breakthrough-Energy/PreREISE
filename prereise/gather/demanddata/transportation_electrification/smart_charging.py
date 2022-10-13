@@ -1,7 +1,6 @@
 import math
 
 import numpy as np
-import pandas as pd
 from scipy.optimize import linprog
 
 from prereise.gather.demanddata.transportation_electrification import (
@@ -89,7 +88,7 @@ def smart_charging(
 
     nd_len = len(newdata)
 
-    newdata = get_constraints(
+    newdata = charging_optimization.get_constraints(
         newdata,
         kwhmi,
         power,
@@ -160,7 +159,7 @@ def smart_charging(
 
                     seg = individual["seg"].apply(int).to_numpy()
 
-                    linprog_inputs = calculate_optimization(
+                    linprog_inputs = charging_optimization.calculate_optimization(
                         charging_consumption,
                         rates,
                         elimit,
