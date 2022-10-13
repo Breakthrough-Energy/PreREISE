@@ -126,6 +126,7 @@ def load_hdv_data(
 
         hdv_data = pd.DataFrame(raw_data, columns=const.hdv_data_column_names)
 
+    # hdv_data = hdv_data.rename(columns=const.hdv_columns_transform)
 
     return hdv_data
 
