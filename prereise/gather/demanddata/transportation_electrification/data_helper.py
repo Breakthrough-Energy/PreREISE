@@ -114,6 +114,7 @@ def load_hdv_data(
 ):
     """Load the data at fdata_v10st.mat.
 
+    :param str veh_type: vehicle type ("hhdv: and "mhdv") category for trips
     :param str filepath: the path to the matfile.
     :return: (*pandas.DataFrame*) -- the data loaded from fdata_v10st.mat, with column
         names added.
