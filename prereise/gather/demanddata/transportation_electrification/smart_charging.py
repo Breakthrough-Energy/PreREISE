@@ -50,6 +50,8 @@ def smart_charging(
     # load NHTS data from function
     if veh_type.lower() == "ldv":
         newdata = data_helper.remove_ldt(data_helper.load_data(census_region, filepath))
+    elif veh_type.lower() == "ldt":
+        newdata = data_helper.remove_ldv(data_helper.load_data(census_region, filepath))
     elif veh_type.lower() == "mdv":
         newdata = data_helper.load_hdv_data("mhdv", filepath)
     elif veh_type.lower() == "hdv":
