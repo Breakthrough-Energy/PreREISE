@@ -8,6 +8,10 @@ import statsmodels.api as sm
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar  # noqa: N813
 
 from prereise.gather.demanddata.bldg_electrification import const
+from prereise.gather.demanddata.bldg_electrification.const import (
+    zone_name_shps,
+    zone_names,
+)
 from prereise.gather.demanddata.bldg_electrification.helper import (
     read_shapefile,
     zone_shp_overlay,
@@ -723,6 +727,15 @@ def main(zone_name, zone_name_shp, base_year, year, plot_boolean=False):
 
 
 if __name__ == "__main__":
+
+    # Reading Balancing Authority and Pumas shapefiles for overlaying
+    zone_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/balancing-authorities/ba_area/ba_area.zip"
+    )
+    pumas_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/pumas-overlay/pumas_overlay.zip"
+    )
+
     # Use base_year for model fitting
     base_year = const.base_year
 
@@ -731,87 +744,6 @@ if __name__ == "__main__":
 
     # If produce profile plots
     plot_boolean = False
-
-    zone_names = [
-        "NYIS-ZONA",
-        "NYIS-ZONB",
-        "NYIS-ZONC",
-        "NYIS-ZOND",
-        "NYIS-ZONE",
-        "NYIS-ZONF",
-        "NYIS-ZONG",
-        "NYIS-ZONH",
-        "NYIS-ZONI",
-        "NYIS-ZONJ",
-        "NYIS-ZONK",
-        "ERCO-C",
-        "ERCO-E",
-        "ERCO-FW",
-        "ERCO-N",
-        "ERCO-NC",
-        "ERCO-S",
-        "ERCO-SC",
-        "ERCO-W",
-        "CISO-PGAE",
-        "CISO-SCE",
-        "CISO-SDGE",
-        "CISO-VEA",
-        "IID",
-        "WALC",
-        "LDWP",
-        "TIDC",
-        "BANC",
-        "ISNE-4000",
-        "ISNE-4001",
-        "ISNE-4002",
-        "ISNE-4003",
-        "ISNE-4004",
-        "ISNE-4005",
-    ]
-
-    zone_name_shps = [
-        "NYISO-A",
-        "NYISO-B",
-        "NYISO-C",
-        "NYISO-D",
-        "NYISO-E",
-        "NYISO-F",
-        "NYISO-G",
-        "NYISO-H",
-        "NYISO-I",
-        "NYISO-J",
-        "NYISO-K",
-        "ERCO-C",
-        "ERCO-E",
-        "ERCO-FW",
-        "ERCO-N",
-        "ERCO-NC",
-        "ERCO-S",
-        "ERCO-SC",
-        "ERCO-W",
-        "CISO-PGAE",
-        "CISO-SCE",
-        "CISO-SDGE",
-        "CISO-VEA",
-        "IID",
-        "WALC",
-        "LADWP",
-        "TID",
-        "BANC",
-        "ISONE-Massachusetts",
-        "ISONE-Maine",
-        "ISONE-New Hampshire",
-        "ISONE-Vermont",
-        "ISONE-Connecticut",
-        "ISONE-Rhode Island",
-    ]
-
-    zone_shp = read_shapefile(
-        "https://besciences.blob.core.windows.net/shapefiles/USA/balancing-authorities/ba_area/ba_area.zip"
-    )
-    pumas_shp = read_shapefile(
-        "https://besciences.blob.core.windows.net/shapefiles/USA/pumas-overlay/pumas_overlay.zip"
-    )
 
     for i in range(len(zone_names)):
         zone_name, zone_name_shp = zone_names[i], zone_name_shps[i]

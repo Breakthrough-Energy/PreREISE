@@ -10,7 +10,7 @@ import requests
 def read_shapefile(url):
     """Read shape files for overlay
 
-    :param str url: directory in blob storage that contained the shape file in zip format
+    :param str url: directory in blob storage that contain the shape file in zip format
     :return: (*geopandas.GeoDataFrame*) -- geo data frame of the shape file
     """
     local_path = "tmp/"
@@ -72,11 +72,14 @@ def state_shp_overlay(state, state_shp, zone_shp):
     :param geopandas.GeoDataFrame zone_shp: geo data frame of zone(BA) shape file
     :return: (*geopandas.GeoDataFrame*) -- state boundaries and load zones within it
     """
-    state_shp = state_shp[state_shp["STUSPS"] == state].copy()
+    if state == "United States":
+        state_shape = state_shp[state_shp["NAME"] == state].copy()
+    else:
+        state_shape = state_shp[state_shp["STUSPS"] == state].copy()
 
     zone_shp["area"] = zone_shp["geometry"].to_crs({"proj": "cea"}).area
 
-    zone_state = gpd.overlay(zone_shp, state_shp.to_crs("EPSG:4269"))
+    zone_state = gpd.overlay(zone_shp, state_shape.to_crs("EPSG:4269"))
     zone_state["area"] = zone_state["geometry"].to_crs({"proj": "cea"}).area
     zone_state["area_frac"] = [
         zone_state["area"][i]

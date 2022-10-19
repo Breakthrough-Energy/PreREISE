@@ -6,6 +6,12 @@ import numpy as np
 import pandas as pd
 
 from prereise.gather.demanddata.bldg_electrification import const
+from prereise.gather.demanddata.bldg_electrification.const import (
+    iso_name,
+    iso_zone_name_shps,
+    iso_zone_names,
+    state_list,
+)
 from prereise.gather.demanddata.bldg_electrification.helper import (
     read_shapefile,
     state_shp_overlay,
@@ -13,11 +19,11 @@ from prereise.gather.demanddata.bldg_electrification.helper import (
 )
 
 
-def get_zone_floor_area(iso, zone_shp, pumas_shp):
+def get_zone_floor_area(iso, zone_shape, pumas_shp):
     """Computes the zone floor area for each ISO.
 
     :param str iso: abbrev. name of ISO.
-    :param geopandas.GeoDataFrame zone_shp: geo data frame of zone(BA) shape file
+    :param geopandas.GeoDataFrame zone_shape: geo data frame of zone(BA) shape file
     :param geopandas.GeoDataFrame pumas_shp: geo data frame of pumas shape file
     :return: (*pandas.DataFrame*) -- Floor area in square meters for all the zones
         with breakdowns of residential, commercial, total heated and total cooled
@@ -25,9 +31,11 @@ def get_zone_floor_area(iso, zone_shp, pumas_shp):
     .. note:: zone floor area in square meters saved as csv into Profiles/result_stats
     """
     zone_floor_area = pd.DataFrame()
-    for zone in zone_names[iso]:
+    for zone in iso_zone_names[iso]:
         puma_data_zone = zone_shp_overlay(
-            zone_name_shps[iso][zone_names[iso].index(zone)], zone_shp, pumas_shp
+            iso_zone_name_shps[iso][iso_zone_names[iso].index(zone)],
+            zone_shape,
+            pumas_shp,
         )
         puma_data_zone = puma_data_zone[~(puma_data_zone["frac_in_zone"] < 0.05)]
 
@@ -95,14 +103,18 @@ def get_zone_floor_area(iso, zone_shp, pumas_shp):
     return zone_floor_area
 
 
-def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
+def main_plots(
+    iso, zone_shape, pumas_shp, state_shp, country_shp, size, plot_show=True
+):
     """Creats floor area avraged slopes for all zones within the ISO for one year.
 
     :param str iso: abbrev. name of ISO.
     :param geopandas.GeoDataFrame zone_shape: geo data frame of zone(BA) shape file
     :param geopandas.GeoDataFrame pumas_shp: geo data frame of pumas shape file
     :param geopandas.GeoDataFrame state_shp: geo data frame of state shape file
+    :param geopandas.GeoDataFrame country_shp: geo data frame of nation shape file
     :param bool plot_show: show the plot or not, default to True.
+    :param int size: defining the image size of plots in dpi.
 
     .. note:: Floor area avg. heating and cooling slope, error and map plots for all
         zones in each ISO saved as png and csv into Profiles/result_stats/hourly_plots
@@ -114,7 +126,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
 
     fig1, ax1 = plt.subplots()
     fig2, ax2 = plt.subplots()
-    for zone in zone_names[iso]:
+    for zone in iso_zone_names[iso]:
         dayhour_fits = pd.read_csv(
             f"https://besciences.blob.core.windows.net/datasets/bldg_el/dayhour_fits/{zone}_dayhour_fits_{base_year}.csv",
             index_col=0,
@@ -175,11 +187,11 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
     if plot_show:
         fig1.savefig(
             f"./Profiles/result_stats/hourly_plots/zone_plots/{iso_name[iso]}_heating.png",
-            dpi=700,
+            dpi=size,
         )
         fig2.savefig(
             f"./Profiles/result_stats/hourly_plots/zone_plots/{iso_name[iso]}_cooling.png",
-            dpi=700,
+            dpi=size,
         )
 
     # Create hourly slope plots with error bars for each zone within each ISO
@@ -189,7 +201,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
     iso_dayhour_fits = pd.DataFrame(index=np.arange(0, 24))
     for wk_wknd in ["wk", "wknd"]:
 
-        iso_floor_area = zone_floor_area.loc[zone_names[iso]].sum()
+        iso_floor_area = zone_floor_area.loc[iso_zone_names[iso]].sum()
 
         # read hourly slopes
         dayhour_fits = {
@@ -197,14 +209,14 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
                 f"https://besciences.blob.core.windows.net/datasets/bldg_el/dayhour_fits/{zone}_dayhour_fits_{base_year}.csv",
                 index_col=0,
             )
-            for i, zone in enumerate(zone_names[iso])
+            for i, zone in enumerate(iso_zone_names[iso])
         }
 
         iso_dayhour_fits[f"s.heat.{wk_wknd}"] = (
             np.sum(
                 [
                     dayhour_fits[i][f"s.heat.{wk_wknd}"].to_list()
-                    for i in range(len(zone_names[iso]))
+                    for i in range(len(iso_zone_names[iso]))
                 ],
                 axis=0,
             )
@@ -216,7 +228,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
             np.sum(
                 [
                     dayhour_fits[i][f"s.cool.{wk_wknd}.db"].to_list()
-                    for i in range(len(zone_names[iso]))
+                    for i in range(len(iso_zone_names[iso]))
                 ],
                 axis=0,
             )
@@ -229,7 +241,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
                 np.sum(
                     [
                         np.square(dayhour_fits[i][f"s.heat.stderr.{wk_wknd}"].to_list())
-                        for i in range(len(zone_names[iso]))
+                        for i in range(len(iso_zone_names[iso]))
                     ],
                     axis=0,
                 )
@@ -245,7 +257,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
                         np.square(
                             dayhour_fits[i][f"s.cool.db.stderr.{wk_wknd}"].to_list()
                         )
-                        for i in range(len(zone_names[iso]))
+                        for i in range(len(iso_zone_names[iso]))
                     ],
                     axis=0,
                 )
@@ -282,7 +294,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
             )
             plt.savefig(
                 f"./Profiles/result_stats/hourly_plots/iso plot with error/{iso}_{wk_wknd}.png",
-                dpi=200,
+                dpi=size,
             )
 
     iso_dayhour = pd.DataFrame()
@@ -335,7 +347,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
         )
         plt.savefig(
             f"./Profiles/result_stats/hourly_plots/iso plot with error/{iso}.png",
-            dpi=200,
+            dpi=size,
         )
 
     iso_slope.loc[iso, "s.heat"] = np.mean(iso_dayhour["s.heat"])
@@ -354,7 +366,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
     # Creating the zone and iso level heating and cooling load in mw/C and btu/m2/C
 
     zone_slope_df = pd.DataFrame()
-    for zone in zone_names[iso]:
+    for zone in iso_zone_names[iso]:
         hourly_data = pd.read_csv(
             f"https://besciences.blob.core.windows.net/datasets/bldg_el/dayhour_fits/{zone}_dayhour_fits_{base_year}.csv",
             index_col=0,
@@ -388,45 +400,53 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
     )
 
     # Creating ISO map plots containing load zones with the heating and cooling slope in btu/m2/C
-
-    zone_elec_btu_m2_c[
-        (zone_elec_btu_m2_c >= 10) | (zone_elec_btu_m2_c <= -10)
-    ] = np.nan
-    zone_elec_btu_m2_c.loc["NYIS-ZOND", :] = [np.nan, np.nan]
-    zone_elec_btu_m2_c.loc["NYIS-ZONH", :] = [np.nan, np.nan]
-    zone_elec_btu_m2_c.loc["WALC", :] = [np.nan, np.nan]
+    if iso in {"NY", "CA", "PJM", "SPP", "NW", "SE"}:
+        zone_elec_btu_m2_c[
+            (zone_elec_btu_m2_c >= 10) | (zone_elec_btu_m2_c <= -10)
+        ] = np.nan
+        for ba in {
+            "NYIS-ZOND",
+            "NYIS-ZONH",
+            "WALC",
+            "PJM-RECO",
+            "SWPP-WFEC",
+            "PSEI",
+            "AECI",
+        }:
+            zone_elec_btu_m2_c.loc[ba] = np.nan
 
     zone_shp = pd.DataFrame()
 
-    if iso == "NE":
-        for i in [
-            zone_shp_ma,
-            zone_shp_me,
-            zone_shp_nh,
-            zone_shp_vt,
-            zone_shp_ct,
-            zone_shp_ri,
-        ]:
-            zone_shp = zone_shp.append(i)
+    if iso in {"NE", "PJM", "SPP", "MISO", "SW", "NW", "SE"}:
+        zone_shp = pd.concat([s for s in iso_state_overlay[iso]])
+
+    elif iso == "USA" or iso == "Outliers":
+        zone_shp = state_shp_overlay("United States", country_shp, zone_shape)
+
     else:
         zone_shp = state_shp_overlay(iso, state_shp, zone_shape)
 
     zone_shp.index = zone_shp["BA"]
 
-    for i in range(len(zone_name_shps[iso])):
-        zone_shp.loc[zone_name_shps[iso][i], "BA"] = zone_names[iso][i]
+    for i in range(len(iso_zone_name_shps[iso])):
+        zone_shp.loc[iso_zone_name_shps[iso][i], "BA"] = iso_zone_names[iso][i]
 
     for use in ["Heating", "Cooling"]:
+        if iso == "Outliers" and use == "Heating":
+            vmax = 250
+        elif iso == "Outliers" and use == "Cooling":
+            vmax = 100
+        else:
+            vmax = 10
         zone_shp.index = zone_shp["BA"]
         zone_shp[use] = abs(zone_elec_btu_m2_c[use])
-
         if plot_show:
             fig, ax = plt.subplots(1, 1)
             zone_shp.plot(
                 column=use,
                 ax=ax,
                 vmin=0,
-                vmax=9,
+                vmax=vmax,
                 legend=True,
                 cmap=plt.cm.hot_r,
                 edgecolor="black",
@@ -449,7 +469,7 @@ def main_plots(iso, zone_shape, pumas_shp, state_shp, plot_show=True):
 
             plt.savefig(
                 f"./Profiles/result_stats/hourly_plots/zone_plots/zone model/{iso}_{use}_zone_model.png",
-                dpi=200,
+                dpi=size,
             )
 
 
@@ -471,6 +491,7 @@ if __name__ == "__main__":
         exist_ok=True,
     )
 
+    # Reading Balancing Authority, Pumas, state and country Boundary shapefiles for overlaying
     zone_shape = read_shapefile(
         "https://besciences.blob.core.windows.net/shapefiles/USA/balancing-authorities/ba_area/ba_area.zip"
     )
@@ -480,114 +501,127 @@ if __name__ == "__main__":
     state_shp = read_shapefile(
         "https://besciences.blob.core.windows.net/shapefiles/USA/state-outlines/cb_2018_us_state_20m.zip"
     )
+    country_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/nation-outlines/cb_2018_us_nation_20m.zip"
+    )
 
-    zone_shp_ma = state_shp_overlay("MA", state_shp, zone_shape)
-    zone_shp_me = state_shp_overlay("ME", state_shp, zone_shape)
-    zone_shp_nh = state_shp_overlay("NH", state_shp, zone_shape)
-    zone_shp_vt = state_shp_overlay("VT", state_shp, zone_shape)
-    zone_shp_ct = state_shp_overlay("CT", state_shp, zone_shape)
-    zone_shp_ri = state_shp_overlay("RI", state_shp, zone_shape)
-
-    zone_names = {
-        "NY": [
-            "NYIS-ZONA",
-            "NYIS-ZONB",
-            "NYIS-ZONC",
-            "NYIS-ZOND",
-            "NYIS-ZONE",
-            "NYIS-ZONF",
-            "NYIS-ZONG",
-            "NYIS-ZONH",
-            "NYIS-ZONI",
-            "NYIS-ZONJ",
-            "NYIS-ZONK",
-        ],
-        "TX": [
-            "ERCO-C",
-            "ERCO-E",
-            "ERCO-FW",
-            "ERCO-N",
-            "ERCO-NC",
-            "ERCO-S",
-            "ERCO-SC",
-            "ERCO-W",
-        ],
-        "CA": [
-            "CISO-PGAE",
-            "CISO-SCE",
-            "CISO-SDGE",
-            "IID",
-            "WALC",
-            "LDWP",
-            "TIDC",
-            "BANC",
-        ],
-        "NE": [
-            "ISNE-4000",
-            "ISNE-4001",
-            "ISNE-4002",
-            "ISNE-4003",
-            "ISNE-4004",
-            "ISNE-4005",
-        ],
+    # Executing the state overlay for all states in the US
+    zone_shp_state = {
+        s: state_shp_overlay(s, state_shp, zone_shape) for s in state_list
     }
 
-    zone_name_shps = {
-        "NY": [
-            "NYISO-A",
-            "NYISO-B",
-            "NYISO-C",
-            "NYISO-D",
-            "NYISO-E",
-            "NYISO-F",
-            "NYISO-G",
-            "NYISO-H",
-            "NYISO-I",
-            "NYISO-J",
-            "NYISO-K",
-        ],
-        "TX": [
-            "ERCO-C",
-            "ERCO-E",
-            "ERCO-FW",
-            "ERCO-N",
-            "ERCO-NC",
-            "ERCO-S",
-            "ERCO-SC",
-            "ERCO-W",
-        ],
-        "CA": [
-            "CISO-PGAE",
-            "CISO-SCE",
-            "CISO-SDGE",
-            "IID",
-            "WALC",
-            "LADWP",
-            "TID",
-            "BANC",
-        ],
+    iso_state_overlay = {
         "NE": [
-            "ISONE-Massachusetts",
-            "ISONE-Maine",
-            "ISONE-New Hampshire",
-            "ISONE-Vermont",
-            "ISONE-Connecticut",
-            "ISONE-Rhode Island",
+            zone_shp_state["MA"],
+            zone_shp_state["ME"],
+            zone_shp_state["NH"],
+            zone_shp_state["VT"],
+            zone_shp_state["CT"],
+            zone_shp_state["RI"],
         ],
-    }
-
-    iso_name = {
-        "NY": "New York",
-        "TX": "Texas",
-        "CA": "California",
-        "NE": "New England",
+        "PJM": [
+            zone_shp_state["DE"],
+            zone_shp_state["IL"],
+            zone_shp_state["IN"],
+            zone_shp_state["KY"],
+            zone_shp_state["MD"],
+            zone_shp_state["NC"],
+            zone_shp_state["MI"],
+            zone_shp_state["NJ"],
+            zone_shp_state["OH"],
+            zone_shp_state["PA"],
+            zone_shp_state["VA"],
+            zone_shp_state["WV"],
+            zone_shp_state["TN"],
+            zone_shp_state["DC"],
+        ],
+        "SPP": [
+            zone_shp_state["KS"],
+            zone_shp_state["OK"],
+            zone_shp_state["NM"],
+            zone_shp_state["TX"],
+            zone_shp_state["AR"],
+            zone_shp_state["LA"],
+            zone_shp_state["MO"],
+            zone_shp_state["SD"],
+            zone_shp_state["ND"],
+            zone_shp_state["MT"],
+            zone_shp_state["MN"],
+            zone_shp_state["IA"],
+            zone_shp_state["WY"],
+            zone_shp_state["NE"],
+        ],
+        "MISO": [
+            zone_shp_state["LA"],
+            zone_shp_state["AR"],
+            zone_shp_state["MS"],
+            zone_shp_state["MI"],
+            zone_shp_state["MO"],
+            zone_shp_state["KY"],
+            zone_shp_state["IN"],
+            zone_shp_state["IL"],
+            zone_shp_state["IA"],
+            zone_shp_state["MN"],
+            zone_shp_state["WI"],
+            zone_shp_state["ND"],
+            zone_shp_state["SD"],
+            zone_shp_state["TX"],
+            zone_shp_state["MT"],
+        ],
+        "SW": [
+            zone_shp_state["AZ"],
+            zone_shp_state["NM"],
+            zone_shp_state["CO"],
+            zone_shp_state["NV"],
+            zone_shp_state["WY"],
+            zone_shp_state["SD"],
+            zone_shp_state["NE"],
+        ],
+        "NW": [
+            zone_shp_state["CA"],
+            zone_shp_state["WA"],
+            zone_shp_state["OR"],
+            zone_shp_state["ID"],
+            zone_shp_state["NV"],
+            zone_shp_state["UT"],
+            zone_shp_state["WY"],
+            zone_shp_state["MT"],
+        ],
+        "SE": [
+            zone_shp_state["MO"],
+            zone_shp_state["KY"],
+            zone_shp_state["MS"],
+            zone_shp_state["TN"],
+            zone_shp_state["AL"],
+            zone_shp_state["GA"],
+            zone_shp_state["NC"],
+            zone_shp_state["SC"],
+            zone_shp_state["FL"],
+            zone_shp_state["VA"],
+        ],
     }
 
     # Use base_year for model results
     base_year = const.base_year
 
-    for iso in ["NY", "TX", "CA", "NE"]:
-        main_plots(iso, zone_shape, pumas_shp, state_shp)
+    # Plot size in dpi
+    size = 700
+
+    for iso in [
+        "NY",
+        "TX",
+        "CA",
+        "NE",
+        "PJM",
+        "SPP",
+        "MISO",
+        "SW",
+        "NW",
+        "SE",
+        "USA",
+        "Outliers",
+    ]:
+        main_plots(iso, zone_shape, pumas_shp, state_shp, country_shp, size)
 
     # Delete the tmp folder that holds the shapefiles localy after the script is run to completion
     shutil.rmtree(os.path.join("tmp"), ignore_errors=False, onerror=None)
