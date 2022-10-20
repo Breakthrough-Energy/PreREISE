@@ -1,6 +1,7 @@
 import os
 
 import geopandas as gpd
+import pandas as pd
 
 from prereise.gather.const import abv2state
 from prereise.utility.shapefile import download_shapefiles
@@ -23,16 +24,19 @@ def append_rural_areas_to_urban(states, urban_areas):
     states = states.rename(columns={"STUSPS": "state"})
     states = states.loc[states["state"].isin(lower_48_states_abv)]
 
-    urban_areas.index = urban_areas["NAME10"]
     urban_areas["state"] = urban_areas["NAME10"].str[-2:]
     # this drops 66 out of 3601 rows
     urban_areas = urban_areas.loc[urban_areas["state"].isin(lower_48_states_abv)]
+
+    urban_areas = urban_areas.rename(columns={"NAME10": "name"})
+    urban_areas = urban_areas.set_index("name", verify_integrity=True)
     urban_areas["urban"] = True
 
     rural_areas = states.overlay(urban_areas, how="difference")
+    rural_areas.index = rural_areas["state"] + "_rural"
     rural_areas["urban"] = False
 
-    return urban_areas.append(rural_areas, ignore_index=True)[
+    return pd.concat([urban_areas, rural_areas], verify_integrity=True)[
         ["state", "geometry", "urban"]
     ]
 
