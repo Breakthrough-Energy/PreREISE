@@ -3,14 +3,12 @@ import os
 import numpy as np
 
 import prereise.gather.demanddata.transportation_electrification.immediate_charging_HDV as immediate_charging_HDV
+from prereise.gather.demanddata.transportation_electrification import const
 from prereise.gather.demanddata.transportation_electrification.data_helper import (
     load_urbanized_scaling_factor,
 )
 from prereise.gather.demanddata.transportation_electrification.immediate import (
     immediate_charging,
-)
-from prereise.gather.demanddata.transportation_electrification import (
-    const,
 )
 
 
