@@ -52,27 +52,25 @@ def calculate_charging_helper(
 
     # -- setting values in the group whose trip_number == 1 --
     # they don't necessarily have to be the first in the group bc of how they were grouped
-    group.loc[group["trip_number"] == 1, "trip start battery charge"] = battery_capacity
+    group1 = group["trip_number"] == 1
+    group.loc[group1, "trip start battery charge"] = battery_capacity
 
-    group.loc[group["trip_number"] == 1, "trip end battery charge"] = (
-        group.loc[group["trip_number"] == 1, "trip start battery charge"]
-        - group.loc[group["trip_number"] == 1, "trip_miles"] * kwhmi * const.ER
+    group.loc[group1, "trip end battery charge"] = (
+        group.loc[group1, "trip start battery charge"]
+        - group.loc[group1, "trip_miles"] * kwhmi * const.ER
     )
 
-    group.loc[group["trip_number"] == 1, "full_charge_time"] = (
-        battery_capacity
-        - group.loc[group["trip_number"] == 1, "trip end battery charge"]
+    group.loc[group1, "full_charge_time"] = (
+        battery_capacity - group.loc[group1, "trip end battery charge"]
     ) / (charging_power * charging_efficiency)
 
-    tmp = group[group["trip_number"] == 1]
-    group.loc[group["trip_number"] == 1, "charging time"] = tmp["charging_allowed"] * (
+    tmp = group[group1]
+    group.loc[group1, "charging time"] = tmp["charging_allowed"] * (
         tmp[["full_charge_time", "dwell_time"]].apply(min, axis=1)
     )
 
-    group.loc[group["trip_number"] == 1, "charging consumption"] = (
-        group.loc[group["trip_number"] == 1, "charging time"]
-        * charging_power
-        * charging_efficiency
+    group.loc[group1, "charging consumption"] = (
+        group.loc[group1, "charging time"] * charging_power * charging_efficiency
     )
 
     # -- setting the values in the rest of the trips --
