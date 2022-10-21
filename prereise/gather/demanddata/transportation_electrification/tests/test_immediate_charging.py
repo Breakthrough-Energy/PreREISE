@@ -1,15 +1,16 @@
-import inspect
 import os
 
 import numpy as np
 
-import prereise
 import prereise.gather.demanddata.transportation_electrification.immediate_charging_HDV as immediate_charging_HDV
 from prereise.gather.demanddata.transportation_electrification.data_helper import (
     load_urbanized_scaling_factor,
 )
 from prereise.gather.demanddata.transportation_electrification.immediate import (
     immediate_charging,
+)
+from prereise.gather.demanddata.transportation_electrification import (
+    const,
 )
 
 
@@ -23,11 +24,7 @@ def test_immediate_charging_region1():
         location_strategy=2,
         veh_type="LDV",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "data",
+            const.data_folder_path,
             "nhts_census_updated_dwell",
         ),
     )
@@ -42,11 +39,7 @@ def test_immediate_charging_mdv():
         location_strategy=1,
         veh_type="MDV",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "data",
+            const.data_folder_path,
             "fdata_v10st.mat",
         ),
         trip_strategy=1,
@@ -58,11 +51,7 @@ def test_immediate_charging_mdv():
         urbanized_area="Antioch",
         state="CA",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "data",
+            const.data_folder_path,
             "regional_scaling_factors",
             "Regional_scaling_factors_UA_",
         ),
@@ -101,11 +90,7 @@ def test_immediate_charging_hdv():
         location_strategy=1,
         veh_type="HDV",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "data",
+            const.data_folder_path,
             "fdata_v10st.mat",
         ),
         trip_strategy=1,
@@ -117,11 +102,7 @@ def test_immediate_charging_hdv():
         urbanized_area="Antioch",
         state="CA",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "data",
+            const.data_folder_path,
             "regional_scaling_factors",
             "Regional_scaling_factors_UA_",
         ),

@@ -1,13 +1,10 @@
 import calendar
-import inspect
 import os
-import pathlib
 
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-import prereise
 from prereise.gather.demanddata.transportation_electrification import const
 
 
@@ -61,11 +58,7 @@ def get_kwhmi(model_year, veh_type, veh_range):
         raise ValueError(f"veh_range must be one of {allowable_ranges}")
 
     filepath = os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
+        const.data_folder_path,
         "Fuel_Efficiencies.csv",
     )
     data = pd.read_csv(filepath, index_col="veh_type")
@@ -278,13 +271,7 @@ def generate_daily_weighting(year, area_type="urban"):
     allowable_area_types = {"urban", "rural"}
     if area_type not in allowable_area_types:
         raise ValueError(f"area_type must be one of {allowable_area_types}")
-    data_dir = os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
-    )
+    data_dir = const.data_folder_path
     monthly_distribution = pd.read_csv(
         os.path.join(data_dir, "moves_monthly.csv"), index_col=0
     )

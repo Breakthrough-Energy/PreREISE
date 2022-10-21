@@ -1,11 +1,10 @@
-import inspect
 import os
 
 import numpy as np
 from scipy.io import loadmat
 
-import prereise
 from prereise.gather.demanddata.transportation_electrification import (
+    const,
     data_helper,
     smart_charging,
     smart_charging_HDV,
@@ -17,11 +16,7 @@ from prereise.gather.demanddata.transportation_electrification.data_helper impor
 
 def test_smart_charging():
     data_dir = os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
+        const.data_folder_path,
         "CAISO_sample_load_2019.mat",
     )
     load_demand = loadmat(data_dir)["load_demand"].flatten()
@@ -37,11 +32,7 @@ def test_smart_charging():
         location_strategy=2,
         veh_type="LDV",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "tests",
+            const.test_folder_path,
             "ldv_test_data.csv",
         ),
         daily_values=daily_values,
@@ -67,11 +58,7 @@ def test_smart_charging():
 
 def test_smart_charging_hdv():
     data_dir = os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
+        const.data_folder_path,
         "CAISO_sample_load_2019.mat",
     )
     load_demand = loadmat(data_dir)["load_demand"].flatten()
@@ -83,11 +70,7 @@ def test_smart_charging_hdv():
         urbanized_area="Antioch",
         state="CA",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "data",
+            const.data_folder_path,
             "regional_scaling_factors",
             "Regional_scaling_factors_UA_",
         ),
@@ -99,11 +82,7 @@ def test_smart_charging_hdv():
         location_strategy=1,
         veh_type="HDV",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "tests",
+            const.test_folder_path,
             "hdv_test_data.csv",
         ),
         initial_load=load_demand,
@@ -129,11 +108,7 @@ def test_smart_charging_hdv():
 
 def test_smart_charging_mdv():
     data_dir = os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
+        const.data_folder_path,
         "CAISO_sample_load_2019.mat",
     )
     load_demand = loadmat(data_dir)["load_demand"].flatten()
@@ -145,11 +120,7 @@ def test_smart_charging_mdv():
         urbanized_area="Antioch",
         state="CA",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "data",
+            const.data_folder_path,
             "regional_scaling_factors",
             "Regional_scaling_factors_UA_",
         ),
@@ -161,11 +132,7 @@ def test_smart_charging_mdv():
         location_strategy=1,
         veh_type="MDV",
         filepath=os.path.join(
-            os.path.dirname(inspect.getsourcefile(prereise)),
-            "gather",
-            "demanddata",
-            "transportation_electrification",
-            "tests",
+            const.test_folder_path,
             "mdv_test_data.csv",
         ),
         initial_load=load_demand,
