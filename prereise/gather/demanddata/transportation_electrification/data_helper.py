@@ -96,7 +96,7 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
     """
     if not (1 <= census_region <= 9):
         raise ValueError("census_region must be between 1 and 9 (inclusive).")
-    if pathlib.Path(filepath).suffix == ".csv":
+    if filepath.endswith(".csv"):
         census_data = pd.read_csv(filepath)
     else:
         nhts_census = loadmat(filepath)
@@ -119,7 +119,7 @@ def load_hdv_data(
     :return: (*pandas.DataFrame*) -- the data loaded from fdata_v10st.mat, with column
         names added.
     """
-    if pathlib.Path(filepath).suffix == ".csv":
+    if filepath.endswith(".csv"):
         hdv_data = pd.read_csv(filepath)
     else:
         mat_data = loadmat(filepath)
