@@ -1,3 +1,24 @@
+import inspect
+import os
+
+import prereise
+
+data_folder_path = os.path.join(
+    os.path.dirname(inspect.getsourcefile(prereise)),
+    "gather",
+    "demanddata",
+    "transportation_electrification",
+    "data",
+)
+
+test_folder_path = os.path.join(
+    os.path.dirname(inspect.getsourcefile(prereise)),
+    "gather",
+    "demanddata",
+    "transportation_electrification",
+    "tests",
+)
+
 model_year = 2040
 
 ldv_location_allowed = {
