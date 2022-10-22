@@ -1,10 +1,10 @@
 import math
 
 import numpy as np
-import pandas as pd
 from scipy.optimize import linprog
 
 from prereise.gather.demanddata.transportation_electrification import (
+    charging_optimization,
     data_helper,
     dwelling,
 )
@@ -12,175 +12,6 @@ from prereise.gather.demanddata.transportation_electrification import (
 location_allowed = {
     1: {1},  # base only
 }
-
-
-def get_constraints(
-    constraints_df, kwhmi, power, trip_strategy, location_strategy, charging_efficiency
-):
-    """Determine the consumption and charging constraints for each trip (hour segment)
-
-    :param pandas.DataFrame constraints_df: trip data of vehicles for optimization constraints
-    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
-    :param float power: charger power, EVSE kW.
-    :param int trip_strategy: a toggle that determines if should charge on any trip or
-        only after last trip (1-anytrip number, 2-last trip)
-    :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, 5, or 6;
-        1-home only, 2-home and work related, 3-anywhere if possibile,
-        4-home and school only, 5-home and work and school, 6-only work
-    :param float charging_efficiency: from grid to battery efficiency.
-    :return: (*pandas.DataFrame*) -- a DataFrame adding the calculated constraints
-        to an individual vehicle's data
-    """
-    grouped_trips = constraints_df.groupby("Vehicle Number")
-
-    # for "power" - setting power value based on "Home base end"
-    constraints_df.loc[
-        constraints_df["Home base end (1/0)"] == 1, "power_allowed"
-    ] = power
-    constraints_df["power_allowed"].fillna(0, inplace=True)
-
-    # for "power" - location
-    if location_strategy == 3:
-        constraints_df["location_allowed"] = True
-    else:
-        allowed = location_allowed[location_strategy]
-        constraints_df["location_allowed"] = constraints_df["Home base end (1/0)"].map(
-            lambda x: x in allowed
-        )
-
-    # for "power" - trip number
-    if trip_strategy == 1:
-        constraints_df["trip_allowed"] = True
-    elif trip_strategy == 2:
-        constraints_df["trip_allowed"] = (
-            constraints_df["Trip Number"] == constraints_df["Total Vehicle Trips"]
-        )
-
-    # for "power" - dwell
-    constraints_df["dwell_allowed"] = constraints_df["Dwell Time"] > 0.2
-
-    # for "power" - determine if can charge
-    allowed_cols = [
-        "power_allowed",
-        "location_allowed",
-        "trip_allowed",
-        "dwell_allowed",
-    ]
-    constraints_df["charging_allowed"] = constraints_df[allowed_cols].apply(all, axis=1)
-
-    for trip_num, group in grouped_trips:
-        constraints_df.loc[group.index, "charging consumption"] = (
-            constraints_df.loc[group.index, "Trip Distance"] * kwhmi * -1
-        )
-        constraints_df.loc[group.index, "seg"] = dwelling.get_segment(
-            constraints_df.loc[group.index, "Trip End"],
-            constraints_df.loc[group.index, "Dwell Time"],
-        )
-
-    constraints_df.loc[
-        constraints_df["charging_allowed"] == True, "power"  # noqa: E712
-    ] = constraints_df["power_allowed"]
-    constraints_df["power"].fillna(0, inplace=True)
-
-    constraints_df["segcum"] = constraints_df["seg"].transform(pd.Series.cumsum)
-
-    constraints_df["energy limit"] = constraints_df.apply(
-        lambda d: dwelling.get_energy_limit(
-            d["power"],
-            d["seg"],
-            d["Trip End"],
-            d["Dwell Time"],
-            charging_efficiency,
-        ),
-        axis=1,
-    )
-
-    return constraints_df
-
-
-def calculate_optimization(
-    charging_consumption, rates, elimit, seg, segsum, segcum, total_trips, kwh
-):
-    """Calculates the minimized charging cost during a specific dwelling activity
-
-    :param list charging_consumption: the charging consumption for each trip
-    :param list rates: rates to be used for the cost function
-    :param list elimit: energy limits during the time span of available charging
-    :param list seg: the amount of the segments in the dwelling activity
-    :param int segsum: the overall total of segments
-    :param list segcum: cumulative sum of the segments
-    :param int total_trips: total number of trips for the current vehicle
-    :param float kwh: kwhmi * veh_range, amount of energy needed to charge vehicle.
-    :return: (*dict*) -- contains the necessary inputs for the linprog optimization
-    """
-    f = np.array(rates)
-
-    # form all the constraints
-    # equality constraint
-    Aeq = np.ones((1, segsum))  # noqa: N806
-
-    # equality constraint
-    Beq = -sum(charging_consumption)  # noqa: N806
-
-    # G2V power upper bound in DC
-    ub = elimit
-    lb = [0] * segsum
-    bounds = list(zip(lb, ub))
-
-    # formulate the constraints matrix in Ax <= b, A can be divided into m
-    # generate the cumulative sum array of seg in segcum
-
-    # the amount of trips. submatrix dimension is m-1 * m
-    m = total_trips
-
-    # 'a' is a m-1 * segsum matrix
-    a = np.zeros((m - 1, segsum))
-    Aineq = np.zeros(((m - 1) * m, segsum))  # noqa: N806
-
-    b = np.tril(np.ones((m - 1, m)), 1)
-    Bineq = np.zeros((m * (m - 1), 1))  # noqa: N806
-
-    for j in range(m):
-        # part of the A matrix
-        a = np.zeros((m - 1, segsum))
-
-        if j > 0:
-            # switch components in b matrix
-            bb = np.concatenate((b[:, m - j : m], b[:, : m - j]), axis=1)
-
-        else:
-            # do not switch if j is 0
-            bb = b
-
-        charging_consumption = np.array(charging_consumption)
-        cc = charging_consumption.reshape((charging_consumption.shape[0], 1))
-
-        # set the constraints in DC
-        Bineq[(m - 1) * j : (m - 1) * (j + 1), :] = kwh + (np.dot(bb, cc))
-
-        for ii in range(m - 1):
-            # indicate the number of the trips
-            k = j + ii
-
-            if k < m:
-                # ones part of the column
-                a[ii : m - 1, segcum[k] - seg[k] : segcum[k]] = 1
-
-            else:
-                k = k - m
-                # ones part of the column
-                a[ii : m - 1, segcum[k] - seg[k] : segcum[k]] = 1
-
-        Aineq[(m - 1) * j : (m - 1) * (j + 1), :] = -a
-
-    return {
-        "c": f,
-        "A_ub": Aineq,
-        "b_ub": Bineq,
-        "A_eq": Aeq,
-        "b_eq": Beq,
-        "bounds": bounds,
-    }
 
 
 def smart_charging(
@@ -254,8 +85,14 @@ def smart_charging(
 
     nd_len = len(newdata)
 
-    newdata = get_constraints(
-        newdata, kwhmi, power, trip_strategy, location_strategy, charging_efficiency
+    newdata = charging_optimization.get_constraints(
+        newdata,
+        kwhmi,
+        power,
+        trip_strategy,
+        location_strategy,
+        location_allowed,
+        charging_efficiency,
     )
 
     for day_iter in range(model_year_len):
@@ -297,9 +134,7 @@ def smart_charging(
         while i < nd_len:
 
             # trip amount for each vehicle
-            total_trips = int(
-                newdata.iloc[i, newdata.columns.get_loc("Total Vehicle Trips")]
-            )
+            total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
 
             # copy one vehicle information to the block
             individual = newdata.iloc[i : i + total_trips].copy()
@@ -307,8 +142,8 @@ def smart_charging(
             individual["rates"] = individual.apply(
                 lambda d: dwelling.get_rates(
                     cost,
-                    d["Trip End"],
-                    d["Dwell Time"],
+                    d["trip_end"],
+                    d["dwell_time"],
                 ),
                 axis=1,
             )
@@ -322,19 +157,16 @@ def smart_charging(
             elimit = [el for energy_lim in elimit for el in energy_lim]
 
             seg = individual["seg"].apply(int).to_numpy()
-
-            segsum = np.sum(seg)
             segcum = np.cumsum(seg)
 
-            linprog_inputs = calculate_optimization(
+            linprog_inputs = charging_optimization.calculate_optimization(
                 charging_consumption,
                 rates,
                 elimit,
                 seg,
-                segsum,
-                segcum,
                 total_trips,
                 kwh,
+                charging_efficiency,
             )
 
             linprog_result = linprog(**linprog_inputs)
@@ -364,17 +196,17 @@ def smart_charging(
                     start = math.floor(
                         individual.iloc[
                             n,
-                            individual.columns.get_loc("Trip End"),
+                            individual.columns.get_loc("trip_end"),
                         ]
                     )
                     end = math.floor(
                         individual.iloc[
                             n,
-                            individual.columns.get_loc("Trip End"),
+                            individual.columns.get_loc("trip_end"),
                         ]
                         + individual.iloc[
                             n,
-                            individual.columns.get_loc("Dwell Time"),
+                            individual.columns.get_loc("dwell_time"),
                         ]
                     )
 

@@ -1,13 +1,10 @@
 import calendar
-import inspect
 import os
-import pathlib
 
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-import prereise
 from prereise.gather.demanddata.transportation_electrification import const
 
 
@@ -61,11 +58,7 @@ def get_kwhmi(model_year, veh_type, veh_range):
         raise ValueError(f"veh_range must be one of {allowable_ranges}")
 
     filepath = os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
+        const.data_folder_path,
         "Fuel_Efficiencies.csv",
     )
     data = pd.read_csv(filepath, index_col="veh_type")
@@ -96,7 +89,7 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
     """
     if not (1 <= census_region <= 9):
         raise ValueError("census_region must be between 1 and 9 (inclusive).")
-    if pathlib.Path(filepath).suffix == ".csv":
+    if filepath.endswith(".csv"):
         census_data = pd.read_csv(filepath)
     else:
         nhts_census = loadmat(filepath)
@@ -110,26 +103,26 @@ def load_data(census_region: int, filepath: str = "nhts_census_updated.mat"):
 
 def load_hdv_data(
     veh_type,
-    filepath=os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
-        "fdata_v10st.mat",
-    ),
+    filepath,
 ):
     """Load the data at fdata_v10st.mat.
 
+    :param str veh_type: vehicle type ("hhdv: and "mhdv") category for trips
     :param str filepath: the path to the matfile.
     :return: (*pandas.DataFrame*) -- the data loaded from fdata_v10st.mat, with column
         names added.
     """
+    if filepath.endswith(".csv"):
+        hdv_data = pd.read_csv(filepath)
+    else:
+        mat_data = loadmat(filepath)
+        raw_data = mat_data[f"{veh_type}_data"]
 
-    hdv_data = loadmat(filepath)
-    raw_data = hdv_data[f"{veh_type}_data"]
+        hdv_data = pd.DataFrame(raw_data, columns=const.hdv_data_column_names)
 
-    return pd.DataFrame(raw_data, columns=const.hdv_data_column_names)
+    hdv_data = hdv_data.rename(columns=const.hdv_columns_transform)
+
+    return hdv_data
 
 
 def load_urbanized_scaling_factor(
@@ -278,13 +271,7 @@ def generate_daily_weighting(year, area_type="urban"):
     allowable_area_types = {"urban", "rural"}
     if area_type not in allowable_area_types:
         raise ValueError(f"area_type must be one of {allowable_area_types}")
-    data_dir = os.path.join(
-        os.path.dirname(inspect.getsourcefile(prereise)),
-        "gather",
-        "demanddata",
-        "transportation_electrification",
-        "data",
-    )
+    data_dir = const.data_folder_path
     monthly_distribution = pd.read_csv(
         os.path.join(data_dir, "moves_monthly.csv"), index_col=0
     )
@@ -351,7 +338,7 @@ def get_total_hdv_daily_vmt(data: pd.DataFrame, veh_range):
     if veh_range not in allowable_ranges:
         raise ValueError(f"veh_range must be one of {allowable_ranges}")
 
-    range_vmt = data["Trip Distance"].copy()
+    range_vmt = data["trip_miles"].copy()
     range_vmt[data["Total Vehicle Miles"] > veh_range] = 0
     daily_vmt_total = sum(range_vmt) * np.ones(365)
 
