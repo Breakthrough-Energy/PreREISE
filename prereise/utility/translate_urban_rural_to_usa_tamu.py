@@ -12,18 +12,28 @@ from prereise.utility.translate_zones import (
 from prereise.utility.generate_rural_shapefiles import (
     generate_urban_and_rural_shapefiles,
 )
-from prereise.gather.const import zone2state_abv
+from prereise.gather.const import zone2state_abv, lower_48_states_abv
 from prereise.utility.shapefile import download_shapefiles
 
 
-def plot_loadzones(tamu_loadzones, states):
+def plot_loadzones(tamu_loadzones, substations, states):
+    """Plot usa tamu loadzone borders as choropleth. Has 20 colors; buckets zones in
+    alphabetical order
+
+    :param geopandas.geodataframe.GeoDataFrame tamu_loadzones: GeoDataFrame with
+        index = zone, columns = ['geometry']
+    :param geopandas.geodataframe.GeoDataFrame substations: GeoDataFrame with
+        index = substation id, columns = ['geometry', 'zone']
+    :param geopandas.geodataframe.GeoDataFrame states: GeoDataFrame with
+        index = state name, columns = ['geometry']
+    :return: (*matplotlib.axes._subplots.AxesSubplot) -- the plot object
+    """
     ax = tamu_loadzones.plot(figsize=(50, 50), cmap="tab20", alpha=0.5)
-    sub.plot(
+    substations.plot(
         ax=ax,
         column="zone",
         linewidth=1,
         cmap="tab20",
-        # alpha= 0.5,
     )
     tamu_loadzones.plot(ax=ax, linewidth=1, edgecolor="red", color="none", alpha=0.5)
     states.plot(
@@ -35,9 +45,8 @@ def plot_loadzones(tamu_loadzones, states):
 
 
 def format_states_gdf(states):
-    # TODO clean
-    states = states.loc[~states["STUSPS"].isin(["AK", "DC", "HI", "PR"])]
     states = states.rename(columns={"STUSPS": "state"})
+    states = states.loc[states["state"].isin(lower_48_states_abv)]
     states.index = states["state"]
     return states
 

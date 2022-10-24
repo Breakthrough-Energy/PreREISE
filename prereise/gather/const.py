@@ -52,6 +52,10 @@ abv2state = {
     "WY": "Wyoming",
 }
 
+lower_48_states_abv = list(abv2state.keys())
+lower_48_states_abv.remove("AK")
+lower_48_states_abv.remove("HI")
+
 zone2state_abv = {
     "Alabama": "AL",
     "Arizona": "AZ",

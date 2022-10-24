@@ -3,7 +3,7 @@ import os
 import geopandas as gpd
 import pandas as pd
 
-from prereise.gather.const import abv2state
+from prereise.gather.const import lower_48_states_abv
 from prereise.utility.shapefile import download_shapefiles
 
 
@@ -17,10 +17,6 @@ def append_rural_areas_to_urban(states, urban_areas):
     :return: (*geopandas.geodataframe.GeoDataFrame*) -- new gdf of urban and rural areas
         includes a column indicating whether the area is urban or not
     """
-    lower_48_states_abv = list(abv2state.keys())
-    lower_48_states_abv.remove("AK")
-    lower_48_states_abv.remove("HI")
-
     states = states.rename(columns={"STUSPS": "state"})
     states = states.loc[states["state"].isin(lower_48_states_abv)]
 
