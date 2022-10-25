@@ -17,16 +17,16 @@ from prereise.utility.shapefile import download_shapefiles
 
 
 def plot_loadzones(tamu_loadzones, substations, states):
-    """Plot usa tamu loadzone borders as choropleth. Has 20 colors; buckets zones in
-    alphabetical order
+    """Plot usa tamu loadzone borders and substations as choropleth.
+       Has 20 colors; buckets zones in alphabetical order.
 
     :param geopandas.geodataframe.GeoDataFrame tamu_loadzones: GeoDataFrame with
         index = zone, columns = ['geometry']
     :param geopandas.geodataframe.GeoDataFrame substations: GeoDataFrame with
         index = substation id, columns = ['geometry', 'zone']
-    :param geopandas.geodataframe.GeoDataFrame states: GeoDataFrame with
-        index = state name, columns = ['geometry']
-    :return: (*matplotlib.axes._subplots.AxesSubplot) -- the plot object
+    :param geopandas.geodataframe.GeoDataFrame states: GeoDataFrame of lower 48
+        US state borders with index = state, columns = ['geometry']
+    :return: (*matplotlib.axes._subplots.AxesSubplot*) -- the plot object
     """
     ax = tamu_loadzones.plot(figsize=(50, 50), cmap="tab20", alpha=0.5)
     substations.plot(
@@ -42,9 +42,17 @@ def plot_loadzones(tamu_loadzones, substations, states):
         edgecolor="black",
         color="none",
     )
+    return ax
 
 
 def format_states_gdf(states):
+    """Takes geodataframe of US state borders, filters to the lower 48 states,
+       and renames columns.
+
+    :param geopandas.geodataframe.GeoDataFrame states: GeoDataFrame of US state
+        borders with index = state, columns = ['geometry', 'STUSPS']
+    :return: (*geopandas.geodataframe.GeoDataFrame*) -- modified states gdf
+    """
     states = states.rename(columns={"STUSPS": "state"})
     states = states.loc[states["state"].isin(lower_48_states_abv)]
     states.index = states["state"]
@@ -52,6 +60,12 @@ def format_states_gdf(states):
 
 
 def create_substation_gdf(grid):
+    """Takes a grid object and uses lat lon data to create a Geodataframe of
+       substations.
+
+    :param powersimdata.input.grid.Grid grid: Grid instance.
+    :return: (*geopandas.geodataframe.GeoDataFrame*) -- gdf of substations
+    """
     sub2zone = grid.bus2sub.copy().join(grid.bus["zone_id"])[["sub_id", "zone_id"]]
     sub2zone = sub2zone.groupby(["sub_id", "zone_id"]).sum()
     sub2zone = sub2zone.reset_index(level="zone_id")
@@ -66,6 +80,18 @@ def create_substation_gdf(grid):
 
 
 def fix_lz_border(states, state, geometry):
+    """Takes a shape representing a loadzone and trims it to match state
+       borders. If there is only one loadzone in that state, we use the
+       original state border. If there are multiple loadzones in one state, we
+       trim the loadzone borders so they do not go outside the state border.
+
+    :param geopandas.geodataframe.GeoDataFrame states: GeoDataFrame of lower 48
+        US state borders with index = state, columns = ['geometry', 'state']
+    :param str state: Abbreviated name of the state.
+    :param TODO geometry: The shape of the loadzone to be trimmed
+    :return: (*TODO*) -- the modified loadzone shape
+    """
+
     state_geom = states.loc[state, "geometry"]
 
     states_with_multiple_loadzones = [
@@ -94,7 +120,18 @@ def fix_lz_border(states, state, geometry):
 
 
 def create_usa_tamu_convex_hull_shapefile(sub_gdf, states):
-    # convex hull: the smallest convex Polygon containing all the points in each geometry
+    """Creates a Geodataframe that approximates the shapes of the USA tamu
+       loadzones. Loadzone shapes are made by taking the convex hull of all the
+       individual substations within that zone. A convex hull is the smallest
+       convex polygon containing all the points in each geometry.
+
+    :param geopandas.geodataframe.GeoDataFrame sub_gdf: GeoDataFrame of
+        substations with index = sub id, columns = ['geometry', 'zone']
+    :param geopandas.geodataframe.GeoDataFrame states: GeoDataFrame of lower 48
+        US state borders with index = state, columns = ['geometry', 'state']
+    :return: (*geopandas.geodataframe.GeoDataFrame*) -- gdf of USA tamu zones
+    """
+
     tamu_loadzones = sub_gdf.dissolve("zone").convex_hull
     tamu_loadzones = gpd.GeoDataFrame(tamu_loadzones)
     tamu_loadzones = tamu_loadzones.rename(columns={0: "geometry"})
