@@ -237,7 +237,7 @@ def immediate_charging(
     if trip_strategy == 1:
         trips["trip_allowed"] = True
     elif trip_strategy == 2:
-        trips["trip_allowed"] = trips["trip_number"] == trips["total vehicle trips"]
+        trips["trip_allowed"] = trips["trip_number"] == trips["total_trips"]
 
     # Add booleans for whether the dell time is long enough to allow charging -- (1)
     trips["dwell_allowed"] = trips["dwell_time"] > 0.2
