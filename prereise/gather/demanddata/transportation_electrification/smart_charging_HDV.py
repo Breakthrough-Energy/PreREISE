@@ -60,9 +60,9 @@ def smart_charging(
         "trip end battery charge",
         "BEV could be used",
         "Battery size",
+        "Electricity cost",
         "Battery discharge",
         "Battery charge",
-        "Electricity cost",
     ]
     newdata = newdata.reindex(list(newdata.columns) + new_columns, axis=1, fill_value=0)
 
@@ -95,33 +95,20 @@ def smart_charging(
         charging_efficiency,
     )
 
-    for day_iter in range(model_year_len):
+    day_num = model_year_len
+    for day_iter in range(day_num):
 
-        # Expand load vector linearly to 7200 points instead of 72
-        if day_iter == model_year_len - 1:  # 365
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, (day_iter + 1) * 24)
-            ]
-            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(48)]
+        adjusted_load = [
+            load_demand[i] + model_year_profile[i]
+            for i in range(
+                day_iter * 24, (day_iter + 1) * 24 + min(day_num - day_iter - 1, 2) * 24
+            )
+        ]
 
-        elif day_iter == model_year_len - 2:  # 364
-            adjusted_load = [
+        if 3 - day_num + day_iter > 0:
+            adjusted_load += [
                 load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 24)
-            ]
-            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(24)]
-
-        elif day_iter == model_year_len - 3:  # 363
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 48)
-            ]
-
-        else:
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, (day_iter * 24) + 72)
+                for i in range(24 * (3 - day_num + day_iter))
             ]
 
         cost = np.array(adjusted_load)
