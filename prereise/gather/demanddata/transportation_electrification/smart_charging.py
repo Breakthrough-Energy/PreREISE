@@ -285,31 +285,14 @@ def smart_charging(
 
         outputelectricload = sum(g2v_load)
 
-        if day_iter == len(input_day) - 1:
-            # MW
-            model_year_profile[day_iter * 24 :] += (
-                outputelectricload[:24] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-            model_year_profile[:24] += (
-                outputelectricload[24:48] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-            model_year_profile[24:48] += (
-                outputelectricload[48:72] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
+        # create wrap-around indexing function
+        profile_window_indices = np.arange(day_iter * 24, day_iter * 24 + 72) % len(
+            model_year_profile
+        )
 
-        elif day_iter == len(input_day) - 2:
-            # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 48] += (
-                outputelectricload[:48] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-            model_year_profile[:24] += (
-                outputelectricload[48:72] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-
-        else:
-            # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 72] += (
-                outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
+        # MW
+        model_year_profile[profile_window_indices] += (
+            outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
+        )
 
     return model_year_profile
