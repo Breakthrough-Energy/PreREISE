@@ -237,7 +237,7 @@ def smart_charging(
                             electricitycost = trip_g2v_cost
                             tripload = trip_v2g_load + trip_g2v_load
 
-                            # update the cost function and vonvert from KW to MW
+                            # update the cost function and convert from KW to MW
                             cost += (
                                 tripload / 1000 / daily_vmt_total[day_iter] * bev_vmt
                             )[0, :]
