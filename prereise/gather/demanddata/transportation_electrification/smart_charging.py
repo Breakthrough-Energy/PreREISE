@@ -280,9 +280,6 @@ def smart_charging(
                             :, newdata.columns.get_loc("Battery size")
                         ] = batterysize
 
-                        # copy individual back to newdata if it can be an EV
-                        newdata.iloc[i : i + total_trips] = individual
-
             # update the counter to the next vehicle
             i += total_trips
 
