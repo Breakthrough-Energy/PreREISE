@@ -222,7 +222,9 @@ def smart_charging(
 
                             segcum = np.cumsum(seg)
                             trip_g2v_load[:, start : end + 1] = (
-                                x[segcum[n] - seg[n] : segcum[n]] / charging_efficiency
+                                #  possibly? x[segcum[n] - seg[n] + 1 : segcum[n]] / charging_efficiency
+                                x[segcum[n] - seg[n] : segcum[n]]
+                                / charging_efficiency
                             )
                             g2v_load[dwell_location, :] += trip_g2v_load[0, :]
                             individual_g2v_load[i + n][:] = trip_g2v_load
