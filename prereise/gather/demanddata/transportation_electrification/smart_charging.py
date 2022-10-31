@@ -83,7 +83,6 @@ def smart_charging(
     daily_vmt_total = data_helper.get_total_daily_vmt(newdata, input_day, daily_values)
 
     kwh = kwhmi * veh_range
-    bev_vmt = const.emfacvmt
     if power > 19.2:
         charging_efficiency = 0.95
     else:
