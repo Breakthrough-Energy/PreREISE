@@ -60,9 +60,9 @@ def smart_charging(
         "trip end battery charge",
         "BEV could be used",
         "Battery size",
+        "Electricity cost",
         "Battery discharge",
         "Battery charge",
-        "Electricity cost",
     ]
     newdata = newdata.reindex(list(newdata.columns) + new_columns, axis=1, fill_value=0)
 
@@ -95,33 +95,20 @@ def smart_charging(
         charging_efficiency,
     )
 
-    for day_iter in range(model_year_len):
+    day_num = model_year_len
+    for day_iter in range(day_num):
 
-        # Expand load vector linearly to 7200 points instead of 72
-        if day_iter == model_year_len - 1:  # 365
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, (day_iter + 1) * 24)
-            ]
-            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(48)]
+        adjusted_load = [
+            load_demand[i] + model_year_profile[i]
+            for i in range(
+                day_iter * 24, (day_iter + 1) * 24 + min(day_num - day_iter - 1, 2) * 24
+            )
+        ]
 
-        elif day_iter == model_year_len - 2:  # 364
-            adjusted_load = [
+        if 3 - day_num + day_iter > 0:
+            adjusted_load += [
                 load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 24)
-            ]
-            adjusted_load += [load_demand[i] + model_year_profile[i] for i in range(24)]
-
-        elif day_iter == model_year_len - 3:  # 363
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, ((day_iter + 1) * 24) + 48)
-            ]
-
-        else:
-            adjusted_load = [
-                load_demand[i] + model_year_profile[i]
-                for i in range(day_iter * 24, (day_iter * 24) + 72)
+                for i in range(24 * (3 - day_num + day_iter))
             ]
 
         cost = np.array(adjusted_load)
@@ -269,39 +256,22 @@ def smart_charging(
                     :, newdata.columns.get_loc("Battery size")
                 ] = batterysize
 
-                # copy individual back to newdata if it can be an EV
-                newdata.iloc[i : i + total_trips] = individual
+                # # copy individual back to newdata if it can be an EV
+                # newdata.iloc[i : i + total_trips] = individual
 
             # update the counter to the next vehicle
             i += total_trips
 
         outputelectricload = sum(g2v_load)
 
-        if day_iter == model_year_len - 1:
-            # MW
-            model_year_profile[day_iter * 24 :] += (
-                outputelectricload[:24] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-            model_year_profile[:24] += (
-                outputelectricload[24:48] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-            model_year_profile[24:48] += (
-                outputelectricload[48:72] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
+        # create wrap-around indexing function
+        profile_window_indices = np.arange(day_iter * 24, day_iter * 24 + 72) % len(
+            model_year_profile
+        )
 
-        elif day_iter == model_year_len - 2:
-            # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 48] += (
-                outputelectricload[:48] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-            model_year_profile[:24] += (
-                outputelectricload[48:72] / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
-
-        else:
-            # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 72] += (
-                outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
-            )
+        # MW
+        model_year_profile[profile_window_indices] += (
+            outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
+        )
 
     return model_year_profile

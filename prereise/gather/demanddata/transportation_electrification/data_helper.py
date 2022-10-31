@@ -64,7 +64,7 @@ def get_kwhmi(model_year, veh_type, veh_range):
     data = pd.read_csv(filepath, index_col="veh_type")
 
     if (veh_type.upper() == "LDV") or (veh_type.upper() == "LDT"):
-        kwhmi = data.loc[f"{veh_type.upper()}_{veh_range}", model_year]
+        kwhmi = data.loc[f"{veh_type.upper()}_{veh_range}", str(model_year)]
 
     elif (veh_type.upper() == "MDV") or (veh_type.upper() == "HDV"):
         kwhmi = data.loc[f"{veh_type.upper()}", str(model_year)]
