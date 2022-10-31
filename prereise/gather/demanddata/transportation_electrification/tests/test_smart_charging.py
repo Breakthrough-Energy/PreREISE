@@ -37,6 +37,7 @@ def test_smart_charging():
         ),
         daily_values=daily_values,
         load_demand=load_demand,
+        bev_vmt=const.emfacvmt,
         trip_strategy=1,
     )
 

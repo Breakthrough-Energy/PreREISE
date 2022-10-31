@@ -22,6 +22,7 @@ def smart_charging(
     filepath,
     daily_values,
     load_demand,
+    bev_vmt,
     trip_strategy=1,
 ):
     """Smart charging function
@@ -64,11 +65,11 @@ def smart_charging(
         "trip start battery charge",
         "trip end battery charge",
         "BEV could be used",
-        "trip_number",
+        "Battery size",
         "Electricity cost",
         "Battery discharge",
         "Battery charge",
-        "Battery size",
+        "trip_number",
     ]
     newdata = newdata.reindex(list(newdata.columns) + new_columns, axis=1, fill_value=0)
 
@@ -82,7 +83,6 @@ def smart_charging(
     daily_vmt_total = data_helper.get_total_daily_vmt(newdata, input_day, daily_values)
 
     kwh = kwhmi * veh_range
-    emfacvmt = const.emfacvmt
     if power > 19.2:
         charging_efficiency = 0.95
     else:
@@ -222,7 +222,9 @@ def smart_charging(
 
                             segcum = np.cumsum(seg)
                             trip_g2v_load[:, start : end + 1] = (
-                                x[segcum[n] - seg[n] : segcum[n]] / charging_efficiency
+                                #  possibly? x[segcum[n] - seg[n] + 1 : segcum[n]] / charging_efficiency
+                                x[segcum[n] - seg[n] : segcum[n]]
+                                / charging_efficiency
                             )
                             g2v_load[dwell_location, :] += trip_g2v_load[0, :]
                             individual_g2v_load[i + n][:] = trip_g2v_load
@@ -237,9 +239,9 @@ def smart_charging(
                             electricitycost = trip_g2v_cost
                             tripload = trip_v2g_load + trip_g2v_load
 
-                            # update the cost function and vonvert from KW to MW
+                            # update the cost function and convert from KW to MW
                             cost += (
-                                tripload / 1000 / daily_vmt_total[day_iter] * emfacvmt
+                                tripload / 1000 / daily_vmt_total[day_iter] * bev_vmt
                             )[0, :]
 
                             # SOC rise in kwh, from charging
@@ -278,45 +280,19 @@ def smart_charging(
                             :, newdata.columns.get_loc("Battery size")
                         ] = batterysize
 
-                        # copy individual back to newdata if it can be an EV
-                        newdata.iloc[i : i + total_trips] = individual
-
             # update the counter to the next vehicle
             i += total_trips
 
         outputelectricload = sum(g2v_load)
 
-        if day_iter == len(input_day) - 1:
-            # MW
-            model_year_profile[day_iter * 24 :] += (
-                outputelectricload[:24] / (daily_vmt_total[day_iter] * 1000) * emfacvmt
-            )
-            model_year_profile[:24] += (
-                outputelectricload[24:48]
-                / (daily_vmt_total[day_iter] * 1000)
-                * emfacvmt
-            )
-            model_year_profile[24:48] += (
-                outputelectricload[48:72]
-                / (daily_vmt_total[day_iter] * 1000)
-                * emfacvmt
-            )
+        # create wrap-around indexing function
+        profile_window_indices = np.arange(day_iter * 24, day_iter * 24 + 72) % len(
+            model_year_profile
+        )
 
-        elif day_iter == len(input_day) - 2:
-            # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 48] += (
-                outputelectricload[:48] / (daily_vmt_total[day_iter] * 1000) * emfacvmt
-            )
-            model_year_profile[:24] += (
-                outputelectricload[48:72]
-                / (daily_vmt_total[day_iter] * 1000)
-                * emfacvmt
-            )
-
-        else:
-            # MW
-            model_year_profile[day_iter * 24 : day_iter * 24 + 72] += (
-                outputelectricload / (daily_vmt_total[day_iter] * 1000) * emfacvmt
-            )
+        # MW
+        model_year_profile[profile_window_indices] += (
+            outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
+        )
 
     return model_year_profile

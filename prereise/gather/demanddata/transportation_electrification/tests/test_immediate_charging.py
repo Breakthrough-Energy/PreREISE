@@ -17,7 +17,6 @@ def test_immediate_charging_region1():
         census_region=1,
         model_year=2017,
         veh_range=100,
-        kwhmi=0.242,
         power=6.6,
         location_strategy=2,
         veh_type="LDV",
