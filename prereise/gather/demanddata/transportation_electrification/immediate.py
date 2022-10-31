@@ -104,7 +104,6 @@ def immediate_charging(
     census_region,
     model_year,
     veh_range,
-    kwhmi,
     power,
     location_strategy,
     veh_type,
@@ -112,10 +111,10 @@ def immediate_charging(
     trip_strategy=1,
 ):
     """Immediate charging function
+
     :param int census_region: any of the 9 census regions defined by US census bureau.
     :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
     :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
-    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
     :param int power: charger power, EVSE kW.
     :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, or 5;
         1-home only, 2-home and work related, 3-anywhere if possibile,
@@ -125,16 +124,20 @@ def immediate_charging(
     :param int trip_strategy: determine to charge after any trip (1) or only after the last trip (2)
     :return: (*numpy.ndarray*) -- charging profiles.
     """
-    # Constants
-    battery_capacity = kwhmi * veh_range
-    input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
 
-    # load NHTS data from function
     if veh_type.lower() == "ldv":
         trips = data_helper.remove_ldt(data_helper.load_data(census_region, filepath))
-
     elif veh_type.lower() == "ldt":
         trips = data_helper.remove_ldv(data_helper.load_data(census_region, filepath))
+    elif veh_type.lower() == "mdv":
+        trips = data_helper.load_hdv_data("mhdv", filepath)
+    elif veh_type.lower() == "hdv":
+        trips = data_helper.load_hdv_data("hhdv", filepath)
+
+    # Constants
+    kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
+    battery_capacity = kwhmi * veh_range
+    input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
 
     # updates the weekend and weekday values in the nhts data
     trips = data_helper.update_if_weekend(trips)
@@ -148,6 +151,7 @@ def immediate_charging(
     new_columns = [
         "trip start battery charge",
         "trip end battery charge",
+        "charging power",
         "charging time",
         "charging consumption",
         "BEV could be used",
@@ -172,7 +176,11 @@ def immediate_charging(
     # Add booleans for whether the dell time is long enough to allow charging
     trips["dwell_allowed"] = trips["dwell_time"] > 0.2
     # Add boolean for whether this trip allows charging
-    allowed_cols = ["location_allowed", "trip_allowed", "dwell_allowed"]
+    allowed_cols = [
+        "location_allowed",
+        "trip_allowed",
+        "dwell_allowed",
+    ]
     trips["charging_allowed"] = trips[allowed_cols].apply(all, axis=1)
 
     # Evaluate weekend vs. weekday for each trip
