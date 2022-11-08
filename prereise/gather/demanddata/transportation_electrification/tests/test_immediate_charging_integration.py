@@ -28,9 +28,9 @@ def test_immediate_charging_region1():
         ),
     )
     bev_vmt = load_urbanized_scaling_factor(
-        model_year=2050,
+        model_year=2017,
         veh_type="LDV",
-        veh_range=200,
+        veh_range=100,
         urbanized_area="Antioch",
         state="CA",
         filepath=os.path.join(
@@ -45,12 +45,27 @@ def test_immediate_charging_region1():
     final_result = adjust_bev(
         hourly_profile=result,
         adjustment_values=daily_values,
-        model_year=2050,
-        veh_type="MDV",
-        veh_range=200,
+        model_year=2017,
+        veh_type="LDV",
+        veh_range=100,
         bev_vmt=bev_vmt,
         charging_efficiency=0.95,
     )
+
+    correct_cumsum = np.array(
+        [
+            5.77314880e01,
+            1.06704314e05,
+            2.21298833e05,
+            3.46061958e05,
+            4.73804702e05,
+            6.07778242e05,
+            7.36039206e05,
+            8.58406341e05,
+        ],
+    )
+
+    np.testing.assert_allclose(final_result.cumsum()[::1095], correct_cumsum)
 
 
 def test_immediate_charging_mdv():
@@ -79,27 +94,33 @@ def test_immediate_charging_mdv():
             "Regional_scaling_factors_UA_",
         ),
     )
-    final_result = immediate_charging_HDV.adjust_bev(
-        model_year=2050,
+
+    daily_values = generate_daily_weighting(2017)
+
+    final_result = adjust_bev(
+        hourly_profile=result,
+        adjustment_values=daily_values,
+        model_year=2017,
         veh_type="MDV",
-        veh_range=200,
-        model_year_profile=result,
+        veh_range=100,
         bev_vmt=bev_vmt,
         charging_efficiency=0.95,
     )
 
     correct_cumsum = np.array(
         [
-            5.61689215500168,
-            10942.68623,
-            21951.59332,
-            32980.21489,
-            43904.32619,
-            54934.05497,
-            65925.06389,
-            76881.00051,
+            6.25888979e00,
+            1.49132922e04,
+            3.10476159e04,
+            4.85031512e04,
+            6.64076921e04,
+            8.52221916e04,
+            1.03157417e05,
+            1.20314233e05,
         ],
     )
+
+    print(final_result.cumsum()[::1095])
 
     np.testing.assert_allclose(final_result.cumsum()[::1095], correct_cumsum)
 
@@ -130,26 +151,30 @@ def test_immediate_charging_hdv():
             "Regional_scaling_factors_UA_",
         ),
     )
-    final_result = immediate_charging_HDV.adjust_bev(
-        model_year=2050,
+
+    daily_values = generate_daily_weighting(2017)
+
+    final_result = adjust_bev(
+        hourly_profile=result,
+        adjustment_values=daily_values,
+        model_year=2017,
         veh_type="HDV",
-        veh_range=200,
-        model_year_profile=result,
+        veh_range=100,
         bev_vmt=bev_vmt,
         charging_efficiency=0.95,
     )
 
     correct_cumsum = np.array(
         [
-            10.8255287099344,
-            10458.16992,
-            20964.88916,
-            31443.09284,
-            41900.81189,
-            52407.05727,
-            62866.27995,
-            73352.53979,
-        ],
+            1.14074474e01,
+            1.34817274e04,
+            2.80378297e04,
+            4.37284949e04,
+            5.99307996e04,
+            7.68898286e04,
+            9.30264299e04,
+            1.08557058e05,
+        ]
     )
 
     np.testing.assert_allclose(final_result.cumsum()[::1095], correct_cumsum)
