@@ -222,7 +222,15 @@ def immediate_charging(
     return summed_profile
 
 
-def adjust_bev(hourly_profile, adjustment_values):  # noqa: N802
+def adjust_bev(
+    hourly_profile,
+    adjustment_values,
+    model_year,
+    veh_type,
+    veh_range,
+    bev_vmt,
+    charging_efficiency,
+):  # noqa: N802
     """Adjusts the charging profiles by applying weighting factors based on
     seasonal/monthly values
 
@@ -231,10 +239,67 @@ def adjust_bev(hourly_profile, adjustment_values):  # noqa: N802
         day of the year loaded from month_info_nhts.mat.
     :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
     """
-    adj_vals = adjustment_values.transpose()
-    profiles = hourly_profile.reshape((24, 365), order="F")
+    kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
 
-    pr = profiles / sum(profiles)
-    adjusted = pr * adj_vals
+    # weekday/weekend, monthly urban and rural moves scaling
+    adjusted_load = apply_daily_adjustments(
+        hourly_profile,
+        adjustment_values,
+    )
 
-    return adjusted.T.flatten()
+    # simulation year urban and rural scaling specific to region
+    simulation_hourly_profile = apply_annual_scaling(
+        adjusted_load,
+        bev_vmt,
+        charging_efficiency,
+        kwhmi,
+    )
+
+    return simulation_hourly_profile
+
+
+def apply_daily_adjustments(
+    hourly_profile,
+    adjustment_values,
+    num_days_per_year=365,
+    num_segments_per_day=24,
+):  # noqa: N802
+    """Adjusts the charging profiles by applying weighting factors based on
+    seasonal/monthly values
+
+    :param numpy.ndarray hourly_profile: normalized charging profiles
+    :param pandas.DataFrame adjustment_values: weighting factors for each
+        day of the year loaded from month_info_nhts.mat.
+    :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
+    """
+    # weekday/weekend, monthly urban and rural moves scaling
+    adj_vals = adjustment_values.transpose().to_numpy()
+    profiles = hourly_profile.reshape(
+        (num_segments_per_day, num_days_per_year), order="F"
+    )
+
+    pr = profiles / np.sum(profiles, axis=0)
+    adjusted = np.multiply(pr, adj_vals)
+
+    adjusted_load = adjusted.T.flatten()
+
+    return adjusted_load
+
+
+def apply_annual_scaling(
+    hourly_profile,
+    bev_vmt,
+    charging_efficiency,
+    kwhmi,
+):
+    """
+
+    :param numpy.ndarray hourly_profile:
+    :param pandas.DataFrame adjustment_values:
+    :return: (*numpy.ndarray*) --
+    """
+    bev_annual_load = bev_vmt * kwhmi / charging_efficiency
+
+    simulation_hourly_profile = bev_annual_load * hourly_profile
+
+    return simulation_hourly_profile
