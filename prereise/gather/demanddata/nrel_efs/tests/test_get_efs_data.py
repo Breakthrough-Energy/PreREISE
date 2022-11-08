@@ -72,6 +72,7 @@ def test_download_data():
         os.remove("project_resstock_efs_2013.zip")
 
 
+@pytest.mark.integration
 def test_extract_data():
     # Create a dummy demand data set
     cont_states = sorted(set(abv2state) - {"AK", "HI"})
@@ -135,6 +136,7 @@ def test_extract_data():
         os.remove("test_demand.csv")
 
 
+@pytest.mark.integration
 def test_partition_demand_by_sector():
     # Create a dummy demand data set
     cont_states = sorted(set(abv2state) - {"AK", "HI"})
@@ -174,6 +176,7 @@ def test_partition_demand_by_sector():
         os.remove("EFSLoadProfile_High_Rapid.csv")
 
 
+@pytest.mark.integration
 def test_partition_flexibility_by_sector():
     # Create a dummy flexibility data set
     cont_states = sorted(set(abv2state) - {"AK", "HI"})
