@@ -266,12 +266,10 @@ def immediate_charging(
 
     for i in range(model_year_len):
         # create wrap-around indexing function
-        profile_window_indices = np.arange(i * 24, i * 24 + 72) % len(
-            model_year_profile
-        )
+        trip_window_indices = np.arange(i * 24, i * 24 + 72) % len(model_year_profile)
 
         # MW
-        model_year_profile[profile_window_indices] += daily_profile
+        model_year_profile[trip_window_indices] += daily_profile
 
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
