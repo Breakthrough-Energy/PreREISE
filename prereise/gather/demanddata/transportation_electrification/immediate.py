@@ -59,14 +59,14 @@ def calculate_charging(
 
 
 def resample_daily_charging(trips, charging_power):
-    """Translate start and end times and power to a 48-hour output array.
+    """Translate start and end times and power to a 72-hour output array.
 
     :param pandas.DataFrame trips: trip data with trip-end and charge-time columns.
     :param int/float charging_power: charging power (kW).
-    :return: (*numpy.array*) -- hourly total charging power for the 48-hour span.
+    :return: (*numpy.array*) -- hourly total charging power for the 72-hour span.
     """
-    fine_resolution = 4800
-    coarse_resolution = 48
+    fine_resolution = 7200
+    coarse_resolution = 72
     ratio = int(fine_resolution / coarse_resolution)
     # determine timing of charging
     augmented_trips = trips.assign(
@@ -208,14 +208,15 @@ def immediate_charging(
     flag_translation = {1: "weekend", 2: "weekday"}
     for i, weekday_flag in enumerate(input_day):
         daily_profile = daily_resampled_profiles[flag_translation[weekday_flag]]
-        if i == len(input_day) - 1:
-            # for the last day of the year, we need to wrap our 48 hours back around
-            # first half: last day of the year
-            model_year_profile[-24:] += daily_profile[:24]
-            # last half: first day of the year
-            model_year_profile[:24] += daily_profile[24:]
-        else:
-            model_year_profile[i * 24 : i * 24 + 48] += daily_profile
+
+        # create wrap-around indexing function
+        profile_window_indices = np.arange(i * 24, i * 24 + 72) % len(
+            model_year_profile
+        )
+
+        # MW
+        model_year_profile[profile_window_indices] += daily_profile
+
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
 
