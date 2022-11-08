@@ -5,15 +5,17 @@ import numpy as np
 import prereise.gather.demanddata.transportation_electrification.immediate_charging_HDV as immediate_charging_HDV
 from prereise.gather.demanddata.transportation_electrification import const
 from prereise.gather.demanddata.transportation_electrification.data_helper import (
+    generate_daily_weighting,
     load_urbanized_scaling_factor,
 )
 from prereise.gather.demanddata.transportation_electrification.immediate import (
+    adjust_bev,
     immediate_charging,
 )
 
 
 def test_immediate_charging_region1():
-    immediate_charging(
+    result = immediate_charging(
         census_region=1,
         model_year=2017,
         veh_range=100,
@@ -24,6 +26,30 @@ def test_immediate_charging_region1():
             const.data_folder_path,
             "nhts_census_updated_dwell",
         ),
+    )
+    bev_vmt = load_urbanized_scaling_factor(
+        model_year=2050,
+        veh_type="LDV",
+        veh_range=200,
+        urbanized_area="Antioch",
+        state="CA",
+        filepath=os.path.join(
+            const.data_folder_path,
+            "regional_scaling_factors",
+            "Regional_scaling_factors_UA_",
+        ),
+    )
+
+    daily_values = generate_daily_weighting(2017)
+
+    final_result = adjust_bev(
+        hourly_profile=result,
+        adjustment_values=daily_values,
+        model_year=2050,
+        veh_type="MDV",
+        veh_range=200,
+        bev_vmt=bev_vmt,
+        charging_efficiency=0.95,
     )
 
 
