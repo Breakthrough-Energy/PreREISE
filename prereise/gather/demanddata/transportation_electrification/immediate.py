@@ -237,7 +237,12 @@ def adjust_bev(
     :param numpy.ndarray hourly_profile: normalized charging profiles
     :param pandas.DataFrame adjustment_values: weighting factors for each
         day of the year loaded from month_info_nhts.mat.
-    :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
+    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
+    :param str veh_type: determine which category (MDV or HDV) to produce charging profiles for
+    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
+    :param int/float bev_vmt: BEV VMT value / scaling factor loaded from Regional_scaling_factors.csv
+    :param float charging_efficiency: from grid to battery efficiency.
+    :return: (*numpy.ndarray*) -- final adjusted charging profiles.
     """
     kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
 
@@ -270,7 +275,9 @@ def apply_daily_adjustments(
     :param numpy.ndarray hourly_profile: normalized charging profiles
     :param pandas.DataFrame adjustment_values: weighting factors for each
         day of the year loaded from month_info_nhts.mat.
-    :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
+    :param int num_days_per_year: optional year parameter to facilite easier testing
+    :param int num_segments_per_day: optional specification of hours per day
+    :return: (*numpy.ndarray*) -- adjusted charging profile
     """
     # weekday/weekend, monthly urban and rural moves scaling
     adj_vals = adjustment_values.transpose().to_numpy()
@@ -292,11 +299,14 @@ def apply_annual_scaling(
     charging_efficiency,
     kwhmi,
 ):
-    """
+    """Adjusts the charging profiles by applying weighting factors based on
+    seasonal/monthly values
 
-    :param numpy.ndarray hourly_profile:
-    :param pandas.DataFrame adjustment_values:
-    :return: (*numpy.ndarray*) --
+    :param numpy.ndarray hourly_profile: hourly charging profile
+    :param int/float bev_vmt: BEV VMT value / scaling factor loaded from Regional_scaling_factors.csv
+    :param float charging_efficiency: from grid to battery efficiency.
+    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
+    :return: (*numpy.ndarray*) -- adjusted charging profile
     """
     bev_annual_load = bev_vmt * kwhmi / charging_efficiency
 
