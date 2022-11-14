@@ -179,7 +179,7 @@ def immediate_charging(
     veh_type,
     filepath,
     trip_strategy=1,
-    kwhmi = None,
+    kwhmi=None,
 ):
     """Immediate charging function
 

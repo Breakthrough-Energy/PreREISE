@@ -102,34 +102,22 @@ def smart_charging(
     day_num = len(input_day)
     for day_iter in range(day_num):
 
-        adjusted_load = [
-            load_demand[i] + model_year_profile[i]
-            for i in range(
-                day_iter * 24, (day_iter + 1) * 24 + min(day_num - day_iter - 1, 2) * 24
-            )
-        ]
+        adjusted_load = load_demand + model_year_profile
 
-        if 3 - day_num + day_iter > 0:
-            adjusted_load += [
-                load_demand[i] + model_year_profile[i]
-                for i in range(24 * (3 - day_num + day_iter))
-            ]
+        trip_window_indices = np.arange(day_iter * 24, day_iter * 24 + 72) % len(
+            model_year_profile
+        )
 
         outputelectricload = daily_trip_charging.calculate_daily_smart_charging_trips(
             newdata,
             input_day,
             day_iter,
             data_day,
-            adjusted_load,
+            adjusted_load[trip_window_indices],
             charging_efficiency,
             daily_vmt_total,
             kwh,
             bev_vmt,
-        )
-
-        # create wrap-around indexing function
-        trip_window_indices = np.arange(day_iter * 24, day_iter * 24 + 72) % len(
-            model_year_profile
         )
 
         # MW
