@@ -1,12 +1,11 @@
 import os
-import geopandas as gpd
 
+import geopandas as gpd
 from powersimdata.input.grid import Grid
-from prereise.utility.translate_zones import (
-    translate_zone_set,
-)
-from prereise.gather.const import zone2state_abv, lower_48_states_abv
+
+from prereise.gather.const import lower_48_states_abv, zone2state_abv
 from prereise.utility.shapefile import download_shapefiles
+from prereise.utility.translate_zones import translate_zone_set
 
 seen = set()
 states_with_multiple_loadzones = set(
