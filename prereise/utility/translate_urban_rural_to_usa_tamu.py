@@ -1,19 +1,21 @@
 import os
-import numpy as np
-import pandas as pd
 import geopandas as gpd
 
 from powersimdata.input.grid import Grid
-from powersimdata.scenario.scenario import Scenario
 from prereise.utility.translate_zones import (
-    filter_interesting_zones,
     translate_zone_set,
-)
-from prereise.utility.generate_rural_shapefiles import (
-    generate_urban_and_rural_shapefiles,
 )
 from prereise.gather.const import zone2state_abv, lower_48_states_abv
 from prereise.utility.shapefile import download_shapefiles
+
+seen = set()
+states_with_multiple_loadzones = set(
+    [
+        state
+        for state in list(zone2state_abv.values())
+        if state in seen or seen.add(state)
+    ]
+)
 
 
 def plot_loadzones(tamu_loadzones, substations, states):
@@ -94,23 +96,6 @@ def fix_lz_border(states, state, geometry):
 
     state_geom = states.loc[state, "geometry"]
 
-    states_with_multiple_loadzones = [
-        "MO",
-        "MN",
-        "MI",
-        "IL",
-        "OH",
-        "PA",
-        "NY",
-        "FL",
-        "GA",
-        "NC",
-        "VA",  # Eastern
-        "CA",
-        "MT",
-        "NM",  # Western
-        "TX",  # ERCOT
-    ]
     if state in states_with_multiple_loadzones:
         # Make sure loadzones don't go outside state borders
         return geometry.intersection(state_geom)
@@ -144,18 +129,18 @@ def create_usa_tamu_convex_hull_shapefile(sub_gdf, states):
     tamu_loadzones = tamu_loadzones.set_crs("epsg:4269")
 
     tamu_loadzones["geometry"] = tamu_loadzones.apply(
-        lambda x: fix_lz_border(states, x.state, x.geometry), axis=1
+        lambda x: fix_lz_border(states, x.state, x.geometry),
+        axis=1,
     )
 
     return tamu_loadzones
 
 
 def translate_urban_rural_to_usa_tamu():
-    """Downloads shapefiles of state outlines and urban areas from BES azure blob storage.
-    Writes these shapefiles to a local folder, then creates new shapefiles that
-    include both urban and rural areas.
+    """Downloads US state borders as well as census data for urban and rural
+       areas in the US. Creates a matrix that can be used to transform
 
-    :return: (*str*) -- path to the new shapefiles
+    :return: (*pandas.DataFrame*) -- matrix of urban and rural zones to USA tamu zones
     """
     base_url = "https://besciences.blob.core.windows.net/shapefiles/USA/"
 
