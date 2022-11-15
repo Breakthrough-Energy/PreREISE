@@ -28,44 +28,24 @@ def test_append_rural_areas_to_urban():
 
     r_and_u = append_rural_areas_to_urban(mock_states, mock_urban)
 
-    # Convert to json then back to dict -- this unpacks the Polygon objects
-    assert json.loads(r_and_u.to_json()) == {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "id": "0",
-                "type": "Feature",
-                "properties": {"state": "CO", "urban": True},
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [[0.1, 0.1], [0.1, 0.5], [0.5, 0.5], [0.5, 0.1], [0.1, 0.1]]
-                    ],
-                },
-            },
-            {
-                "id": "1",
-                "type": "Feature",
-                "properties": {"state": "CO", "urban": True},
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [[4.0, 4.0], [4.0, 4.5], [4.5, 4.5], [4.5, 4.0], [4.0, 4.0]]
-                    ],
-                },
-            },
-            {
-                "id": "2",
-                "type": "Feature",
-                "properties": {"state": "CO", "urban": False},
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [[5.0, 5.0], [5.0, 0.0], [0.0, 0.0], [0.0, 5.0], [5.0, 5.0]],
-                        [[4.5, 4.0], [4.5, 4.5], [4.0, 4.5], [4.0, 4.0], [4.5, 4.0]],
-                        [[0.5, 0.5], [0.1, 0.5], [0.1, 0.1], [0.5, 0.1], [0.5, 0.5]],
-                    ],
-                },
-            },
-        ],
+    expected = {
+        "geometry": {
+            "Boulder_CO": Polygon(
+                [[4.0, 4.0], [4.0, 4.5], [4.5, 4.5], [4.5, 4.0], [4.0, 4.0]]
+            ),
+            "CO_rural": Polygon(
+                [[5.0, 5.0], [5.0, 0.0], [0.0, 0.0], [0.0, 5.0], [5.0, 5.0]],
+                [
+                    [[4.5, 4.0], [4.5, 4.5], [4.0, 4.5], [4.0, 4.0], [4.5, 4.0]],
+                    [[0.5, 0.5], [0.1, 0.5], [0.1, 0.1], [0.5, 0.1], [0.5, 0.5]],
+                ],
+            ),
+            "Denver_CO": Polygon(
+                [[0.1, 0.1], [0.1, 0.5], [0.5, 0.5], [0.5, 0.1], [0.1, 0.1]]
+            ),
+        },
+        "state": {"Boulder_CO": "CO", "CO_rural": "CO", "Denver_CO": "CO"},
+        "urban": {"Boulder_CO": True, "CO_rural": False, "Denver_CO": True},
     }
+
+    assert r_and_u.to_dict() == expected
