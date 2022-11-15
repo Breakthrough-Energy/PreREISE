@@ -8,8 +8,6 @@ from prereise.utility.translate_urban_rural_to_usa_tamu import (
     create_usa_tamu_convex_hull_shapefile,
     fix_lz_border,
     format_states_gdf,
-    states_with_multiple_loadzones,
-    translate_urban_rural_to_usa_tamu,
 )
 
 WA_lz_polygon = Polygon([(1, 1), (0, 5), (5, 6), (4, 1)])
@@ -46,11 +44,7 @@ def test_format_states_gdf():
 
 class MockGrid:
     def __init__(self):
-        """Constructor.
-        :param dict grid_attrs: dictionary of {*field_name*, *data*} pairs
-            where *field_name* is the name of the field and *data* a dictionary
-            or DataFrame.
-        """
+        """Constructor"""
         self.bus2sub = pd.DataFrame({"sub_id": {0: 122, 1: 122, 2: 6134}})
         self.bus = pd.DataFrame({"zone_id": {0: 204, 1: 204, 2: 201}})
         self.id2zone = {204: "Bay Area", 201: "Washington"}
