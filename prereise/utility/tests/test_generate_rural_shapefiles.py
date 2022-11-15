@@ -1,5 +1,3 @@
-import json
-
 import geopandas as gpd
 from shapely.geometry import Polygon
 
