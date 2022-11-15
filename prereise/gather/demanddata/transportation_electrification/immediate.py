@@ -124,7 +124,6 @@ def immediate_charging(
     :param int trip_strategy: determine to charge after any trip (1) or only after the last trip (2)
     :return: (*numpy.ndarray*) -- charging profiles.
     """
-
     if veh_type.lower() == "ldv":
         trips = data_helper.remove_ldt(data_helper.load_data(census_region, filepath))
     elif veh_type.lower() == "ldt":
@@ -267,7 +266,7 @@ def apply_daily_adjustments(
     adjustment_values,
     num_days_per_year=365,
     num_segments_per_day=24,
-)
+):
     """Adjusts the charging profiles by applying weighting factors based on
     annual vehicle miles traveled (VMT) for battery electric vehicles in a specific geographic region
 
