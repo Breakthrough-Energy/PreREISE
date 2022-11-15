@@ -229,7 +229,7 @@ def adjust_bev(
     veh_range,
     bev_vmt,
     charging_efficiency,
-):  # noqa: N802
+):
     """Adjusts the charging profiles by applying weighting factors based on
     seasonal/monthly values
 
@@ -267,9 +267,9 @@ def apply_daily_adjustments(
     adjustment_values,
     num_days_per_year=365,
     num_segments_per_day=24,
-):  # noqa: N802
+)
     """Adjusts the charging profiles by applying weighting factors based on
-    seasonal/monthly values
+    annual vehicle miles traveled (VMT) for battery electric vehicles in a specific geographic region
 
     :param numpy.ndarray hourly_profile: normalized charging profiles
     :param pandas.DataFrame adjustment_values: weighting factors for each
