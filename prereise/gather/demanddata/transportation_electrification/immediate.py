@@ -59,14 +59,14 @@ def calculate_charging(
 
 
 def resample_daily_charging(trips, charging_power):
-    """Translate start and end times and power to a 48-hour output array.
+    """Translate start and end times and power to a 72-hour output array.
 
     :param pandas.DataFrame trips: trip data with trip-end and charge-time columns.
     :param int/float charging_power: charging power (kW).
-    :return: (*numpy.array*) -- hourly total charging power for the 48-hour span.
+    :return: (*numpy.array*) -- hourly total charging power for the 72-hour span.
     """
-    fine_resolution = 4800
-    coarse_resolution = 48
+    fine_resolution = 7200
+    coarse_resolution = 72
     ratio = int(fine_resolution / coarse_resolution)
     # determine timing of charging
     augmented_trips = trips.assign(
@@ -124,7 +124,6 @@ def immediate_charging(
     :param int trip_strategy: determine to charge after any trip (1) or only after the last trip (2)
     :return: (*numpy.ndarray*) -- charging profiles.
     """
-
     if veh_type.lower() == "ldv":
         trips = data_helper.remove_ldt(data_helper.load_data(census_region, filepath))
     elif veh_type.lower() == "ldt":
@@ -208,33 +207,107 @@ def immediate_charging(
     flag_translation = {1: "weekend", 2: "weekday"}
     for i, weekday_flag in enumerate(input_day):
         daily_profile = daily_resampled_profiles[flag_translation[weekday_flag]]
-        if i == len(input_day) - 1:
-            # for the last day of the year, we need to wrap our 48 hours back around
-            # first half: last day of the year
-            model_year_profile[-24:] += daily_profile[:24]
-            # last half: first day of the year
-            model_year_profile[:24] += daily_profile[24:]
-        else:
-            model_year_profile[i * 24 : i * 24 + 48] += daily_profile
+
+        # create wrap-around indexing function
+        trip_window_indices = np.arange(i * 24, i * 24 + 72) % len(model_year_profile)
+
+        # MW
+        model_year_profile[trip_window_indices] += daily_profile
+
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
 
     return summed_profile
 
 
-def adjust_bev(hourly_profile, adjustment_values):  # noqa: N802
+def adjust_bev(
+    hourly_profile,
+    adjustment_values,
+    model_year,
+    veh_type,
+    veh_range,
+    bev_vmt,
+    charging_efficiency,
+):
     """Adjusts the charging profiles by applying weighting factors based on
     seasonal/monthly values
 
     :param numpy.ndarray hourly_profile: normalized charging profiles
     :param pandas.DataFrame adjustment_values: weighting factors for each
         day of the year loaded from month_info_nhts.mat.
-    :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
+    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
+    :param str veh_type: determine which category (MDV or HDV) to produce charging profiles for
+    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
+    :param int/float bev_vmt: BEV VMT value / scaling factor loaded from Regional_scaling_factors.csv
+    :param float charging_efficiency: from grid to battery efficiency.
+    :return: (*numpy.ndarray*) -- final adjusted charging profiles.
     """
-    adj_vals = adjustment_values.transpose()
-    profiles = hourly_profile.reshape((24, 365), order="F")
+    kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
 
-    pr = profiles / sum(profiles)
-    adjusted = pr * adj_vals
+    # weekday/weekend, monthly urban and rural moves scaling
+    adjusted_load = apply_daily_adjustments(
+        hourly_profile,
+        adjustment_values,
+    )
 
-    return adjusted.T.flatten()
+    # simulation year urban and rural scaling specific to region
+    simulation_hourly_profile = apply_annual_scaling(
+        adjusted_load,
+        bev_vmt,
+        charging_efficiency,
+        kwhmi,
+    )
+
+    return simulation_hourly_profile
+
+
+def apply_daily_adjustments(
+    hourly_profile,
+    adjustment_values,
+    num_days_per_year=365,
+    num_segments_per_day=24,
+):
+    """Adjusts the charging profiles by applying weighting factors based on
+    annual vehicle miles traveled (VMT) for battery electric vehicles in a specific geographic region
+
+    :param numpy.ndarray hourly_profile: normalized charging profiles
+    :param pandas.DataFrame adjustment_values: weighting factors for each
+        day of the year loaded from month_info_nhts.mat.
+    :param int num_days_per_year: optional year parameter to facilite easier testing
+    :param int num_segments_per_day: optional specification of hours per day
+    :return: (*numpy.ndarray*) -- adjusted charging profile
+    """
+    # weekday/weekend, monthly urban and rural moves scaling
+    adj_vals = adjustment_values.transpose().to_numpy()
+    profiles = hourly_profile.reshape(
+        (num_segments_per_day, num_days_per_year), order="F"
+    )
+
+    pr = profiles / np.sum(profiles, axis=0)
+    adjusted = np.multiply(pr, adj_vals)
+
+    adjusted_load = adjusted.T.flatten()
+
+    return adjusted_load
+
+
+def apply_annual_scaling(
+    hourly_profile,
+    bev_vmt,
+    charging_efficiency,
+    kwhmi,
+):
+    """Adjusts the charging profiles by applying weighting factors based on
+    seasonal/monthly values
+
+    :param numpy.ndarray hourly_profile: hourly charging profile
+    :param int/float bev_vmt: BEV VMT value / scaling factor loaded from Regional_scaling_factors.csv
+    :param float charging_efficiency: from grid to battery efficiency.
+    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
+    :return: (*numpy.ndarray*) -- adjusted charging profile
+    """
+    bev_annual_load = bev_vmt * kwhmi / charging_efficiency
+
+    simulation_hourly_profile = bev_annual_load * hourly_profile
+
+    return simulation_hourly_profile

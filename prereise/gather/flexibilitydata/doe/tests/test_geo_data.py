@@ -1,11 +1,14 @@
 import os
 
+import pytest
+
 from prereise.gather.flexibilitydata.doe.batch_process import (
     collect_all_raw_data,
     create_geo_cache_files,
 )
 
 
+@pytest.mark.integration
 def test_batch_download():
     """Test the downloader from all raw data sources, check if file exist"""
 
@@ -29,6 +32,7 @@ def test_batch_download():
     os.remove(os.path.join(abs_download_path, "non_iou_zipcodes_2019.csv"))
 
 
+@pytest.mark.integration
 def test_cache_production():
     """Test the functions that produce cached files"""
 
