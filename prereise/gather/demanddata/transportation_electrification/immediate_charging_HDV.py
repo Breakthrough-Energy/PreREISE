@@ -265,43 +265,13 @@ def immediate_charging(
     model_year_profile = np.zeros(24 * model_year_len)
 
     for i in range(model_year_len):
-        if i == model_year_len - 1:
-            # for the last day of the year, we need to wrap our 48 hours back around
-            # first half: last day of the year
-            model_year_profile[-24:] += daily_profile[:24]
-            # last half: first day of the year
-            model_year_profile[:24] += daily_profile[24:48]
-            model_year_profile[24:48] += daily_profile[48:72]
+        # create wrap-around indexing function
+        trip_window_indices = np.arange(i * 24, i * 24 + 72) % len(model_year_profile)
 
-        elif i == model_year_len - 2:
-            model_year_profile[i * 24 : i * 24 + 48] += daily_profile[:48]
-            model_year_profile[:24] += daily_profile[48:72]
-
-        else:
-            model_year_profile[i * 24 : i * 24 + 72] += daily_profile
+        # MW
+        model_year_profile[trip_window_indices] += daily_profile
 
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
 
     return summed_profile
-
-
-def adjust_bev(
-    model_year, veh_type, veh_range, model_year_profile, bev_vmt, charging_efficiency
-):
-
-    """Adjusts the charging profiles by applying weighting factors based on
-    seasonal/monthly values
-
-    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
-    :param str veh_type: determine which category (MDV or HDV) to produce charging profiles for
-    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
-    :param numpy.ndarray model_year_profile: normalized charging profiles
-    :param int/float bev_vmt: BEV VMT value / scaling factor loaded from Regional_scaling_factors.csv
-    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
-    :param float charging_efficiency: from grid to battery efficiency.
-    :return: (*numpy.ndarray*) -- the final adjusted charging profiles.
-    """
-    kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
-    bev_annual_load = bev_vmt * kwhmi / charging_efficiency
-    return model_year_profile * bev_annual_load
