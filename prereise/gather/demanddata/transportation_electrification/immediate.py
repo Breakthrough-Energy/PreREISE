@@ -11,7 +11,7 @@ allowed_locations_by_strategy = {
 }
 
 
-def calculate_charging(
+def calculate_daily_immediate_charging_trips(
     trips, charging_power, battery_capacity, kwhmi, charging_efficiency
 ):
     """Parse travel patterns to estimate charging and state-of-charge after each trip.
@@ -192,10 +192,10 @@ def immediate_charging(
     ].copy()
 
     # Calculate the charge times and SOC for each trip, then resample resolution
-    calculate_charging(
+    calculate_daily_immediate_charging_trips(
         weekday_trips, power, battery_capacity, kwhmi, charging_efficiency
     )
-    calculate_charging(
+    calculate_daily_immediate_charging_trips(
         weekend_trips, power, battery_capacity, kwhmi, charging_efficiency
     )
     daily_resampled_profiles = {
