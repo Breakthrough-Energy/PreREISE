@@ -179,6 +179,7 @@ def immediate_charging(
     veh_type,
     filepath,
     trip_strategy=1,
+    kwhmi = None,
 ):
     """Immediate charging function
 
@@ -200,7 +201,8 @@ def immediate_charging(
         trips = data_helper.load_hdv_data("hhdv", filepath)
 
     # Constants
-    kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
+    if kwhmi is None:
+        kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     battery_capacity = kwhmi * veh_range
     model_year_len = 365
 

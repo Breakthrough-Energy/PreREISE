@@ -24,6 +24,7 @@ def smart_charging(
     initial_load,
     bev_vmt,
     trip_strategy=1,
+    kwhmi=None,
 ):
     """Smart charging function
 
@@ -73,8 +74,8 @@ def smart_charging(
     model_year_profile = np.zeros(24 * model_year_len)
 
     daily_vmt_total = data_helper.get_total_hdv_daily_vmt(newdata, veh_range)
-
-    kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
+    if kwhmi is None:
+        kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     kwh = kwhmi * veh_range
 
     # charging_efficiency value used to be in const.py
