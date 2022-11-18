@@ -120,7 +120,6 @@ def smart_charging(
             bev_vmt,
         )
 
-        # MW
         model_year_profile[trip_window_indices] += (
             outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
         )
