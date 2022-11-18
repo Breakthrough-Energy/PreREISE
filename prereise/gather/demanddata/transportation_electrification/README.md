@@ -1,5 +1,6 @@
 ## Architecture Diagram
 
+``` mermaid
 graph TD
     A[Vehicle Demand Interface Function] -->|choose vehicle type, vehicle range, model year, charging strategy| B(Load Data)
     I --> |evaluate whether charging is available| C{calculate charging over \n given trip window} 
@@ -14,3 +15,4 @@ graph TD
         D --> |scale for daily/monthly driving patterns, yearly regional scaling factors| J(Scaled Trip Demand)
         C --> |loop over days in year| C
     end
+```
