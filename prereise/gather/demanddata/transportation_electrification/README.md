@@ -10,7 +10,7 @@ graph TD
     H --> G[Vehicle Load Statistics]
     B --> |parse out relevant columns| I[Charging availability and strategy]
 
-    subgraph Trip___Window Loop
+    subgraph Trip Window Loop
         C --> D(Normalized Trip Demand)
         D --> |scale for daily/monthly driving patterns, yearly regional scaling factors| J(Scaled Trip Demand)
         C --> |loop over days in year| C
