@@ -185,10 +185,10 @@ def immediate_charging(
     # Evaluate weekend vs. weekday for each trip
     data_day = data_helper.get_data_day(trips)
     weekday_trips = trips.loc[
-        (data_day == 2) & (trips["total vehicle miles traveled"] < veh_range * const.ER)
+        (data_day == 2) & (trips["total vehicle miles traveled"] <= veh_range * const.ER)
     ].copy()
     weekend_trips = trips.loc[
-        (data_day == 1) & (trips["total vehicle miles traveled"] < veh_range * const.ER)
+        (data_day == 1) & (trips["total vehicle miles traveled"] <= veh_range * const.ER)
     ].copy()
 
     # Calculate the charge times and SOC for each trip, then resample resolution

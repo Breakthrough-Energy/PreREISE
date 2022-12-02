@@ -59,6 +59,12 @@ def smart_charging(
     elif veh_type.lower() == "hdv":
         newdata = data_helper.load_hdv_data("hhdv", filepath)
 
+    allowable_ranges = {100, 200, 300}
+    if veh_range not in allowable_ranges:
+        raise ValueError(f"veh_range must be one of {allowable_ranges}")
+
+    newdata = newdata[newdata["total vehicle miles traveled"] <= veh_range]
+
     # updates the weekend and weekday values in the nhts data
     newdata = data_helper.update_if_weekend(newdata)
 
@@ -81,7 +87,7 @@ def smart_charging(
     model_year_profile = np.zeros(24 * len(input_day))
     data_day = data_helper.get_data_day(newdata)
 
-    daily_vmt_total = data_helper.get_total_daily_vmt(newdata, input_day, daily_values)
+    daily_vmt_total = data_helper.get_total_daily_vmt(newdata, input_day, veh_type.lower())
 
     kwh = kwhmi * veh_range
     if power > 19.2:
@@ -121,7 +127,10 @@ def smart_charging(
         )
 
         model_year_profile[trip_window_indices] += (
-            outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
+            outputelectricload
+            * daily_values[day_iter]
+            / (daily_vmt_total[day_iter] * 1000)
+            * bev_vmt
         )
 
     return model_year_profile

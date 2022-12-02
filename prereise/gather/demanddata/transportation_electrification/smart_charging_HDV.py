@@ -73,7 +73,11 @@ def smart_charging(
     load_demand = -min(initial_load) + initial_load
     model_year_profile = np.zeros(24 * model_year_len)
 
-    daily_vmt_total = data_helper.get_total_hdv_daily_vmt(newdata, veh_range)
+    input_days = np.ones(model_year_len)
+
+    daily_vmt_total = data_helper.get_total_daily_vmt(
+        newdata, input_days, veh_type.lower()
+    )
     if kwhmi is None:
         kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     kwh = kwhmi * veh_range
