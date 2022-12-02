@@ -20,12 +20,22 @@ def calculate_daily_smart_charging_trips(
     kwh,
     bev_vmt,
 ):
+    """Calculate smart charging strategy for a trip window starting at particular day
+
+    :param pandas.DataFrame newdata: trip data
+    :param numpy.array input_day:
+    :param int day_iter: 
+    :param numpy.array data_day: 
+    :param int/float charging_efficiency: from grid to battery efficiency.
+    """
     cost = np.array(adjusted_load)
     nd_len = len(newdata)
     g2v_load = np.zeros((100, 72))
     individual_g2v_load = np.zeros((nd_len, 72))
 
     i = 0
+    optimization_fail = 0
+    missed_vmt = 0
 
     while i < nd_len:
 
@@ -181,10 +191,16 @@ def calculate_daily_smart_charging_trips(
                     individual.iloc[
                         :, newdata.columns.get_loc("Battery size")
                     ] = batterysize
+            else:
+                optimization_fail += 1
+                missed_vmt += individual["total vehicle miles traveled"].sum()
 
         # update the counter to the next vehicle
         i += total_trips
 
     outputelectricload = sum(g2v_load)
+
+    print(f"Optimization failures: {optimization_fail}")
+    print(f"missed_vmt: {missed_vmt}")
 
     return outputelectricload

@@ -108,11 +108,15 @@ def smart_charging(
     day_num = len(input_day)
     for day_iter in range(day_num):
 
+        print(f"Day: {day_iter}")
+
         adjusted_load = load_demand + model_year_profile
 
         trip_window_indices = np.arange(day_iter * 24, day_iter * 24 + 72) % len(
             model_year_profile
         )
+
+        print(f"total_vmt: {daily_vmt_total[day_iter]}")
 
         outputelectricload = daily_trip_charging.calculate_daily_smart_charging_trips(
             newdata,
