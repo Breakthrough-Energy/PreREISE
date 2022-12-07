@@ -68,42 +68,52 @@ def zonal_data(puma_data, hours_utc):
 
     stats = pd.Series(
         data=[
-            sum(puma_data["pop"]),
-            sum(puma_data[f"res_area_{base_year}_m2"]),
-            sum(puma_data[f"com_area_{base_year}_m2"]),
-            sum(puma_data["ind_area_gbs_m2"]),
+            sum(puma_data["pop"] * puma_data["frac_in_zone"]),
+            sum(puma_data[f"res_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
+            sum(puma_data[f"com_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
+            sum(puma_data["ind_area_gbs_m2"] * puma_data["frac_in_zone"]),
             sum(
                 puma_data[f"res_area_{base_year}_m2"]
                 * puma_data[f"frac_elec_sh_res_{base_year}"]
+                * puma_data["frac_in_zone"]
             )
-            / sum(puma_data[f"res_area_{base_year}_m2"]),
-            sum(puma_data[f"res_area_{base_year}_m2"] * puma_data["AC_penetration"])
-            / sum(puma_data[f"res_area_{base_year}_m2"]),
+            / sum(puma_data[f"res_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
+            sum(
+                puma_data[f"res_area_{base_year}_m2"]
+                * puma_data["AC_penetration"]
+                * puma_data["frac_in_zone"]
+            )
+            / sum(puma_data[f"res_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
             sum(
                 puma_data[f"com_area_{base_year}_m2"]
                 * puma_data[f"frac_elec_sh_com_{base_year}"]
+                * puma_data["frac_in_zone"]
             )
-            / sum(puma_data[f"com_area_{base_year}_m2"]),
+            / sum(puma_data[f"com_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
             sum(
                 puma_data[f"res_area_{base_year}_m2"]
                 * puma_data[f"frac_elec_dhw_res_{base_year}"]
+                * puma_data["frac_in_zone"]
             )
-            / sum(puma_data[f"res_area_{base_year}_m2"]),
+            / sum(puma_data[f"res_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
             sum(
                 puma_data[f"com_area_{base_year}_m2"]
                 * puma_data[f"frac_elec_dhw_com_{base_year}"]
+                * puma_data["frac_in_zone"]
             )
-            / sum(puma_data[f"com_area_{base_year}_m2"]),
+            / sum(puma_data[f"com_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
             sum(
                 puma_data[f"res_area_{base_year}_m2"]
                 * puma_data[f"frac_elec_other_res_{base_year}"]
+                * puma_data["frac_in_zone"]
             )
-            / sum(puma_data[f"res_area_{base_year}_m2"]),
+            / sum(puma_data[f"res_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
             sum(
                 puma_data[f"com_area_{base_year}_m2"]
                 * puma_data[f"frac_elec_cook_com_{base_year}"]
+                * puma_data["frac_in_zone"]
             )
-            / sum(puma_data[f"com_area_{base_year}_m2"]),
+            / sum(puma_data[f"com_area_{base_year}_m2"] * puma_data["frac_in_zone"]),
             sum(puma_data["hdd65_normals"] * puma_data["pop"] / sum(puma_data["pop"])),
             sum(puma_data["cdd65_normals"] * puma_data["pop"] / sum(puma_data["pop"])),
         ],
