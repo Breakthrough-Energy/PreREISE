@@ -44,7 +44,7 @@ def test_shift_local_time_by_loadzone_to_utc():
     agg_dem = pd.DataFrame(
         1,
         index=pd.date_range("2016-01-01", "2017-01-01", freq="H", inclusive="left"),
-        columns=set(id2abv),
+        columns=id2abv,
     )
     agg_dem.index.name = "Local Time"
     agg_dem.iloc[8712:8736] += 1.0
