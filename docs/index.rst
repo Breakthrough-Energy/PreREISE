@@ -50,6 +50,12 @@ Historical
    demand/historical/eastern.rst
 
 
+Transportation Electrification
+++++++++++++++++++++++++++++++
+.. include::
+   demand/transportation_electrification/summary.rst
+
+
 NREL Electrification Futures Study Demand and Flexibility Data
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 .. include::
