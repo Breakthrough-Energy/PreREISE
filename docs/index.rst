@@ -55,6 +55,9 @@ Transportation Electrification
 .. include::
    demand/transportation_electrification/summary.rst
 
+.. include::
+   demand/transportation_electrification/data.rst
+
 
 NREL Electrification Futures Study Demand and Flexibility Data
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
