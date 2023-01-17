@@ -141,3 +141,21 @@ safety_coefficient = 1
 ER = 1
 
 emfacvmt = 758118400
+
+census_region2state = {
+    1: ["CT", "MA", "ME", "NH", "RI", "VT"],
+    2: ["PA", "NJ", "NY"],
+    3: ["IL", "IN", "MI", "OH", "WI"],
+    4: ["IA", "KS", "MN", "MO", "ND", "NE", "SD"],
+    5: ["DE", "FL", "GA", "MD", "NC", "SC", "VA", "WV"],
+    6: ["AL", "KY", "MS", "TN"],
+    7: ["AR", "LA", "OK", "TX"],
+    8: ["AZ", "CO", "ID", "MT", "NM", "NV", "UT", "WY"],
+    9: ["AK", "CA", "HI", "OR", "WA"],
+}
+
+state2census_region = {
+    state: census_region
+    for census_region, state_list in census_region2state.items()
+    for state in state_list
+}
