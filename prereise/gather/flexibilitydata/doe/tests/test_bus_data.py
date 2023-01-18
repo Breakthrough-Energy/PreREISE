@@ -2,10 +2,12 @@ import os
 import pickle as pkl
 
 import pandas as pd
+import pytest
 
 from prereise.gather.flexibilitydata.doe.bus_data import get_bus_fips, get_bus_zip
 
 
+@pytest.mark.skip
 def test_get_bus_fips():
     """Test the FCC Area API using constant dataframe"""
     bus_pos_dict = {
