@@ -7,7 +7,6 @@ from prereise.gather.demanddata.transportation_electrification import (
     const,
     data_helper,
     smart_charging,
-    smart_charging_HDV,
 )
 from prereise.gather.demanddata.transportation_electrification.data_helper import (
     generate_daily_weighting,
@@ -36,7 +35,7 @@ def test_smart_charging():
             "ldv_test_data.csv",
         ),
         daily_values=daily_values,
-        load_demand=load_demand,
+        external_signal=load_demand,
         bev_vmt=const.emfacvmt,
         trip_strategy=1,
     )
@@ -76,7 +75,7 @@ def test_smart_charging_hdv():
             "Regional_scaling_factors_UA_",
         ),
     )
-    result = smart_charging_HDV.smart_charging(
+    result = smart_charging.smart_charging(
         model_year=2050,
         veh_range=200,
         power=80,
@@ -86,7 +85,7 @@ def test_smart_charging_hdv():
             const.test_folder_path,
             "hdv_test_data.csv",
         ),
-        initial_load=load_demand,
+        external_signal=load_demand,
         bev_vmt=bev_vmt,
         trip_strategy=1,
     )
@@ -126,7 +125,7 @@ def test_smart_charging_mdv():
             "Regional_scaling_factors_UA_",
         ),
     )
-    result = smart_charging_HDV.smart_charging(
+    result = smart_charging.smart_charging(
         model_year=2050,
         veh_range=200,
         power=80,
@@ -136,7 +135,7 @@ def test_smart_charging_mdv():
             const.test_folder_path,
             "mdv_test_data.csv",
         ),
-        initial_load=load_demand,
+        external_signal=load_demand,
         bev_vmt=bev_vmt,
         trip_strategy=1,
     )
