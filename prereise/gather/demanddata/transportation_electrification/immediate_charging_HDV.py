@@ -17,7 +17,7 @@ def calculate_charging_helper(
     :param int/float kwhmi: vehicle electricity consumption (kWh/ mile).
     :param int/float charging_power: charging power (kW).
     :param float charging_efficiency: from grid to battery efficiency.
-    :return (*pandas.DataFrame*) -- the updated data with the charging and SOC values
+    :return: (*pandas.DataFrame*) -- the updated data with the charging and SOC values
         for one group of trips.
     """
 
@@ -115,7 +115,8 @@ def calculate_charging(
     :param int/float charging_power: charging power (kW).
     :param int/float battery_capacity: battery capacity (kWh).
     :param int/float kwhmi: vehicle electricity consumption (kWh/ mile).
-    :return (*pandas.DataFrame*) -- the updated data with the charging and SOC values for all vehicles.
+    :return: (*pandas.DataFrame*) -- the updated data with the charging and SOC values
+        for all vehicles.
     """
     trips = trips.groupby("vehicle_number", sort=False).apply(
         lambda x: calculate_charging_helper(
@@ -182,15 +183,18 @@ def immediate_charging(
 ):
     """Immediate charging function
 
-    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040, 2050.
-    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
+    :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040,
+        2050.
+    :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on
+        single charge.
     :param int power: charger power, EVSE kW.
     :param int location_strategy: where the vehicle can charge - 1 or 3;
         1-base only, 3-anywhere if possibile.
     :param str veh_type: determine which category (MDV or HDV) to produce charging
         profiles for
     :param str filepath: the path to the HDV data file.
-    :param int trip_strategy: determine to charge after any trip (1) or only after the last trip (2)
+    :param int trip_strategy: determine to charge after any trip (1) or only after the
+        last trip (2)
     :return: (*numpy.ndarray*) -- charging profiles.
     """
     # load NHTS data from function
