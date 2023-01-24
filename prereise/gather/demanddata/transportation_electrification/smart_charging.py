@@ -136,11 +136,16 @@ def smart_charging(
             total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
             # copy one vehicle information to the block
             individual = newdata.iloc[i : i + total_trips].copy()
-            if individual["why_from"].head(1).values[0] == individual["dwell_location"].tail(1).values[0]:
+            if (
+                individual["why_from"].head(1).values[0]
+                == individual["dwell_location"].tail(1).values[0]
+            ):
                 filtered_census_data = pd.concat(
                     [filtered_census_data, individual], ignore_index=True
                 )
+            i += total_trips
         newdata = filtered_census_data
+        nd_len = len(newdata)
 
     newdata = charging_optimization.get_constraints(
         newdata,
@@ -332,6 +337,11 @@ def smart_charging(
         )
 
         # MW
+
+        print(outputelectricload
+            * daily_values[day_iter]
+            / (daily_vmt_total[day_iter] * 1000)
+            * bev_vmt)
 
         model_year_profile[trip_window_indices] += (
             outputelectricload
