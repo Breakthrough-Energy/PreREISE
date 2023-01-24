@@ -134,6 +134,7 @@ hdv_columns_transform = {
     "Total Vehicle Trips": "total_trips",
     "Dwell Time": "dwell_time",
     "Trip End": "trip_end",
+    "Total Vehicle Miles": "total vehicle miles traveled",
 }
 
 safety_coefficient = 1
