@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+import pandas as pd
 from scipy.optimize import linprog
 
 from prereise.gather.demanddata.transportation_electrification import (
@@ -102,12 +103,14 @@ def smart_charging(
     model_year_profile = np.zeros(24 * len(input_day))
     if veh_type.lower() in {"ldv", "ldt"}:
         data_day = data_helper.get_data_day(newdata)
-        daily_vmt_total = data_helper.get_total_daily_vmt(
-            newdata, input_day, daily_values
-        )
     elif veh_type.lower() in {"mdv", "hdv"}:
         data_day = input_day
-        daily_vmt_total = data_helper.get_total_hdv_daily_vmt(newdata, veh_range)
+
+    daily_vmt_total = data_helper.get_total_daily_vmt(
+        newdata, input_day, veh_type.lower()
+    )
+    print(daily_vmt_total)
+    print(len(daily_vmt_total))
 
     if kwhmi is None:
         kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
@@ -126,6 +129,19 @@ def smart_charging(
         location_allowed = const.hdv_location_allowed
         use_data_row = hdv_use_all_data_rows
 
+    if veh_type.lower() in {"ldv", "ldt"}:
+        filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
+        i = 0
+        while i < nd_len:
+            total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
+            # copy one vehicle information to the block
+            individual = newdata.iloc[i : i + total_trips].copy()
+            if individual["why_from"].head(1).values[0] == individual["dwell_location"].tail(1).values[0]:
+                filtered_census_data = pd.concat(
+                    [filtered_census_data, individual], ignore_index=True
+                )
+        newdata = filtered_census_data
+
     newdata = charging_optimization.get_constraints(
         newdata,
         kwhmi,
@@ -138,6 +154,9 @@ def smart_charging(
 
     day_num = len(input_day)
     for day_iter in range(day_num):
+
+        print(f"Day: {day_iter}")
+
         adjusted_load = [
             external_signal[i] + model_year_profile[i]
             for i in range(
@@ -182,7 +201,6 @@ def smart_charging(
 
                 elimit = individual["energy limit"]
                 elimit = [el for energy_lim in elimit for el in energy_lim]
-        print(f"Day: {day_iter}")
 
                 seg = individual["seg"].apply(int).to_numpy()
 
