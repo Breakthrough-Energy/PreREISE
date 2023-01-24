@@ -182,6 +182,7 @@ def smart_charging(
 
                 elimit = individual["energy limit"]
                 elimit = [el for energy_lim in elimit for el in energy_lim]
+        print(f"Day: {day_iter}")
 
                 seg = individual["seg"].apply(int).to_numpy()
 
@@ -310,8 +311,12 @@ def smart_charging(
         )
 
         # MW
+
         model_year_profile[trip_window_indices] += (
-            outputelectricload / (daily_vmt_total[day_iter] * 1000) * bev_vmt
+            outputelectricload
+            * daily_values[day_iter]
+            / (daily_vmt_total[day_iter] * 1000)
+            * bev_vmt
         )
 
     return model_year_profile
