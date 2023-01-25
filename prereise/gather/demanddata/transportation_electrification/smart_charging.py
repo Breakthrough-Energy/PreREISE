@@ -1,4 +1,6 @@
+import gc
 import math
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,7 @@ from prereise.gather.demanddata.transportation_electrification import (
     dwelling,
 )
 
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 def ldv_weekday_weekend_check(x, y):
     """Helper function to select weekday/weekend data rows
@@ -145,6 +148,8 @@ def smart_charging(
                     [filtered_census_data, individual], ignore_index=True
                 )
             i += total_trips
+        del newdata
+        gc.collect()
         newdata = filtered_census_data
         nd_len = len(newdata)
         print(f"updated data length:{nd_len}")
@@ -163,6 +168,7 @@ def smart_charging(
     for day_iter in range(day_num):
 
         print(f"Day: {day_iter}")
+        gc.collect()
 
         adjusted_load = [
             external_signal[i] + model_year_profile[i]
@@ -340,16 +346,16 @@ def smart_charging(
 
         # MW
 
-        print(outputelectricload
-            * daily_values[day_iter]
-            / (daily_vmt_total[day_iter] * 1000)
-            * bev_vmt)
-
-        model_year_profile[trip_window_indices] += (
+        scaled_output = (
             outputelectricload
             * daily_values[day_iter]
             / (daily_vmt_total[day_iter] * 1000)
             * bev_vmt
         )
+
+        print(trip_window_indices)
+        print(scaled_output)
+
+        model_year_profile[trip_window_indices] += scaled_output
 
     return model_year_profile
