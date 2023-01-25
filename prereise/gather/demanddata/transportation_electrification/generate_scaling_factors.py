@@ -209,3 +209,67 @@ def calculate_urban_rural_fraction(vmt_for_ua, vmt_for_state):
             vmt_for_ra_perc[s] = 0
 
     return vmt_for_ua_perc, vmt_for_ra_perc
+
+
+def get_efs_vmt_projection_for_state(efs_annual_data, electrification_scenario=None):
+    """Retrieve the projected annual Vehicle Miles Traveled (VMT) for various
+    technolgies for a chosen scenario.
+
+    :param pandas.DataFrame efs_annual_data: electrification projection in
+        each state for the transportation sector as returned by the
+        :func:`prereise.gather.demanddata.nrel_efs.get_efs_annual_data.get_efs_annual_data` function
+    :param str electrification_scenario: range of electrification futures. Default to
+        *'HIGH ELECTRIFICATION - MODERATE TECHNOLOGY ADVANCEMENT'* if not specified.
+    :return: (*dict*) -- keys are state abbreviations and values are data frames
+        giving projected VMT values for different years and vehicle types.
+    :raises ValueError: if ``electrification_scenario`` is invalid.
+    """
+    if electrification_scenario is None:
+        electrification_scenario = (
+            "HIGH ELECTRIFICATION - MODERATE TECHNOLOGY ADVANCEMENT"
+        )
+
+    possible = [
+        "HIGH ELECTRIFICATION - MODERATE TECHNOLOGY ADVANCEMENT",
+        "MEDIUM ELECTRIFICATION - MODERATE TECHNOLOGY ADVANCEMENT",
+        "REFERENCE ELECTRIFICATION - MODERATE TECHNOLOGY ADVANCEMENT",
+        "LOW ELECTRICITY GROWTH - MODERATE TECHNOLOGY ADVANCEMENT",
+        "ELECTRIFICATION TECHNICAL POTENTIAL - MODERATE TECHNOLOGY ADVANCEMENT",
+    ]
+    if electrification_scenario not in possible:
+        raise ValueError(f"invalid scenario. Choose from {' | '.join(possible)}")
+
+    tech = [  # noqa: F841
+        "ELECTRIC LIGHT-DUTY AUTO - 100 MILE RANGE",
+        "ELECTRIC LIGHT-DUTY AUTO - 200 MILE RANGE",
+        "ELECTRIC LIGHT-DUTY AUTO - 300 MILE RANGE",
+        "ELECTRIC LIGHT-DUTY TRUCK - 100 MILE RANGE",
+        "ELECTRIC LIGHT-DUTY TRUCK - 200 MILE RANGE",
+        "ELECTRIC LIGHT-DUTY TRUCK - 300 MILE RANGE",
+        "BATTERY ELECTRIC MEDIUM-DUTY VEHICLE",
+        "ELECTRIC HEAVY DUTY VEHICLE",
+    ]
+
+    efs_annual_data = efs_annual_data.query(
+        "SCENARIO==@electrification_scenario & FINAL_ENERGY=='ELECTRICITY' & DEMAND_TECHNOLOGY==@tech"
+    )[["STATE", "DEMAND_TECHNOLOGY", "YEAR", "UNIT", "VALUE"]].dropna(
+        subset=["DEMAND_TECHNOLOGY"]
+    )
+
+    efs_annual_data["VALUE"] = efs_annual_data.apply(
+        lambda x: x["VALUE"] * pow(10, 9) if x["UNIT"] == "GIGAMILE" else x["VALUE"],
+        axis=1,
+    )
+
+    efs_annual_data.drop("UNIT", axis=1, inplace=True)
+    efs_annual_data["STATE"] = efs_annual_data["STATE"].map(
+        lambda x: state2abv.get(x.title(), "DC")
+    )
+    efs_for_state = {
+        s: efs_annual_data.query("STATE==@s")
+        .drop("STATE", axis=1)
+        .reset_index(drop=True)
+        for s in state2abv.values()
+    }
+
+    return efs_for_state
