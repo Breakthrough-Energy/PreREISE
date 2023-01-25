@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from prereise.gather.demanddata.transportation_electrification import const, data_helper
 
@@ -133,6 +134,28 @@ def immediate_charging(
     elif veh_type.lower() == "hdv":
         trips = data_helper.load_hdv_data("hhdv", filepath)
 
+    ### filter for cyclical trips
+    nd_len = len(trips)
+    filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
+    i = 0
+    while i < nd_len:
+        total_trips = int(trips.iloc[i, trips.columns.get_loc("total_trips")])
+        # copy one vehicle information to the block
+        individual = trips.iloc[i : i + total_trips].copy()
+        if (
+            individual["why_from"].head(1).values[0]
+            == individual["dwell_location"].tail(1).values[0]
+        ):
+            filtered_census_data = pd.concat(
+                [filtered_census_data, individual], ignore_index=True
+            )
+        i += total_trips
+    del trips
+    trips = filtered_census_data
+
+    print(f"updated data length:{nd_len}")
+    #####
+
     # Constants
     kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     battery_capacity = kwhmi * veh_range
@@ -207,6 +230,8 @@ def immediate_charging(
     flag_translation = {1: "weekend", 2: "weekday"}
     for i, weekday_flag in enumerate(input_day):
         daily_profile = daily_resampled_profiles[flag_translation[weekday_flag]]
+        print(f"day: {i}")
+        print(f"daily sum: {np.sum(daily_profile)}")
 
         # create wrap-around indexing function
         trip_window_indices = np.arange(i * 24, i * 24 + 72) % len(model_year_profile)

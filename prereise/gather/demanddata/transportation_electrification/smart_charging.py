@@ -109,6 +109,29 @@ def smart_charging(
     elif veh_type.lower() in {"mdv", "hdv"}:
         data_day = input_day
 
+    ### filter for cyclical trips
+    nd_len = len(newdata)
+    filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
+    i = 0
+    while i < nd_len:
+        total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
+        # copy one vehicle information to the block
+        individual = newdata.iloc[i : i + total_trips].copy()
+        if (
+            individual["why_from"].head(1).values[0]
+            == individual["dwell_location"].tail(1).values[0]
+        ):
+            filtered_census_data = pd.concat(
+                [filtered_census_data, individual], ignore_index=True
+            )
+        i += total_trips
+    del newdata
+    gc.collect()
+    newdata = filtered_census_data
+
+    print(f"updated data length:{nd_len}")
+    #####
+
     daily_vmt_total = data_helper.get_total_daily_vmt(
         newdata, input_day, veh_type.lower()
     )
@@ -132,27 +155,6 @@ def smart_charging(
     elif veh_type.lower() in {"mdv", "hdv"}:
         location_allowed = const.hdv_location_allowed
         use_data_row = hdv_use_all_data_rows
-
-    if veh_type.lower() in {"ldv", "ldt"}:
-        filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
-        i = 0
-        while i < nd_len:
-            total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
-            # copy one vehicle information to the block
-            individual = newdata.iloc[i : i + total_trips].copy()
-            if (
-                individual["why_from"].head(1).values[0]
-                == individual["dwell_location"].tail(1).values[0]
-            ):
-                filtered_census_data = pd.concat(
-                    [filtered_census_data, individual], ignore_index=True
-                )
-            i += total_trips
-        del newdata
-        gc.collect()
-        newdata = filtered_census_data
-        nd_len = len(newdata)
-        print(f"updated data length:{nd_len}")
 
     newdata = charging_optimization.get_constraints(
         newdata,
@@ -353,8 +355,11 @@ def smart_charging(
             * bev_vmt
         )
 
-        print(trip_window_indices)
-        print(scaled_output)
+        # print(f"optimization output: {outputelectricload}")
+        print(f"optimization output sum: {np.sum(outputelectricload)}")
+        # print(f"trip window hours: {trip_window_indices}")
+        # print(f"scaled out: {scaled_output}")
+        print(f"scaled output sum: {np.sum(scaled_output)}")
 
         model_year_profile[trip_window_indices] += scaled_output
 
