@@ -121,6 +121,7 @@ def smart_charging(
         charging_efficiency = 0.9
 
     nd_len = len(newdata)
+    print(f"data length:{nd_len}")
 
     if veh_type.lower() in {"ldv", "ldt"}:
         location_allowed = const.ldv_location_allowed
@@ -146,6 +147,7 @@ def smart_charging(
             i += total_trips
         newdata = filtered_census_data
         nd_len = len(newdata)
+        print(f"updated data length:{nd_len}")
 
     newdata = charging_optimization.get_constraints(
         newdata,
