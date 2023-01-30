@@ -1,3 +1,4 @@
+import os
 import warnings
 
 import pandas as pd
@@ -139,7 +140,7 @@ def calculate_vmt_for_ua(census_ua, tht_ua):
     :param dict census_ua: dictionary as returned by :func:`load_census_ua`
     :param pandas.Series tht_ua: vmt per capita in urban areas as returned by
         :func:`load_dot_vmt_per_capita`
-    :return: (*dict*) -- keys are state abbreviations and values are series giving
+    :return: (*dict*) -- keys are state abbreviations and values are data frame giving
         annual vmt by urban areas.
     """
 
@@ -155,19 +156,14 @@ def calculate_vmt_for_ua(census_ua, tht_ua):
             r"[, -.]", "", regex=True
         )
         common = set(tht_ua_format.index).intersection(set(census_ua_format.index))
-        vmt_for_ua[s] = (
-            pd.DataFrame(
-                {
-                    "Annual VMT": [
-                        365 * tht_ua_format.loc[i] * census_ua_format.loc[i]
-                        for i in common
-                    ]
-                },
-                index=list(common),
-            )
-            .rename(index=format2original)
-            .squeeze()
-        )
+        vmt_for_ua[s] = pd.DataFrame(
+            {
+                "Annual VMT": [
+                    365 * tht_ua_format.loc[i] * census_ua_format.loc[i] for i in common
+                ]
+            },
+            index=list(common),
+        ).rename(index=format2original)
 
     return vmt_for_ua
 
@@ -205,8 +201,8 @@ def calculate_urban_rural_fraction(vmt_for_ua, vmt_for_state):
             vmt_for_ra_perc[s] = 1 - vmt_for_ua_perc[s].sum()
         # Handle District of Columbia
         else:
-            vmt_for_ua_perc[s] = 1
-            vmt_for_ra_perc[s] = 0
+            vmt_for_ua_perc[s] = pd.Series({"Washington, DC-VA-MD": 1})
+            vmt_for_ra_perc[s] = pd.Series(0.0, index=["Annual VMT"])
 
     return vmt_for_ua_perc, vmt_for_ra_perc
 
@@ -273,3 +269,103 @@ def get_efs_vmt_projection_for_state(efs_annual_data, electrification_scenario=N
     }
 
     return efs_for_state
+
+
+def generate_scaling_factor(efs_vmt_for_state, vmt_for_ua_perc, vmt_for_ra_perc):
+    """Calculate for each year the scaling factors by vehicle technology in urban and
+    rural areas.
+
+    :param dict efs_vmt_for_state: keys are state abbreviations and values are data
+        frames enclosing the projected annual VMT by vehicle technology and year
+        as returned by :func:`get_efs_vmt_projection_for_state`.
+    :param dict vmt_for_ua_perc: keys are state abbreviations and values are series
+        giving VMT fractions for urban areas in state. This is returned by
+        :func:`calculate_urban_rural_fraction`
+    :param dict vmt_for_ra_perc: same as ``vmt_for_ua_perc`` but for rural areas.
+    :return: (*tuple*) -- dictionary for urban and rural area. Keys are years, values
+        are data frames enclosing scaling factors for each vehicle type.
+    """
+    rural_scaling_factor = {}
+    urban_scaling_factor = {}
+    for s in state2abv.values():
+        efs_value = (
+            efs_vmt_for_state[s]
+            .pivot(index="YEAR", columns="DEMAND_TECHNOLOGY", values="VALUE")
+            .rename(
+                columns={
+                    "ELECTRIC LIGHT-DUTY AUTO - 100 MILE RANGE": "LDV Car - 100 mi",
+                    "ELECTRIC LIGHT-DUTY AUTO - 200 MILE RANGE": "LDV Car - 200 mi",
+                    "ELECTRIC LIGHT-DUTY AUTO - 300 MILE RANGE": "LDV Car - 300 mi",
+                    "ELECTRIC LIGHT-DUTY TRUCK - 100 MILE RANGE": "LDV Truck - 100 mi",
+                    "ELECTRIC LIGHT-DUTY TRUCK - 200 MILE RANGE": "LDV Truck - 200 mi",
+                    "ELECTRIC LIGHT-DUTY TRUCK - 300 MILE RANGE": "LDV Truck - 300 mi",
+                    "BATTERY ELECTRIC MEDIUM-DUTY VEHICLE": "MDV Truck",
+                    "ELECTRIC HEAVY DUTY VEHICLE": "HDV Truck",
+                }
+            )
+            .rename_axis(columns=None, index=None)
+        )
+        rural_scaling_factor_state = efs_value.multiply(vmt_for_ra_perc[s].squeeze())
+        for y in efs_value.index:
+            rural_scaling_factor[y] = pd.concat(
+                [
+                    rural_scaling_factor.get(y, pd.DataFrame()),
+                    rural_scaling_factor_state.loc[y]
+                    .to_frame(name=s)
+                    .T.rename_axis("State"),
+                ]
+            )
+            urban_scaling_factor[y] = pd.concat(
+                [
+                    urban_scaling_factor.get(y, pd.DataFrame()),
+                    pd.concat(
+                        [
+                            pd.DataFrame(
+                                {
+                                    "State": s,
+                                    "UA": vmt_for_ua_perc[s]
+                                    .index.str.split(",")
+                                    .str[0],
+                                },
+                                index=vmt_for_ua_perc[s].index,
+                            ),
+                            pd.DataFrame(
+                                efs_value.loc[y].to_dict(),
+                                index=vmt_for_ua_perc[s].index,
+                            ).multiply(vmt_for_ua_perc[s].values, axis=0),
+                        ],
+                        axis=1,
+                    ).rename_axis("Area Name"),
+                ]
+            )
+
+    return urban_scaling_factor, rural_scaling_factor
+
+
+def write_scaling_factor_files(
+    urban_scaling_factor, rural_scaling_factor, dir_path=None
+):
+    """Create files for each year enclosing scaling factors by vehicle technology in
+    urban and rural areas.
+
+    :param dict urban_scaling_factor: keys are years, values are data frames enclosing
+        scaling factors for each vehicle type in urban area.
+    :param dict rural_scaling_factor: keys are years, values are data frames enclosing
+        scaling factors for each vehicle type in each rural area.
+    :param str dir_path: path to folder wher files will be written. Default to *'data/
+        regional_scaling_factors'* in current directory.
+    """
+    if dir_path is None:
+        dir_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data",
+            "regional_scaling_factors",
+        )
+    os.makedirs(dir_path, exist_ok=True)
+    for y in urban_scaling_factor:
+        rural_scaling_factor[y].to_csv(
+            os.path.join(dir_path, f"regional_scaling_factors_RA_{y}.csv")
+        )
+        urban_scaling_factor[y].to_csv(
+            os.path.join(dir_path, f"regional_scaling_factors_UA_{y}.csv")
+        )
