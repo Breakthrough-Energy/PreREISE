@@ -277,6 +277,7 @@ def adjust_puma_slopes(
     :return: (*tuple*) -- a pair of pandas.DataFrame objects for per-puma residential
         and commercial slopes, respectively.
     """
+
     # Minimize error between actual slopes and fitted function
     # Note for fitting to converge, hdd must be divided by 1000 and slopes in btu
     def model(par, hdd_div1000, slope_btu):

@@ -200,7 +200,6 @@ def main_plots(
 
     iso_dayhour_fits = pd.DataFrame(index=np.arange(0, 24))
     for wk_wknd in ["wk", "wknd"]:
-
         iso_floor_area = zone_floor_area.loc[iso_zone_names[iso]].sum()
 
         # read hourly slopes
@@ -474,7 +473,6 @@ def main_plots(
 
 
 if __name__ == "__main__":
-
     os.makedirs(
         os.path.join(
             os.path.dirname(__file__),

@@ -93,7 +93,6 @@ def generate_profiles(yr_temps=const.base_year, bldg_class="res", hp_model="advp
 
     # Loop through states to create profile outputs
     for state in const.state_list:
-
         # Load and subset relevant data for the state
         puma_data_it = const.puma_data.query("state == @state")
 

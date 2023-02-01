@@ -72,7 +72,6 @@ def era5_download(years, directory, variable="temp"):
     os.makedirs(os.path.join(directory, variable), exist_ok=True)
 
     for year in years:
-
         if year < 1979:
             dataset = "reanalysis-era5-single-levels-preliminary-back-extension"
         else:
@@ -116,9 +115,9 @@ def create_era5_pumas(
     :raises ValueError: if the ``variable`` name is invalid.
     :raises FileNotFoundError: if not all required files are present.
     """
+
     # Function to convert latitude and longitude to cartesian coordinates
     def lon_lat_to_cartesian(lon, lat):
-
         # WGS 84 reference coordinate system parameters
         a = 6378.137  # major axis [km]
         e2 = 6.69437999014e-3  # eccentricity squared
