@@ -5,15 +5,23 @@ from prereise.gather.demanddata.bldg_electrification import const
 
 class LoadProjectionScenario:
     """Define load projection scenario for a load zone.
-    For a base scenario, read and save building stock inputs
-    For a projection scenario, some fields are projected from base scenario based on the projection scenario inputs
+    For a base scenario, read and save building stock inputs.
+    For a projection scenario, some fields are projected from base scenario
+    based on the projection scenario inputs.
 
     :param str id: id of scenario, 'base' refers to modeled base year scenario
-    :param Pandas Series input_series: Precomputed information of building stock floor area and energy usages for a base scenario.
-        User defined growth inputs for a projection scenario. This series contains information for a load zone, which are listed as follows:
-        1) poppulation 2) total building floor area by type 3) primary energy source types and hourshold fraction for space heating, cooling, hot water and cooking
-        4) assumed dominate type of heat pump 5) assumed energy efficiency of cooking and air conditioning.
-    #param class scenarios other: None for a base scenario. And base scenario instance is expected for a projection scenario.
+    :param pandas.Series input_series: precomputed information of building stock floor
+        area and energy usages for a base scenario. User defined growth inputs for a
+        projection scenario. This series contains information for a load zone,
+        which are listed as follows:
+        1) population
+        2) total building floor area by type
+        3) primary energy source types and household fraction for space heating,
+           cooling, hot water and cooking
+        4) assumed dominate type of heat pump
+        5) assumed energy efficiency of cooking and air conditioning.
+    :param load_projection_scenario.LoadProjectionScenario other: the base scenario
+        instance for a projection scenario creation. None if creating a base scenario.
     """
 
     def __init__(self, id, input_series, other=None):
@@ -28,7 +36,7 @@ class LoadProjectionScenario:
         if other is None:
             self.stats = (
                 input_series.dropna()
-            )  # dropna is supposed to drop rows that only used for defining future scenarios
+            )  # drop rows that only used for defining future scenarios
             self._compute_base_scenario()
 
         else:
@@ -66,7 +74,8 @@ class LoadProjectionScenario:
         self.floor_area_m2 = {}
         for clas in const.classes:
             if np.isnan(self.stats[f"{clas}_area_ann_grow_rate"]):
-                # floor area growth rate is assumed to be proportional to population growth by default, unless user defines a growth rate for floor area
+                # floor area growth rate is assumed to be proportional to population
+                # growth by default, unless user defines a growth rate for floor area
                 self.floor_area_m2[clas] = other.floor_area_m2[clas] * (
                     1 + self.stats["pop_ann_grow_rate"]
                 ) ** (self.year - other.year)
@@ -76,8 +85,10 @@ class LoadProjectionScenario:
                 ) ** (self.year - other.year)
 
             if not np.isnan(self.stats[f"frac_hp_{clas}_heat"]):
-                # calculate fraction of floor area using heat pump, resistance heat or fossil fuel furnace as major heating appliances
-                # Users can either define the fractions directly or the shift in major heating fuels from the base scenario or assume BAU cases
+                # calculate fraction of floor area using heat pump, resistance heat
+                # or fossil fuel furnace as major heating appliances
+                # Users can either define the fractions directly or the shift in major
+                # heating fuels from the base scenario or assume BAU cases
                 self.stats[f"ff2hp_{clas}"] = (
                     1
                     - self.stats[f"frac_ff_{clas}_heat"]
@@ -139,7 +150,7 @@ class LoadProjectionScenario:
 
     def floor_area_growth(self, other):
         """
-        :return (float):  compound floor area growth
+        :return (*float*) -- compound floor area growth
         """
         return (self.floor_area_m2["res"] + self.floor_area_m2["com"]) / (
             other.floor_area_m2["res"] + other.floor_area_m2["com"]
@@ -147,43 +158,45 @@ class LoadProjectionScenario:
 
     def floor_area_growth_type(self, other, clas):
         """
-        :return (float): compound floor area growth by building type
+        :return (*float*) -- compound floor area growth by building type
         """
         return self.floor_area_m2[clas] / other.floor_area_m2[clas]
 
     def frac_hp_growth(self, other):
         """
-        :return (float): floor area growth ratio that use hp as main heating appliance
+        :return (*float*) -- floor area growth ratio that use hp as main heating
+            appliance
         """
         return self.hp_heat_area_m2 / other.hp_heat_area_m2
 
     def frac_resist_growth(self, other):
         """
-        :return (float): floor area growth ratio that use resistance heat as main heating source
+        :return (*float*) -- floor area growth ratio that use resistance heat as main
+            heating source
         """
         return self.resist_heat_area_m2 / other.resist_heat_area_m2
 
     def frac_cool_growth(self, other):
         """
-        :return (float): floor area growth ratio that have electric air conditioning
+        :return (*float*) -- floor area growth ratio that have electric air conditioning
         """
         return self.elec_cool_m2 / other.elec_cool_m2
 
     def frac_htg_ff2hp(self, other, clas):
         """
-        :return (float): fraction of floor area electrified for heating
+        :return (*float*) -- fraction of floor area electrified for heating
         """
         return other.stats[f"frac_ff_{clas}_heat"] - self.stats[f"frac_ff_{clas}_heat"]
 
     def frac_dhw_ff2hp(self, other, clas):
         """
-        :return (float): fraction of floor area electrified for dhw
+        :return (*float*) -- fraction of floor area electrified for dhw
         """
         return other.stats[f"frac_ff_dhw_{clas}"] - self.stats[f"frac_ff_dhw_{clas}"]
 
     def frac_cook_ff2hp(self, other, clas):
         """
-        :return (float): fraction of floor area electrified for cooking
+        :return (*float*) -- fraction of floor area electrified for cooking
         """
         cook_other = "cook" if clas == "com" else "other"
         return (
@@ -193,12 +206,14 @@ class LoadProjectionScenario:
 
     def frac_cooling_eff_change(self, other):
         """
-        :return (float): ratio of cooling efficiency improvement compares to base scenario
+        :return (*float*) -- ratio of cooling efficiency improvement compares to base
+            scenario
         """
         return self.cool_energy_intensity / other.cool_energy_intensity
 
     def compare_hp_heat_type(self, other):
         """
-        :return (bool): True if the heat pump type for projection scenario is the same as that of base scenario, otherwise False
+        :return (*bool*) -- True if the heat pump type for projection scenario is the
+            same as that of base scenario, otherwise False
         """
         return self.hp_type_heat == other.hp_type_heat

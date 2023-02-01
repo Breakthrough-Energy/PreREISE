@@ -27,15 +27,20 @@ from prereise.gather.demanddata.bldg_electrification.zone_profile_generator impo
 
 
 def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit, base_scen, hp_heat_cop):
-    """Compute baseload, heating, and cooling electricity for a certain hour of year under model base year scenario
+    """Compute baseload, heating, and cooling electricity for a certain hour of year
+    under model base year scenario
 
     :param pandas.Series temp_series: data for the given hour.
-    :param pandas.DataFrame hourly_fits_df: hourly and week/weekend breakpoints and coefficients for electricity use equations.
-    :param pandas.DataFrame db_wb_fit: least-square estimators of the linear relationship between WBT and DBT
-    :param prereise.gather.demanddata.bldg_electrification.load_projection_scenario.LoadProjectionScenario base_scen: reference scenario instance
-    :param pandas.DataFrame hp_heat_cop: heat pump COP against DBT with a 0.1 degree C interval
-
-    :return: (*list*) -- [baseload, heating, cooling]
+    :param pandas.DataFrame hourly_fits_df: hourly and week/weekend breakpoints and
+        coefficients for electricity use equations.
+    :param pandas.DataFrame db_wb_fit: least-square estimators of the linear
+        relationship between WBT and DBT
+    :param load_projection_scenario.LoadProjectionScenario base_scen: reference
+        scenario instance
+    :param pandas.DataFrame hp_heat_cop: heat pump COP against DBT with
+        a 0.1 degree C interval
+    :return: (*list*) -- energy for baseload, heat pump heating, resistance heating,
+        and cooling of certain hour
     """
     temp = temp_series["temp_c"]
     temp_wb = temp_series["temp_c_wb"]
@@ -78,8 +83,10 @@ def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit, base_scen, hp_heat_co
 
     if temp <= t_bph:
         heat_eng = -s_heat * (t_bph - temp)
-        # seperate resistance heat and heat pump energy by COP. HP assumed to be medium performance HP that's used in Mike's Joule paper
-        # ! Since we now have our estimation of current heat pump adoption rate, this function can be merged to the same one in zone_profile_generator.py
+        # Separate resistance heat and heat pump energy by COP.
+        # HP assumed to be medium performance HP that's used in Mike's Joule paper
+        # ! Since we now have our estimation of current heat pump adoption rate,
+        # this function can be merged to the same one in zone_profile_generator.py
         cop_hp = hp_heat_cop.loc[round(temp, 1), "cop"]
         hp_eng = (
             heat_eng
@@ -120,16 +127,22 @@ def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit, base_scen, hp_heat_co
 def scale_energy(
     base_energy, temp_df, base_scen, new_scen, midperfhp_cop, advperfhp_cop
 ):
-    """project energy consumption for each projection scenarios from the base scenario
+    """Project energy consumption for each projection scenarios from the base scenario
 
-    :param pandas.DataFrame base_energy: dataframe of disaggregated electricity consumptions for all weather years
+    :param pandas.DataFrame base_energy: dataframe of disaggregated
+        electricity consumptions for all weather years
     :param pandas.DataFrame temp_df: weather records the given hours
-    :param prereise.gather.demanddata.bldg_electrification.load_projection_scenario.LoadProjectionScenario base_scen: reference scenario instance
-    :param prereise.gather.demanddata.bldg_electrification.load_projection_scenario.LoadProjectionScenario new_scen: projection scenario instance
-    :param Pandas.DataFrame midperfhp_cop: average performance heat pump COP against DBT with a 0.1 degree C interval
-    :param Pandas.DataFrame advperfhp_cop: advanced performance heat pump (90% percentile cold climate heat pump) COP against DBT with a 0.1 degree C interval
-
-    :return (*pandas.DataFrame*) scen_load_mwh -- hourly electricity consumption induced by heat pump heating, resistance heating, cooling, and 'base' loads for a projection scenario
+    :param load_projection_scenario.LoadProjectionScenario base_scen:
+        reference scenario instance
+    :param load_projection_scenario.LoadProjectionScenario new_scen:
+        projection scenario instance
+    :param Pandas.DataFrame midperfhp_cop: average performance heat pump COP
+        against DBT with a 0.1 degree C interval
+    :param Pandas.DataFrame advperfhp_cop: advanced performance heat pump
+        (90% percentile cold climate heat pump) COP against DBT with a 0.1
+        degree C interval
+    :return (*pandas.DataFrame*) -- hourly electricity consumption induced by heat pump
+        heating, resistance heating, cooling, and baseload for a projection scenario
     """
     base_load_scaler = new_scen.floor_area_growth(base_scen)
     cool_load_scaler = new_scen.frac_cooling_eff_change(
@@ -159,9 +172,8 @@ def scale_energy(
 
     scen_load_mwh = pd.DataFrame(index=base_energy.index)
     scen_load_mwh["base_load_mw"] = base_energy["base_load_mw"] * base_load_scaler
-    if (
-        new_hp_profile == "elec"
-    ):  # if user select to use the current electricity heat pump consumption profiles for heating load projection
+    if new_hp_profile == "elec":  # if user select to use the current electricity
+        # heat pump consumption profiles for heating load projection
         scen_load_mwh["heat_hp_load_mw"] = (
             base_energy["heat_hp_load_mw"] * hp_load_scaler
         )
@@ -176,14 +188,20 @@ def scale_energy(
 
 
 def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen):
-    """return hourly electricity loads for a projection scenario from converting fossil fuel heating, dhw and cooking to electric ones
-    :param list weather_years: user defined year(s) of weather profile for load projection
-    :param pandas.DataFrame puma_data: puma data within zone, output of zone_shp_overlay()
-    :param prereise.gather.demanddata.bldg_electrification.load_projection_scenario.LoadProjectionScenario base_scen: reference scenario instance
-    :param prereise.gather.demanddata.bldg_electrification.load_projection_scenario.LoadProjectionScenario new_scen: projection scenario instance
+    """Calculate hourly electricity loads for a projection scenario from converting
+    fossil fuel heating, dhw and cooking to electric ones
 
-    :return (*pandas.DataFrame*) ff2hp_load_mwh -- hourly projection load from converting fossil fuel consumption to electricity for
-        projection scenarios given weather conditions from selected weather years
+    :param list weather_years: user defined year(s) of weather profile for
+        load projection
+    :param pandas.DataFrame puma_data: puma data within zone,
+        output of :func:`zone_shp_overlay`
+    :param load_projection_scenario.LoadProjectionScenario base_scen:
+        reference scenario instance
+    :param load_projection_scenario.LoadProjectionScenario new_scen:
+        projection scenario instance
+    :return (*pandas.DataFrame*) -- hourly projection load from converting fossil fuel
+        consumption to electricity for projection scenarios given weather conditions
+        from selected weather years
     """
 
     def ff2hp_dhw_profiles(clas):
@@ -335,17 +353,18 @@ def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen):
 
 
 def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_years):
-    """load projection for one zone for all selected weather years.
+    """Load projection for one zone in all selected weather years.
 
     :param str zone_name: name of load zone used to save profile.
     :param str zone_name_shp: name of load zone within shapefile.
-    :param prereise.gather.demanddata.bldg_electrification.load_projection_scenario.LoadProjectionScenario new_scen: projection scenario instance
-    :param prereise.gather.demanddata.bldg_electrification.load_projection_scenario.LoadProjectionScenario base_scen: reference scenario instance
-    :param list weather_years: user defined year(s) of weather profile for load projection
-
-    :return (dictionary) zone_profile_load_mwh -- hourly projected load breakdowns for all scenarios
-        example: "base": (Pandas.DataFrame) hourly load breakdowns for base scenario
-                 "scen_id": (Pandas.DataFrame) hourly projected load breakdowns for projection scenario "scen_id"
+    :param load_projection_scenario.LoadProjectionScenario base_scen:
+        reference scenario instance
+    :param load_projection_scenario.LoadProjectionScenario new_scen:
+        projection scenario instance
+    :param list weather_years: user defined year(s) of weather profile
+        for load projection
+    :return (*dict*) -- hourly projected load breakdowns for all scenarios, keys are
+        scenario names, values are data frames of load breakdowns
     """
     hours_utc_weather_years = pd.date_range(
         start=f"{weather_years[0]}-01-01",
@@ -440,10 +459,12 @@ if __name__ == "__main__":
     # Use base_year for model fitting
     base_year = const.base_year
 
-    # Weather year to produce load profiles. If multiple years, then time series result will show for more than one year
+    # Weather year to produce load profiles. If multiple years,
+    # then time series result will show for more than one year
     weather_years = [2018, 2019]
 
-    # new heat pump load profile assumption. User can select whether to use electric profile or fossil fuel profile to estimate
+    # new heat pump load profile assumption. User can select whether to use
+    # electric profile or fossil fuel profile to estimate
     # electrified fossil fuel consumption for heating
     new_hp_profile = "elec"  # "elec" or "ff"
 

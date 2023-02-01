@@ -53,6 +53,7 @@ def zonal_data(puma_data, hours_utc, year):
 
     :param pandas.DataFrame puma_data: puma data within zone, output of zone_shp_overlay()
     :param pandas.DatetimeIndex hours_utc: index of UTC hours.
+    :param int year: year of temperature data
 
     :return: (*pandas.DataFrame*) temp_df -- hourly zonal values of temperature, wetbulb temperature, and darkness fraction
     """
