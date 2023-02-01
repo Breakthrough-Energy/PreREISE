@@ -229,7 +229,6 @@ def get_all_bus_eiaid(bus_csv_path, doe_csv_path, cache_path, bus_pos, out_path)
 
     # match with bus number
     for i in range(bus_num):
-
         # match zip
         if bus_zip["zip"][i] in zip2eiaid.keys():
             for j in zip2eiaid[bus_zip["zip"][i]]:

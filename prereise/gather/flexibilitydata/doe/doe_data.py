@@ -21,7 +21,6 @@ def cleanup_directory(root):
 
     all_folders = os.listdir(root)
     for i in all_folders:
-
         if os.path.isdir(os.path.join(root, i)):
             cleanup_directory(os.path.join(root, i))
 

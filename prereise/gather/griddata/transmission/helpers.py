@@ -20,7 +20,7 @@ class DataclassWithValidation:
             raise TypeError(
                 "_validate_input_types can only be called on dataclassed objects."
             )
-        for (name, specified_type) in self.__annotations__.items():
+        for name, specified_type in self.__annotations__.items():
             # Ignore attributes that aren't passed via the __init__ method
             if not self.__dataclass_fields__[name].init:
                 continue
