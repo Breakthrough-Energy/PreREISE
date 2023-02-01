@@ -159,12 +159,12 @@ def smart_charging(
 
     nd_len = len(newdata)
     # One thing we need for LDV and LDT is the filter for vehicle range
-    if veh_type.lower() in {"ldv", "ldt"}:
-        newdata = newdata.loc[
-            (newdata["total vehicle miles traveled"] < veh_range)
-        ]
+    newdata = newdata.loc[
+        (newdata["total vehicle miles traveled"] < veh_range)
+    ]
 
-        ### LDV and LDT filter for cyclical trips
+    ### LDV and LDT filter for cyclical trips
+    if veh_type.lower() in {"ldv", "ldt"}:
         filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
         i = 0
         while i < nd_len:
@@ -268,8 +268,8 @@ def smart_charging(
         missed_vmt = 0
         if veh_type.lower() in {"ldv", "ldt"}:
             missed_vehicles = pd.DataFrame(columns=const.nhts_census_column_names)
-        elif veh_type.lower() in {"mdv", "hdv"}:
-            missed_vehicles = pd.DataFrame(columns=newdata.columns)
+#        elif veh_type.lower() in {"mdv", "hdv"}:
+#            missed_vehicles = pd.DataFrame(columns=newdata.columns)
 #            missed_vehicles = pd.DataFrame(columns=const.hdv_data_column_names)
         x_kwh = 0
         optimization_fail = 0
@@ -435,10 +435,10 @@ def smart_charging(
                     ] = batterysize
                 else:
                     optimization_fail += 1
-                    missed_vehicles = missed_vehicles.reindex(individual.columns, axis=1, fill_value=0)
-                    missed_vehicles = pd.concat(
-                        [missed_vehicles, individual], ignore_index=True
-                    )
+#                    missed_vehicles = missed_vehicles.reindex(individual.columns, axis=1, fill_value=0)
+#                    missed_vehicles = pd.concat(
+#                        [missed_vehicles, individual], ignore_index=True
+#                    )
                     #DANL EDITS
                     missed_vmt += individual["trip_miles"].sum()
                     #DANL EDITS
@@ -490,14 +490,14 @@ def smart_charging(
         print(f"Exit Flag 3: {flag_3_fail}")
         print(f"Exit Flag 4: {flag_4_fail}")
 
-        print(missed_vehicles[[
-            "dwell_time","total vehicle miles traveled","dwell_location",
-            "vehicle_number","location_allowed","trip_allowed","dwell_allowed","charging_allowed",
-            "dwell_charging","required_charging","max_charging"
+#        print(missed_vehicles[[
+#            "dwell_time","total vehicle miles traveled","dwell_location",
+#            "vehicle_number","location_allowed","trip_allowed","dwell_allowed","charging_allowed",
+#            "dwell_charging","required_charging","max_charging"
             #,"trip_number","Date","Day of Week",
             #"If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes",
             #"trip_miles","Vehicle miles traveled","why_from"
-            ]])
+#            ]])
 
 #    "Household",     "Vehicle ID", "Person ID","Scaling Factor Applied","trip_number","Date","Day of Week",
 # "If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes","Dwell time","trip_miles",
