@@ -102,40 +102,100 @@ def smart_charging(
 
     input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
     external_signal = -min(external_signal) + external_signal
+    if kwhmi is None:
+        kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
+    kwh = kwhmi * veh_range
+    if power > 19.2:
+        charging_efficiency = 0.95
+    else:
+        charging_efficiency = 0.9
 
+    # Add booleans for whether the location allows charging
+    if location_strategy == 3:
+        newdata1["location_allowed"] = True
+    else:
+        if veh_type.lower() in {"ldv", "ldt"}:
+            allowed = const.ldv_location_allowed[location_strategy]
+            newdata1["location_allowed"] = newdata1["dwell_location"].isin(allowed)
+        elif veh_type.lower() in {"mdv", "hdv"}:
+            allowed = const.hdv_location_allowed[location_strategy]
+            newdata1["location_allowed"] = newdata1["dwell_location"].isin(allowed)
 
-    ### DANL EDITS
-    # One thing we need is the filter for vehicle range
+    # Add booleans for whether the trip_number (compared to total trips) allows charging
+    if trip_strategy == 1:
+        newdata1["trip_allowed"] = True
+    elif trip_strategy == 2:
+        newdata1["trip_allowed"] = newdata1["trip_number"] == newdata1["total_trips"]
+
+    # Add booleans for whether the dwell time is long enough to allow charging
+    newdata1["dwell_allowed"] = newdata1["dwell_time"] > 0.2
+
+    # Add boolean for whether this trip allows charging
+    allowed_cols = [
+        "location_allowed",
+        "trip_allowed",
+        "dwell_allowed",
+    ]
+    newdata1["charging_allowed"] = newdata1[allowed_cols].apply(all, axis=1)
+
+    newdata1["dwell_charging"] = (
+        newdata1["charging_allowed"] * newdata1["dwell_time"] * power * charging_efficiency
+    )
+    newdata1["required_charging"] = (
+        newdata1["total vehicle miles traveled"] * kwhmi
+    )
+
+    grouped_trips = newdata1.groupby("vehicle_number")
+    for vehicle_num, group in grouped_trips:
+        newdata1.loc[group.index, "max_charging"] = (
+            newdata1.loc[group.index, "dwell_charging"].sum()
+        )
+
     newdata = newdata1.loc[
-        (newdata1["total vehicle miles traveled"] < veh_range)
+        (newdata1["required_charging"] <= newdata1["max_charging"])
     ].copy()
 
-    ### filter for cyclical trips
+    ### DANL EDITS
+
     nd_len = len(newdata)
-    filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
-    i = 0
-    while i < nd_len:
-        total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
-        # copy one vehicle information to the block
-        individual = newdata.iloc[i : i + total_trips].copy()
-        if (
-            individual["why_from"].head(1).values[0]
-            == individual["dwell_location"].tail(1).values[0]
-        ):
-            filtered_census_data = pd.concat(
-                [filtered_census_data, individual], ignore_index=True
-            )
-        i += total_trips
-    del newdata
-    gc.collect()
-    newdata = filtered_census_data
+    # One thing we need for LDV and LDT is the filter for vehicle range
+    if veh_type.lower() in {"ldv", "ldt"}:
+        newdata = newdata.loc[
+            (newdata["total vehicle miles traveled"] < veh_range)
+        ]
+
+        ### LDV and LDT filter for cyclical trips
+        filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
+        i = 0
+        while i < nd_len:
+            total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
+            # copy one vehicle information to the block
+            individual = newdata.iloc[i : i + total_trips].copy()
+            if (
+                individual["why_from"].head(1).values[0]
+                == individual["dwell_location"].tail(1).values[0]
+            ):
+                filtered_census_data = pd.concat(
+                    [filtered_census_data, individual], ignore_index=True
+                )
+            i += total_trips
+        del newdata
+        gc.collect()
+        newdata = filtered_census_data
+
+
+
 
     ### DANL EDITS
     model_year_profile = np.zeros(24 * len(input_day))
     if veh_type.lower() in {"ldv", "ldt"}:
         data_day = data_helper.get_data_day(newdata)
     elif veh_type.lower() in {"mdv", "hdv"}:
-        data_day = input_day
+        data_day = np.ones(len(newdata)) + 1
+#        data_day = input_day
+
+    print(f"data_day:{data_day}")
+    
 
     print(f"updated data length:{nd_len}")
     #####
@@ -145,14 +205,6 @@ def smart_charging(
     )
     print(f"Daily vmt values for each day of the year is : {daily_vmt_total}")
     print(f"Length of Daily vmt values is : {len(daily_vmt_total)}")
-
-    if kwhmi is None:
-        kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
-    kwh = kwhmi * veh_range
-    if power > 19.2:
-        charging_efficiency = 0.95
-    else:
-        charging_efficiency = 0.9
 
     nd_len = len(newdata)
     print(f"data length:{nd_len}")
@@ -164,11 +216,11 @@ def smart_charging(
         location_allowed = const.hdv_location_allowed
         use_data_row = hdv_use_all_data_rows
 
-    ### DANL EDITS
-    print(f"kWh per mile value is : {kwhmi}")
+#    ### DANL EDITS
+#    print(f"kWh per mile value is : {kwhmi}")
     # Sum over newdata's VMT before and after this function call
-    newdata_vmt_before = float(newdata.iloc[:, newdata.columns.get_loc("total vehicle miles traveled")].sum())
-    print(f"Newdata vmt before get_constraints call is : {newdata_vmt_before}")
+#    newdata_vmt_before = float(newdata.iloc[:, newdata.columns.get_loc("total vehicle miles traveled")].sum())
+#    print(f"Newdata vmt before get_constraints call is : {newdata_vmt_before}")
 
 
     newdata = charging_optimization.get_constraints(
@@ -181,9 +233,9 @@ def smart_charging(
         charging_efficiency,
     )
 
-    ### DANL EDITS
-    newdata_vmt_after = float(newdata.iloc[:, newdata.columns.get_loc("total vehicle miles traveled")].sum())
-    print(f"Newdata vmt after get_constraints call is : {newdata_vmt_after}")
+#    ### DANL EDITS
+#    newdata_vmt_after = float(newdata.iloc[:, newdata.columns.get_loc("total vehicle miles traveled")].sum())
+#    print(f"Newdata vmt after get_constraints call is : {newdata_vmt_after}")
     
     day_num = len(input_day)
     for day_iter in range(day_num):
@@ -213,6 +265,18 @@ def smart_charging(
         individual_vmt = 0
         individual_trip_miles = 0
         linprog_charge_results = 0
+        missed_vmt = 0
+        if veh_type.lower() in {"ldv", "ldt"}:
+            missed_vehicles = pd.DataFrame(columns=const.nhts_census_column_names)
+        elif veh_type.lower() in {"mdv", "hdv"}:
+            missed_vehicles = pd.DataFrame(columns=newdata.columns)
+#            missed_vehicles = pd.DataFrame(columns=const.hdv_data_column_names)
+        x_kwh = 0
+        optimization_fail = 0
+        flag_1_fail = 0
+        flag_2_fail = 0
+        flag_3_fail = 0
+        flag_4_fail = 0
 
 
         while i < nd_len:
@@ -369,6 +433,24 @@ def smart_charging(
                     individual.iloc[
                         :, newdata.columns.get_loc("Battery size")
                     ] = batterysize
+                else:
+                    optimization_fail += 1
+                    missed_vehicles = missed_vehicles.reindex(individual.columns, axis=1, fill_value=0)
+                    missed_vehicles = pd.concat(
+                        [missed_vehicles, individual], ignore_index=True
+                    )
+                    #DANL EDITS
+                    missed_vmt += individual["trip_miles"].sum()
+                    #DANL EDITS
+                    if exitflag == 1:
+                        flag_1_fail += 1
+                    elif exitflag == 2:
+                        flag_2_fail += 1
+                    elif exitflag == 3:
+                        flag_3_fail += 1
+                    elif exitflag == 4:
+                        flag_4_fail += 1
+
 
             # update the counter to the next vehicle
             i += total_trips
@@ -389,7 +471,7 @@ def smart_charging(
             * bev_vmt
         )
 
-        output_check_array = outputelectricload / kwhmi / daily_vmt_total[day_iter]
+        output_check_array = outputelectricload / kwhmi / daily_vmt_total[day_iter] * charging_efficiency
         output_check_sum = output_check_array.sum()
 
         print(f"Output sanity check value should be 1 and it is : {output_check_sum}")
@@ -401,6 +483,30 @@ def smart_charging(
         # print(f"trip window hours: {trip_window_indices}")
         # print(f"scaled out: {scaled_output}")
         print(f"scaled output sum: {np.sum(scaled_output)}")
+
+        print(f"Vmt missed in optimization: {missed_vmt}")    
+        print(f"Exit Flag 1: {flag_1_fail}")
+        print(f"Exit Flag 2: {flag_2_fail}")
+        print(f"Exit Flag 3: {flag_3_fail}")
+        print(f"Exit Flag 4: {flag_4_fail}")
+
+        print(missed_vehicles[[
+            "dwell_time","total vehicle miles traveled","dwell_location",
+            "vehicle_number","location_allowed","trip_allowed","dwell_allowed","charging_allowed",
+            "dwell_charging","required_charging","max_charging"
+            #,"trip_number","Date","Day of Week",
+            #"If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes",
+            #"trip_miles","Vehicle miles traveled","why_from"
+            ]])
+
+#    "Household",     "Vehicle ID", "Person ID","Scaling Factor Applied","trip_number","Date","Day of Week",
+# "If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes","Dwell time","trip_miles",
+# "Vehicle miles traveled","why_from","dwell_location","Vehicle type","Household vehicle count","Household size",
+#"Trip type","Start time (hour decimal)","trip_end","dwell_time",
+#"Travel time (hour decimal)","Vehicle speed (mi/hour)","vehicle_number",
+#"total_trips","total vehicle miles traveled",
+
+
 
         model_year_profile[trip_window_indices] += scaled_output
 
