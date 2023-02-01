@@ -48,7 +48,7 @@ def bkpt_scale(df, num_points, bkpt, heat_cool):
     return dft.sort_index(), bkpt
 
 
-def zonal_data(puma_data, hours_utc):
+def zonal_data(puma_data, hours_utc, year):
     """Aggregate puma metrics to population weighted hourly zonal values
 
     :param pandas.DataFrame puma_data: puma data within zone, output of zone_shp_overlay()
@@ -676,7 +676,9 @@ def main(zone_name, zone_name_shp, base_year, year, plot_boolean=False):
 
     puma_data_zone = zone_shp_overlay(zone_name_shp, zone_shp, pumas_shp)
 
-    temp_df_base_year, stats_base_year = zonal_data(puma_data_zone, hours_utc_base_year)
+    temp_df_base_year, stats_base_year = zonal_data(
+        puma_data_zone, hours_utc_base_year, year
+    )
 
     temp_df_base_year["load_mw"] = zone_load
 
@@ -694,7 +696,7 @@ def main(zone_name, zone_name_shp, base_year, year, plot_boolean=False):
         {"hour_utc": list(range(len(hours_utc)))}
     )
 
-    temp_df, stats = zonal_data(puma_data_zone, hours_utc)
+    temp_df, stats = zonal_data(puma_data_zone, hours_utc, year)
 
     energy_list = zone_profile_load_MWh.hour_utc.apply(
         lambda x: temp_to_energy(temp_df.loc[x], hourly_fits_df, db_wb_fit)
