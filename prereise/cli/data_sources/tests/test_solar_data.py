@@ -82,7 +82,6 @@ def test_solar_data_nsrdb_invalid_method(solar_data_nsrdb_object):
 
 @patch("prereise.cli.data_sources.solar_data.Grid")
 def test_solar_data_nsrdb_happy_path(grid, solar_data_nsrdb_object):
-
     methods_to_test = [
         ("prereise.cli.data_sources.solar_data.sam.retrieve_data_blended", SAM_STRING),
         ("prereise.cli.data_sources.solar_data.naive.retrieve_data", NAIVE_STRING),

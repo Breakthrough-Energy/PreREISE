@@ -101,7 +101,6 @@ def retrieve_data(wind_farm, start_date="2016-01-01", end_date="2016-12-31"):
     first = True
     request_iter = enumerate(noaa.get_hourly_data(start, end))
     for i, response in tqdm(request_iter, total=url_count):
-
         data_tmp = pd.DataFrame(
             {"plant_id": id_target, "ts": [dt] * n_target, "ts_id": [i + 1] * n_target}
         )
