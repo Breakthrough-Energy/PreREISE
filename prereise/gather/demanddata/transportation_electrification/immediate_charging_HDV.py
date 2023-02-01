@@ -76,7 +76,6 @@ def calculate_charging_helper(
     # -- setting the values in the rest of the trips --
     pos = group.columns.get_loc("trip start battery charge")
     for i in range(1, len(group)):
-
         # setting the remaining trips' start SOC with the end SOC from the previous trip
         # this will skip over the entries that are trip_number 1 since those already have a "trip start battery charge"
         if group.iloc[i, group.columns.get_loc("trip_number")] != 1:

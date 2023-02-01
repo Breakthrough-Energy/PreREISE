@@ -138,7 +138,6 @@ def smart_charging(
 
     day_num = len(input_day)
     for day_iter in range(day_num):
-
         adjusted_load = [
             external_signal[i] + model_year_profile[i]
             for i in range(
@@ -160,12 +159,10 @@ def smart_charging(
         i = 0
 
         while i < nd_len:
-
             # trip amount for each vehicle
             total_trips = int(newdata.iloc[i, newdata.columns.get_loc("total_trips")])
 
             if use_data_row(data_day[i], input_day[day_iter]):
-
                 # copy one vehicle information to the block
                 individual = newdata.iloc[i : i + total_trips].copy()
 
@@ -209,7 +206,6 @@ def smart_charging(
 
                 # find the feasible points
                 if exitflag == 0:
-
                     # can be an EV
                     individual.iloc[:, newdata.columns.get_loc("BEV could be used")] = 1
 

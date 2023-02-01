@@ -69,7 +69,6 @@ def test_immediate_charging_region1():
 
 
 def test_immediate_charging_mdv():
-
     result = immediate_charging_HDV.immediate_charging(
         model_year=2050,
         veh_range=200,
@@ -126,7 +125,6 @@ def test_immediate_charging_mdv():
 
 
 def test_immediate_charging_hdv():
-
     result = immediate_charging_HDV.immediate_charging(
         model_year=2050,
         veh_range=200,

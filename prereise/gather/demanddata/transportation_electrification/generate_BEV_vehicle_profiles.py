@@ -105,9 +105,7 @@ def generate_bev_vehicle_profiles(
     # calculate demand for all geographic areas with scaling factors
     state_demand_profiles = {}
     for geographic_area, bev_vmt in geographic_area_bev_vmt.items():
-
         if charging_strategy == "immediate":
-
             if veh_type.lower() in {"ldv", "ldt"}:
                 normalized_demand = immediate.immediate_charging(
                     census_region=census_region,
