@@ -42,11 +42,18 @@ def func_dhw_cop(temp_c, model):
 os.makedirs("Profiles", exist_ok=True)
 
 
-def generate_profiles(yr_temps=const.base_year, bldg_class="res", hp_model="advperfhp"):
+def generate_dhw_profiles(
+    yr_temps=const.base_year,
+    states=None,
+    bldg_class="res",
+    hp_model="advperfhp",
+):
     """Create time series for electricity loads from converting fossil fuel
     water heating to heat pump water heaters
 
-    :param int yr_temps: year for temperature. Default is 2019.
+    :param int yr_temps: year for temperature, defaults to ``const.base_year``.
+    :param list states: list of states to loop through, defaults to None, in which
+        case ``const.state_list`` is used.
     :param str bldg_class: type of building. Default is residential.
     :param str hp_model: type of heat pump. Default is advanced performance cold
         climate heat pump.
@@ -59,6 +66,8 @@ def generate_profiles(yr_temps=const.base_year, bldg_class="res", hp_model="advp
     """
     if not isinstance(yr_temps, int):
         raise TypeError("yr_temps must be an int")
+    if states is None:
+        states = const.state_list
     if not isinstance(bldg_class, str):
         raise TypeError("bldg_class must be a str")
     if not isinstance(hp_model, str):
@@ -66,7 +75,8 @@ def generate_profiles(yr_temps=const.base_year, bldg_class="res", hp_model="advp
 
     if yr_temps not in const.yr_temps_all:
         raise ValueError(
-            "yr_temps must be among available temperature years: {const.yr_temps_first}-{const.yr_temps_last}"
+            "yr_temps must be among available temperature years: "
+            "{const.yr_temps_first}-{const.yr_temps_last}"
         )
     if bldg_class not in ["res", "com"]:
         raise ValueError(
@@ -92,12 +102,12 @@ def generate_profiles(yr_temps=const.base_year, bldg_class="res", hp_model="advp
     )
 
     # Loop through states to create profile outputs
-    for state in const.state_list:
+    for state in states:
         # Load and subset relevant data for the state
         puma_data_it = const.puma_data.query("state == @state")
 
         temps_pumas_it = pd.read_csv(
-            f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/temps/temps_pumas_{state}_{yr_temps}.csv"
+            f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/{yr_temps}/temps/temps_pumas_{state}_{yr_temps}.csv"
         )
 
         hours = pd.date_range(
@@ -111,7 +121,8 @@ def generate_profiles(yr_temps=const.base_year, bldg_class="res", hp_model="advp
             state_slopes.loc[state, "dhw_slope"] if bldg_class == "res" else 0
         )
 
-        # Based on the timezone for each PUMA, the dhw multiplier list is arranged to match local time
+        # Based on the timezone for each PUMA
+        # the dhw multiplier list is arranged to match local time
         dhw_mult_df = puma_data_it.apply(
             lambda x: pd.Series(
                 hours.tz_convert(x.timezone).hour.map(lambda y: dhw_mult[y])

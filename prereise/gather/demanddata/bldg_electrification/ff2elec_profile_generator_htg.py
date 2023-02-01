@@ -66,12 +66,20 @@ def htg_to_cop(temp_c, model):
         return calculate_cop(temp_c, model)
 
 
-def generate_profiles(yr_temps, bldg_class, hp_model, output_folder="Profiles"):
+def generate_htg_profiles(
+    yr_temps=const.base_year,
+    states=None,
+    bldg_class="res",
+    hp_model="advperfhp",
+    output_folder="Profiles",
+):
     """Generate and write profiles on dist.
     Create time series for electricity loads from converting
     fossil fuel heating to electric heat pumps.
 
-    :param int yr_temps: year for temperature.
+    :param int yr_temps: year for temperature, defaults to ``const.base_year``.
+    :param list states: list of states to loop through, defaults to None, in which
+        case ``const.state_list`` is used.
     :param str bldg_class: type of building.
     :param str hp_model: type of heat pump.
     :param str output_folder: location to store profiles (will be created if necessary).
@@ -85,6 +93,8 @@ def generate_profiles(yr_temps, bldg_class, hp_model, output_folder="Profiles"):
     """
     if not isinstance(yr_temps, int):
         raise TypeError("yr_temps must be an int")
+    if states is None:
+        states = const.state_list
     if not isinstance(bldg_class, str):
         raise TypeError("bldg_class must be a str")
     if not isinstance(hp_model, str):
@@ -92,7 +102,8 @@ def generate_profiles(yr_temps, bldg_class, hp_model, output_folder="Profiles"):
 
     if yr_temps not in const.yr_temps_all:
         raise ValueError(
-            "yr_temps must be among available temperature years: {const.yr_temps_first}-{const.yr_temps_last}"
+            "yr_temps must be among available temperature years: "
+            "{const.yr_temps_first}-{const.yr_temps_last}"
         )
     if bldg_class not in ["res", "com"]:
         raise ValueError(
@@ -116,12 +127,12 @@ def generate_profiles(yr_temps, bldg_class, hp_model, output_folder="Profiles"):
     )
 
     # Loop through states to create profile outputs
-    for state in const.state_list:
+    for state in states:
         # Load and subset relevant data for the state
         puma_data_it = const.puma_data.query("state == @state")
         puma_slopes_it = puma_slopes.query("state == @state")
         temps_pumas_it = pd.read_csv(
-            f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/temps/temps_pumas_{state}_{yr_temps}.csv"
+            f"https://besciences.blob.core.windows.net/datasets/bldg_el/pumas/{yr_temps}/temps/temps_pumas_{state}_{yr_temps}.csv"
         )
 
         # Compute electric HP loads from fossil fuel conversion

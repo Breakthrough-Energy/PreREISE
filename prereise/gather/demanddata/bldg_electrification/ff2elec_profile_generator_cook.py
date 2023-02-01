@@ -1,4 +1,3 @@
-# Import libraries
 import os
 
 import pandas as pd
@@ -6,11 +5,15 @@ import pandas as pd
 from prereise.gather.demanddata.bldg_electrification import const
 
 
-def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
+def generate_cook_profiles(
+    yr_temps=const.base_year, states=None, bldg_class="res", efficiency="high"
+):
     """This script returns hourly electricity loads from converting
     fossil fuel cooking to electric cooking
 
-    :param int yr_temps: year for temperature. Default is 2016.
+    :param int yr_temps: year for temperature, defaults to ``const.base_year``.
+    :param list states: list of states to loop through, defaults to None, in which
+        case ``const.state_list`` is used.
     :param str bldg_class: type of building. Default is residential.
     :param str efficiency: efficiency of cooking. Default is high.
     :raises TypeError:
@@ -22,6 +25,8 @@ def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
     """
     if not isinstance(yr_temps, int):
         raise TypeError("yr_temps must be an int")
+    if states is None:
+        states = const.state_list
     if not isinstance(bldg_class, str):
         raise TypeError("bldg_class must be a str")
     if not isinstance(efficiency, str):
@@ -29,7 +34,8 @@ def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
 
     if yr_temps not in const.yr_temps_all:
         raise ValueError(
-            "yr_temps must be among available temperature years: {const.yr_temps_first}-{const.yr_temps_last}"
+            "yr_temps must be among available temperature years: "
+            "{const.yr_temps_first}-{const.yr_temps_last}"
         )
     if bldg_class not in ["res", "com"]:
         raise ValueError(
@@ -54,7 +60,7 @@ def generate_profiles(yr_temps=2016, bldg_class="res", efficiency="high"):
     os.makedirs("Profiles", exist_ok=True)
 
     # Loop through states to create profile outputs
-    for state in const.state_list:
+    for state in states:
         # Load and subset relevant data for the state
         puma_data_it = const.puma_data[const.puma_data["state"] == state]
 
