@@ -72,6 +72,9 @@ def smart_charging(
     :return: (*numpy.ndarray*) -- charging profiles.
     """
 
+    # for code developer debugging printouts (1 = yes, 0 = no)
+    debug_printout = 0
+
     # load NHTS data from function
     if veh_type.lower() == "ldv":
         newdata1 = data_helper.remove_ldt(data_helper.load_data(census_region, filepath))
@@ -141,29 +144,29 @@ def smart_charging(
     newdata1["dwell_charging"] = (
         newdata1["charging_allowed"] * newdata1["dwell_time"] * power * charging_efficiency
     )
-    newdata1["required_charging"] = (
-        newdata1["total vehicle miles traveled"] * kwhmi
-    )
 
     grouped_trips = newdata1.groupby("vehicle_number")
     for vehicle_num, group in grouped_trips:
         newdata1.loc[group.index, "max_charging"] = (
             newdata1.loc[group.index, "dwell_charging"].sum()
         )
+        newdata1.loc[group.index,"required_charging"] = (
+            newdata1.loc[group.index,"trip_miles"].sum() * kwhmi
+        )
 
+    # Filter for whenever available charging is insufficient to meet required charging
     newdata = newdata1.loc[
         (newdata1["required_charging"] <= newdata1["max_charging"])
     ].copy()
 
-    ### DANL EDITS
-
-    nd_len = len(newdata)
-    # One thing we need for LDV and LDT is the filter for vehicle range
+    # Filter for vehicle's battery range
     newdata = newdata.loc[
         (newdata["total vehicle miles traveled"] < veh_range)
     ]
 
-    ### LDV and LDT filter for cyclical trips
+    nd_len = len(newdata)
+
+    # LDV and LDT filter for cyclical trips
     if veh_type.lower() in {"ldv", "ldt"}:
         filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
         i = 0
@@ -183,31 +186,17 @@ def smart_charging(
         gc.collect()
         newdata = filtered_census_data
 
-
-
-
-    ### DANL EDITS
     model_year_profile = np.zeros(24 * len(input_day))
     if veh_type.lower() in {"ldv", "ldt"}:
         data_day = data_helper.get_data_day(newdata)
     elif veh_type.lower() in {"mdv", "hdv"}:
         data_day = np.ones(len(newdata)) + 1
-#        data_day = input_day
-
-    print(f"data_day:{data_day}")
-    
-
-    print(f"updated data length:{nd_len}")
-    #####
 
     daily_vmt_total = data_helper.get_total_daily_vmt(
         newdata, input_day, veh_type.lower()
     )
-    print(f"Daily vmt values for each day of the year is : {daily_vmt_total}")
-    print(f"Length of Daily vmt values is : {len(daily_vmt_total)}")
 
     nd_len = len(newdata)
-    print(f"data length:{nd_len}")
 
     if veh_type.lower() in {"ldv", "ldt"}:
         location_allowed = const.ldv_location_allowed
@@ -215,13 +204,6 @@ def smart_charging(
     elif veh_type.lower() in {"mdv", "hdv"}:
         location_allowed = const.hdv_location_allowed
         use_data_row = hdv_use_all_data_rows
-
-#    ### DANL EDITS
-#    print(f"kWh per mile value is : {kwhmi}")
-    # Sum over newdata's VMT before and after this function call
-#    newdata_vmt_before = float(newdata.iloc[:, newdata.columns.get_loc("total vehicle miles traveled")].sum())
-#    print(f"Newdata vmt before get_constraints call is : {newdata_vmt_before}")
-
 
     newdata = charging_optimization.get_constraints(
         newdata,
@@ -232,10 +214,6 @@ def smart_charging(
         location_allowed,
         charging_efficiency,
     )
-
-#    ### DANL EDITS
-#    newdata_vmt_after = float(newdata.iloc[:, newdata.columns.get_loc("total vehicle miles traveled")].sum())
-#    print(f"Newdata vmt after get_constraints call is : {newdata_vmt_after}")
     
     day_num = len(input_day)
     for day_iter in range(day_num):
@@ -261,23 +239,23 @@ def smart_charging(
         g2v_load = np.zeros((100, 72))
         individual_g2v_load = np.zeros((nd_len, 72))
 
-        i = 0
+        # code developer debugging variables
         individual_vmt = 0
         individual_trip_miles = 0
         linprog_charge_results = 0
-        missed_vmt = 0
-        if veh_type.lower() in {"ldv", "ldt"}:
-            missed_vehicles = pd.DataFrame(columns=const.nhts_census_column_names)
-#        elif veh_type.lower() in {"mdv", "hdv"}:
-#            missed_vehicles = pd.DataFrame(columns=newdata.columns)
-#            missed_vehicles = pd.DataFrame(columns=const.hdv_data_column_names)
-        x_kwh = 0
         optimization_fail = 0
         flag_1_fail = 0
         flag_2_fail = 0
         flag_3_fail = 0
         flag_4_fail = 0
+        missed_vmt = 0
+        if veh_type.lower() in {"ldv", "ldt"}: 
+            missed_vehicles = pd.DataFrame(columns=const.nhts_census_column_names)
+        elif veh_type.lower() in {"mdv", "hdv"}: 
+            missed_vehicles = pd.DataFrame(columns=list(newdata.columns) + 
+            ["power_allowed", "charging consumption", "seg", "power", "segcum", "energy limit", "rates"])
 
+        i = 0
 
         while i < nd_len:
 
@@ -289,11 +267,7 @@ def smart_charging(
                 # copy one vehicle information to the block
                 individual = newdata.iloc[i : i + total_trips].copy()
 
-                ### DANL EDITS
-                # Pull individual's VMT and calculate what the expected charging amount should be
-#                print(f"individual vmt: {individual["total vehicle miles traveled"]}")
                 individual_vmt += float(individual.iloc[0,individual.columns.get_loc("total vehicle miles traveled")])
-                # The column "trip_miles" is what is used in the optimization constraints
                 individual_trip_miles += float(individual.iloc[:,individual.columns.get_loc("trip_miles")].sum())
 
                 individual["rates"] = individual.apply(
@@ -434,14 +408,12 @@ def smart_charging(
                         :, newdata.columns.get_loc("Battery size")
                     ] = batterysize
                 else:
+                    # collected for debugging if desired
                     optimization_fail += 1
-#                    missed_vehicles = missed_vehicles.reindex(individual.columns, axis=1, fill_value=0)
-#                    missed_vehicles = pd.concat(
-#                        [missed_vehicles, individual], ignore_index=True
-#                    )
-                    #DANL EDITS
+                    missed_vehicles = pd.concat(
+                        [missed_vehicles, individual], ignore_index=True
+                    )
                     missed_vmt += individual["trip_miles"].sum()
-                    #DANL EDITS
                     if exitflag == 1:
                         flag_1_fail += 1
                     elif exitflag == 2:
@@ -471,42 +443,31 @@ def smart_charging(
             * bev_vmt
         )
 
-        output_check_array = outputelectricload / kwhmi / daily_vmt_total[day_iter] * charging_efficiency
-        output_check_sum = output_check_array.sum()
+        if debug_printout == 1:
+            output_check_array = outputelectricload / kwhmi / daily_vmt_total[day_iter] * charging_efficiency
+            output_check_sum = output_check_array.sum()
 
-        print(f"Output sanity check value should be 1 and it is : {output_check_sum}")
-        print(f"Charging summation from linprog_x directly is : {linprog_charge_results}")
-        print(f"Original vmt sum via the column total vehicle miles traveled was : {individual_vmt}")
-        print(f"Original vmt sum via the column trip miles sum was : {individual_trip_miles}")
-        # print(f"optimization output: {outputelectricload}")
-        print(f"optimization output sum: {np.sum(outputelectricload)}")
-        # print(f"trip window hours: {trip_window_indices}")
-        # print(f"scaled out: {scaled_output}")
-        print(f"scaled output sum: {np.sum(scaled_output)}")
+            print(f"Unscaling the optimiation output should be close to or equal to 1 and is : {output_check_sum}")
+            print(f"Original vmt sum via the column total vehicle miles traveled was : {individual_vmt}")
+            print(f"Original vmt sum via the column trip miles sum was : {individual_trip_miles}")
+            print(f"Charging summation from linprog_x directly is : {linprog_charge_results}")
+            print(f"optimization output sum: {np.sum(outputelectricload)}")
+            print(f"scaled output sum: {np.sum(scaled_output)}")
 
-        print(f"Vmt missed in optimization: {missed_vmt}")    
-        print(f"Exit Flag 1: {flag_1_fail}")
-        print(f"Exit Flag 2: {flag_2_fail}")
-        print(f"Exit Flag 3: {flag_3_fail}")
-        print(f"Exit Flag 4: {flag_4_fail}")
+            print(f"Vmt missed in optimization: {missed_vmt}")    
+            print(f"Exit Flag 1: {flag_1_fail}")
+            print(f"Exit Flag 2: {flag_2_fail}")
+            print(f"Exit Flag 3: {flag_3_fail}")
+            print(f"Exit Flag 4: {flag_4_fail}")
 
-#        print(missed_vehicles[[
-#            "dwell_time","total vehicle miles traveled","dwell_location",
-#            "vehicle_number","location_allowed","trip_allowed","dwell_allowed","charging_allowed",
-#            "dwell_charging","required_charging","max_charging"
-            #,"trip_number","Date","Day of Week",
-            #"If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes",
-            #"trip_miles","Vehicle miles traveled","why_from"
-#            ]])
-
-#    "Household",     "Vehicle ID", "Person ID","Scaling Factor Applied","trip_number","Date","Day of Week",
-# "If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes","Dwell time","trip_miles",
-# "Vehicle miles traveled","why_from","dwell_location","Vehicle type","Household vehicle count","Household size",
-#"Trip type","Start time (hour decimal)","trip_end","dwell_time",
-#"Travel time (hour decimal)","Vehicle speed (mi/hour)","vehicle_number",
-#"total_trips","total vehicle miles traveled",
-
-
+            print(missed_vehicles[[
+                "dwell_time","total vehicle miles traveled","dwell_location",
+                "vehicle_number","location_allowed","trip_allowed","dwell_allowed","charging_allowed",
+                "dwell_charging","required_charging","max_charging",
+                #,"trip_number","Date","Day of Week",
+                #"If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes",
+                #"trip_miles","Vehicle miles traveled","why_from",
+            ]])
 
         model_year_profile[trip_window_indices] += scaled_output
 
