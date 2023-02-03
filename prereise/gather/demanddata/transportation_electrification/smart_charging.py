@@ -15,6 +15,7 @@ from prereise.gather.demanddata.transportation_electrification import (
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
+
 def ldv_weekday_weekend_check(x, y):
     """Helper function to select weekday/weekend data rows
 
@@ -48,6 +49,7 @@ def smart_charging(
     daily_values=None,
     kwhmi=None,
     trip_strategy=1,
+    input_day=None,
 ):
     """Smart charging function
 
@@ -77,11 +79,15 @@ def smart_charging(
 
     # load NHTS data from function
     if veh_type.lower() == "ldv":
-        newdata1 = data_helper.remove_ldt(data_helper.load_data(census_region, filepath))
+        newdata1 = data_helper.remove_ldt(
+            data_helper.load_data(census_region, filepath)
+        )
         # updates the weekend and weekday values in the nhts data
         newdata1 = data_helper.update_if_weekend(newdata1)
     elif veh_type.lower() == "ldt":
-        newdata1 = data_helper.remove_ldv(data_helper.load_data(census_region, filepath))
+        newdata1 = data_helper.remove_ldv(
+            data_helper.load_data(census_region, filepath)
+        )
         # updates the weekend and weekday values in the nhts data
         newdata1 = data_helper.update_if_weekend(newdata1)
     elif veh_type.lower() == "mdv":
@@ -99,12 +105,19 @@ def smart_charging(
         "Battery charge",
         "trip_number",
     ]
-    newdata1 = newdata1.reindex(list(newdata1.columns) + new_columns, axis=1, fill_value=0)
+    newdata1 = newdata1.reindex(
+        list(newdata1.columns) + new_columns, axis=1, fill_value=0
+    )
 
     newdata1["trip_number"] = newdata1.groupby("vehicle_number").cumcount() + 1
 
-    input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
+    if input_day is None:
+        input_day = data_helper.get_input_day(
+            data_helper.get_model_year_dti(model_year)
+        )
+
     external_signal = -min(external_signal) + external_signal
+
     if kwhmi is None:
         kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     kwh = kwhmi * veh_range
@@ -142,16 +155,19 @@ def smart_charging(
     newdata1["charging_allowed"] = newdata1[allowed_cols].apply(all, axis=1)
 
     newdata1["dwell_charging"] = (
-        newdata1["charging_allowed"] * newdata1["dwell_time"] * power * charging_efficiency
+        newdata1["charging_allowed"]
+        * newdata1["dwell_time"]
+        * power
+        * charging_efficiency
     )
 
     grouped_trips = newdata1.groupby("vehicle_number")
     for vehicle_num, group in grouped_trips:
-        newdata1.loc[group.index, "max_charging"] = (
-            newdata1.loc[group.index, "dwell_charging"].sum()
-        )
-        newdata1.loc[group.index,"required_charging"] = (
-            newdata1.loc[group.index,"trip_miles"].sum() * kwhmi
+        newdata1.loc[group.index, "max_charging"] = newdata1.loc[
+            group.index, "dwell_charging"
+        ].sum()
+        newdata1.loc[group.index, "required_charging"] = (
+            newdata1.loc[group.index, "trip_miles"].sum() * kwhmi
         )
 
     # Filter for whenever available charging is insufficient to meet required charging
@@ -160,9 +176,7 @@ def smart_charging(
     ].copy()
 
     # Filter for vehicle's battery range
-    newdata = newdata.loc[
-        (newdata["total vehicle miles traveled"] < veh_range)
-    ]
+    newdata = newdata.loc[(newdata["total vehicle miles traveled"] < veh_range)]
 
     nd_len = len(newdata)
 
@@ -214,10 +228,11 @@ def smart_charging(
         location_allowed,
         charging_efficiency,
     )
-    
+
+    output_load_sum_list = []
+
     day_num = len(input_day)
     for day_iter in range(day_num):
-
         print(f"Day: {day_iter}")
         gc.collect()
 
@@ -249,11 +264,23 @@ def smart_charging(
         flag_3_fail = 0
         flag_4_fail = 0
         missed_vmt = 0
-        if veh_type.lower() in {"ldv", "ldt"}: 
-            missed_vehicles = pd.DataFrame(columns=const.nhts_census_column_names)
-        elif veh_type.lower() in {"mdv", "hdv"}: 
-            missed_vehicles = pd.DataFrame(columns=list(newdata.columns) + 
-            ["power_allowed", "charging consumption", "seg", "power", "segcum", "energy limit", "rates"])
+        # if veh_type.lower() in {"ldv", "ldt"}:
+        #     missed_vehicles = pd.DataFrame(
+        #         columns=const.nhts_census_column_names
+        #     ).astype("int64")
+        # elif veh_type.lower() in {"mdv", "hdv"}:
+        #     missed_vehicles = pd.DataFrame(
+        #         columns=list(newdata.columns)
+        #         + [
+        #             "power_allowed",
+        #             "charging consumption",
+        #             "seg",
+        #             "power",
+        #             "segcum",
+        #             "energy limit",
+        #             "rates",
+        #         ]
+        #     )
 
         i = 0
 
@@ -265,8 +292,14 @@ def smart_charging(
                 # copy one vehicle information to the block
                 individual = newdata.iloc[i : i + total_trips].copy()
 
-                individual_vmt += float(individual.iloc[0,individual.columns.get_loc("total vehicle miles traveled")])
-                individual_trip_miles += float(individual.iloc[:,individual.columns.get_loc("trip_miles")].sum())
+                individual_vmt += float(
+                    individual.iloc[
+                        0, individual.columns.get_loc("total vehicle miles traveled")
+                    ]
+                )
+                individual_trip_miles += float(
+                    individual.iloc[:, individual.columns.get_loc("trip_miles")].sum()
+                )
 
                 individual["rates"] = individual.apply(
                     lambda d: dwelling.get_rates(
@@ -299,19 +332,19 @@ def smart_charging(
 
                 linprog_result = linprog(**linprog_inputs)
 
-                # fval is the value of the final cost, exitflag is the reason why the optimization terminates
-                # 0-success, 1-limit reached, 2-problem infeasible, 3-problem unbounded, 4-numerical difficulties
-                x = np.array(linprog_result.x)
                 exitflag = linprog_result.status
-
-
-                ### DANL EDITS
-                linprog_charge_results += x.sum().sum()
 
                 state_of_charge = np.zeros((total_trips, 2))
 
                 # find the feasible points
                 if exitflag == 0:
+                    # fval is the value of the final cost, exitflag is the reason why the optimization terminates
+                    # 0-success, 1-limit reached, 2-problem infeasible, 3-problem unbounded, 4-numerical difficulties
+                    x_array = np.array(linprog_result.x)
+
+                    ### DANL EDITS
+                    linprog_charge_results += x_array.sum().sum()
+
                     # can be an EV
                     individual.iloc[:, newdata.columns.get_loc("BEV could be used")] = 1
 
@@ -349,14 +382,15 @@ def smart_charging(
 
                         segcum = np.cumsum(seg)
                         trip_g2v_load[:, start : end + 1] = (
-                            x[segcum[n] - seg[n] : segcum[n]] / charging_efficiency
+                            x_array[segcum[n] - seg[n] : segcum[n]]
+                            / charging_efficiency
                         )
                         g2v_load[dwell_location, :] += trip_g2v_load[0, :]
                         individual_g2v_load[i + n][:] = trip_g2v_load
                         trip_g2v_cost = np.matmul(trip_g2v_load, cost)[0]
 
                         # charging charge. in DC
-                        charge = sum(x[segcum[n] - seg[n] : segcum[n]])
+                        charge = sum(x_array[segcum[n] - seg[n] : segcum[n]])
 
                         # V2G results
                         trip_v2g_load = np.zeros((1, 72))
@@ -407,9 +441,14 @@ def smart_charging(
                 else:
                     # collected for debugging if desired
                     optimization_fail += 1
-                    missed_vehicles = pd.concat(
-                        [missed_vehicles, individual], ignore_index=True
-                    )
+                    # agg_col_set = set(missed_vehicles.columns.to_list())
+                    # ind_col_set = set(individual.columns.to_list())
+                    # print(ind_col_set - agg_col_set)
+                    # print(missed_vehicles.index)
+                    # print(individual.index)
+                    # missed_vehicles = pd.concat(
+                    #     [missed_vehicles, individual], ignore_index=True
+                    # )
                     missed_vmt += individual["trip_miles"].sum()
                     if exitflag == 1:
                         flag_1_fail += 1
@@ -420,11 +459,12 @@ def smart_charging(
                     elif exitflag == 4:
                         flag_4_fail += 1
 
-
             # update the counter to the next vehicle
             i += total_trips
 
         outputelectricload = sum(g2v_load)
+
+        output_load_sum_list.append(np.sum(outputelectricload))
 
         # create wrap-around indexing function
         trip_window_indices = np.arange(day_iter * 24, day_iter * 24 + 72) % len(
@@ -441,31 +481,56 @@ def smart_charging(
         )
 
         if debug_printout == 1:
-            output_check_array = outputelectricload / kwhmi / daily_vmt_total[day_iter] * charging_efficiency
+            output_check_array = (
+                outputelectricload
+                / kwhmi
+                / daily_vmt_total[day_iter]
+                * charging_efficiency
+            )
             output_check_sum = output_check_array.sum()
 
-            print(f"Unscaling the optimiation output should be close to or equal to 1 and is : {output_check_sum}")
-            print(f"Original vmt sum via the column total vehicle miles traveled was : {individual_vmt}")
-            print(f"Original vmt sum via the column trip miles sum was : {individual_trip_miles}")
-            print(f"Charging summation from linprog_x directly is : {linprog_charge_results}")
+            print(
+                f"Unscaling the optimiation output should be close to or equal to 1 and is : {output_check_sum}"
+            )
+            print(
+                f"Original vmt sum via the column total vehicle miles traveled was : {individual_vmt}"
+            )
+            print(
+                f"Original vmt sum via the column trip miles sum was : {individual_trip_miles}"
+            )
+            print(
+                f"Charging summation from linprog_x directly is : {linprog_charge_results}"
+            )
             print(f"optimization output sum: {np.sum(outputelectricload)}")
             print(f"scaled output sum: {np.sum(scaled_output)}")
 
-            print(f"Vmt missed in optimization: {missed_vmt}")    
+            print(f"Vmt missed in optimization: {missed_vmt}")
             print(f"Exit Flag 1: {flag_1_fail}")
             print(f"Exit Flag 2: {flag_2_fail}")
             print(f"Exit Flag 3: {flag_3_fail}")
             print(f"Exit Flag 4: {flag_4_fail}")
 
-            print(missed_vehicles[[
-                "dwell_time","total vehicle miles traveled","dwell_location",
-                "vehicle_number","location_allowed","trip_allowed","dwell_allowed","charging_allowed",
-                "dwell_charging","required_charging","max_charging",
-                #,"trip_number","Date","Day of Week",
-                #"If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes",
-                #"trip_miles","Vehicle miles traveled","why_from",
-            ]])
+            # print(
+            #     missed_vehicles[
+            #         [
+            #             "dwell_time",
+            #             "total vehicle miles traveled",
+            #             "dwell_location",
+            #             "vehicle_number",
+            #             "location_allowed",
+            #             "trip_allowed",
+            #             "dwell_allowed",
+            #             "charging_allowed",
+            #             "dwell_charging",
+            #             "required_charging",
+            #             "max_charging",
+            #             # ,"trip_number","Date","Day of Week",
+            #             # "If Weekend","Trip start time (HHMM)","Trip end time (HHMM)","Travel Minutes",
+            #             # "trip_miles","Vehicle miles traveled","why_from",
+            #         ]
+            #     ]
+            # )
 
         model_year_profile[trip_window_indices] += scaled_output
 
-    return model_year_profile
+    return model_year_profile, output_load_sum_list, newdata

@@ -110,6 +110,7 @@ def immediate_charging(
     veh_type,
     filepath,
     trip_strategy=1,
+    input_day=None,
 ):
     """Immediate charging function
 
@@ -134,7 +135,7 @@ def immediate_charging(
     elif veh_type.lower() == "hdv":
         trips = data_helper.load_hdv_data("hhdv", filepath)
 
-    ### filter for cyclical trips
+    # filter for cyclical trips
     nd_len = len(trips)
     filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
     i = 0
@@ -159,7 +160,11 @@ def immediate_charging(
     # Constants
     kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     battery_capacity = kwhmi * veh_range
-    input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
+
+    if input_day is None:
+        input_day = data_helper.get_input_day(
+            data_helper.get_model_year_dti(model_year)
+        )
 
     # updates the weekend and weekday values in the nhts data
     trips = data_helper.update_if_weekend(trips)
@@ -211,17 +216,15 @@ def immediate_charging(
 
     grouped_trips = trips.groupby("vehicle_number")
     for vehicle_num, group in grouped_trips:
-        trips.loc[group.index, "max_charging"] = (
-            trips.loc[group.index, "dwell_charging"].sum()
-        )
-        trips.loc[group.index,"required_charging"] = (
-            trips.loc[group.index,"trip_miles"].sum() * kwhmi
+        trips.loc[group.index, "max_charging"] = trips.loc[
+            group.index, "dwell_charging"
+        ].sum()
+        trips.loc[group.index, "required_charging"] = (
+            trips.loc[group.index, "trip_miles"].sum() * kwhmi
         )
 
     # Filter for whenever available charging is insufficient to meet required charging
-    trips = trips.loc[
-        (trips["required_charging"] <= trips["max_charging"])
-    ]
+    trips = trips.loc[(trips["required_charging"] <= trips["max_charging"])]
 
     # Evaluate weekend vs. weekday for each trip
     data_day = data_helper.get_data_day(trips)
@@ -248,8 +251,8 @@ def immediate_charging(
     flag_translation = {1: "weekend", 2: "weekday"}
     for i, weekday_flag in enumerate(input_day):
         daily_profile = daily_resampled_profiles[flag_translation[weekday_flag]]
-        print(f"day: {i}")
-        print(f"daily sum: {np.sum(daily_profile)}")
+        # print(f"day: {i}")
+        # print(f"daily sum: {np.sum(daily_profile)}")
 
         # create wrap-around indexing function
         trip_window_indices = np.arange(i * 24, i * 24 + 72) % len(model_year_profile)
@@ -260,7 +263,15 @@ def immediate_charging(
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
 
-    return summed_profile
+    output_load_sum_list = [
+        np.sum(daily_resampled_profiles["weekend"]),
+        np.sum(daily_resampled_profiles["weekday"]),
+    ]
+    print(np.sum(daily_resampled_profiles["weekend"]))
+    print(np.sum(daily_resampled_profiles["weekday"]))
+    print(output_load_sum_list)
+
+    return summed_profile, output_load_sum_list, trips
 
 
 def adjust_bev(

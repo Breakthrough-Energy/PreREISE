@@ -262,22 +262,18 @@ def immediate_HDV_charging(
 
     grouped_trips = trips.groupby("vehicle_number")
     for vehicle_num, group in grouped_trips:
-        trips.loc[group.index, "max_charging"] = (
-            trips.loc[group.index, "dwell_charging"].sum()
-        )
-        trips.loc[group.index,"required_charging"] = (
-            trips.loc[group.index,"trip_miles"].sum() * kwhmi
+        trips.loc[group.index, "max_charging"] = trips.loc[
+            group.index, "dwell_charging"
+        ].sum()
+        trips.loc[group.index, "required_charging"] = (
+            trips.loc[group.index, "trip_miles"].sum() * kwhmi
         )
 
     # Filter for whenever available charging is insufficient to meet required charging
-    trips = trips.loc[
-        (trips["required_charging"] <= trips["max_charging"])
-    ]
+    trips = trips.loc[(trips["required_charging"] <= trips["max_charging"])]
 
     # Filter for vehicle's battery range
-    trips = trips.loc[
-        (trips["total vehicle miles traveled"] < veh_range)
-    ]
+    trips = trips.loc[(trips["total vehicle miles traveled"] < veh_range)]
 
     hdv_trips = trips.copy()
 
@@ -300,4 +296,4 @@ def immediate_HDV_charging(
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
 
-    return summed_profile
+    return summed_profile, daily_profile, trips
