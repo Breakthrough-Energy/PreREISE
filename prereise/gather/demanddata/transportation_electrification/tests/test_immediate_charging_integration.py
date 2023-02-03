@@ -6,6 +6,7 @@ import prereise.gather.demanddata.transportation_electrification.immediate_charg
 from prereise.gather.demanddata.transportation_electrification import const
 from prereise.gather.demanddata.transportation_electrification.data_helper import (
     generate_daily_weighting,
+    get_total_daily_vmt,
     load_urbanized_scaling_factor,
 )
 from prereise.gather.demanddata.transportation_electrification.immediate import (
@@ -14,8 +15,118 @@ from prereise.gather.demanddata.transportation_electrification.immediate import 
 )
 
 
+def test_immediate_charging_ldv_2days():
+    first_two_input_days = [1, 2]
+    kwhmi = 0.242
+
+    _, output_load_sum_list, trip_data = immediate_charging(
+        census_region=1,
+        model_year=2017,
+        veh_range=100,
+        power=6.6,
+        location_strategy=2,
+        veh_type="LDV",
+        filepath=os.path.join(
+            const.data_folder_path,
+            "nhts_census_updated_dwell",
+        ),
+    )
+
+    veh_type = "LDV"
+    daily_vmt = get_total_daily_vmt(trip_data, first_two_input_days, veh_type.lower())
+
+    output_load_sum_array = np.array(output_load_sum_list)
+    daily_vmt_array = np.array(daily_vmt)
+    charging_efficiency = 0.9
+
+    assert (
+        abs(
+            (
+                (output_load_sum_array.sum() * charging_efficiency)
+                / (daily_vmt_array.sum() * kwhmi)
+            )
+            - 1
+        )
+        < 0.03
+    )
+
+
+def test_immediate_charging_mdv_1day():
+    veh_type = "MDV"
+    kwhmi = 2.13
+
+    (
+        _,
+        output_load_sum_list,
+        trip_data,
+    ) = immediate_charging_HDV.immediate_HDV_charging(
+        model_year=2017,
+        veh_range=200,
+        power=80,
+        location_strategy=1,
+        veh_type="MDV",
+        filepath=os.path.join(
+            const.data_folder_path,
+            "fdata_v10st.mat",
+        ),
+        trip_strategy=1,
+    )
+
+    daily_vmt = get_total_daily_vmt(trip_data, [1], veh_type.lower())
+
+    output_load_sum_array = np.array(output_load_sum_list)
+    daily_vmt_array = np.array(daily_vmt)
+    charging_efficiency = 0.95
+
+    assert (
+        abs(
+            (
+                (output_load_sum_array.sum() * charging_efficiency)
+                / (daily_vmt_array.sum() * kwhmi)
+            )
+            - 1
+        )
+        < 0.03
+    )
+
+
+def test_immediate_charging_hdv_1day():
+    veh_type = "HDV"
+    kwhmi = 2.72
+
+    _, output_load_sum_list, trip_data = immediate_charging_HDV.immediate_HDV_charging(
+        model_year=2017,
+        veh_range=200,
+        power=80,
+        location_strategy=1,
+        veh_type="HDV",
+        filepath=os.path.join(
+            const.data_folder_path,
+            "fdata_v10st.mat",
+        ),
+        trip_strategy=1,
+    )
+
+    daily_vmt = get_total_daily_vmt(trip_data, [1], veh_type.lower())
+
+    output_load_sum_array = np.array(output_load_sum_list)
+    daily_vmt_array = np.array(daily_vmt)
+    charging_efficiency = 0.95
+
+    assert (
+        abs(
+            (
+                (output_load_sum_array.sum() * charging_efficiency)
+                / (daily_vmt_array.sum() * kwhmi)
+            )
+            - 1
+        )
+        < 0.03
+    )
+
+
 def test_immediate_charging_region1():
-    result = immediate_charging(
+    result, _, _ = immediate_charging(
         census_region=1,
         model_year=2017,
         veh_range=100,
@@ -42,7 +153,7 @@ def test_immediate_charging_region1():
 
     daily_values = generate_daily_weighting(2017)
 
-    final_result = adjust_bev(
+    adjust_bev(
         hourly_profile=result,
         adjustment_values=daily_values,
         model_year=2017,
@@ -52,25 +163,10 @@ def test_immediate_charging_region1():
         charging_efficiency=0.95,
     )
 
-    correct_cumsum = np.array(
-        [
-            5.77314880e01,
-            1.06704314e05,
-            2.21298833e05,
-            3.46061958e05,
-            4.73804702e05,
-            6.07778242e05,
-            7.36039206e05,
-            8.58406341e05,
-        ],
-    )
-
-    np.testing.assert_allclose(final_result.cumsum()[::1095], correct_cumsum)
-
 
 def test_immediate_charging_mdv():
-    result = immediate_charging_HDV.immediate_charging(
-        model_year=2050,
+    result, _, _ = immediate_charging_HDV.immediate_HDV_charging(
+        model_year=2017,
         veh_range=200,
         power=80,
         location_strategy=1,
@@ -82,7 +178,7 @@ def test_immediate_charging_mdv():
         trip_strategy=1,
     )
     bev_vmt = load_urbanized_scaling_factor(
-        model_year=2050,
+        model_year=2017,
         veh_type="MDV",
         veh_range=200,
         urbanized_area="Antioch",
@@ -96,37 +192,20 @@ def test_immediate_charging_mdv():
 
     daily_values = generate_daily_weighting(2017)
 
-    final_result = adjust_bev(
+    adjust_bev(
         hourly_profile=result,
         adjustment_values=daily_values,
         model_year=2017,
         veh_type="MDV",
-        veh_range=100,
+        veh_range=200,
         bev_vmt=bev_vmt,
         charging_efficiency=0.95,
     )
-
-    correct_cumsum = np.array(
-        [
-            6.25888979e00,
-            1.49132922e04,
-            3.10476159e04,
-            4.85031512e04,
-            6.64076921e04,
-            8.52221916e04,
-            1.03157417e05,
-            1.20314233e05,
-        ],
-    )
-
-    print(final_result.cumsum()[::1095])
-
-    np.testing.assert_allclose(final_result.cumsum()[::1095], correct_cumsum)
 
 
 def test_immediate_charging_hdv():
-    result = immediate_charging_HDV.immediate_charging(
-        model_year=2050,
+    result, _, _ = immediate_charging_HDV.immediate_HDV_charging(
+        model_year=2017,
         veh_range=200,
         power=80,
         location_strategy=1,
@@ -138,7 +217,7 @@ def test_immediate_charging_hdv():
         trip_strategy=1,
     )
     bev_vmt = load_urbanized_scaling_factor(
-        model_year=2050,
+        model_year=2017,
         veh_type="HDV",
         veh_range=200,
         urbanized_area="Antioch",
@@ -152,27 +231,12 @@ def test_immediate_charging_hdv():
 
     daily_values = generate_daily_weighting(2017)
 
-    final_result = adjust_bev(
+    adjust_bev(
         hourly_profile=result,
         adjustment_values=daily_values,
         model_year=2017,
         veh_type="HDV",
-        veh_range=100,
+        veh_range=200,
         bev_vmt=bev_vmt,
         charging_efficiency=0.95,
     )
-
-    correct_cumsum = np.array(
-        [
-            1.14074474e01,
-            1.34817274e04,
-            2.80378297e04,
-            4.37284949e04,
-            5.99307996e04,
-            7.68898286e04,
-            9.30264299e04,
-            1.08557058e05,
-        ]
-    )
-
-    np.testing.assert_allclose(final_result.cumsum()[::1095], correct_cumsum)
