@@ -205,6 +205,24 @@ def immediate_charging(
     ]
     trips["charging_allowed"] = trips[allowed_cols].apply(all, axis=1)
 
+    trips["dwell_charging"] = (
+        trips["charging_allowed"] * trips["dwell_time"] * power * charging_efficiency
+    )
+
+    grouped_trips = trips.groupby("vehicle_number")
+    for vehicle_num, group in grouped_trips:
+        trips.loc[group.index, "max_charging"] = (
+            trips.loc[group.index, "dwell_charging"].sum()
+        )
+        trips.loc[group.index,"required_charging"] = (
+            trips.loc[group.index,"trip_miles"].sum() * kwhmi
+        )
+
+    # Filter for whenever available charging is insufficient to meet required charging
+    trips = trips.loc[
+        (trips["required_charging"] <= trips["max_charging"])
+    ]
+
     # Evaluate weekend vs. weekday for each trip
     data_day = data_helper.get_data_day(trips)
     weekday_trips = trips.loc[
