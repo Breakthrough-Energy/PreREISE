@@ -129,16 +129,18 @@ def load_dot_vmt_per_capita(path):
     )
 
     return (
-        df_ua.squeeze().loc[lambda x: x != "[no data]"],
+        df_ua.squeeze().loc[~df_ua.index.str.contains("\[no data\]")],  # noqa: W605
         df_state.rename(index=state2abv).squeeze(),
     )
 
 
-def calculate_vmt_for_ua(census_ua, tht_ua):
+def calculate_vmt_for_ua(census_ua, tht_ua, tht_state):
     """Calculate the total annual Vehicle Miles Traveled (VMT) in urban areas
 
     :param dict census_ua: dictionary as returned by :func:`load_census_ua`
-    :param pandas.Series tht_ua: vmt per capita in urban areas as returned by
+    :param pandas.Series tht_ua: daily vmt per capita in urban areas as returned by
+        :func:`load_dot_vmt_per_capita`
+    :param pandas.Series tht_state: annual vmt per capita in state as returned by
         :func:`load_dot_vmt_per_capita`
     :return: (*dict*) -- keys are state abbreviations and values are data frame giving
         annual vmt by urban areas.
@@ -159,7 +161,10 @@ def calculate_vmt_for_ua(census_ua, tht_ua):
         vmt_for_ua[s] = pd.DataFrame(
             {
                 "Annual VMT": [
-                    365 * tht_ua_format.loc[i] * census_ua_format.loc[i] for i in common
+                    365 * tht_ua_format.loc[i] * census_ua_format.loc[i]
+                    if tht_ua_format.loc[i] != "[no data]"
+                    else tht_state.loc[s] * census_ua_format.loc[i]
+                    for i in common
                 ]
             },
             index=list(common),
