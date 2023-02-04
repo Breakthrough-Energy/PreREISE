@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 
-from prereise.gather.const import abv2state
 from prereise.gather.demanddata.transportation_electrification import (
     const,
     immediate,
@@ -69,7 +68,7 @@ def generate_bev_vehicle_profiles(
     urban_scaling_filepath = os.path.join(
         const.data_folder_path,
         "regional_scaling_factors",
-        "Regional_scaling_factors_UA_",
+        "regional_scaling_factors_UA_",
     )
     urban_scaling_factors = pd.read_csv(
         urban_scaling_filepath + str(projection_year) + ".csv", index_col="State"
@@ -93,11 +92,11 @@ def generate_bev_vehicle_profiles(
         projection_year,
         veh_type,
         veh_range,
-        abv2state[state.upper()].upper(),
+        state.upper(),
         filepath=os.path.join(
             const.data_folder_path,
             "regional_scaling_factors",
-            "Regional_scaling_factors_RA_",
+            "regional_scaling_factors_RA_",
         ),
     )
     geographic_area_bev_vmt.update({f"{state}_rural": rural_bev_vmt})
