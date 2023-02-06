@@ -59,7 +59,7 @@ def test_immediate_charging_mdv_1day():
         _,
         output_load_sum_list,
         trip_data,
-    ) = immediate_charging_HDV.immediate_HDV_charging(
+    ) = immediate_charging_HDV.immediate_hdv_charging(
         model_year=2017,
         veh_range=200,
         power=80,
@@ -94,7 +94,7 @@ def test_immediate_charging_hdv_1day():
     veh_type = "HDV"
     kwhmi = 2.72
 
-    _, output_load_sum_list, trip_data = immediate_charging_HDV.immediate_HDV_charging(
+    _, output_load_sum_list, trip_data = immediate_charging_HDV.immediate_hdv_charging(
         model_year=2017,
         veh_range=200,
         power=80,
@@ -165,7 +165,7 @@ def test_immediate_charging_region1():
 
 
 def test_immediate_charging_mdv():
-    result, _, _ = immediate_charging_HDV.immediate_HDV_charging(
+    result, _, _ = immediate_charging_HDV.immediate_hdv_charging(
         model_year=2017,
         veh_range=200,
         power=80,
@@ -204,7 +204,7 @@ def test_immediate_charging_mdv():
 
 
 def test_immediate_charging_hdv():
-    result, _, _ = immediate_charging_HDV.immediate_HDV_charging(
+    result, _, _ = immediate_charging_HDV.immediate_hdv_charging(
         model_year=2017,
         veh_range=200,
         power=80,

@@ -171,7 +171,7 @@ def resample_daily_charging(trips, charging_power):
     return output_array
 
 
-def immediate_HDV_charging(
+def immediate_hdv_charging(
     model_year,
     veh_range,
     power,

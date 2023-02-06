@@ -342,7 +342,7 @@ def smart_charging(
                     # 0-success, 1-limit reached, 2-problem infeasible, 3-problem unbounded, 4-numerical difficulties
                     x_array = np.array(linprog_result.x)
 
-                    ### DANL EDITS
+                    # DANL EDITS
                     linprog_charge_results += x_array.sum().sum()
 
                     # can be an EV

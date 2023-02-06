@@ -107,7 +107,7 @@ def generate_bev_vehicle_profiles(
     for geographic_area, bev_vmt in geographic_area_bev_vmt.items():
         if charging_strategy == "immediate":
             if veh_type.lower() in {"ldv", "ldt"}:
-                normalized_demand = immediate.immediate_charging(
+                normalized_demand, _, _ = immediate.immediate_charging(
                     census_region=census_region,
                     model_year=projection_year,
                     veh_range=veh_range,
@@ -117,7 +117,7 @@ def generate_bev_vehicle_profiles(
                     filepath=vehicle_trip_data_filepath,
                 )
             elif veh_type.lower() in {"mdv", "hdv"}:
-                normalized_demand = immediate_charging_HDV.immediate_charging(
+                normalized_demand, _, _ = immediate_charging_HDV.immediate_charging(
                     model_year=projection_year,
                     veh_range=veh_range,
                     power=power,
@@ -137,7 +137,7 @@ def generate_bev_vehicle_profiles(
             )
 
         elif charging_strategy == "smart":
-            final_demand = smart_charging.smart_charging(
+            final_demand, _, _ = smart_charging.smart_charging(
                 census_region=census_region,
                 model_year=projection_year,
                 veh_range=veh_range,
