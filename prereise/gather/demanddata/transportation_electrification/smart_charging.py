@@ -53,12 +53,10 @@ def smart_charging(
 ):
     """Smart charging function
 
-    :param int census_region: any of the 9 census regions defined by US census bureau.
     :param int model_year: year that is being modelled/projected to, 2017, 2030, 2040,
         2050.
     :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on
         single charge.
-    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
     :param int power: charger power, EVSE kW.
     :param int location_strategy: where the vehicle can charge-1, 2, 3, 4, or 5;
         1-home only, 2-home and work related, 3-anywhere if possibile,
@@ -66,11 +64,16 @@ def smart_charging(
     :param str veh_type: determine which category (LDV or LDT) to produce charging
         profiles for
     :param str filepath: the path to the nhts mat file.
+    :param np.array external_signal: the initial load demand
+    :param float bev_vmt: BEV VMT value / scaling factor loaded from Regional_scaling_factors.csv
+    :param int census_region: any of the 9 census regions defined by US census bureau.
     :param pandas.Series daily_values: daily weight factors returned from
         :func:`generate_daily_weighting`.
-    :param np.array load_demand: the initial load demand
+    :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
     :param int trip_strategy: determine to charge after any trip (1) or only after the
         last trip (2)
+    :param numpy.ndarray input_day: daily list which specifies 1 if the day is a weekend,
+        and 2 if the day is a weekday
     :return: (*numpy.ndarray*) -- charging profiles.
     """
 

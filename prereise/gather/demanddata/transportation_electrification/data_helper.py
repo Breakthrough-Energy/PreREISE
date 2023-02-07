@@ -304,8 +304,8 @@ def get_total_daily_vmt(data: pd.DataFrame, input_day, veh_type):
     :param pandas.DataFrame data: the data returned from :func:`load_data`.
     :param numpy.ndarray input_day: day of the week for each day in the year derived
         from :func:`get_input_day`.
-    :param pandas.Series daily_values: daily weight factors returned from
-        :func:`generate_daily_weighting`.
+    :param pandas.Series veh_type: vehicle class (LDV, LDT, MDV, HDV)
+    :raises ValueError: Vehicle class is not specified
     :return: (*np.array*) -- an array where each element is the daily VMT and total
         vehicles for that day.
     """
