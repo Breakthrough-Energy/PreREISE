@@ -136,35 +136,26 @@ def immediate_charging(
         trips = data_helper.load_hdv_data("hhdv", filepath)
 
     # filter for cyclical trips
-    nd_len = len(trips)
     filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
     i = 0
-    while i < nd_len:
+    while i < len(trips):
         total_trips = int(trips.iloc[i, trips.columns.get_loc("total_trips")])
         # copy one vehicle information to the block
         individual = trips.iloc[i : i + total_trips].copy()
-        if (
-            individual["why_from"].head(1).values[0]
-            == individual["dwell_location"].tail(1).values[0]
-        ):
+        if individual["why_from"].iloc[0] == individual["dwell_location"].iloc[-1]:
             filtered_census_data = pd.concat(
                 [filtered_census_data, individual], ignore_index=True
             )
         i += total_trips
-    del trips
     trips = filtered_census_data
 
-    print(f"updated data length:{nd_len}")
     #####
 
     # Constants
     kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     battery_capacity = kwhmi * veh_range
 
-    if input_day is None:
-        input_day = data_helper.get_input_day(
-            data_helper.get_model_year_dti(model_year)
-        )
+    input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
 
     # updates the weekend and weekday values in the nhts data
     trips = data_helper.update_if_weekend(trips)
@@ -266,9 +257,6 @@ def immediate_charging(
         np.sum(daily_resampled_profiles["weekend"]),
         np.sum(daily_resampled_profiles["weekday"]),
     ]
-    print(np.sum(daily_resampled_profiles["weekend"]))
-    print(np.sum(daily_resampled_profiles["weekday"]))
-    print(output_load_sum_list)
 
     return summed_profile, output_load_sum_list, trips
 
