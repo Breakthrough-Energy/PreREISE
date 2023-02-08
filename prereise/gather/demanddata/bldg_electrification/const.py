@@ -756,6 +756,9 @@ hp_param_dhw = pd.read_csv(os.path.join(dir_path, "data", "hp_parameters_dhw.csv
 puma_data = pd.read_csv(
     os.path.join(dir_path, "data", "puma_data.csv"), index_col="puma"
 )
+puma_fuel = pd.read_csv(
+    os.path.join(dir_path, "data", "puma_fuel.csv"), index_col="puma"
+)
 
 # Reference temperatures for computations
 temp_ref = {"res": 18.3, "com": 16.7}
@@ -870,3 +873,30 @@ regions = {
 }
 
 fuel = ["natgas", "fok", "othergas", "elec"]
+
+# census region for current heat pump penetration. Defined by RECS/CBECS surveys
+census_region = {
+    "res": {
+        "New England": ["MA", "CT", "ME", "NH", "RI", "VT"],
+        "Middle Atlantic": ["NJ", "NY", "PA"],
+        "East North Central": ["IL", "MI", "WI", "IN", "OH"],
+        "West North Central": ["MO", "IA", "MN", "ND", "SD", "KS", "NE"],
+        "South Atlantic": ["VA", "GA", "FL", "DC", "DE", "MD", "WV", "NC", "SC"],
+        "East South Central": ["TN", "AL", "KY", "MS"],
+        "West South Central": ["TX", "AR", "LA", "OK"],
+        "Mountain North": ["CO", "ID", "MT", "UT", "WY"],
+        "Mountain South": ["AZ", "NM", "NV"],
+        "Pacific": ["CA", "AK", "HI", "OR", "WA"],
+    },
+    "com": {
+        "New England": ["MA", "CT", "ME", "NH", "RI", "VT"],
+        "Middle Atlantic": ["NJ", "NY", "PA"],
+        "East North Central": ["IL", "MI", "WI", "IN", "OH"],
+        "West North Central": ["MO", "IA", "MN", "ND", "SD", "KS", "NE"],
+        "South Atlantic": ["VA", "GA", "FL", "DC", "DE", "MD", "WV", "NC", "SC"],
+        "East South Central": ["TN", "AL", "KY", "MS"],
+        "West South Central": ["TX", "AR", "LA", "OK"],
+        "Mountain": ["CO", "ID", "MT", "UT", "WY", "AZ", "NM", "NV"],
+        "Pacific": ["CA", "AK", "HI", "OR", "WA"],
+    },
+}
