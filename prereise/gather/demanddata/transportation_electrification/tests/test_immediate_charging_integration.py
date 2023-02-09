@@ -147,7 +147,7 @@ def test_immediate_charging_region1():
         filepath=os.path.join(
             const.data_folder_path,
             "regional_scaling_factors",
-            "Regional_scaling_factors_UA_",
+            "regional_scaling_factors_UA_",
         ),
     )
 
@@ -186,7 +186,7 @@ def test_immediate_charging_mdv():
         filepath=os.path.join(
             const.data_folder_path,
             "regional_scaling_factors",
-            "Regional_scaling_factors_UA_",
+            "regional_scaling_factors_UA_",
         ),
     )
 
@@ -225,7 +225,7 @@ def test_immediate_charging_hdv():
         filepath=os.path.join(
             const.data_folder_path,
             "regional_scaling_factors",
-            "Regional_scaling_factors_UA_",
+            "regional_scaling_factors_UA_",
         ),
     )
 
