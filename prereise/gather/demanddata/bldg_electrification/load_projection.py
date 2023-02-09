@@ -446,7 +446,7 @@ def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_yea
             advperfhp_cop,
         )
         ff2hp_profile_load_mwh[id] = ff_electrify_profiles(
-            weather_years, puma_data_zone, scenario, base_scen
+            weather_years, puma_data_zone, base_scen, scenario
         )
         zone_profile_load_mwh[id] = pd.concat(
             [elec_profile_load_mwh[id], ff2hp_profile_load_mwh[id]], axis=1
