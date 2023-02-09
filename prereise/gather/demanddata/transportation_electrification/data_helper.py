@@ -131,7 +131,7 @@ def load_urbanized_scaling_factor(
     veh_range,
     urbanized_area,
     state,
-    filepath="Regional_scaling_factors_UA_",
+    filepath="regional_scaling_factors_UA_",
 ):
     """Load the scaling factor for urbanized areas based on model year and vehicle
     type for the inputted urbanized area and state.
@@ -143,7 +143,7 @@ def load_urbanized_scaling_factor(
     :param str urbanized_area: name of urbanized area or city.
     :param str state: the US state the inputted urbanized area is in.
     :param str filepath: the path to the csv.
-    :return: (*int/float*) -- scaling factor value from the Regional_scaling_factors_UA_{model_year}.csv
+    :return: (*int/float*) -- scaling factor value from the regional_scaling_factors_UA_{model_year}.csv
     :raises ValueError: if ``veh_range`` is not 100, 200, or 300 and if ``veh_type``
         is not 'LDT', 'LDV', 'MDV', 'HDV', or 'Transit
     """
@@ -176,7 +176,7 @@ def load_urbanized_scaling_factor(
 
 
 def load_rural_scaling_factor(
-    model_year, veh_type, veh_range, state, filepath="Regional_scaling_factors_RA_"
+    model_year, veh_type, veh_range, state, filepath="regional_scaling_factors_RA_"
 ):
     """Load the scaling factor for rural areas based on model year and vehicle
     type for the inputted state.
@@ -187,7 +187,7 @@ def load_rural_scaling_factor(
     :param int veh_range: 100, 200, or 300, represents how far vehicle can travel on single charge.
     :param str state: the US state the inputted urbanized area is in.
     :param str filepath: the path to the csv.
-    :return: (*int/float*) -- scaling factor value from the Regional_scaling_factors_RA_{model_year}.csv
+    :return: (*int/float*) -- scaling factor value from the regional_scaling_factors_RA_{model_year}.csv
     :raises ValueError: if ``veh_range`` is not 100, 200, or 300 and if ``veh_type``
         is not 'LDT', 'LDV', 'MDV', 'HDV', or 'Transit
     """
