@@ -161,7 +161,7 @@ def scale_energy(
         elif new_scen.hp_type_heat == "advperfhp":
             new_hp_heat_cop = advperfhp_cop
 
-        hp_cop_adv = new_hp_heat_cop / base_hp_heat_cop  # <1
+        hp_cop_adv = base_hp_heat_cop / new_hp_heat_cop  # <1
 
         hp_cop_scaler = pd.Series(dtype="float64")
         for i in temp_df.index:
