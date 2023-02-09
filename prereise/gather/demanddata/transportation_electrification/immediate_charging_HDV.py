@@ -171,7 +171,7 @@ def resample_daily_charging(trips, charging_power):
     return output_array
 
 
-def immediate_charging(
+def immediate_hdv_charging(
     model_year,
     veh_range,
     power,
@@ -256,6 +256,25 @@ def immediate_charging(
 
     trips.loc[trips["charging_allowed"], "charging power"] = power
 
+    trips["dwell_charging"] = (
+        trips["charging_allowed"] * trips["dwell_time"] * power * charging_efficiency
+    )
+
+    grouped_trips = trips.groupby("vehicle_number")
+    for vehicle_num, group in grouped_trips:
+        trips.loc[group.index, "max_charging"] = trips.loc[
+            group.index, "dwell_charging"
+        ].sum()
+        trips.loc[group.index, "required_charging"] = (
+            trips.loc[group.index, "trip_miles"].sum() * kwhmi
+        )
+
+    # Filter for whenever available charging is insufficient to meet required charging
+    trips = trips.loc[(trips["required_charging"] <= trips["max_charging"])]
+
+    # Filter for vehicle's battery range
+    trips = trips.loc[(trips["total vehicle miles traveled"] < veh_range)]
+
     hdv_trips = trips.copy()
 
     # Calculate the charge times and SOC for each trip, then resample resolution
@@ -277,4 +296,4 @@ def immediate_charging(
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
 
-    return summed_profile
+    return summed_profile, daily_profile, trips
