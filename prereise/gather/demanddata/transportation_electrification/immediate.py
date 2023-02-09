@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from prereise.gather.demanddata.transportation_electrification import const, data_helper
 
@@ -109,6 +110,7 @@ def immediate_charging(
     veh_type,
     filepath,
     trip_strategy=1,
+    input_day=None,
 ):
     """Immediate charging function
 
@@ -133,9 +135,26 @@ def immediate_charging(
     elif veh_type.lower() == "hdv":
         trips = data_helper.load_hdv_data("hhdv", filepath)
 
+    # filter for cyclical trips
+    filtered_census_data = pd.DataFrame(columns=const.nhts_census_column_names)
+    i = 0
+    while i < len(trips):
+        total_trips = int(trips.iloc[i, trips.columns.get_loc("total_trips")])
+        # copy one vehicle information to the block
+        individual = trips.iloc[i : i + total_trips].copy()
+        if individual["why_from"].iloc[0] == individual["dwell_location"].iloc[-1]:
+            filtered_census_data = pd.concat(
+                [filtered_census_data, individual], ignore_index=True
+            )
+        i += total_trips
+    trips = filtered_census_data
+
+    #####
+
     # Constants
     kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     battery_capacity = kwhmi * veh_range
+
     input_day = data_helper.get_input_day(data_helper.get_model_year_dti(model_year))
 
     # updates the weekend and weekday values in the nhts data
@@ -182,14 +201,29 @@ def immediate_charging(
     ]
     trips["charging_allowed"] = trips[allowed_cols].apply(all, axis=1)
 
+    trips["dwell_charging"] = (
+        trips["charging_allowed"] * trips["dwell_time"] * power * charging_efficiency
+    )
+
+    grouped_trips = trips.groupby("vehicle_number")
+    for vehicle_num, group in grouped_trips:
+        trips.loc[group.index, "max_charging"] = trips.loc[
+            group.index, "dwell_charging"
+        ].sum()
+        trips.loc[group.index, "required_charging"] = (
+            trips.loc[group.index, "trip_miles"].sum() * kwhmi
+        )
+
+    # Filter for whenever available charging is insufficient to meet required charging
+    trips = trips.loc[(trips["required_charging"] <= trips["max_charging"])]
+
+    # Filter by vehicle range
+    trips = trips.loc[trips["total vehicle miles traveled"] < veh_range * const.ER]
+
     # Evaluate weekend vs. weekday for each trip
     data_day = data_helper.get_data_day(trips)
-    weekday_trips = trips.loc[
-        (data_day == 2) & (trips["total vehicle miles traveled"] < veh_range * const.ER)
-    ].copy()
-    weekend_trips = trips.loc[
-        (data_day == 1) & (trips["total vehicle miles traveled"] < veh_range * const.ER)
-    ].copy()
+    weekday_trips = trips.loc[data_day == 2].copy()
+    weekend_trips = trips.loc[data_day == 1].copy()
 
     # Calculate the charge times and SOC for each trip, then resample resolution
     calculate_charging(
@@ -207,6 +241,8 @@ def immediate_charging(
     flag_translation = {1: "weekend", 2: "weekday"}
     for i, weekday_flag in enumerate(input_day):
         daily_profile = daily_resampled_profiles[flag_translation[weekday_flag]]
+        # print(f"day: {i}")
+        # print(f"daily sum: {np.sum(daily_profile)}")
 
         # create wrap-around indexing function
         trip_window_indices = np.arange(i * 24, i * 24 + 72) % len(model_year_profile)
@@ -217,7 +253,12 @@ def immediate_charging(
     # Normalize the output so that it sums to 1
     summed_profile = model_year_profile / model_year_profile.sum()
 
-    return summed_profile
+    output_load_sum_list = [
+        np.sum(daily_resampled_profiles["weekend"]),
+        np.sum(daily_resampled_profiles["weekday"]),
+    ]
+
+    return summed_profile, output_load_sum_list, trips
 
 
 def adjust_bev(
