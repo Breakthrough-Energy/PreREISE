@@ -395,8 +395,20 @@ def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_yea
         index_col=0,
     )
 
-    midperfhp_cop = pd.read_csv("./data/cop_temp_htg_midperfhp.csv")
-    advperfhp_cop = pd.read_csv("./data/cop_temp_htg_advperfhp.csv")
+    midperfhp_cop = pd.read_csv(
+        os.path.join(
+            os.path.dirname(__file__),
+            "data",
+            "cop_temp_htg_midperfhp.csv",
+        )
+    )
+    advperfhp_cop = pd.read_csv(
+        os.path.join(
+            os.path.dirname(__file__),
+            "data",
+            "cop_temp_htg_advperfhp.csv",
+        )
+    )
     midperfhp_cop.index = midperfhp_cop["temp"]
     advperfhp_cop.index = advperfhp_cop["temp"]
 
