@@ -17,7 +17,7 @@ from prereise.gather.demanddata.transportation_electrification.immediate import 
 
 def test_immediate_charging_ldv_2days():
     first_two_input_days = [1, 2]
-    kwhmi = 0.242
+    kwhmi = 0.342
 
     _, output_load_sum_list, trip_data = immediate_charging(
         census_region=1,
@@ -53,7 +53,7 @@ def test_immediate_charging_ldv_2days():
 
 def test_immediate_charging_mdv_1day():
     veh_type = "MDV"
-    kwhmi = 2.13
+    kwhmi = 2.203
 
     (
         _,
@@ -92,7 +92,7 @@ def test_immediate_charging_mdv_1day():
 
 def test_immediate_charging_hdv_1day():
     veh_type = "HDV"
-    kwhmi = 2.72
+    kwhmi = 3.916
 
     _, output_load_sum_list, trip_data = immediate_charging_HDV.immediate_hdv_charging(
         model_year=2017,
