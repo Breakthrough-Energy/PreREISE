@@ -23,4 +23,4 @@ def test_ldv_immediate_runs():
     )
 
     assert len(state_demand_df) == 8760
-    assert len(state_demand_df.columns) == 13
+    assert len(state_demand_df.columns) == 15

@@ -66,7 +66,7 @@ def smart_charging(
         profiles for
     :param str filepath: the path to the nhts mat file.
     :param np.array external_signal: the initial load demand
-    :param float bev_vmt: BEV VMT value / scaling factor loaded from Regional_scaling_factors.csv
+    :param float bev_vmt: BEV VMT value / scaling factor loaded from regional_scaling_factors.csv
     :param int census_region: any of the 9 census regions defined by US census bureau.
     :param pandas.Series daily_values: daily weight factors returned from
         :func:`generate_daily_weighting`.

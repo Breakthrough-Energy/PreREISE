@@ -4,6 +4,11 @@ import warnings
 import pandas as pd
 from powersimdata.network.constants.region.geography import USA
 
+from prereise.gather.demanddata.nrel_efs.get_efs_annual_data import (
+    get_efs_annual_data,
+    nrel_annual_efs_url,
+)
+
 warnings.simplefilter(action="ignore", category=UserWarning)
 
 census_ua_url = "https://www2.census.gov/geo/docs/reference/ua/ua_st_list_all.xls"
@@ -176,7 +181,8 @@ def calculate_vmt_for_ua(census_ua, tht_ua, tht_state):
 def calculate_vmt_for_state(census_state, tht_state):
     """Calculate the total annual Vehicle Miles Traveled (VMT) in states
 
-    :param dict census_state: dictionary as returned by :func:`load_census_state`
+    :param pandas.Series census_state: population in state as returned by
+        :func:`load_census_state`
     :param pandas.Series tht_state: vmt per capita in states as returned by
         :func:`load_dot_vmt_per_capita`
     :return: (*pandas.Series*) -- indices are state abbreviations and values are annual
@@ -214,7 +220,7 @@ def calculate_urban_rural_fraction(vmt_for_ua, vmt_for_state):
 
 def get_efs_vmt_projection_for_state(efs_annual_data, electrification_scenario=None):
     """Retrieve the projected annual Vehicle Miles Traveled (VMT) for various
-    technolgies for a chosen scenario.
+    technologies for a chosen scenario.
 
     :param pandas.DataFrame efs_annual_data: electrification projection in
         each state for the transportation sector as returned by the
@@ -367,6 +373,7 @@ def write_scaling_factor_files(
             "regional_scaling_factors",
         )
     os.makedirs(dir_path, exist_ok=True)
+    print(f"Writing scaling factors files in {dir_path}")
     for y in urban_scaling_factor:
         rural_scaling_factor[y].to_csv(
             os.path.join(dir_path, f"regional_scaling_factors_RA_{y}.csv")
@@ -374,3 +381,22 @@ def write_scaling_factor_files(
         urban_scaling_factor[y].to_csv(
             os.path.join(dir_path, f"regional_scaling_factors_UA_{y}.csv")
         )
+
+
+if __name__ == "__main__":
+    census_ua = load_census_ua(census_ua_url)
+    census_state = load_census_state(census_state_url)
+    tht_ua, tht_state = load_dot_vmt_per_capita(tht_data_url)
+    vmt_ua = calculate_vmt_for_ua(census_ua, tht_ua, tht_state)
+    vmt_state = calculate_vmt_for_state(census_state, tht_state)
+    vmt_ua_perc, vmt_ra_perc = calculate_urban_rural_fraction(vmt_ua, vmt_state)
+
+    efs = get_efs_annual_data(nrel_annual_efs_url, "TRANSPORTATION")
+
+    vmt_projection = get_efs_vmt_projection_for_state(efs)
+
+    ua_scaling, ra_scaling = generate_scaling_factor(
+        vmt_projection, vmt_ua_perc, vmt_ra_perc
+    )
+
+    write_scaling_factor_files(ua_scaling, ra_scaling)
