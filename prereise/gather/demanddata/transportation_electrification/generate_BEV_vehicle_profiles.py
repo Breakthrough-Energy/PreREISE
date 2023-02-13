@@ -75,8 +75,13 @@ def generate_bev_vehicle_profiles(
     )
     state_urban_areas = urban_scaling_factors.loc[state.upper(), "UA"]
 
+    if isinstance(state_urban_areas, str):
+        iterable_urban_areas = [state_urban_areas]
+    else:
+        iterable_urban_areas = state_urban_areas.to_list()
+
     # scaling factors for listed urban areas
-    for urban_area in state_urban_areas.to_list():
+    for urban_area in iterable_urban_areas:
         urban_bev_vmt = load_urbanized_scaling_factor(
             model_year=projection_year,
             veh_type=veh_type,
