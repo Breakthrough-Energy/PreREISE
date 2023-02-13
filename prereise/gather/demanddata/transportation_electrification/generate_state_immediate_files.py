@@ -7,13 +7,12 @@ from prereise.gather.demanddata.transportation_electrification.generate_BEV_vehi
     generate_bev_vehicle_profiles,
 )
 
-def write_state_demand_files(
-    demand_output, state, dir_path=None
-):
+
+def write_state_demand_files(demand_output, state, dir_path=None):
     """Create files for each state
 
-    :param dict demand_output: 
-    :param str state: 
+    :param dict demand_output:
+    :param str state:
     :param str dir_path: path to folder wher files will be written. Default to *'data/
         regional_scaling_factors'* in current directory.
     """
@@ -25,13 +24,10 @@ def write_state_demand_files(
     os.makedirs(dir_path, exist_ok=True)
     print(f"Writing state demand files in {dir_path}")
 
-    demand_output.to_pickle(
-        os.path.join(dir_path, f"immediate_{state}.pkl")
-    )
+    demand_output.to_pickle(os.path.join(dir_path, f"immediate_{state}.pkl"))
 
 
 if __name__ == "__main__":
-
     state_set = set(abv2state.keys()) - {"AK", "HI", "VT"}
 
     state_list = ["VT"] + list(state_set)
