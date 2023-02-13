@@ -106,30 +106,31 @@ def generate_bev_vehicle_profiles(
     )
     geographic_area_bev_vmt.update({f"{state}_rural": rural_bev_vmt})
 
+    if charging_strategy == "immediate":
+        if veh_type.lower() in {"ldv", "ldt"}:
+            normalized_demand, _, _ = immediate.immediate_charging(
+                census_region=census_region,
+                model_year=projection_year,
+                veh_range=veh_range,
+                power=power,
+                location_strategy=location_strategy,
+                veh_type=veh_type,
+                filepath=vehicle_trip_data_filepath,
+            )
+        elif veh_type.lower() in {"mdv", "hdv"}:
+            normalized_demand, _, _ = immediate_charging_HDV.immediate_charging(
+                model_year=projection_year,
+                veh_range=veh_range,
+                power=power,
+                location_strategy=location_strategy,
+                veh_type=veh_type,
+                filepath=vehicle_trip_data_filepath,
+            )
+
     # calculate demand for all geographic areas with scaling factors
     state_demand_profiles = {}
     for geographic_area, bev_vmt in geographic_area_bev_vmt.items():
         if charging_strategy == "immediate":
-            if veh_type.lower() in {"ldv", "ldt"}:
-                normalized_demand, _, _ = immediate.immediate_charging(
-                    census_region=census_region,
-                    model_year=projection_year,
-                    veh_range=veh_range,
-                    power=power,
-                    location_strategy=location_strategy,
-                    veh_type=veh_type,
-                    filepath=vehicle_trip_data_filepath,
-                )
-            elif veh_type.lower() in {"mdv", "hdv"}:
-                normalized_demand, _, _ = immediate_charging_HDV.immediate_charging(
-                    model_year=projection_year,
-                    veh_range=veh_range,
-                    power=power,
-                    location_strategy=location_strategy,
-                    veh_type=veh_type,
-                    filepath=vehicle_trip_data_filepath,
-                )
-
             final_demand = immediate.adjust_bev(
                 hourly_profile=normalized_demand,
                 adjustment_values=daily_values,
