@@ -466,7 +466,7 @@ Recommended citation: J. King, A. Clifton and B.-M. Hodge. 2014. Validation of P
 * Location: ***prereise/gather/demanddata/bldg_electrification/data/hp_parameters.csv***
 
 ##### General Purpose
-The data is used to compute temperature-dependent coefficient of performance for each of the three model space heating heat pumps in `ff2elec_profile_generator_htg.py`.
+The data is used to compute temperature-dependent coefficient of performance for each of the three model space heating heat pumps in `ff2elec_profile_generator_htg.py`. Pre-computed COP values against ambient temperature is stored in `data/cop_temp_htg_advperfhp.csv` and `data/cop_temp_htg_midperfhp.csv`
 
 ##### Source
 * Name: Domestic Hot Water Heat Pump Parameters
@@ -658,6 +658,38 @@ The data are used to fit model for temperature-dependent fossil fuel usage.
 ##### General Purpose
 The data are used to fit model for temperature-dependent fossil fuel usage.
 
+##### Source
+* Name: Fraction Target for Residential and Commercial Heat Pump Possession as Main Heating Device
+* Author: EIA
+* Description: Fraction of residential or commercial floor space using heat pump as main heating device for Census Regions
+* Source: https://www.eia.gov
+* Exact source location:
+  * RECS2015: https://www.eia.gov/consumption/residential/data/2015/
+  * RECS2020: https://www.eia.gov/consumption/residential/data/2020/
+  * CBECS2012: https://www.eia.gov/consumption/commercial/data/2012/
+  * CBECS2018: https://www.eia.gov/consumption/commercial/data/2018/
+
+##### Destination
+* Modifications to source file(s): Interpolate 2019 values based on RECS2015 and RECS2020, and extrapolate 2019 values based on CBECS2012 and CBECS 2018.
+* Location: 
+  * ***prereise/gather/demanddata/bldg_electrification/data/frac_target_hp_res.csv***
+  * ***prereise/gather/demanddata/bldg_electrification/data/frac_target_hp_com.csv***
+
+##### General Purpose
+The data are used to fit model for current heat pump penetration rate.
+
+##### Source
+* Name: Natural Gas Prices
+* Author: EIA
+* Description: Annual average natural gas price (residential) of states
+* Source: https://www.eia.gov
+* Exact source location: https://www.eia.gov/dnav/ng/ng_pri_sum_dcu_nus_a.htm
+##### Destination
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/state_ng_residential_price_2019.csv***
+
+##### General Purpose
+The data are used in the linear regression model for estimating current heat pump penetration rate. 
+
 
 #### U.S. Census Bureau
 ##### Source
@@ -701,6 +733,20 @@ The data are used to aggregate to the PUMA level data available only at the Cens
 
 ##### General Purpose
 The data are used to compute population-weighted average values for PUMAs based on the Census Tract data.
+
+##### Source
+* Name: American Housing Survey (AHS)
+* Author: U.S. Census Bureau
+* Description: Number of household use heat pumps as main heating equipment for metropolitan areas, Table "Heating, Air Conditioning, and Appliances", year 2017 and 2019
+* Source: https://www.census.gov/
+* Exact source location: https://www.census.gov/programs-surveys/ahs/data/interactive/ahstablecreator.html?s_areas=00000&s_year=2019&s_tablename=TABLE3&s_bygroup1=1&s_bygroup2=1&s_filtergroup1=1&s_filtergroup2=1
+
+##### Destination
+* Modifications to source file(s): the household number that possess heat pumps are converted to fractions of household within the survey area by dividing it to the total household number provided in the same tables. 
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/hp_ahs.xlsx***
+
+##### General Purpose
+The data are used as basis for estimating current heat pump penetration rate. 
 
 
 #### U.S. Federal Emergency Management Agency (FEMA)

@@ -335,8 +335,8 @@ def estimate_puma_hp_penetration(hp_fit_df, hp_fit_df_low_elec, puma_data_metro)
         puma_hp_df[f"census_region_{clas}"] = puma_hp_df.apply(
             lambda x: [
                 i
-                for i in const.census_region[clas]
-                if x["state"] in const.census_region[clas][i]
+                for i in const.recs_cbecs_census_region[clas]
+                if x["state"] in const.recs_cbecs_census_region[clas][i]
             ][0],
             axis=1,
         )

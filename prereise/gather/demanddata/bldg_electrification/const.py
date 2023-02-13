@@ -875,7 +875,7 @@ regions = {
 fuel = ["natgas", "fok", "othergas", "elec"]
 
 # census region for current heat pump penetration. Defined by RECS/CBECS surveys
-census_region = {
+recs_cbecs_census_region = {
     "res": {
         "New England": ["MA", "CT", "ME", "NH", "RI", "VT"],
         "Middle Atlantic": ["NJ", "NY", "PA"],
