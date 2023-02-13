@@ -350,7 +350,7 @@ def apply_annual_scaling(
     :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
     :return: (*numpy.ndarray*) -- adjusted charging profile
     """
-    bev_annual_load = bev_vmt * kwhmi / charging_efficiency
+    bev_annual_load = bev_vmt * (kwhmi / 1000) / charging_efficiency
 
     simulation_hourly_profile = bev_annual_load * hourly_profile
 
