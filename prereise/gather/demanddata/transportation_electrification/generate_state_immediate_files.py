@@ -1,4 +1,5 @@
 import os
+import time
 
 from prereise.gather.const import abv2state
 from prereise.gather.demanddata.transportation_electrification import const
@@ -30,7 +31,19 @@ def write_state_demand_files(
 
 
 if __name__ == "__main__":
-    for state in abv2state:
+
+    state_set = set(abv2state.keys()) - {"AK", "HI", "VT"}
+
+    state_list = ["VT"] + list(state_set)
+
+    print("State order:")
+    print(state_list)
+
+    for state in state_list:
+        print(f"Current state: {state}")
+
+        tic = time.perf_counter()
+
         state_demand_df = generate_bev_vehicle_profiles(
             vehicle_trip_data_filepath=os.path.join(
                 const.data_folder_path,
@@ -46,8 +59,8 @@ if __name__ == "__main__":
             trip_strategy=1,
         )
 
-    print(state)
+        write_state_demand_files(state_demand_df, state)
 
-    write_state_demand_files(state_demand_df, state)
+        toc = time.perf_counter()
 
-    print()
+        print(f"State {state} ran in {toc - tic:0.4f} seconds\n")
