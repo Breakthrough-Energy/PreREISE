@@ -58,7 +58,12 @@ def zone_shp_overlay(zone_name_shp, zone_shp, pumas_shp):
         os.path.join(os.path.dirname(__file__), "data", "puma_data.csv"),
         index_col="puma",
     )
+    puma_hp = pd.read_csv(
+        os.path.join(os.path.dirname(__file__), "data", "puma_hp_data.csv"),
+        index_col="puma",
+    )
     puma_data_zone = puma_data_zone.join(puma_data, on="puma")
+    puma_data_zone = puma_data_zone.join(puma_hp.drop(columns=["state"]), on="puma")
     puma_data_zone = puma_data_zone.set_index("puma")
 
     return puma_data_zone
