@@ -18,9 +18,6 @@ from prereise.gather.demanddata.bldg_electrification.helper import (
     read_shapefile,
     zone_shp_overlay,
 )
-from prereise.gather.demanddata.bldg_electrification.load_projection_scenario import (
-    LoadProjectionScenario,
-)
 from prereise.gather.demanddata.bldg_electrification.zone_profile_generator import (
     zonal_data,
 )
@@ -125,7 +122,13 @@ def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit, base_scen, hp_heat_co
 
 
 def scale_energy(
-    base_energy, temp_df, base_scen, new_scen, midperfhp_cop, advperfhp_cop, new_hp_profile
+    base_energy,
+    temp_df,
+    base_scen,
+    new_scen,
+    midperfhp_cop,
+    advperfhp_cop,
+    new_hp_profile,
 ):
     """Project energy consumption for each projection scenarios from the base scenario
 
@@ -141,8 +144,8 @@ def scale_energy(
     :param Pandas.DataFrame advperfhp_cop: advanced performance heat pump
         (90% percentile cold climate heat pump) COP against DBT with a 0.1
         degree C interval
-    :param string new_hp_profile: either "elec" or "ff". Choose either current electric 
-        heat pump heating demand profiles or current fossil fuel heating demand that the 
+    :param string new_hp_profile: either "elec" or "ff". Choose either current electric
+        heat pump heating demand profiles or current fossil fuel heating demand that the
         projected newly electrified load will follow.
     :return (*pandas.DataFrame*) -- hourly electricity consumption induced by heat pump
         heating, resistance heating, cooling, and baseload for a projection scenario
@@ -190,7 +193,9 @@ def scale_energy(
     return scen_load_mwh
 
 
-def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen, new_hp_profile):
+def ff_electrify_profiles(
+    weather_years, puma_data, base_scen, new_scen, new_hp_profile
+):
     """Calculate hourly electricity loads for a projection scenario from converting
     fossil fuel heating, dhw and cooking to electric ones
 
@@ -202,8 +207,8 @@ def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen, new_hp_
         reference scenario instance
     :param load_projection_scenario.LoadProjectionScenario new_scen:
         projection scenario instance
-    :param string new_hp_profile: either "elec" or "ff". Choose either current electric 
-        heat pump heating demand profiles or current fossil fuel heating demand that the 
+    :param string new_hp_profile: either "elec" or "ff". Choose either current electric
+        heat pump heating demand profiles or current fossil fuel heating demand that the
         projected newly electrified load will follow.
     :return (*pandas.DataFrame*) -- hourly projection load from converting fossil fuel
         consumption to electricity for projection scenarios given weather conditions
@@ -358,7 +363,9 @@ def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen, new_hp_
     return ff2hp_load_mwh
 
 
-def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_years, new_hp_profile):
+def predict_scenario(
+    zone_name, zone_name_shp, base_scen, new_scens, weather_years, new_hp_profile
+):
     """Load projection for one zone in all selected weather years.
 
     :param str zone_name: name of load zone used to save profile.
@@ -369,8 +376,8 @@ def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_yea
         projection scenario instance
     :param list weather_years: user defined year(s) of weather profile
         for load projection
-    :param string new_hp_profile: either "elec" or "ff". Choose either current electric 
-        heat pump heating demand profiles or current fossil fuel heating demand that the 
+    :param string new_hp_profile: either "elec" or "ff". Choose either current electric
+        heat pump heating demand profiles or current fossil fuel heating demand that the
         projected newly electrified load will follow.
     :return (*dict*) -- hourly projected load breakdowns for all scenarios, keys are
         scenario names, values are data frames of load breakdowns
