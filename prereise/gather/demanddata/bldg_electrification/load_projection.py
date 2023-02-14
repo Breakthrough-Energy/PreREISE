@@ -125,7 +125,7 @@ def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit, base_scen, hp_heat_co
 
 
 def scale_energy(
-    base_energy, temp_df, base_scen, new_scen, midperfhp_cop, advperfhp_cop
+    base_energy, temp_df, base_scen, new_scen, midperfhp_cop, advperfhp_cop, new_hp_profile
 ):
     """Project energy consumption for each projection scenarios from the base scenario
 
@@ -141,6 +141,9 @@ def scale_energy(
     :param Pandas.DataFrame advperfhp_cop: advanced performance heat pump
         (90% percentile cold climate heat pump) COP against DBT with a 0.1
         degree C interval
+    :param string new_hp_profile: either "elec" or "ff". Choose either current electric 
+        heat pump heating demand profiles or current fossil fuel heating demand that the 
+        projected newly electrified load will follow.
     :return (*pandas.DataFrame*) -- hourly electricity consumption induced by heat pump
         heating, resistance heating, cooling, and baseload for a projection scenario
     """
@@ -187,7 +190,7 @@ def scale_energy(
     return scen_load_mwh
 
 
-def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen):
+def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen, new_hp_profile):
     """Calculate hourly electricity loads for a projection scenario from converting
     fossil fuel heating, dhw and cooking to electric ones
 
@@ -199,6 +202,9 @@ def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen):
         reference scenario instance
     :param load_projection_scenario.LoadProjectionScenario new_scen:
         projection scenario instance
+    :param string new_hp_profile: either "elec" or "ff". Choose either current electric 
+        heat pump heating demand profiles or current fossil fuel heating demand that the 
+        projected newly electrified load will follow.
     :return (*pandas.DataFrame*) -- hourly projection load from converting fossil fuel
         consumption to electricity for projection scenarios given weather conditions
         from selected weather years
@@ -286,11 +292,11 @@ def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen):
                 os.path.join(
                     os.path.dirname(__file__),
                     "Profiles",
-                    f"elec_cook_ff2hp_{clas}_{state}_{base_year}_{cook_eff}_mw.csv",
+                    f"elec_cook_ff2hp_{clas}_{state}_{const.base_year}_{cook_eff}_mw.csv",
                 )
             ):
                 print(f"generating ff cooking profiles for {state}...")
-                generate_cook_profiles(base_year, [state], clas, cook_eff)
+                generate_cook_profiles(const.base_year, [state], clas, cook_eff)
 
         ff2hp_cook_pumas = pd.concat(
             list(
@@ -299,7 +305,7 @@ def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen):
                         os.path.join(
                             os.path.dirname(__file__),
                             "Profiles",
-                            f"elec_cook_ff2hp_{clas}_{x}_{base_year}_{cook_eff}_mw.csv",
+                            f"elec_cook_ff2hp_{clas}_{x}_{const.base_year}_{cook_eff}_mw.csv",
                         ),
                         index_col=0,
                     )
@@ -352,7 +358,7 @@ def ff_electrify_profiles(weather_years, puma_data, base_scen, new_scen):
     return ff2hp_load_mwh
 
 
-def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_years):
+def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_years, new_hp_profile):
     """Load projection for one zone in all selected weather years.
 
     :param str zone_name: name of load zone used to save profile.
@@ -363,9 +369,22 @@ def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_yea
         projection scenario instance
     :param list weather_years: user defined year(s) of weather profile
         for load projection
+    :param string new_hp_profile: either "elec" or "ff". Choose either current electric 
+        heat pump heating demand profiles or current fossil fuel heating demand that the 
+        projected newly electrified load will follow.
     :return (*dict*) -- hourly projected load breakdowns for all scenarios, keys are
         scenario names, values are data frames of load breakdowns
     """
+    # Use base_year for model fitting
+    base_year = const.base_year
+
+    zone_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/balancing-authorities/ba_area/ba_area.zip"
+    )
+    pumas_shp = read_shapefile(
+        "https://besciences.blob.core.windows.net/shapefiles/USA/pumas-overlay/pumas_overlay.zip"
+    )
+
     hours_utc_weather_years = pd.date_range(
         start=f"{weather_years[0]}-01-01",
         end=f"{weather_years[-1]+1}-01-01",
@@ -456,86 +475,13 @@ def predict_scenario(zone_name, zone_name_shp, base_scen, new_scens, weather_yea
             scenario,
             midperfhp_cop,
             advperfhp_cop,
+            new_hp_profile,
         )
         ff2hp_profile_load_mwh[id] = ff_electrify_profiles(
-            weather_years, puma_data_zone, base_scen, scenario
+            weather_years, puma_data_zone, base_scen, scenario, new_hp_profile
         )
         zone_profile_load_mwh[id] = pd.concat(
             [elec_profile_load_mwh[id], ff2hp_profile_load_mwh[id]], axis=1
         )
 
     return zone_profile_load_mwh
-
-
-if __name__ == "__main__":
-    # Use base_year for model fitting
-    base_year = const.base_year
-
-    # Weather year to produce load profiles. If multiple years,
-    # then time series result will show for more than one year
-    weather_years = [2018, 2019]
-
-    # new heat pump load profile assumption. User can select whether to use
-    # electric profile or fossil fuel profile to estimate
-    # electrified fossil fuel consumption for heating
-    new_hp_profile = "elec"  # "elec" or "ff"
-
-    # Reading Balancing Authority and Pumas shapefiles for overlaying
-    zone_shp = read_shapefile(
-        "https://besciences.blob.core.windows.net/shapefiles/USA/balancing-authorities/ba_area/ba_area.zip"
-    )
-    pumas_shp = read_shapefile(
-        "https://besciences.blob.core.windows.net/shapefiles/USA/pumas-overlay/pumas_overlay.zip"
-    )
-
-    zone_names = [
-        "NYIS-ZONA",
-    ]
-
-    zone_name_shps = [
-        "NYISO-A",
-    ]
-
-    for i in range(len(zone_names)):
-        zone_name, zone_name_shp = zone_names[i], zone_name_shps[i]
-
-        scen_data = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),
-                "projection",
-                "scenario_inputs",
-                f"{zone_name}_stats.csv",
-            ),
-            index_col=0,
-        )
-
-        base_scenarios = LoadProjectionScenario("base", scen_data.pop("yr2019"))
-        print(f"base scenario: year {base_year}, weather year: {weather_years}")
-
-        proj_scenarios = {}
-        for name, values in scen_data.iteritems():
-            proj_scenarios[name] = LoadProjectionScenario(name, values, base_scenarios)
-            print(f"projection scenario {name}, year {proj_scenarios[name].year}")
-
-        os.makedirs(
-            os.path.join(os.path.dirname(__file__), "Profiles"),
-            exist_ok=True,
-        )
-        zone_profile_load_mwh = predict_scenario(
-            zone_name, zone_name_shp, base_scenarios, proj_scenarios, weather_years
-        )
-
-        os.makedirs(
-            os.path.join(os.path.dirname(__file__), "projection", "results"),
-            exist_ok=True,
-        )
-
-        for name, values in zone_profile_load_mwh.items():
-            zone_profile_load_mwh[name].to_csv(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "projection",
-                    "results",
-                    f"{zone_name}_{name}_mwh.csv",
-                )
-            )
