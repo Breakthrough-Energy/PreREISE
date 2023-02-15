@@ -1,6 +1,6 @@
 import os
-import time
 import sys
+import time
 
 import pandas as pd
 
@@ -11,7 +11,9 @@ from prereise.gather.demanddata.transportation_electrification import (
 )
 
 
-def write_state_demand_files(demand_output, census_region, veh_type, veh_range, projection_year, dir_path=None):
+def write_state_demand_files(
+    demand_output, veh_type, veh_range, projection_year, dir_path=None
+):
     """Create files for each state
 
     :param dict demand_output:
@@ -23,38 +25,54 @@ def write_state_demand_files(demand_output, census_region, veh_type, veh_range, 
         dir_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "output",
-            f"{veh_type}{veh_range}",
+            f"{veh_type}_{veh_range}",
         )
     os.makedirs(dir_path, exist_ok=True)
     print(f"Writing state demand files in {dir_path}")
 
-    demand_output.to_pickle(os.path.join(dir_path, f"{projection_year}_immediate_census_{census_region}_{veh_type}{veh_range}.pkl"))
+    demand_output.to_pickle(
+        os.path.join(
+            dir_path,
+            f"{projection_year}_immediate_census_{veh_type}_{veh_range}.pkl",
+        )
+    )
 
 
 if __name__ == "__main__":
-
     veh_type = sys.argv[1]
     veh_range = sys.argv[2]
 
-    vehicle_trip_data_filepath=os.path.join(
-        const.data_folder_path,
-        "nhts_census_updated_dwell.mat",
-    )
-    charging_strategy="immediate"
-    veh_type="ldv"
-    power=6.6
-    location_strategy=2
+    if veh_type.lower() in {"ldv", "ldt"}:
+        vehicle_trip_data_filepath = os.path.join(
+            const.data_folder_path,
+            "nhts_census_updated_dwell.mat",
+        )
+        power = 6.6
+        location_strategy = 2
 
-    for projection_year in range(2020,2051,5):
+    elif veh_type.lower() in {"mdv", "hdv"}:
+        vehicle_trip_data_filepath = os.path.join(
+            const.data_folder_path,
+            "fdata_v10st.mat",
+        )
+        power = 80
+        location_strategy = 1
+
+    charging_strategy = "immediate"
+
+    projection_years = [2017] + list(range(2020, 2051, 5))
+
+    for projection_year in projection_years:
         print(f"Current projection year: {projection_year}")
 
-        census_shapes = {}
-        for census_region in range(1,10):
-            print(f"Current census region: {census_region}")
+        demand_shapes = {}
 
-            tic = time.perf_counter()
+        if veh_type.lower() in {"ldv", "ldt"}:
+            for census_region in range(1, 10):
+                tic = time.perf_counter()
 
-            if veh_type.lower() in {"ldv", "ldt"}:
+                print(f"Current census region: {census_region}")
+
                 normalized_demand, _, _ = immediate.immediate_charging(
                     census_region=census_region,
                     model_year=projection_year,
@@ -64,20 +82,33 @@ if __name__ == "__main__":
                     veh_type=veh_type,
                     filepath=vehicle_trip_data_filepath,
                 )
-            elif veh_type.lower() in {"mdv", "hdv"}:
-                normalized_demand, _, _ = immediate_charging_HDV.immediate_charging(
-                    model_year=projection_year,
-                    veh_range=veh_range,
-                    power=power,
-                    location_strategy=location_strategy,
-                    veh_type=veh_type,
-                    filepath=vehicle_trip_data_filepath,
-                )
+            demand_shapes.update(
+                {f"{veh_type}_region_{census_region}": normalized_demand}
+            )
 
-            census_shapes.update({f"census_region_{census_region}": normalized_demand})
+            toc = time.perf_counter()
+            print(
+                f"Vehicle type {veh_type} for census region {census_region} ran in {toc - tic:0.4f} seconds\n"
+            )
 
-        census_shapes_df = pd.DataFrame(
-            census_shapes,
+        elif veh_type.lower() in {"mdv", "hdv"}:
+            tic = time.perf_counter()
+
+            normalized_demand, _, _ = immediate_charging_HDV.immediate_charging(
+                model_year=projection_year,
+                veh_range=veh_range,
+                power=power,
+                location_strategy=location_strategy,
+                veh_type=veh_type,
+                filepath=vehicle_trip_data_filepath,
+            )
+            demand_shapes.update({f"{veh_type}_demand_shape": normalized_demand})
+
+            toc = time.perf_counter()
+            print(f"Vehicle type {veh_type} ran in {toc - tic:0.4f} seconds\n")
+
+        demand_shapes_df = pd.DataFrame(
+            demand_shapes,
             index=pd.date_range(
                 start=f"{projection_year}-01-01 00:00:00",
                 end=f"{projection_year}-12-31 23:00:00",
@@ -85,8 +116,6 @@ if __name__ == "__main__":
             ),
         )
 
-        write_state_demand_files(census_shapes_df, census_region, veh_type, veh_range, projection_year)
-
-        toc = time.perf_counter()
-
-        print(f"Census region {census_region} ran in {toc - tic:0.4f} seconds\n")
+        write_state_demand_files(
+            demand_shapes_df, census_region, veh_type, veh_range, projection_year
+        )
