@@ -118,7 +118,7 @@ def generate_bev_vehicle_profiles(
                 filepath=vehicle_trip_data_filepath,
             )
         elif veh_type.lower() in {"mdv", "hdv"}:
-            normalized_demand, _, _ = immediate_charging_HDV.immediate_charging(
+            normalized_demand, _, _ = immediate_charging_HDV.immediate_hdv_charging(
                 model_year=projection_year,
                 veh_range=veh_range,
                 power=power,
