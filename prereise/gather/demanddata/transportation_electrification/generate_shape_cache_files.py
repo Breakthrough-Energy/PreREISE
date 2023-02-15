@@ -40,7 +40,9 @@ def write_state_demand_files(
 
 if __name__ == "__main__":
     veh_type = sys.argv[1]
-    veh_range = sys.argv[2]
+    print(f"vehicle type: {veh_type}")
+    veh_range = int(sys.argv[2])
+    print(f"vehicle range: {veh_range}\n")
 
     if veh_type.lower() in {"ldv", "ldt"}:
         vehicle_trip_data_filepath = os.path.join(
