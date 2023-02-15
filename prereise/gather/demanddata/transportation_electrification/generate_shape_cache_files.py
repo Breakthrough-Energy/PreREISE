@@ -96,7 +96,7 @@ if __name__ == "__main__":
         elif veh_type.lower() in {"mdv", "hdv"}:
             tic = time.perf_counter()
 
-            normalized_demand, _, _ = immediate_charging_HDV.immediate_charging(
+            normalized_demand, _, _ = immediate_charging_HDV.immediate_hdv_charging(
                 model_year=projection_year,
                 veh_range=veh_range,
                 power=power,
