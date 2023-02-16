@@ -71,8 +71,7 @@ if __name__ == "__main__":
         demand_shapes = {}
 
         if veh_type.lower() in {"ldv", "ldt"}:
-            # for census_region in range(1, 10):
-            for census_region in range(1, 2):
+            for census_region in range(1, 10):
                 tic = time.perf_counter()
 
                 print(f"Current census region: {census_region}")
