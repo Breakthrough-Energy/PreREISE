@@ -85,14 +85,14 @@ if __name__ == "__main__":
                     veh_type=veh_type,
                     filepath=vehicle_trip_data_filepath,
                 )
-            demand_shapes.update(
-                {f"{veh_type}_region_{census_region}": normalized_demand}
-            )
+                demand_shapes.update(
+                    {f"{veh_type}_region_{census_region}": normalized_demand}
+                )
 
-            toc = time.perf_counter()
-            print(
-                f"Vehicle type {veh_type} for census region {census_region} ran in {toc - tic:0.4f} seconds\n"
-            )
+                toc = time.perf_counter()
+                print(
+                    f"Vehicle type {veh_type} for census region {census_region} ran in {toc - tic:0.4f} seconds\n"
+                )
 
         elif veh_type.lower() in {"mdv", "hdv"}:
             tic = time.perf_counter()
