@@ -1,12 +1,13 @@
 Methodology 
 ###########
+
+.. _ev_charging_model:
+
 EV Charging Model Process and Flowchart 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This EV charging model simulates the charging behavior of the following on-road vehicle
-categories: light-duty vehicles (LDV), light-duty trucks (LDT), medium-duty vehicles
-(MDV), and heavy-duty vehicles (HDV). The default LDV and LDT trip data come from the
-2017 National Household Travel Survey (NHTS), with an example of the data included in
-:numref:`example_daily_trips`.
+categories: LDV, LDT, MDV, and HDV. The default LDV and LDT trip data come from the 2017
+NHTS, with an example of the data included in :numref:`example_daily_trips`.
 
 .. _example_daily_trips:
 
@@ -15,10 +16,10 @@ categories: light-duty vehicles (LDV), light-duty trucks (LDT), medium-duty vehi
 
    Example daily trips of vehicle data from NHTS
 
-These are also divided into Census Divisions, which are then mapped to the
-corresponding regions within the grid model. The MDV and HDV trip data are anonymized
-from the Texas Commercial Vehicle Survey and calibrated to align with medium- and heavy-
-duty vehicle trip statistics. More details about each data set are included in
+These are also divided into Census Divisions, which are then mapped to the corresponding
+regions within the grid model. The MDV and HDV trip data are anonymized from the Texas
+Commercial Vehicle Survey and calibrated to align with medium- and heavy-duty vehicle
+trip statistics. More details about each data set are included in
 :numref:`vehicle_travel_patterns` and can be updated to reflect different vehicle
 scenarios or incorporate more recent data. In all cases, an average weekday and average
 weekend daily pattern of vehicle trips is calculated from the vehicle trip data. Then,
@@ -37,7 +38,7 @@ The LDV and LDT vehicle miles traveled (VMT) by hour is presented in
    Light-duty vehicle/truck miles traveled by hour of the day for weekends and weekdays 
 
 Similarly, Figure :numref:`dwelling_over_24h` illustrates the percentage of vehicles
-parked and able to charge at each hour over a 24-hour period.
+parked and able to charge at each hour over a 24-hour period. 
 
 .. _dwelling_over_24h:
 
@@ -51,7 +52,7 @@ The flowchart in :numref:`trip_patterns_flowchart` illustrates the entire proced
 .. _trip_patterns_flowchart:
 
 .. mermaid::
-   :caption: Daily BEV-capable trip patterns
+   :caption: Workflow from input trip data to weekday and weekend trip patterns 
 
    flowchart TD
       subgraph main[ ]
@@ -73,25 +74,25 @@ The flowchart in :numref:`trip_patterns_flowchart` illustrates the entire proced
 
 These daily BEV-capable trip patterns are then further distributed temporally and
 spatially, as discussed in more detail in :numref:`annual_vehicle_miles_traveled`.
-State-level and urban area (UA) VMT per capita were taken from the Department of
-Transportation’s transportation health tool and create the distribution across rural
-and urban areas, as defined by the U.S. Census Bureau
-:cite:p:`DoT_transportation_health_tool`, :cite:p:`CB_urban_rural_classification`.
-Weight factors from the U.S. EPA model, MOVES, create the time-of-year scaling of
-weekday versus weekend and month of the year :cite:p:`EPA_moves`.
+State-level and UA VMT per capita were taken from the Department of Transportation’s
+transportation health tool and create the distribution across rural and urban areas, as
+defined by the U.S. Census Bureau :cite:p:`DoT_transportation_health_tool`,
+:cite:p:`CB_urban_rural_classification`. Weight factors from the U.S. EPA model, MOVES,
+create the time-of-year scaling of weekday versus weekend and month of the year
+:cite:p:`EPA_moves`.
  
-Projections from NREL’s Electrification Futures Study (EFS) provide the adoption rate
-scaling of BEV demand to create the base-year and simulation-year profiles of BEV-
-capable trip patterns :cite:p:`NREL_electric_technology_adoption`.  Total charging
-demand by area (urban and rural) is scaled based on state-level BEV VMT projections
-from NREL’s EFS :cite:p:`NREL_efs`.  As more granular BEV projections become available,
-scaling projections could be targeted to specific urban and rural areas given the
-model’s structure.  The procedure is shown in :numref:`dynamics_flowchart`.
+Projections from NREL’s EFS provide the adoption rate scaling of BEV demand to create
+the base-year and simulation-year profiles of BEV-capable trip patterns
+:cite:p:`NREL_electric_technology_adoption`. Total charging demand by area (urban and
+rural) is scaled based on state-level BEV VMT projections from NREL’s EFS.  As more
+granular BEV projections become available, scaling projections could be targeted to
+specific urban and rural areas given the model’s structure. The procedure is shown in
+:numref:`dynamics_flowchart`.
 
 .. _dynamics_flowchart:
 
 .. mermaid::
-   :caption: Simulating base-year and simulation-year dynamics
+   :caption: Workflow from weekday and weekend trip patterns to annual VMT pattern
 
    flowchart LR
       subgraph main[ ]
@@ -142,27 +143,27 @@ smart charging algorithm. 
 
 With the projected BEV vehicle trips in place, NREL’s EFS is again used to set the fuel
 efficiency for the simulated year to determine the amount of electricity needed to
-charge after each BEV trip.  Then, the charging model uses one of two charging
-algorithm strategies: immediate (uncoordinated) charging and smart (optimal) charging,
-with example illustrations shown in :numref:`immediate_charging_result` and
-:numref:`smart_charging_result`.  Both algorithms are deterministic and directly
-utilize the input vehicle trip data to calculate the charging demand based on vehicle
-travel distances, dwell locations, and user defined infrastructure parameters. The
-Smart Charging algorithm currently uses an optimization function to minimize wholesale
-prices via flattening the net load curve. Incorporating additional optimization goals
-that will change the cost function, such as minimizing individual vehicle costs in
-response to time-varying utility rate structures, will be explored in future work. For
-the Smart Charging algorithm, each representative vehicle sequentially sets its
-charging pattern in response to the optimization function as well as an aggregate load
-profile. That vehicle’s additional charging load is then added to the aggregate load
-profile, which is then sent to the next vehicle as an input to its smart charging
-decision. The aggregate profile of electricity demand from all smart-charging BEVs is
-then simply the sum across all vehicles (see :numref:`demand_calculation_flowchart`). 
+charge after each BEV trip.  Then, the charging model uses one of two charging algorithm
+strategies: immediate (uncoordinated) charging and smart (optimal) charging, with
+example illustrations shown in :numref:`immediate_charging_result` and
+:numref:`smart_charging_result`. Both algorithms are deterministic and directly utilize
+the input vehicle trip data to calculate the charging demand based on vehicle travel
+distances, dwell locations, and user defined infrastructure parameters. The Smart
+Charging algorithm currently uses an optimization function to minimize wholesale prices
+via flattening the net load curve. Incorporating additional optimization goals that will
+change the cost function, such as minimizing individual vehicle costs in response to
+time-varying utility rate structures, could be explored in future work. For the Smart
+Charging algorithm, each representative vehicle sequentially sets its charging pattern
+in response to the optimization function as well as an aggregate load profile. That
+vehicle’s additional charging load is then added to the aggregate load profile, which is
+then sent to the next vehicle as an input to its smart charging decision. The aggregate
+profile of electricity demand from all smart-charging BEVs is then simply the sum across
+all vehicles (see :numref:`demand_calculation_flowchart`). 
 
 .. _demand_calculation_flowchart:
 
 .. mermaid::
-   :caption: Calculating simulation-year electricity demand
+   :caption: Workflow from the annual VMT pattern to the additional electricity demand from the BEV charging profiles 
 
    flowchart TB
       subgraph main[ ]
@@ -199,7 +200,8 @@ reached or car unplugged, whichever comes first.
    Notional results for immediate charging algorithm, with charging hours within the
    bracket
 
-Smart charging refers to coordinated charging, where drivers provide information on their travel schedule and charging demand to the electric grid operator.
+Smart charging refers to coordinated charging, where drivers provide information on
+their travel schedule and charging demand to the electric grid operator.
 
 .. _smart_charging_result:
 
@@ -212,52 +214,45 @@ Smart charging refers to coordinated charging, where drivers provide information
 
 **Example Output -- Immediate Charging**. Immediate Charging refers to full power
 charging at time of plug-in until the battery is full or until the vehicle departs on
-the next driving trip. :numref:`ldv_immediate_charging_output` and
-:numref:`ldt_immediate_charging_output` present normalized, unscaled LDV and LDT
-charging demand, respectively.  These normalized profiles are then scaled based on the
-parameters for the desired simulation year, with an example output shown in
-:numref:`example_ldv_immediate_load`.  These include the projected VMT for the
-simulated year, the fuel efficiency projection (e.g. number of kWh used per mile
-traveled), and the efficiency of the charging process.
+the next driving trip. :numref:`ldv_immediate_charging_output` presents a normalized,
+unscaled LDV charging demand alongside a normalization of the underlying
+non-transportation base demand (note: the normalization of the charging profile uses the
+sum of a full year of charging from the sample vehicles as the denominator).  Notice how
+the uncoordinated charging pattern aligns with the underlying non-transportation base
+demand.
+
+From there, this normalized profile is then scaled based on the parameters for the
+desired simulation year, with an example output shown in
+:numref:`example_ldv_immediate_load`. These parameters include the projected VMT for the
+simulated year, the fuel efficiency projection (e.g. number of kWh consumed per mile
+traveled), and the efficiency of the charging process. Notice that the peak demand
+increases due to the uncoordinated charging pattern. 
 
 .. _ldv_immediate_charging_output:
 
 .. figure:: demand/transportation_electrification/img/methodology/ldv_immediate_charging_output.png
    :align: center
 
-   Normalized LDV immediate charging output for 168 hours (1 week)
-
-.. _ldt_immediate_charging_output:
-
-.. figure:: demand/transportation_electrification/img/methodology/ldt_immediate_charging_output.png
-   :align: center
-
-   Normalized LDT immediate charging output for 168 hours (1 week)
+   Normalized LDV Immediate Charging output for 1 example week
 
 
 **Example Output -- Smart Charging**. Smart charging refers to coordinated charging,
 where drivers provide information on their travel schedule and charging demand to the
 electric grid operator. Vehicle charging is optimized based on cost (e.g., time-of-use
 rates), grid support needs, travel considerations, and vehicle constraints.
-:numref:`ldv_smart_charging_output` and :numref:`ldt_smart_charging_output` present
-normalized, unscaled LDV and LDT smart charging demand, respectively.
-:numref:`example_ldv_smart_load` shows an example of the results from LDV smart
-charging at scale that was optimized for grid support needs by flattening net demand
-(e.g. “filling in the valleys”). 
+:numref:`ldv_smart_charging_output` presents a normalized, unscaled LDV smart charging
+demand alongside a normalization of the underlying non-transportation base demand.
+Notice how in this case the smart charging pattern no longer aligns with the underlying
+non-transportation base demand. :numref:`example_ldv_smart_load` shows an example of the
+results from LDV smart charging at scale that was optimized for grid support needs by
+flattening net demand (e.g. “filling in the valleys”). 
 
 .. _ldv_smart_charging_output:
 
 .. figure:: demand/transportation_electrification/img/methodology/ldv_smart_charging_output.png
    :align: center
 
-   Normalized LDV smart charging output for 168 hours (1 week)
-
-.. _ldt_smart_charging_output:
-
-.. figure:: demand/transportation_electrification/img/methodology/ldt_smart_charging_output.png
-   :align: center
-
-   Normalized LDT smart charging output for 168 hours (1 week)
+   Normalized LDV Smart Charging output for 1 example week
 
 
 .. _vehicle_travel_patterns:
@@ -486,30 +481,30 @@ row of the data table is a unique trip taken by the specified vehicle. 
 
 Annual Vehicle Miles Traveled
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The model is structured for a single base year and three future years: 2017, 2030,
-2040, and 2050. Each year is unique based on vehicle miles traveled (VMT) and fuel
-economy (miles per gallon of gasoline equivalent, mi/GGE), which together determine
-annual vehicle electricity demand. The base year and future projections of battery
-electric vehicle miles traveled are taken from NREL’s Electrification Futures Study
-:cite:p:`NREL_electric_technology_adoption`. BEV VMT is divided into VMT occurring in
-Urban Areas (UA) and Rural Areas (RA). UA is a term assigned by the U.S. Census Bureau
-and is described as areas with a population of 50,000 people or more
+The model is structured for a single base year (2017) and 33 future years (2018-2050).
+Each year is unique based on vehicle miles traveled (VMT) and fuel economy (miles per
+gallon of gasoline equivalent, mi/GGE), which together determine annual vehicle
+electricity demand. The base year and future projections of battery electric vehicle
+miles traveled are taken from NREL’s EFS :cite:p:`NREL_electric_technology_adoption`. BEV
+VMT is divided into VMT occurring in UAs and RAs. UA is a term assigned by the U.S.
+Census Bureau and is described as areas with a population of 50,000 people or more
 :cite:p:`CB_urban_rural_classification`. Other years are available from NREL, if
 desired.
 
+.. _electric_vehicle_miles_traveled_projections:
 
 Electric Vehicle Miles Traveled Projections by Urban and Rural Area 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-VMT per capita for each state and Urban Area (UA) was taken from the Department of
-Transportation’s transportation health tool :cite:p:`DoT_transportation_health_tool`.
-To determine total state VMT, state population was taken from Census data and was
-multiplied by the above state VMT per capita data
-:cite:p:`DoT_transportation_health_tool` :cite:p:`CB_urban_rural_classification`. Then,
-to calculate the fraction of total state VMT that is allocated to each urban area (UA)
-and rural area (RA), the UA population was also pulled from Census data
-:cite:p:`CB_urban_rural_classification`. From there, the UA population was multiplied
-by UA VMT per capita to get total UA VMT. Lastly, UA VMT is subtracted from state VMT
-to determine the RA VMT for the state.  These calculations are summarized below: 
+VMT per capita for each state and UA was taken from the Department of Transportation’s 
+transportation health tool :cite:p:`DoT_transportation_health_tool`. To determine total 
+state VMT, state population was taken from Census data and was multiplied by the above 
+state VMT per capita data :cite:p:`DoT_transportation_health_tool` 
+:cite:p:`CB_urban_rural_classification`. Then, to calculate the fraction of total state 
+VMT that is allocated to each UA and RA, the UA population was also pulled from Census 
+data :cite:p:`CB_urban_rural_classification`. From there, the UA population was 
+multiplied by UA VMT per capita to get total UA VMT. Lastly, UA VMT is subtracted from 
+state VMT to determine the RA VMT for the state. These calculations are summarized 
+below: 
 
 .. math::
 
@@ -522,10 +517,11 @@ to determine the RA VMT for the state.  These calculations are summarized below:
 
 .. math::
 
-    V_{\rm UA} = A_{\rm state} \times P_{\rm UA}
+    V_{\rm UA} = A_{\rm UA} \times P_{\rm UA}
 
 | where:
 | :math:`V_{\rm UA}` is the urban area VMT,
+| :math:`A_{\rm UA}` is the VMT per capita,
 | :math:`P_{\rm UA}` is the urban area population.
 
 .. math::
@@ -540,9 +536,8 @@ Monthly and Daily Weight Factors 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Along with the rural/urban distribution, the default scenarios also use weekday/weekend
 and monthly weight factors to distribute annual VMT. These weight factors come directly
-from the U.S. Environmental Protection Agency’s MOtor Vehicle Emission Simulator
-(MOVES) model :cite:p:`EPA_moves`. The weight factor values are listed in
-:numref:`weekday_vs_weekend_weight_table` and :numref:`month_weight_table`. 
+from the U.S. EPA’s MOVES model :cite:p:`EPA_moves`. The weight factor values are listed 
+in :numref:`weekday_vs_weekend_weight_table` and :numref:`month_weight_table`. 
 
 .. _weekday_vs_weekend_weight_table:
 
@@ -588,25 +583,27 @@ from the U.S. Environmental Protection Agency’s MOtor Vehicle Emission Simulat
     | December  | 0.0802        |
     +-----------+---------------+
 
+
+.. _bev_vmt_projections:
+
 BEV VMT Projections 
 ~~~~~~~~~~~~~~~~~~~
 To calculate the BEV VMT by vehicle class for each UA, state-level BEV VMT projections
-were based on the NREL Electrification Futures Study for 9 vehicle types
+were based on NREL's EFS for 8 vehicle types 
 :cite:p:`NREL_electric_technology_adoption`: 
 
 1. LDV BEV Cars: 100 mi, 200 mi, 300 mi 
 2. LDV BEV Trucks: 100 mi, 200 mi, 300 mi 
-3. BEV Transit Buses 
-4. MDV Trucks 
-5. HDV Trucks 
+3. MDV Trucks 
+4. HDV Trucks 
 
-Projections were used for 2030, 2040, and 2050. The 2017 base year assumptions were
-calibrated based on historical data. For all years, BEV VMT at the state level was
-translated to BEV VMT at the UA level by multiplying the state-level projections by the
-fraction of state VMT allocated to each UA. It is assumed that the proportion of VMT
-occurring in urban areas relative to total state VMT will be constant moving into the
-future. There are some UAs that did not have VMT data. Out of 481 UAs, 56 did not have
-VMT per capita data from the DOT, so those entries are zeros.
+Projections were used for 2018-2050. The 2017 base year assumptions were calibrated
+based on historical data. For all years, BEV VMT at the state level was translated to
+BEV VMT at the UA level by multiplying the state-level projections by the fraction of
+state VMT allocated to each UA. It is assumed that the proportion of VMT occurring in
+urban areas relative to total state VMT will be constant moving into the future. There
+are some UAs that did not have VMT data. Out of 481 UAs, 56 did not have VMT per capita
+data from the DOT, so those entries will use their respective state’s VMT per capita.
 
 Once each UA and the state’s RA have their projected annual VMT for a simulation year,
 the annual VMT is distributed to each day of the year based on weight factors from U.S.
@@ -654,42 +651,42 @@ The trip data are scaled based on the allocated daily VMT. The daily patterns ar
 adjusted by scaling the VMT of each trip within the daily patterns so that the total
 across the simulation matches the Annual VMT projection for each state. 
 
+.. _fuel_efficiency_projections:
 
 Fuel Efficiency Projections 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-NREL’s Electrification Futures Study also projects average BEV fuel economy over time, based on assumptions regarding technology improvements and vehicle range
+NREL’s Electrification Futures Study also projects average BEV fuel economy over time,
+based on assumptions regarding technology improvements and vehicle range
 :cite:p:`NREL_efs`. NREL provides a range of possible BEV fuel economies (“Slow
 Advancement”, “Moderate Advancement”, and “Rapid Advancement”). The charging model uses
-mid-range values as the default fuel economy for each vehicle category and year, as
-shown in :numref:`bev_fuel_economy_table`. 
+the "Moderate Advancement" values as the default fuel economy for each vehicle category
+and year, as shown in :numref:`bev_fuel_economy_table`. 
 
 .. _bev_fuel_economy_table:
 
 .. table:: Default BEV fuel economy by vehicle category and year
 
-    +-------------------------------------+---------------------------+
-    |                                     | Fuel Economy (mile/GGE)   |
-    +                                     +------+------+------+------+
-    | Vehicle Type                        | 2017 | 2030 | 2040 | 2050 |
-    +=====================================+======+======+======+======+
-    | LDV BEV cars, 100 mile range        | 138  | 156  | 158  | 160  |
-    +-------------------------------------+------+------+------+------+
-    | LDV BEV cars, 200 mile range        | 129  | 152  | 155  | 156  |
-    +-------------------------------------+------+------+------+------+
-    | LDV BEV cars, 300 mile range        | 122  | 148  | 152  | 154  |
-    +-------------------------------------+------+------+------+------+
-    | LDT BEV trucks, 100 mile range      | 103  | 105  | 106  | 107  |
-    +-------------------------------------+------+------+------+------+
-    | LDT BEV trucks, 200 mile range      | 97   | 103  | 104  | 104  |
-    +-------------------------------------+------+------+------+------+
-    | LDT BEV trucks, 300 mile range      | 94   | 100  | 101  | 102  |
-    +-------------------------------------+------+------+------+------+
-    | Transit buses                       | 13   | 16   | 18   | 19   |
-    +-------------------------------------+------+------+------+------+
-    | MDV trucks                          | 16   | 21   | 23   | 24   |
-    +-------------------------------------+------+------+------+------+
-    | HDV trucks                          | 12   | 16   | 17   | 18   |
-    +-------------------------------------+------+------+------+------+
+    +-------------------------------------+-----------------------------------------------------------+
+    |                                     | Fuel Economy (mile/GGE)                                   |
+    +                                     +-----------+-----------+-----------+-----------+-----------+
+    | Vehicle Type                        | 2017-2019 | 2020-2024 | 2025-2034 | 2035-2044 | 2045-2050 |
+    +=====================================+===========+===========+===========+===========+===========+
+    | LDV BEV cars, 100 mile range        | 103       | 117       | 137       | 153       | 159       |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
+    | LDV BEV cars, 200 mile range        | 97        | 112       | 133       | 149       | 155       |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
+    | LDV BEV cars, 300 mile range        | 85        | 102       | 124       | 138       | 144       |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
+    | LDT BEV trucks, 100 mile range      | 60        | 69        | 78        | 83        | 85        |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
+    | LDT BEV trucks, 200 mile range      | 57        | 66        | 76        | 81        | 83        |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
+    | LDT BEV trucks, 300 mile range      | 50        | 60        | 72        | 76        | 79        |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
+    | MDV trucks                          | 16        | 17        | 19        | 21        | 22        |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
+    | HDV trucks                          | 9         | 10        | 13        | 14        | 15        |
+    +-------------------------------------+-----------+-----------+-----------+-----------+-----------+
 
 Smart Charging Optimization Algorithm 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -718,7 +715,7 @@ vehicle is parked.
     \sum_{i=1}^n \sum_{j=1}^{seg(i)} x_{ij} + \sum_{i=1}^n y_i = 0
 
 | where:
-| :math:`j` is the discharged energy from driving
+| :math:`y` is the discharged energy from driving
 
 **Inequality** constraints:
 
@@ -745,17 +742,35 @@ vehicle is parked.
 | :math:`\eta` is the charging efficiency
 
 The optimization is structured to minimize the cost to charge each battery electric
-vehicle within defined battery constraints. It is conducted at hourly timescale,
-meaning that cost and electricity demand are provided in hourly segments. Charging
-efficiency is dependent on the type of electric vehicle supply equipment (EVSE).
-Efficiency tends to increase with higher charging rates.
+vehicle within defined battery constraints. It is conducted at hourly timescale, meaning
+that cost and electricity demand are provided in hourly segments. Charging efficiency is
+dependent on the type of electric vehicle supply equipment (EVSE). Efficiency tends to
+increase with higher charging rates. The model currently distinguishes between the lower
+charging efficiency of AC level 2 charging (90%) and DC charging (95%), where AC
+charging is assumed for charging rates at or below 19.2 kW, and DC charging is assumed
+for charging rates above 19.2 kW. If a dwell time (:math:`\Delta t`) falls below one
+hour, the charge (:math:`x`) available for that segment will be reduced proportional to
+the amount of time spent parked (i.e., if a vehicle is parked for 30 minutes, the charge
+will be reduced to :math:`1/2`). The default minimum dwell time to consider a charging
+event is 0.2 hours, or 12 minutes. This value can be modified depending on the user’s
+scenario. The minimum dwell time is set in order to avoid impractical charging events
+where, in the real world, a vehicle operator would not plug in their vehicle due to the
+shortness of the stop. If the charging rate available is high (e.g., DC Fast Charging),
+a shorter minimum dwell time may be warranted. 
 
-If a dwell time (:math:`\Delta t`) falls below one hour, the charge (x) available for
-that segment will be reduced proportional to the amount of time spent parked (i.e., if
-a vehicle is parked for 30 minutes, the charge will be reduced to :math:`1/2`). The
-default minimum dwell time to consider a charging event is 0.2 hours, or 12 minutes.
-This value can be modified depending on the user’s scenario. The minimum dwell time is
-set in order to avoid impractical charging events where, in the real world, a vehicle
-operator would not plug in their vehicle due to the shortness of the stop. If the
-charging rate available is high (e.g., DC Fast Charging), a shorter minimum dwell time
-may be warranted.
+
+Adoption Rate
+^^^^^^^^^^^^^
+As discussed in :numref:`bev_vmt_projections`, the default BEV adoption rates used in
+this model are the VMT projections from NREL’s EFS data.  NREL used their Automotive
+Deployment Options Projection Tool (ADOPT) in 2017 to generate the 2018-2050
+projections.  Once actual adoption rates become available, those values could be used at
+the state and/or UA level to update all remaining VMT projections.  As an example, the
+California Energy Commission publishes a dashboard of the Light Duty Vehicle Population
+by fuel type (including BEVs) in California for past years.
+
+Similarly, other updates of BEV adoption rate projections at both state and UA levels
+undoubtedly will arise over time.  As discussed in the User Manual section above, using
+the user interface and modifying the accompanying datasets would allow updated adoption
+rate projections to create corresponding BEV charging profiles when desired. Links for
+these data sources are available in :numref:`data_sources`. 
