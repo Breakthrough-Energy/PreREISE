@@ -27,13 +27,14 @@ def write_state_demand_files(
             "output",
             str(f"{veh_type}_{str(veh_range)}"),
         )
+    print(dir_path)
     os.makedirs(dir_path, exist_ok=True)
     print(f"Writing state demand files in {dir_path}")
 
     demand_output.to_pickle(
         os.path.join(
             dir_path,
-            f"{projection_year}_immediate_census_{veh_type}_{veh_range}.pkl",
+            f"{projection_year}_immediate_{veh_type}_{veh_range}.pkl",
         )
     )
 
@@ -70,7 +71,8 @@ if __name__ == "__main__":
         demand_shapes = {}
 
         if veh_type.lower() in {"ldv", "ldt"}:
-            for census_region in range(1, 10):
+            # for census_region in range(1, 10):
+            for census_region in range(1, 2):
                 tic = time.perf_counter()
 
                 print(f"Current census region: {census_region}")
@@ -119,5 +121,5 @@ if __name__ == "__main__":
         )
 
         write_state_demand_files(
-            demand_shapes_df, census_region, veh_type, veh_range, projection_year
+            demand_shapes_df, veh_type, veh_range, projection_year
         )
