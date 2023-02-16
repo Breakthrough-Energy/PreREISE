@@ -205,7 +205,7 @@ def immediate_hdv_charging(
     # Constants
     kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
     battery_capacity = kwhmi * veh_range
-    model_year_len = 365
+    model_year_len = len(data_helper.get_model_year_dti(model_year))
 
     # charging_efficiency val used to be in const.py
     if power > 19.2:
