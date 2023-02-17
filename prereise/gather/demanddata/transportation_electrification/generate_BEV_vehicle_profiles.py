@@ -22,7 +22,7 @@ def generate_bev_vehicle_profiles(
     veh_type,
     veh_range,
     projection_year,
-    state,
+    states,
     external_signal=None,
     power=6.6,
     location_strategy=2,
@@ -40,7 +40,7 @@ def generate_bev_vehicle_profiles(
         single charge in miles.
     :param int projection_year: year that is being modelled/projected to, 2017, 2030, 2040,
         2050.
-    :param str state: US state abbreviation
+    :param List[str] state: List of US state abbreviation
     :param numpy.ndarray (optional) external_signal: initial load demand (MW for each hour)
     :param int power: (optional) charger power, EVSE kW; default value: 6.6 kW;
     :param int location_strategy: (optional) where the vehicle can charge-1, 2, 3, 4, or 5;
@@ -53,79 +53,107 @@ def generate_bev_vehicle_profiles(
         in each state (MW for each hour)
     """
 
-    census_region = const.state2census_region[state]
-    kwhmi = get_kwhmi(projection_year, veh_type, veh_range)
-
-    daily_values = generate_daily_weighting(projection_year)
-
     if power > 19.2:
         charging_efficiency = 0.95
     else:
         charging_efficiency = 0.9
 
+    if isinstance(states, str):
+        states = [states]
+
     geographic_area_bev_vmt = {}
+    for state in states:
 
-    urban_scaling_filepath = os.path.join(
-        const.data_folder_path,
-        "regional_scaling_factors",
-        "regional_scaling_factors_UA_",
-    )
-    urban_scaling_factors = pd.read_csv(
-        urban_scaling_filepath + str(projection_year) + ".csv", index_col="State"
-    )
-    state_urban_areas = urban_scaling_factors.loc[state.upper(), "UA"]
+        census_region = const.state2census_region[state]
+        kwhmi = get_kwhmi(projection_year, veh_type, veh_range)
 
-    if isinstance(state_urban_areas, str):
-        iterable_urban_areas = [state_urban_areas]
-    else:
-        iterable_urban_areas = state_urban_areas.to_list()
+        daily_values = generate_daily_weighting(projection_year)
 
-    # scaling factors for listed urban areas
-    for urban_area in iterable_urban_areas:
-        urban_bev_vmt = load_urbanized_scaling_factor(
-            model_year=projection_year,
-            veh_type=veh_type,
-            veh_range=veh_range,
-            urbanized_area=urban_area,
-            state=state,
-            filepath=urban_scaling_filepath,
-        )
-        geographic_area_bev_vmt.update({f"{state}_{urban_area}": urban_bev_vmt})
-
-    # scaling factors for rural areas
-    rural_bev_vmt = load_rural_scaling_factor(
-        projection_year,
-        veh_type,
-        veh_range,
-        state.upper(),
-        filepath=os.path.join(
+        urban_scaling_filepath = os.path.join(
             const.data_folder_path,
             "regional_scaling_factors",
-            "regional_scaling_factors_RA_",
-        ),
-    )
-    geographic_area_bev_vmt.update({f"{state}_rural": rural_bev_vmt})
+            "regional_scaling_factors_UA_",
+        )
+        urban_scaling_factors = pd.read_csv(
+            urban_scaling_filepath + str(projection_year) + ".csv", index_col="State"
+        )
+        state_urban_areas = urban_scaling_factors.loc[state.upper(), "UA"]
+
+        if isinstance(state_urban_areas, str):
+            iterable_urban_areas = [state_urban_areas]
+        else:
+            iterable_urban_areas = state_urban_areas.to_list()
+
+        # scaling factors for listed urban areas
+        for urban_area in iterable_urban_areas:
+            urban_bev_vmt = load_urbanized_scaling_factor(
+                model_year=projection_year,
+                veh_type=veh_type,
+                veh_range=veh_range,
+                urbanized_area=urban_area,
+                state=state,
+                filepath=urban_scaling_filepath,
+            )
+            geographic_area_bev_vmt.update({f"{state}_{urban_area}": urban_bev_vmt})
+
+        # scaling factors for rural areas
+        rural_bev_vmt = load_rural_scaling_factor(
+            projection_year,
+            veh_type,
+            veh_range,
+            state.upper(),
+            filepath=os.path.join(
+                const.data_folder_path,
+                "regional_scaling_factors",
+                "regional_scaling_factors_RA_",
+            ),
+        )
+        geographic_area_bev_vmt.update({f"{state}_rural": rural_bev_vmt})
 
     if charging_strategy == "immediate":
-        if veh_type.lower() in {"ldv", "ldt"}:
-            normalized_demand, _, _ = immediate.immediate_charging(
-                census_region=census_region,
-                model_year=projection_year,
-                veh_range=veh_range,
-                power=power,
-                location_strategy=location_strategy,
-                veh_type=veh_type,
-                filepath=vehicle_trip_data_filepath,
-            )
-        elif veh_type.lower() in {"mdv", "hdv"}:
-            normalized_demand, _, _ = immediate_charging_HDV.immediate_hdv_charging(
-                model_year=projection_year,
-                veh_range=veh_range,
-                power=power,
-                location_strategy=location_strategy,
-                veh_type=veh_type,
-                filepath=vehicle_trip_data_filepath,
-            )
+        cache_file_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "scripts",
+            "cache",
+            str(f"{veh_type}_{str(veh_range)}"),
+            f"{projection_year}_immediate_{veh_type}_{veh_range}.pkl",
+        )
+        print(cache_file_path)
+
+        if os.path.isfile(cache_file_path):
+
+            normalized_demand_df = pd.read_pickle(cache_file_path)
+
+            if veh_type.lower() in {"ldv", "ldt"}:
+                normalized_demand = normalized_demand_df[f"{veh_type}_region_{census_region}"].to_numpy()
+            elif veh_type.lower() in {"mdv", "hdv"}:
+                normalized_demand = normalized_demand_df[f"{veh_type}_demand_shape"].to_numpy()
+
+            print("Cache file used!")
+
+        else:
+
+            print("Computing demand shape file!")
+
+            if veh_type.lower() in {"ldv", "ldt"}:
+                normalized_demand, _, _ = immediate.immediate_charging(
+                    census_region=census_region,
+                    model_year=projection_year,
+                    veh_range=veh_range,
+                    power=power,
+                    location_strategy=location_strategy,
+                    veh_type=veh_type,
+                    filepath=vehicle_trip_data_filepath,
+                )
+            elif veh_type.lower() in {"mdv", "hdv"}:
+                normalized_demand, _, _ = immediate_charging_HDV.immediate_hdv_charging(
+                    model_year=projection_year,
+                    veh_range=veh_range,
+                    power=power,
+                    location_strategy=location_strategy,
+                    veh_type=veh_type,
+                    filepath=vehicle_trip_data_filepath,
+                )
 
     # calculate demand for all geographic areas with scaling factors
     state_demand_profiles = {}
@@ -159,12 +187,12 @@ def generate_bev_vehicle_profiles(
 
         state_demand_profiles.update({geographic_area: final_demand})
 
-        state_demand_profiles_df = pd.DataFrame(
-            state_demand_profiles,
-            index=pd.date_range(
-                start=f"{projection_year}-01-01 00:00:00",
-                end=f"{projection_year}-12-31 23:00:00",
-                freq="H",
-            ),
-        )
+    state_demand_profiles_df = pd.DataFrame(
+        state_demand_profiles,
+        index=pd.date_range(
+            start=f"{projection_year}-01-01 00:00:00",
+            end=f"{projection_year}-12-31 23:00:00",
+            freq="H",
+        ),
+    )
     return state_demand_profiles_df

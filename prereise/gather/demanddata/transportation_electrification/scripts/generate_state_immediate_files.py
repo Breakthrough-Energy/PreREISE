@@ -8,7 +8,7 @@ from prereise.gather.demanddata.transportation_electrification.generate_BEV_vehi
 )
 
 
-def write_state_demand_files(demand_output, state, dir_path=None):
+def write_state_demand_files(demand_output, veh_type, veh_range, projection_year, dir_path=None):
     """Create files for each state
 
     :param dict demand_output:
@@ -19,44 +19,68 @@ def write_state_demand_files(demand_output, state, dir_path=None):
     if dir_path is None:
         dir_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "output",
+            "demand",
+            f"{veh_type}_{veh_range}",
         )
     os.makedirs(dir_path, exist_ok=True)
     print(f"Writing state demand files in {dir_path}")
 
-    demand_output.to_pickle(os.path.join(dir_path, f"immediate_{state}.pkl"))
+    demand_output.to_csv(os.path.join(dir_path, f"immediate_{veh_type}_{veh_range}_{projection_year}.csv"))
 
 
 if __name__ == "__main__":
-    state_set = set(abv2state.keys()) - {"AK", "HI", "VT"}
 
-    state_list = ["VT"] + list(state_set)
+    veh_types = ["mdv", "hdv"]
+    veh_ranges = [200]
 
-    print("State order:")
-    print(state_list)
+    projection_years = [2017] + list(range(2020, 2051, 5))
 
-    for state in state_list:
-        print(f"Current state: {state}")
+    us_states = abv2state.keys()
 
-        tic = time.perf_counter()
+    contiguous_states = [state for state in us_states if (state not in ["AK", "HI"])]
 
-        state_demand_df = generate_bev_vehicle_profiles(
-            vehicle_trip_data_filepath=os.path.join(
+    print("States to process:")
+    print(contiguous_states)
+
+
+    for veh_type in veh_types:
+
+        if veh_type.lower() in {"ldv", "ldt"}:
+            vehicle_trip_data_filepath = os.path.join(
                 const.data_folder_path,
                 "nhts_census_updated_dwell.mat",
-            ),
-            charging_strategy="immediate",
-            veh_type="ldv",
-            veh_range=100,
-            projection_year=2024,
-            state=state,
-            power=6.6,
-            location_strategy=2,
-            trip_strategy=1,
-        )
+            )
+            power = 6.6
+            location_strategy = 2
 
-        write_state_demand_files(state_demand_df, state)
+        elif veh_type.lower() in {"mdv", "hdv"}:
+            vehicle_trip_data_filepath = os.path.join(
+                const.data_folder_path,
+                "fdata_v10st.mat",
+            )
+            power = 80
+            location_strategy = 1
 
-        toc = time.perf_counter()
+        for veh_range in veh_ranges:
+            for projection_year in projection_years:
 
-        print(f"State {state} ran in {toc - tic:0.4f} seconds\n")
+                print(f"Projection year: {projection_year}")
+
+                tic = time.perf_counter()
+
+                state_demand_df = generate_bev_vehicle_profiles(
+                    vehicle_trip_data_filepath=vehicle_trip_data_filepath,
+                    charging_strategy="immediate",
+                    veh_type=veh_type,
+                    veh_range=veh_range,
+                    projection_year=projection_year,
+                    states=contiguous_states,
+                    power=power,
+                    location_strategy=location_strategy,
+                )
+
+                write_state_demand_files(state_demand_df, veh_type, veh_range, projection_year)
+
+                toc = time.perf_counter()
+
+                print(f"Year {projection_year} for vehicle type {veh_type} & vehicle range {veh_range} ran in {toc - tic:0.4f} seconds\n")
