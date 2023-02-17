@@ -30,20 +30,21 @@ def write_state_demand_files(demand_output, veh_type, veh_range, projection_year
 
 if __name__ == "__main__":
 
-    veh_types = ["mdv", "hdv"]
-    veh_ranges = [200]
+    veh_types = ["ldv", "ldv", "ldv", "ldt", "ldt", "ldt", "mdv", "hdv"]
+    veh_ranges = [100, 200, 300, 100, 200, 300, 200, 200]
 
     projection_years = [2017] + list(range(2020, 2051, 5))
 
     us_states = abv2state.keys()
-
     contiguous_states = [state for state in us_states if (state not in ["AK", "HI"])]
 
     print("States to process:")
     print(contiguous_states)
 
-
-    for veh_type in veh_types:
+    for i in len(veh_types):
+        veh_type = veh_types[i]
+        veh_range = veh_ranges[i]
+        print(f"Running for vehicle type {veh_type} with range {veh_range}")
 
         if veh_type.lower() in {"ldv", "ldt"}:
             vehicle_trip_data_filepath = os.path.join(
@@ -61,26 +62,25 @@ if __name__ == "__main__":
             power = 80
             location_strategy = 1
 
-        for veh_range in veh_ranges:
-            for projection_year in projection_years:
+        for projection_year in projection_years:
 
-                print(f"Projection year: {projection_year}")
+            print(f"Projection year: {projection_year}")
 
-                tic = time.perf_counter()
+            tic = time.perf_counter()
 
-                state_demand_df = generate_bev_vehicle_profiles(
-                    vehicle_trip_data_filepath=vehicle_trip_data_filepath,
-                    charging_strategy="immediate",
-                    veh_type=veh_type,
-                    veh_range=veh_range,
-                    projection_year=projection_year,
-                    states=contiguous_states,
-                    power=power,
-                    location_strategy=location_strategy,
-                )
+            state_demand_df = generate_bev_vehicle_profiles(
+                vehicle_trip_data_filepath=vehicle_trip_data_filepath,
+                charging_strategy="immediate",
+                veh_type=veh_type,
+                veh_range=veh_range,
+                projection_year=projection_year,
+                states=contiguous_states,
+                power=power,
+                location_strategy=location_strategy,
+            )
 
-                write_state_demand_files(state_demand_df, veh_type, veh_range, projection_year)
+            write_state_demand_files(state_demand_df, veh_type, veh_range, projection_year)
 
-                toc = time.perf_counter()
+            toc = time.perf_counter()
 
-                print(f"Year {projection_year} for vehicle type {veh_type} & vehicle range {veh_range} ran in {toc - tic:0.4f} seconds\n")
+            print(f"Year {projection_year} for vehicle type {veh_type} & vehicle range {veh_range} ran in {toc - tic:0.4f} seconds\n")
