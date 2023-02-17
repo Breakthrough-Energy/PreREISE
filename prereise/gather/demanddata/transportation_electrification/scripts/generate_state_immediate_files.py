@@ -41,7 +41,7 @@ if __name__ == "__main__":
     print("States to process:")
     print(contiguous_states)
 
-    for i in len(veh_types):
+    for i in range(len(veh_types)):
         veh_type = veh_types[i]
         veh_range = veh_ranges[i]
         print(f"Running for vehicle type {veh_type} with range {veh_range}")
