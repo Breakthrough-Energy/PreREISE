@@ -25,7 +25,7 @@ def write_state_demand_files(
         dir_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "output",
-            str(f"{veh_type}_{str(veh_range)}"),
+            f"{veh_type}_{veh_range}",
         )
     print(dir_path)
     os.makedirs(dir_path, exist_ok=True)
