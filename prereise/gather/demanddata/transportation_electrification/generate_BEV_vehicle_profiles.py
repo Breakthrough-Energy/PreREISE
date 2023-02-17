@@ -131,7 +131,9 @@ def generate_bev_vehicle_profiles(
 
             if veh_type.lower() in {"ldv", "ldt"}:
                 if normalized_demand_df is not None:
-                    normalized_demand = normalized_demand_df[f"{veh_type}_region_{census_region}"].to_numpy()
+                    normalized_demand = normalized_demand_df[
+                        f"{veh_type}_region_{census_region}"
+                    ].to_numpy()
                 else:
                     normalized_demand, _, _ = immediate.immediate_charging(
                         census_region=census_region,
@@ -144,9 +146,15 @@ def generate_bev_vehicle_profiles(
                     )
             elif veh_type.lower() in {"mdv", "hdv"}:
                 if normalized_demand_df is not None:
-                    normalized_demand = normalized_demand_df[f"{veh_type}_demand_shape"].to_numpy()
+                    normalized_demand = normalized_demand_df[
+                        f"{veh_type}_demand_shape"
+                    ].to_numpy()
                 else:
-                    normalized_demand, _, _ = immediate_charging_HDV.immediate_hdv_charging(
+                    (
+                        normalized_demand,
+                        _,
+                        _,
+                    ) = immediate_charging_HDV.immediate_hdv_charging(
                         model_year=projection_year,
                         veh_range=veh_range,
                         power=power,
@@ -154,7 +162,7 @@ def generate_bev_vehicle_profiles(
                         veh_type=veh_type,
                         filepath=vehicle_trip_data_filepath,
                     )
-                    
+
             final_demand = immediate.adjust_bev(
                 hourly_profile=normalized_demand,
                 adjustment_values=daily_values,

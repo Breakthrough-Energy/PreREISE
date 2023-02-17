@@ -119,6 +119,4 @@ if __name__ == "__main__":
             ),
         )
 
-        write_state_demand_files(
-            demand_shapes_df, veh_type, veh_range, projection_year
-        )
+        write_state_demand_files(demand_shapes_df, veh_type, veh_range, projection_year)

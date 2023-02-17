@@ -8,7 +8,9 @@ from prereise.gather.demanddata.transportation_electrification.generate_BEV_vehi
 )
 
 
-def write_state_demand_files(demand_output, veh_type, veh_range, projection_year, dir_path=None):
+def write_state_demand_files(
+    demand_output, veh_type, veh_range, projection_year, dir_path=None
+):
     """Create files for each state
 
     :param dict demand_output:
@@ -25,11 +27,14 @@ def write_state_demand_files(demand_output, veh_type, veh_range, projection_year
     os.makedirs(dir_path, exist_ok=True)
     print(f"Writing state demand files in {dir_path}")
 
-    demand_output.to_csv(os.path.join(dir_path, f"immediate_{veh_type}_{veh_range}_{projection_year}.csv"))
+    demand_output.to_csv(
+        os.path.join(
+            dir_path, f"immediate_{veh_type}_{veh_range}_{projection_year}.csv"
+        )
+    )
 
 
 if __name__ == "__main__":
-
     veh_types = ["ldv", "ldv", "ldv", "ldt", "ldt", "ldt", "mdv", "hdv"]
     veh_ranges = [100, 200, 300, 100, 200, 300, 200, 200]
 
@@ -63,7 +68,6 @@ if __name__ == "__main__":
             location_strategy = 1
 
         for projection_year in projection_years:
-
             print(f"Projection year: {projection_year}")
 
             tic = time.perf_counter()
@@ -79,8 +83,12 @@ if __name__ == "__main__":
                 location_strategy=location_strategy,
             )
 
-            write_state_demand_files(state_demand_df, veh_type, veh_range, projection_year)
+            write_state_demand_files(
+                state_demand_df, veh_type, veh_range, projection_year
+            )
 
             toc = time.perf_counter()
 
-            print(f"Year {projection_year} for vehicle type {veh_type} & vehicle range {veh_range} ran in {toc - tic:0.4f} seconds\n")
+            print(
+                f"Year {projection_year} for vehicle type {veh_type} & vehicle range {veh_range} ran in {toc - tic:0.4f} seconds\n"
+            )
