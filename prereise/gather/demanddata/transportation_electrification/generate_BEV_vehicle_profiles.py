@@ -108,29 +108,31 @@ def generate_bev_vehicle_profiles(
         )
         geographic_area_bev_vmt.update({f"{state}_rural": rural_bev_vmt})
 
+    if charging_strategy == "immediate":
+        cache_file_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "scripts",
+            "cache",
+            str(f"{veh_type}_{str(veh_range)}"),
+            f"{projection_year}_immediate_{veh_type}_{veh_range}.pkl",
+        )
+        if os.path.isfile(cache_file_path):
+            normalized_demand_df = pd.read_pickle(cache_file_path)
+            print("Cache file used!")
+        else:
+            normalized_demand_df = None
+
     # calculate demand for all geographic areas with scaling factors
     state_demand_profiles = {}
     for geographic_area, bev_vmt in geographic_area_bev_vmt.items():
         if charging_strategy == "immediate":
-            state = geographic_area.split("_", 1)
+            state = geographic_area.split("_", 1)[0]
             census_region = const.state2census_region[state]
 
-            cache_file_path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "scripts",
-                "cache",
-                str(f"{veh_type}_{str(veh_range)}"),
-                f"{projection_year}_immediate_{veh_type}_{veh_range}.pkl",
-            )
-
-            normalized_demand_df = pd.read_pickle(cache_file_path)
-
             if veh_type.lower() in {"ldv", "ldt"}:
-                if os.path.isfile(cache_file_path):
+                if normalized_demand_df is not None:
                     normalized_demand = normalized_demand_df[f"{veh_type}_region_{census_region}"].to_numpy()
-                    print("Cache file used!")
                 else:
-                    print("Computing demand shape file!")
                     normalized_demand, _, _ = immediate.immediate_charging(
                         census_region=census_region,
                         model_year=projection_year,
@@ -141,11 +143,9 @@ def generate_bev_vehicle_profiles(
                         filepath=vehicle_trip_data_filepath,
                     )
             elif veh_type.lower() in {"mdv", "hdv"}:
-                if os.path.isfile(cache_file_path):
+                if normalized_demand_df is not None:
                     normalized_demand = normalized_demand_df[f"{veh_type}_demand_shape"].to_numpy()
-                    print("Cache file used!")
                 else:
-                    print("Computing demand shape file!")
                     normalized_demand, _, _ = immediate_charging_HDV.immediate_hdv_charging(
                         model_year=projection_year,
                         veh_range=veh_range,
