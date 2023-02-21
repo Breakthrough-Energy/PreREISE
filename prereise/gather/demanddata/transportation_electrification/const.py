@@ -148,7 +148,7 @@ census_region2state = {
     2: ["PA", "NJ", "NY"],
     3: ["IL", "IN", "MI", "OH", "WI"],
     4: ["IA", "KS", "MN", "MO", "ND", "NE", "SD"],
-    5: ["DE", "FL", "GA", "MD", "NC", "SC", "VA", "WV"],
+    5: ["DE", "FL", "GA", "MD", "NC", "SC", "VA", "WV", "DC"],
     6: ["AL", "KY", "MS", "TN"],
     7: ["AR", "LA", "OK", "TX"],
     8: ["AZ", "CO", "ID", "MT", "NM", "NV", "UT", "WY"],
