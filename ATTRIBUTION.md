@@ -4,7 +4,7 @@ This package contains a variety of materials, including data sets and related ma
 
 ### Geographical Information
 #### BA to County Mapping
-#### Source
+##### Source
 * Name: Counties in the United States
 * Author: mapchart.net
 * Description: An interactive map contains all the counties in the United
@@ -12,10 +12,50 @@ This package contains a variety of materials, including data sets and related ma
 * Source: https://mapchart.net
 * Exact source location: https://mapchart.net/usa-counties.html
 
-#### Destination
+##### Destination
 * Modifications to source file(s): None
 * Location: ***prereise/gather/data/ba_to_county.txt***
 
+#### PUMA Shape File
+##### Source
+* Name: TIGER/Line Shapefiles, PUMA, 2010
+* Author: U.S. Census Bureau
+* Description: Shapefiles for Public Use Microdata Areas (PUMAs), Year 2010
+* Source: https://www.census.gov/
+* Exact source location: https://www2.census.gov/geo/tiger/TIGER2010/PUMA5/2010/
+
+##### Destination
+* Modifications to source file(s): Shapefiles for 48 contiguous U.S states and DC are merged into one shapefile covering entire geography.
+* Location: 
+  * ***prereise/gather/demanddata/bldg_electrification/data/pumas.dbf***
+  * ***prereise/gather/demanddata/bldg_electrification/data/pumas.prj***
+  * ***prereise/gather/demanddata/bldg_electrification/data/pumas.shp***
+  * ***prereise/gather/demanddata/bldg_electrification/data/pumas.shx***
+
+##### General Purpose
+The data are used to assign a time zone to each PUMA.
+
+#### Timezone Shape File
+##### Source
+* Name: Timezone Boundary Shapefiles
+* Author: Evan Siroky
+* Description: Shapefiles for Public Use Microdata Areas (PUMAs), Year 2010
+* Source: https://github.com/evansiroky/timezone-boundary-builder
+* Exact source location: https://github.com/evansiroky/timezone-boundary-builder/releases/download/2020d/timezones.shapefile.zip
+
+##### Destination
+* Modifications to source file(s): Rename files from combined shapefiles to timezones shapefiles.
+* Location: 
+  * ***prereise/gather/demanddata/bldg_electrification/data/tz_us.dbf***
+  * ***prereise/gather/demanddata/bldg_electrification/data/tz_us.prj***
+  * ***prereise/gather/demanddata/bldg_electrification/data/tz_us.shp***
+  * ***prereise/gather/demanddata/bldg_electrification/data/tz_us.shx***
+
+##### General Purpose
+The data are used to assign a time zone to each PUMA.
+
+##### Note
+The data is licensed under the [Open Data Commons Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/)
 
 #### US County Map Shape Files
 #### Source
@@ -400,5 +440,351 @@ The dataset is used to generate wind profiles from wind speed profiles.
 
 ##### Note
 Recommended citation: J. King, A. Clifton and B.-M. Hodge. 2014. Validation of Power Output for the WIND Toolkit, Golden, CO: National Renewable Energy Laboratory. NREL/TP-6A20-74110. https://www.nrel.gov/docs/fy14osti/61714.pdf
+
+---
+
+
+### Building Electrification
+#### Quadracci Sustainable Engineering Lab (QSEL)
+##### Source
+* Name: Space Heating Heat Pump Parameters
+* Author: QSEL
+* Description: space heating heat pump coefficient of performance and capacity rating at standard temperatures for 3 models: "midperfhp", "advperfhp" and "futurehp"
+* Source:
+  * "midperfhp" and "advperfhp": https://neep.org/ 
+  * "futurehp": https://www.energy.gov/eere/office-energy-efficiency-renewable-energy/
+* Exact source location: 
+  * "midperfhp" and "advperfhp": [ccASHP 2019]
+  * "futurehp": [Bouza, A 2016]
+
+##### Destination
+* Modifications to source file(s): The development of hp_parameters is described in detail in [Waite M, Modi V 2020], including: three models for temperature-dependent HP coefficient of performance, are developed based on the 90th percentile performance of HPs in [ccASHP 2019] ("advperfhp"), the median performance of cold climate HPs in [ccASHP 2019] ("midperfhp"), and the midpoint between residential and commercial electric HP performance targets set by the U.S. Department of Energy in [Bouza, A 2016].
+
+[ccASHP 2019]: https://neep.org/heating-electrification/ccashp-specification-product-list
+[Bouza, A 2016]: https://energy.gov/sites/prod/files/2016/04/f30/Bouza%2C%20Tony_HVAC%2C%20WH%20and%20Appliance.pdf
+[Waite M, Modi V 2020]: https://engrxiv.org/mh4py/download
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/hp_parameters.csv***
+
+##### General Purpose
+The data is used to compute temperature-dependent coefficient of performance for each of the three model space heating heat pumps in `ff2elec_profile_generator_htg.py`. Pre-computed COP values against ambient temperature is stored in `data/cop_temp_htg_advperfhp.csv` and `data/cop_temp_htg_midperfhp.csv`
+
+##### Source
+* Name: Domestic Hot Water Heat Pump Parameters
+* Author: QSEL
+* Description: domestic hot water (DHW) heat pump coefficient of performance and capacity rating at standard temperatures for 3 models: "midperfhp," "advperfhp," and "futurehp"
+* Source:
+  * Base product: https://www.eco2waterheater.com/
+  * Performance data: https://www.smallplanetsupply.com/
+* Exact source location: page 13 of [Sanden SanCO2 performance data]
+
+##### Destination
+* Modifications to source file(s): "advperfhp" parameters directly from [Sanden SanCO2 performance data] for outlet water temperature of 140 deg. F. "midperfhp" scales "advperfhp" parameters to match HP performance in [Shapiro C, Puttagunta S 2016]. "futurehp" scales "advperfhp" parameters to match improvement target in [Goetzler W, et al. 2014].
+
+[Sanden SanCO2 performance data]: https://static1.squarespace.com/static/5c1a79ca96d455dcbffdc742/t/5c474cee562fa759dd733b04/1548176625850/Sanden_sanc02_technical-info_10-2017_4.pdf
+[Shapiro C, Puttagunta S 2016]: https://www.nrel.gov/docs/fy16osti/64904.pdf
+[Goetzler W, et al. 2014]: https://www.energy.gov/sites/prod/files/2014/09/f18/WH_Roadmap_Report_Final_2014-09-22.pdf
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/hp_parameters_dhw.csv***
+
+##### General Purpose
+The data are used to compute temperature-dependent coefficient of performance for each of the three model domestic hot water heating heat pumps in `ff2elec_profile_generator_dhw.py`.
+
+
+#### Energy Information Administration (EIA)
+##### Source
+* Name: CBECS Floor Areas
+* Author: EIA
+* Description: Floor areas of state groups from CBECS data
+* Source: https://www.eia.gov
+* Exact source location: 
+  * CBECS2003 Table A4: https://www.eia.gov/consumption/commercial/archive/cbecs/cbecs2003/detailed_tables_2003/2003set2/2003html/a4.html
+  * CBECS2003 Table B5: https://www.eia.gov/consumption/commercial/data/2012/bc/pdf/b1-b46.pdf
+
+##### Destination
+* Modifications to source file(s): Data from CBECS2003 Table A4 and CBECS2012 Table B5 are combined. Columns corresponding to states in each Census Division are added.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/area_scale_com.csv***
+
+##### General Purpose
+The data are used to compute 2010 commercial floor areas for state groupings in order to scale General Building Stock data.
+
+##### Source
+* Name: RECS Floor Areas
+* Author: EIA
+* Description: Floor areas of state groups from RECS data
+* Source: https://www.eia.gov
+* Exact source location:
+  * RECS2009: https://www.eia.gov/consumption/residential/data/2009/
+  * RECS2015: https://www.eia.gov/consumption/residential/data/2015/
+
+##### Destination
+* Modifications to source file(s): Data from RECS2009 Tables HC10.2-10.5 and RECS2015 Tables HC10.2-10.5 are combined. Columns corresponding to states in each Census Division and subgroups reported in RECS are added.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/area_scale_res.csv***
+
+##### General Purpose
+The data are used to compute 2010 commercial floor areas for state groupings in order to scale General Building Stock data.
+
+##### Source
+* Name: Natural Gas Consumption by End Use, Volumes Delivered to Commercial
+* Author: EIA
+* Description: Monthly natural gas usage by commercial customers by state 2010
+* Source: https://www.eia.gov
+* Exact source location: https://www.eia.gov/dnav/ng/ng_cons_sum_a_EPG0_vcs_mmcf_m.htm
+
+##### Destination
+* Modifications to source file(s): The data are organized and labeled for use in fossil fuel fitting and electrification models.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/ng_monthly_mmbtu_2010_com.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Natural Gas Consumption by End Use, Volumes Delivered to Residential
+* Author: EIA
+* Description: Monthly natural gas usage by residential customers by state 2010
+* Source: https://www.eia.gov
+* Exact source location: https://www.eia.gov/dnav/ng/ng_cons_sum_a_EPG0_vrs_mmcf_m.htm
+
+##### Destination
+* Modifications to source file(s): The data are organized and labeled for use in fossil fuel fitting and electrification models.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/ng_monthly_mmbtu_2010_res.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Adjusted Fuel Oil and Kerosene Sales by End Use, Revised
+* Author: EIA
+* Description: Annual fuel oil and kerosense usage by consumer class (residential/commercial) year and state
+* Source: https://www.eia.gov
+* Exact source location: http://www.eia.gov/dnav/pet/xls/eia_821_data_difference.xls
+
+##### Destination
+* Modifications to source file(s): The data are organized and labeled for use in fossil fuel fitting and electrification models.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/fok_data_bystate_2010.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: 2010 Propane Sales by State
+* Author: EIA
+* Description: Annual propane usage, by consumer class (residential/commercial) year and state
+* Source: https://www.eia.gov
+* Exact source location: https://www.eia.gov/state/seds/seds-data-complete.php?sid=US
+
+##### Destination
+* Modifications to source file(s): Annual propane usage data for residential and commercial buildings are extracted. The data are organized and labeled for use in fossil fuel fitting and electrification models.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/propane_data_bystate_2010.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Fraction Target for Main Commercial Cooking Fuel
+* Author: EIA
+* Description: Fraction of commercial floor space using electricity, natural gas, propane for cooking in 2010 for each of 4 Census Regions
+* Source: https://www.eia.gov
+* Exact source location:
+  * CBECS2003: https://www.eia.gov/consumption/commercial/data/2003/
+  * CBECS2012: https://www.eia.gov/consumption/commercial/data/2012/
+
+##### Destination
+* Modifications to source file(s): Interpolate 2010 values based on CBECS 2003 Table B33 and estimate values for 2012 main cooking fuel computed from any use of each fuel for cooking (CBECS 2012 Table B3) and total commercial floor area with cooking in each region (CBECS 2012 Table B25).
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/frac_target_cook_com.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Fraction Target for Main Commercial Domestic Hot Water Fuel
+* Author: EIA
+* Description: Fraction of commercial floor space using electricity, natural gas, propane, fuel oil for domestic hot water in 2010 for each of 4 Census Regions
+* Source: https://www.eia.gov
+* Exact source location:
+  * CBECS2003: https://www.eia.gov/consumption/commercial/data/2003/
+  * CBECS2012: https://www.eia.gov/consumption/commercial/data/2012/
+
+##### Destination
+* Modifications to source file(s): Interpolate 2010 values based on CBECS 2003 Table B32 and estimate values for 2012 main domestic hot water fuel computed from any use of each fuel for DHW (CBECS 2012 Table B3) and total commercial floor area with DHW in each region (CBECS 2012 Table B25).
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/frac_target_dhw_com.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Fraction Target for Main Residential Domestic Hot Water Fuel
+* Author: EIA
+* Description: Fraction of households using electricity, natural gas, propane, fuel oil for domestic hot water in 2010 for each of 4 Census Regions
+* Source: https://www.eia.gov
+* Exact source location:
+  * RECS2009: https://www.eia.gov/consumption/residential/data/2009/
+  * RECS2015: https://www.eia.gov/consumption/residential/data/2015/
+
+##### Destination
+* Modifications to source file(s): Interpolate 2010 values based on RECS2009 Tables 8.8-8.11 and RECS2015 Tables 8.7 and 8.8.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/frac_target_dhw_res.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Fraction Target for Main Residential Cooking Fuel
+* Author: EIA
+* Description: Fraction of households using electricity, natural gas, propane for cooking in 2010 for each of 4 Census Regions
+* Source: https://www.eia.gov
+* Exact source location:
+  * RECS2009: https://www.eia.gov/consumption/residential/data/2009/
+  * RECS2015: https://www.eia.gov/consumption/residential/data/2015/
+
+##### Destination
+* Modifications to source file(s): Interpolate 2010 values based on RECS2009 Tables 3.8-3.11 and RECS2015 Tables 3.7 and 3.8.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/frac_target_other_res.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Fraction Target for Main Commercial Space Heating Fuel
+* Author: EIA
+* Description: Fraction of commercial floor space using electricity, natural gas, propane, fuel oil for space heating in 2010 for each of 4 Census Regions
+* Source: https://www.eia.gov
+* Exact source location:
+  * CBECS2003: https://www.eia.gov/consumption/commercial/data/2003/
+  * CBECS2012: https://www.eia.gov/consumption/commercial/data/2012/
+
+##### Destination
+* Modifications to source file(s): Interpolate 2010 values based on CBECS2003 Table B29 and CBECS2012 Table B3.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/frac_target_sh_com.csv***
+
+##### General Purpose
+The data are used to fit model for temperature-dependent fossil fuel usage.
+
+##### Source
+* Name: Fraction Target for Residential and Commercial Heat Pump Possession as Main Heating Device
+* Author: EIA
+* Description: Fraction of residential or commercial floor space using heat pump as main heating device for Census Regions
+* Source: https://www.eia.gov
+* Exact source location:
+  * RECS2015: https://www.eia.gov/consumption/residential/data/2015/
+  * RECS2020: https://www.eia.gov/consumption/residential/data/2020/
+  * CBECS2012: https://www.eia.gov/consumption/commercial/data/2012/
+  * CBECS2018: https://www.eia.gov/consumption/commercial/data/2018/
+
+##### Destination
+* Modifications to source file(s): Interpolate 2019 values based on RECS2015 and RECS2020, and extrapolate 2019 values based on CBECS2012 and CBECS 2018.
+* Location: 
+  * ***prereise/gather/demanddata/bldg_electrification/data/frac_target_hp_res.csv***
+  * ***prereise/gather/demanddata/bldg_electrification/data/frac_target_hp_com.csv***
+
+##### General Purpose
+The data are used to fit model for current heat pump penetration rate.
+
+##### Source
+* Name: Natural Gas Prices
+* Author: EIA
+* Description: Annual average natural gas price (residential) of states
+* Source: https://www.eia.gov
+* Exact source location: https://www.eia.gov/dnav/ng/ng_pri_sum_dcu_nus_a.htm
+##### Destination
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/state_ng_residential_price_2019.csv***
+
+##### General Purpose
+The data are used in the linear regression model for estimating current heat pump penetration rate. 
+
+
+#### U.S. Census Bureau
+##### Source
+* Name: House Heating Fuel
+* Author: U.S. Census Bureau
+* Description: Estimated primary heating fuel by number of households in each Public Use Microdata Area (PUMA) based on American Community Survey (ACS), Table B25040, 2012: ACS 5-Year Estimates Detailed Tables
+* Source: https://www.census.gov/
+* Exact source location: https://data.census.gov/cedsci/table?q=B25040&tid=ACSDT1Y2019.B25040
+
+##### Destination
+* Modifications to source file(s): Column headers are modified. State ID is added as another column.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/puma_fuel_2010.csv***
+
+##### General Purpose
+The data are used as basis for PUMA-level adjustments for other residential end uses (DHW and cooking) and commercial fossil fuel uses (space heating, DHW and cooking).
+
+##### Source
+* Name: 2010 Census Tract to 2010 PUMA Mapping File
+* Author: U.S. Census Bureau
+* Description: File with Census Tract ID and corresponding PUMA for each Census Tract
+* Source: https://www.census.gov/
+* Exact source location: https://www2.census.gov/geo/docs/maps-data/data/rel/2010_Census_Tract_to_2010_PUMA.txt
+
+##### Destination
+* Modifications to source file(s): Census Tract and PUMA identification numbers are extracted from source data. Text strings for consistency with other elements of  code are appended. File format is changed to CSV.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/tract_puma_mapping.csv***
+
+##### General Purpose
+The data are used to aggregate to the PUMA level data available only at the Census Tracts level or previously assigned to Census Tracts.
+
+##### Source
+* Name: 2010 Decennial Census Population by Census Tract
+* Author: U.S. Census Bureau
+* Description: Census Tract level population for Year 2010
+* Source: https://www.census.gov/
+* Exact source location: https://data.census.gov/cedsci/table?t=Populations%20and%20People&g=0100000US%241400000&y=2010&d=DEC%20Summary%20File%201&tid=DECENNIALSF12010.P1
+
+##### Destination
+* Modifications to source file(s): None
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/tract_pop.csv***
+
+##### General Purpose
+The data are used to compute population-weighted average values for PUMAs based on the Census Tract data.
+
+##### Source
+* Name: American Housing Survey (AHS)
+* Author: U.S. Census Bureau
+* Description: Number of household use heat pumps as main heating equipment for metropolitan areas, Table "Heating, Air Conditioning, and Appliances", year 2017 and 2019
+* Source: https://www.census.gov/
+* Exact source location: https://www.census.gov/programs-surveys/ahs/data/interactive/ahstablecreator.html?s_areas=00000&s_year=2019&s_tablename=TABLE3&s_bygroup1=1&s_bygroup2=1&s_filtergroup1=1&s_filtergroup2=1
+
+##### Destination
+* Modifications to source file(s): the household number that possess heat pumps are converted to fractions of household within the survey area by dividing it to the total household number provided in the same tables. 
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/hp_ahs.xlsx***
+
+##### General Purpose
+The data are used as basis for estimating current heat pump penetration rate. 
+
+
+#### U.S. Federal Emergency Management Agency (FEMA)
+##### Source
+* Name: General Building Stock Floor Areas by Building Class
+* Author: FEMA
+* Description: General Building Stock database available as part of FEMA's Hazus application, which includes building square footage estimates by occupancy at the Cenus Tract level for 2010.
+* Source: https://www.fema.gov
+* Exact source location: https://msc.fema.gov/portal/resources/download#HazusDownloadAnchor
+
+##### Destination
+* Modifications to source file(s): Details of the modifcations are in [Waite M, et al. 2020].
+
+[Waite M, et al. 2020]: https://www.sciencedirect.com/science/article/pii/S2542435119305781
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/tract_gbs_area.csv***
+
+##### General Purpose
+The data are used to assign building areas by class at the Census Tract level. These areas are then scaled based on other data sources to estimate 2010 floor areas of each class in `puma_data_agg.py`.
+
+##### Note
+The source data is at times not available and may requires the installation of the Hazus Application.
+
+
+#### U.S. National Oceanic and Atmospheric Administration (NOAA)
+##### Source
+* Name: 1981-2010 Climate Normals
+* Author: NOAA
+* Description: Heating Degree Day and Cooling Degree Day Normals (65 deg. F basis)
+* Source: https://www.noaa.gov
+* Exact source location:
+  * Heating degree day normals: https://www.ncei.noaa.gov/pub/data/normals/1981-2010/products/temperature/ann-htdd-normal.txt
+  * Cooling degree day normals: https://www.ncei.noaa.gov/pub/data/normals/1981-2010/products/temperature/ann-cldd-normal.txt
+
+##### Destination
+* Modifications to source file(s): Heating Degree Day normals (HDD65) and Cooling Degree Day normals (CDD65) are assigned to each Census Tract based on the nearest weather station in the NOAA data.
+* Location: ***prereise/gather/demanddata/bldg_electrification/data/tract_degday_normals.csv***
+
+##### General Purpose
+The data are aggregated at the PUMA level and used for various modules that estimate technology adoption (e.g. residential air conditioning) and climate-adjusted heating and cooling behavior.
 
 ---
