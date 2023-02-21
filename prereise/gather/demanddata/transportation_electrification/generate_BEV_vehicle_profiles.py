@@ -93,20 +93,21 @@ def generate_bev_vehicle_profiles(
                 filepath=urban_scaling_filepath,
             )
             geographic_area_bev_vmt.update({f"{state}_{urban_area}": urban_bev_vmt})
-
-        # scaling factors for rural areas
-        rural_bev_vmt = load_rural_scaling_factor(
-            projection_year,
-            veh_type,
-            veh_range,
-            state.upper(),
-            filepath=os.path.join(
-                const.data_folder_path,
-                "regional_scaling_factors",
-                "regional_scaling_factors_RA_",
-            ),
-        )
-        geographic_area_bev_vmt.update({f"{state}_rural": rural_bev_vmt})
+            
+        if state is not "DC":
+            # scaling factors for rural areas
+            rural_bev_vmt = load_rural_scaling_factor(
+                projection_year,
+                veh_type,
+                veh_range,
+                state.upper(),
+                filepath=os.path.join(
+                    const.data_folder_path,
+                    "regional_scaling_factors",
+                    "regional_scaling_factors_RA_",
+                ),
+            )
+            geographic_area_bev_vmt.update({f"{state}_rural": rural_bev_vmt})
 
     if charging_strategy == "immediate":
         cache_file_path = os.path.join(
