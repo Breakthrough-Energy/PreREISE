@@ -40,7 +40,7 @@ def generate_bev_vehicle_profiles(
         single charge in miles.
     :param int projection_year: year that is being modelled/projected to, 2017, 2030, 2040,
         2050.
-    :param List[str] state: List of US state abbreviation
+    :param List[str] states: List of US state abbreviation
     :param numpy.ndarray (optional) external_signal: initial load demand (MW for each hour)
     :param int power: (optional) charger power, EVSE kW; default value: 6.6 kW;
     :param int location_strategy: (optional) where the vehicle can charge-1, 2, 3, 4, or 5;
@@ -93,8 +93,7 @@ def generate_bev_vehicle_profiles(
                 filepath=urban_scaling_filepath,
             )
             geographic_area_bev_vmt.update({f"{state}_{urban_area}": urban_bev_vmt})
-            
-        if state is not "DC":
+        if state != "DC":
             # scaling factors for rural areas
             rural_bev_vmt = load_rural_scaling_factor(
                 projection_year,
