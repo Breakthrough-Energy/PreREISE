@@ -285,10 +285,13 @@ def adjust_bev(
     """
     kwhmi = data_helper.get_kwhmi(model_year, veh_type, veh_range)
 
+    num_days_per_year = len(data_helper.get_model_year_dti(model_year))
+
     # weekday/weekend, monthly urban and rural moves scaling
     adjusted_load = apply_daily_adjustments(
         hourly_profile,
         adjustment_values,
+        num_days_per_year,
     )
 
     # simulation year urban and rural scaling specific to region
@@ -305,7 +308,7 @@ def adjust_bev(
 def apply_daily_adjustments(
     hourly_profile,
     adjustment_values,
-    num_days_per_year=365,
+    num_days_per_year,
     num_segments_per_day=24,
 ):
     """Adjusts the charging profiles by applying weighting factors based on
@@ -347,7 +350,7 @@ def apply_annual_scaling(
     :param int kwhmi: fuel efficiency, should vary based on vehicle type and model_year.
     :return: (*numpy.ndarray*) -- adjusted charging profile
     """
-    bev_annual_load = bev_vmt * kwhmi / charging_efficiency
+    bev_annual_load = bev_vmt * (kwhmi / 1000) / charging_efficiency
 
     simulation_hourly_profile = bev_annual_load * hourly_profile
 

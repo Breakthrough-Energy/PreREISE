@@ -16,7 +16,7 @@ def test_ldv_immediate_runs():
         veh_type="ldv",
         veh_range=100,
         projection_year=2017,
-        state="AL",
+        states="AL",
         power=6.6,
         location_strategy=2,
         trip_strategy=1,

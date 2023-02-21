@@ -67,6 +67,8 @@ def test_apply_annual_scaling():
         kwhmi,
     )
 
-    correct_annual_scaling = np.array([20, 60, 40, 40, 80, 20, 18, 22, 20, 20, 50, 30])
+    correct_annual_scaling = (
+        np.array([20, 60, 40, 40, 80, 20, 18, 22, 20, 20, 50, 30]) / 1000
+    )
 
-    assert np.array_equal(scaling_result, correct_annual_scaling)
+    np.testing.assert_almost_equal(scaling_result, correct_annual_scaling)
