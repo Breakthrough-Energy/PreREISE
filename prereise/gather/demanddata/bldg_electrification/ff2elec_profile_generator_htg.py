@@ -160,6 +160,7 @@ def generate_htg_profiles(
         # Export profile file as CSV
         elec_htg_ff2hp_puma_mw_it.to_csv(
             os.path.join(
+                os.path.dirname(__file__),
                 "Profiles",
                 f"elec_htg_ff2hp_{bldg_class}_{state}_{yr_temps}_{hp_model}_mw.csv",
             ),
