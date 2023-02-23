@@ -79,6 +79,7 @@ def generate_cook_profiles(
         # Export profile file as CSV
         cook_elec.to_csv(
             os.path.join(
+                os.path.dirname(__file__),
                 "Profiles",
                 f"elec_cook_ff2hp_{bldg_class}_{state}_{yr_temps}_{efficiency}_mw.csv",
             )
