@@ -119,7 +119,7 @@ def calculate_optimization(
     segsum = np.sum(seg)
     segcum = np.cumsum(seg)
 
-    f = np.array(rates) / charging_efficiency
+    f = np.array(rates) 
 
     # form all the constraints
     # equality constraint
