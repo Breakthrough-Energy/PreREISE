@@ -804,3 +804,21 @@ The source data is at times not available and may requires the installation of t
 The data are aggregated at the PUMA level and used for various modules that estimate technology adoption (e.g. residential air conditioning) and climate-adjusted heating and cooling behavior.
 
 ---
+
+### Synthetic Demand Response Data Generation
+
+### EnergyCoupon
+
+##### Source
+
+* Name: EnergyCoupon: A Case Study on Incentive-based Demand Response in Smart Grid
+* Author: Bainan Xia, Hao Ming, Ki-Yeob Lee, Yuanyuan Li, Yuqi Zhou, Shantanu Bansal, Srinivas Shakkottai, and Le Xie
+* Description: Incentive-based demand response program trial data
+* Source: ***prereise/gather/flexibilitydata/human_in_the_loop/data/***
+
+##### Destination
+
+* Modifications to source files(s): Unzipped, all nonparticipants and participants data are concatenated into two files named `nonparticipants.csv` and `participants.csv` , with timestamp index.
+* Location: ***prereise/gather/flexibilitydata/human_in_the_loop/data***
+
+---
