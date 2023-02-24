@@ -176,13 +176,27 @@ def scale_energy(
             ]
         hp_load_scaler = hp_cop_scaler * new_scen.frac_hp_growth(base_scen)
 
+    if np.isinf(new_scen.frac_hp_growth(base_scen)):
+        new_hp_cop_scaler = pd.Series(dtype="float64")
+        for i in temp_df.index:
+            new_hp_cop_scaler.loc[i] = new_hp_heat_cop.loc[
+                round(temp_df.loc[i, "temp_c"], 1), "cop"
+            ]
+        resist_hp_load_scaler = (
+            new_scen.hp_heat_area_m2 / base_scen.resist_heat_area_m2 / new_hp_cop_scaler
+        )
     scen_load_mwh = pd.DataFrame(index=base_energy.index)
     scen_load_mwh["base_load_mw"] = base_energy["base_load_mw"] * base_load_scaler
     if new_hp_profile == "elec":  # if user select to use the current electricity
         # heat pump consumption profiles for heating load projection
-        scen_load_mwh["heat_hp_load_mw"] = (
-            base_energy["heat_hp_load_mw"] * hp_load_scaler
-        )
+        if np.isinf(new_scen.frac_hp_growth(base_scen)):
+            scen_load_mwh["heat_hp_load_mw"] = (
+                base_energy["heat_resist_load_mw"] * resist_hp_load_scaler
+            )
+        else:
+            scen_load_mwh["heat_hp_load_mw"] = (
+                base_energy["heat_hp_load_mw"] * hp_load_scaler
+            )
     else:
         scen_load_mwh["heat_existing_hp_load_mw"] = base_energy["heat_hp_load_mw"]
     scen_load_mwh["heat_resist_load_mw"] = (
