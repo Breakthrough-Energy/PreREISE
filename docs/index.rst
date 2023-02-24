@@ -14,6 +14,8 @@ folder adjacent to your clone of PreREISE.
     generate any input data if you use the scenario framework to carry out power flow
     study.
 
+.. contents:: :local:
+
 
 General Comments
 ----------------
@@ -48,6 +50,24 @@ Historical
 
 .. include::
    demand/historical/eastern.rst
+
+
+Transportation Electrification
+++++++++++++++++++++++++++++++
+.. include::
+   demand/transportation_electrification/summary.rst
+
+.. include::
+   demand/transportation_electrification/data.rst
+
+.. include::
+   demand/transportation_electrification/manual.rst
+
+.. include::
+   demand/transportation_electrification/methodology.rst
+
+.. include::
+   demand/transportation_electrification/sources.rst
 
 
 NREL Electrification Futures Study Demand and Flexibility Data
@@ -96,3 +116,7 @@ Resources
 
 .. include::
    renewables/notebook.rst
+
+Bibliography
+++++++++++++
+.. bibliography::

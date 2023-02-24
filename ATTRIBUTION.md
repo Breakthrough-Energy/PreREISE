@@ -245,6 +245,22 @@ These datasets are used to generate flexibility profiles that are realized throu
 These datasets are generously provided by NREL, which is operated for the U.S. Department of Energy by the Alliance for Sustainable Energy, LLC. Before using these datasets, please read [this disclaimer](https://www.nrel.gov/disclaimer.html) first.
 
 
+#### U.S. Environmental Protection Agency
+##### Source
+* Name: MOVES2010 Highway Vehicle Population and Activity Data
+* Author: U.S. Environmental Protection Agency
+* Description: Vehicle Miles Travelled disribution by month and by weekday/weekend
+* Source: https://www.epa.gov/moves/moves-onroad-technical-reports
+* Exact Source Location: https://nepis.epa.gov/Exe/ZyPDF.cgi?Dockey=P100ABRO.pdf
+
+##### Destination
+* Modifications to source file(s): None
+* Location:
+  * ***prereise/gather/demanddata/transportation_electrification/moves_daily.csv***
+  * ***prereise/gather/demanddata/transportation_electrification/moves_monthly.csv***
+
+##### General Purpose
+The dataset is used to distribute the annual vehicle miles traveled (VMT) using seasonal weight factors for the final charging profiles.
 
 ---
 ### Hydro

@@ -145,3 +145,5 @@ prereise/gather/winddata/data/StatePowerCurves.csv
 
 # Jupyter Notebook
 share/
+
+.devcontainer
