@@ -24,7 +24,7 @@ def write_state_demand_files(
     if dir_path is None:
         dir_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "output",
+            "cache",
             f"{veh_type}_{veh_range}",
         )
     print(dir_path)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
             "nhts_census_updated_dwell.mat",
         )
         power = 6.6
-        location_strategy = 2
+        location_strategy = 1
 
     elif veh_type.lower() in {"mdv", "hdv"}:
         vehicle_trip_data_filepath = os.path.join(
