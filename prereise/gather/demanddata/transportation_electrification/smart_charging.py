@@ -223,7 +223,8 @@ def smart_charging(
     output_load_sum_list = []
 
     day_num = len(input_day)
-    for day_iter in range(day_num):
+#    for day_iter in range(day_num):
+    for day_iter in range(7):
         print(f"Day: {day_iter}")
         gc.collect()
 
