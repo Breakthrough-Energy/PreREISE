@@ -41,9 +41,10 @@ if __name__ == "__main__":
     projection_years = [2017] + list(range(2020, 2051, 5))
 
     us_states = abv2state.keys()
-    contiguous_states = [
-        state for state in us_states if (state not in ["AK", "HI"])
-    ] + ["DC"]
+    # contiguous_states = [
+    #     state for state in us_states if (state not in ["AK", "HI"])
+    # ] + ["DC"]
+    contiguous_states = ["NY"]
 
     print("States to process:")
     print(contiguous_states)
