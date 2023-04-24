@@ -14,14 +14,16 @@ class LoadProjectionScenario:
         area and energy usages for a base scenario. User defined growth inputs for a
         projection scenario. This series contains information for a load zone,
         which are listed as follows:
-        1) population
-        2) total building floor area by type
-        3) primary energy source types and household fraction for space heating,
+
+        #. population
+        #. total building floor area by type
+        #. primary energy source types and household fraction for space heating,
            cooling, hot water and cooking
-        4) assumed dominate type of heat pump
-        5) assumed energy efficiency of cooking and air conditioning.
-    :param load_projection_scenario.LoadProjectionScenario other: the base scenario
-        instance for a projection scenario creation. None if creating a base scenario.
+        #. assumed dominate type of heat pump
+        #. assumed energy efficiency of cooking and air conditioning.
+
+    :param LoadProjectionScenario other: the base scenario instance for a projection
+        scenario creation. None if creating a base scenario.
     """
 
     def __init__(self, id, input_series, other=None):
