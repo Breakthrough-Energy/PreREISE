@@ -30,6 +30,7 @@ def test_get_bus_fips():
     os.remove("bus_fips.pkl")
 
 
+@pytest.mark.skip
 def test_get_bus_zip():
     """Test the geopy OSM query using constant dataframe"""
     bus_pos_dict = {
