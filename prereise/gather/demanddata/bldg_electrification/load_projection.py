@@ -18,6 +18,9 @@ from prereise.gather.demanddata.bldg_electrification.helper import (
     read_shapefile,
     zone_shp_overlay,
 )
+from prereise.gather.demanddata.bldg_electrification.load_projection_scenario import (  # noqa: F401
+    LoadProjectionScenario,
+)
 from prereise.gather.demanddata.bldg_electrification.zone_profile_generator import (
     zonal_data,
 )
@@ -32,10 +35,9 @@ def temp_to_energy(temp_series, hourly_fits_df, db_wb_fit, base_scen, hp_heat_co
         coefficients for electricity use equations.
     :param pandas.DataFrame db_wb_fit: least-square estimators of the linear
         relationship between WBT and DBT
-    :param load_projection_scenario.LoadProjectionScenario base_scen: reference
-        scenario instance
-    :param pandas.DataFrame hp_heat_cop: heat pump COP against DBT with
-        a 0.1 degree C interval
+    :param LoadProjectionScenario base_scen: reference scenario instance
+    :param pandas.DataFrame hp_heat_cop: heat pump COP against DBT with a 0.1 degree C
+        interval
     :return: (*list*) -- energy for baseload, heat pump heating, resistance heating,
         and cooling of certain hour
     """
@@ -132,19 +134,16 @@ def scale_energy(
 ):
     """Project energy consumption for each projection scenarios from the base scenario
 
-    :param pandas.DataFrame base_energy: dataframe of disaggregated
-        electricity consumptions for all weather years
+    :param pandas.DataFrame base_energy: dataframe of disaggregated electricity
+        consumptions for all weather years
     :param pandas.DataFrame temp_df: weather records the given hours
-    :param load_projection_scenario.LoadProjectionScenario base_scen:
-        reference scenario instance
-    :param load_projection_scenario.LoadProjectionScenario new_scen:
-        projection scenario instance
-    :param Pandas.DataFrame midperfhp_cop: average performance heat pump COP
-        against DBT with a 0.1 degree C interval
-    :param Pandas.DataFrame advperfhp_cop: advanced performance heat pump
-        (90% percentile cold climate heat pump) COP against DBT with a 0.1
-        degree C interval
-    :param string new_hp_profile: either "elec" or "ff". Choose either current electric
+    :param LoadProjectionScenario base_scen: reference scenario instance
+    :param LoadProjectionScenario new_scen: projection scenario instance
+    :param pandas.DataFrame midperfhp_cop: average performance heat pump COP against
+        DBT with a 0.1 degree C interval
+    :param pandas.DataFrame advperfhp_cop: advanced performance heat pump (90%
+        percentile cold climate heat pump) COP against DBT with a 0.1 degree C interval
+    :param str new_hp_profile: either "elec" or "ff". Choose either current electric
         heat pump heating demand profiles or current fossil fuel heating demand that the
         projected newly electrified load will follow.
     :return (*pandas.DataFrame*) -- hourly electricity consumption induced by heat pump
@@ -217,16 +216,14 @@ def ff_electrify_profiles(
         load projection
     :param pandas.DataFrame puma_data: puma data within zone,
         output of :func:`zone_shp_overlay`
-    :param load_projection_scenario.LoadProjectionScenario base_scen:
-        reference scenario instance
-    :param load_projection_scenario.LoadProjectionScenario new_scen:
-        projection scenario instance
-    :param string new_hp_profile: either "elec" or "ff". Choose either current electric
+    :param LoadProjectionScenario base_scen: reference scenario instance
+    :param LoadProjectionScenario new_scen: projection scenario instance
+    :param str new_hp_profile: either "elec" or "ff". Choose either current electric
         heat pump heating demand profiles or current fossil fuel heating demand that the
         projected newly electrified load will follow.
     :return (*pandas.DataFrame*) -- hourly projection load from converting fossil fuel
         consumption to electricity for projection scenarios given weather conditions
-        from selected weather years
+        from selected weather years.
     """
 
     def ff2hp_dhw_profiles(clas):
@@ -384,17 +381,15 @@ def predict_scenario(
 
     :param str zone_name: name of load zone used to save profile.
     :param str zone_name_shp: name of load zone within shapefile.
-    :param load_projection_scenario.LoadProjectionScenario base_scen:
-        reference scenario instance
-    :param load_projection_scenario.LoadProjectionScenario new_scen:
-        projection scenario instance
-    :param list weather_years: user defined year(s) of weather profile
-        for load projection
-    :param string new_hp_profile: either "elec" or "ff". Choose either current electric
-        heat pump heating demand profiles or current fossil fuel heating demand that the
-        projected newly electrified load will follow.
+    :param LoadProjectionScenario base_scen: reference scenario instance
+    :param LoadProjectionScenario new_scen: projection scenario instance
+    :param list weather_years: user defined year(s) of weather profile for load
+        projection
+    :param str new_hp_profile: either "elec" or "ff". Choose either current electric
+        heat pump heating demand profiles or current fossil fuel heating demand that
+        the projected newly electrified load will follow.
     :return (*dict*) -- hourly projected load breakdowns for all scenarios, keys are
-        scenario names, values are data frames of load breakdowns
+        scenario names, values are data frames of load breakdowns.
     """
     # Use base_year for model fitting
     base_year = const.base_year
