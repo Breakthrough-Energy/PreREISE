@@ -49,12 +49,10 @@ def download_doe(download_path="data"):
     # delete and further extract
     os.remove(os.path.join(download_path, "filter.zip"))
 
-    for i in os.listdir(download_path):
-        fh = tarfile.open(os.path.join(download_path, i))
-        fh.extractall(download_path)
-
-        fh.close()
-        os.remove(os.path.join(download_path, i))
+    for f in os.listdir(download_path):
+        with tarfile.open(os.path.join(download_path, f), "r:gz") as fh:
+            fh.extractall(download_path)
+        os.remove(os.path.join(download_path, f))
 
     # cleanup
     cleanup_directory(download_path)

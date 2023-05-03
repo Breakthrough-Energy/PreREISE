@@ -4,11 +4,11 @@ import pickle as pkl
 import re
 import time
 
-import geopy
 import numpy as np
 import pandas as pd
 import requests
 from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
 from powersimdata.utility.distance import find_closest_neighbor
 from tqdm import tqdm
 
@@ -22,20 +22,12 @@ def get_bus_pos(network_path):
 
     try:
         sub_df = pd.read_csv(os.path.join(network_path, "sub.csv"))
-    except Exception:
-        raise OSError(
-            errno.ENOENT,
-            os.strerror(errno.ENOENT),
-            "sub.csv in model folder does not exist.",
-        )
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Can't find sub.csv file in {network_path} folder")
     try:
         bus2sub_df = pd.read_csv(os.path.join(network_path, "bus2sub.csv"))
-    except Exception:
-        raise OSError(
-            errno.ENOENT,
-            os.strerror(errno.ENOENT),
-            "bus2sub.csv in model folder does not exist.",
-        )
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Can't find bus2sub.csv file in {network_path} folder")
 
     bus_pos = pd.DataFrame()
 
@@ -131,7 +123,7 @@ def get_bus_zip(bus_pos, cache_path, start_idx=0):
         "zip": [0] * bus_num,
     }
 
-    geocoder = geopy.Nominatim(user_agent="BES")
+    geocoder = Nominatim(user_agent="BES")
     reverse = RateLimiter(
         geocoder.reverse, min_delay_seconds=0.05, return_value_on_exception=None
     )
