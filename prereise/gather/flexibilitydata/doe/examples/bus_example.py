@@ -1,5 +1,7 @@
 import os
 
+from powersimdata import Grid
+
 from prereise.gather.flexibilitydata.doe.bus_data import (
     get_all_bus_eiaid,
     get_bus_fips,
@@ -10,7 +12,8 @@ from prereise.gather.flexibilitydata.doe.bus_data import (
 cache_path = os.path.join(os.path.dirname(__file__), os.pardir, "cache")
 
 # find coordinates of buses in a .mat case
-bus_pos = get_bus_pos(cache_path)
+grid = Grid("Texas")
+bus_pos = get_bus_pos(grid)
 
 # find the FIPS of all buses and store to cache
 get_bus_fips(bus_pos, cache_path)

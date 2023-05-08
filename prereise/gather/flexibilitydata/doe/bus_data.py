@@ -13,34 +13,14 @@ from powersimdata.utility.distance import find_closest_neighbor
 from tqdm import tqdm
 
 
-def get_bus_pos(network_path):
+def get_bus_pos(grid):
     """Read raw files of synthetic grid and extract the lat/lon coordinate of all buses
 
-    :param str network_path: path to folder of raw data of a power network
-    :return: (*pandas.DataFrame*) -- (n x 3) dataframe containing bus coordinates
+    :param powersimdata.input.grid.Grid grid: a Grid instance
+    :return: (*pandas.DataFrame*) -- a data frame of bus position
     """
 
-    try:
-        sub_df = pd.read_csv(os.path.join(network_path, "sub.csv"))
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Can't find sub.csv file in {network_path} folder")
-    try:
-        bus2sub_df = pd.read_csv(os.path.join(network_path, "bus2sub.csv"))
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Can't find bus2sub.csv file in {network_path} folder")
-
-    bus_pos = pd.DataFrame()
-
-    bus_pos["bus_id"] = bus2sub_df["bus_id"]
-
-    bus_pos["lat"] = [
-        sub_df.loc[sub_df["sub_id"] == i, "lat"].values[0] for i in bus2sub_df["sub_id"]
-    ]
-    bus_pos["lon"] = [
-        sub_df.loc[sub_df["sub_id"] == i, "lon"].values[0] for i in bus2sub_df["sub_id"]
-    ]
-
-    return bus_pos
+    return grid.bus[["lat", "lon"]].reset_index()
 
 
 def get_bus_fips(bus_pos, cache_path, start_idx=0):
